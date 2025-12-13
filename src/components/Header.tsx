@@ -1,17 +1,17 @@
 import { Link } from '@tanstack/react-router'
 
-import ClerkHeader from '../integrations/clerk/header-user.tsx'
-
 import { useState } from 'react'
 import {
   ChevronDown,
   ChevronRight,
-  Globe,
+  ClipboardType,
+  Database,
   Home,
   Menu,
   Network,
   SquareFunction,
   StickyNote,
+  Table,
   X,
 } from 'lucide-react'
 
@@ -75,7 +75,7 @@ export default function Header() {
           {/* Demo Links Start */}
 
           <Link
-            to="/demo/clerk"
+            to="/demo/db-chat"
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
             activeProps={{
@@ -83,8 +83,47 @@ export default function Header() {
                 'flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2',
             }}
           >
-            <Globe size={20} />
-            <span className="font-medium">Clerk</span>
+            <Database size={20} />
+            <span className="font-medium">DB Chat</span>
+          </Link>
+
+          <Link
+            to="/demo/form/simple"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
+            activeProps={{
+              className:
+                'flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2',
+            }}
+          >
+            <ClipboardType size={20} />
+            <span className="font-medium">Simple Form</span>
+          </Link>
+
+          <Link
+            to="/demo/form/address"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
+            activeProps={{
+              className:
+                'flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2',
+            }}
+          >
+            <ClipboardType size={20} />
+            <span className="font-medium">Address Form</span>
+          </Link>
+
+          <Link
+            to="/demo/table"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
+            activeProps={{
+              className:
+                'flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2',
+            }}
+          >
+            <Table size={20} />
+            <span className="font-medium">TanStack Table</span>
           </Link>
 
           <Link
@@ -200,10 +239,6 @@ export default function Header() {
 
           {/* Demo Links End */}
         </nav>
-
-        <div className="p-4 border-t border-gray-700 bg-gray-800 flex flex-col gap-2">
-          <ClerkHeader />
-        </div>
       </aside>
     </>
   )

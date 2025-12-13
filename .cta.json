@@ -9,10 +9,13 @@
   "version": 1,
   "framework": "react-cra",
   "chosenAddOns": [
-    "eslint",
-    "clerk",
-    "t3env",
+    "biome",
+    "compiler",
+    "db",
+    "form",
     "shadcn",
+    "t3env",
+    "table",
     "start",
     "tanstack-query"
   ]
