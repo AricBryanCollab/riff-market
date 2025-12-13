@@ -32,8 +32,8 @@ This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
 
 ## Linting & Formatting
 
+This project uses [Biome](https://biomejs.dev/) for linting and formatting. The following scripts are available:
 
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
 
 ```bash
 npm run lint
@@ -42,9 +42,13 @@ npm run check
 ```
 
 
-## Setting up Clerk
+## Shadcn
 
-- Set the `VITE_CLERK_PUBLISHABLE_KEY` in your `.env.local`.
+Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
+
+```bash
+pnpm dlx shadcn@latest add button
+```
 
 
 ## T3Env
@@ -63,15 +67,6 @@ console.log(env.VITE_APP_TITLE);
 
 
 
-
-
-## Shadcn
-
-Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
-
-```bash
-pnpm dlx shadcn@latest add button
-```
 
 
 
