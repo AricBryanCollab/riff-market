@@ -50,6 +50,7 @@ model User {
   email     String   @unique
   firstName String
   lastName  String
+  password  String
   role      Role     @default(CUSTOMER)
 
   settings      UserSettings?
