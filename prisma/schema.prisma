@@ -15,7 +15,7 @@ datasource db {
 
 enum Role {
   ADMIN
-  OWNER
+  SELLER
   CUSTOMER
 }
 
@@ -54,6 +54,7 @@ model User {
   role      Role     @default(CUSTOMER)
 
   settings      UserSettings?
+  products       Product[]
   orders        Order[]
   reviews       Review[]
   notifications Notification[]
@@ -103,6 +104,7 @@ model OrderItem {
 
 model Product {
   id          String @id @default(uuid())
+  sellerId    String
   name        String
   category    ProductCategory
   brand       String
@@ -112,6 +114,7 @@ model Product {
   price       Float
   stock       Int
 
+  seller User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
   reviews    Review[]
 
