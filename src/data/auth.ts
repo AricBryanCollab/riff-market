@@ -1,6 +1,4 @@
-import { PrismaClient } from "generated/prisma";
-
-const prisma = new PrismaClient();
+import { prisma } from  "@/data/connectDb";
 
 export const findUserByEmail = async (email: string) => {
 	try {
