@@ -6,6 +6,8 @@ import { createUser, findUserByEmail, findUserById } from '@/data/auth';
 import { toHashPassword, validatePassword } from '@/utils/bcrypt';
 import { useAppSession } from '@/utils/session';
 
+
+// Sign Up
 const signUpSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
@@ -42,14 +44,27 @@ export const signUp = createServerFn({ method: 'POST' })
     return { success: true, user: { id: user.id, email: user.email }}
   })
 
-export const signIn = async (email: string, password: string) => {
-  const user = await findUserByEmail(email)
-  if (!user) return null
+// Sign In
+const signInSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1, 'Password is required'),
+})
 
-  const isValid = await validatePassword(password, user.password)
-  return isValid ? user : null
-}
-
+export const signIn = createServerFn({ method: 'POST' })
+  .inputValidator(signInSchema)
+  .handler(async ({ data }) => {
+    const user = await findUserByEmail(data.email)
+    if (!user) {
+      return { error: "Invalid email or password" }
+    }
+    const isValid = await validatePassword(data.password, user.password)
+    if (!isValid) {
+      return { error: "Invalid email or password" }
+    }
+    const session = await useAppSession();
+    await session.update({ userId: user.id });
+    return { success: true, user: { id: user.id, email: user.email } }
+  })
 
 export const getCurrentUserFn = createServerFn({ method: 'GET' }).handler(
   async () => {
