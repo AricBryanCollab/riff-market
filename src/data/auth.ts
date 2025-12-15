@@ -1,6 +1,8 @@
 import { prisma } from  "@/data/connectDb";
 import { User } from "generated/prisma/client";
 
+type ReqUser = Omit<User, "id" | "createdAt" | "updatedAt">
+
 export const findUserByEmail = async (email: string) => {
 	try {
 		const user = await prisma.user.findFirst({
@@ -30,7 +32,7 @@ export const findUserById = async (id: string) => {
 	}
 }
 
-export const createUser = async (user: User) => {
+export const createUser = async (user: ReqUser) => {
 	try{
 		const newUser = await prisma.user.create({
 			data: {
