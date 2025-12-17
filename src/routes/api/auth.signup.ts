@@ -1,14 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { signUp } from '@/actions/auth'
+import { signUpService } from '@/actions/auth'
 import type { SignUpRequest } from '@/types/auth'
 
-export const Route = createFileRoute('/api/api/auth')({
+export const Route = createFileRoute('/api/auth/signup')({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
           const body = (await request.json()) as SignUpRequest
-          const newUser = await signUp({ data: body })
+          const newUser = await signUpService(body)
 
           if (newUser.error) {
             return new Response(

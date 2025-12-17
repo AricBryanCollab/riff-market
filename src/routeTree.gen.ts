@@ -10,43 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiApiAuthRouteImport } from './routes/api/api.auth'
+import { Route as ApiAuthSignupRouteImport } from './routes/api/auth.signup'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiApiAuthRoute = ApiApiAuthRouteImport.update({
-  id: '/api/api/auth',
-  path: '/api/api/auth',
+const ApiAuthSignupRoute = ApiAuthSignupRouteImport.update({
+  id: '/api/auth/signup',
+  path: '/api/auth/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/api/api/auth': typeof ApiApiAuthRoute
+  '/api/auth/signup': typeof ApiAuthSignupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/api/api/auth': typeof ApiApiAuthRoute
+  '/api/auth/signup': typeof ApiAuthSignupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/api/api/auth': typeof ApiApiAuthRoute
+  '/api/auth/signup': typeof ApiAuthSignupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/api/auth'
+  fullPaths: '/' | '/api/auth/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/api/auth'
-  id: '__root__' | '/' | '/api/api/auth'
+  to: '/' | '/api/auth/signup'
+  id: '__root__' | '/' | '/api/auth/signup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ApiApiAuthRoute: typeof ApiApiAuthRoute
+  ApiAuthSignupRoute: typeof ApiAuthSignupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,11 +58,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/api/auth': {
-      id: '/api/api/auth'
-      path: '/api/api/auth'
-      fullPath: '/api/api/auth'
-      preLoaderRoute: typeof ApiApiAuthRouteImport
+    '/api/auth/signup': {
+      id: '/api/auth/signup'
+      path: '/api/auth/signup'
+      fullPath: '/api/auth/signup'
+      preLoaderRoute: typeof ApiAuthSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -70,17 +70,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ApiApiAuthRoute: ApiApiAuthRoute,
+  ApiAuthSignupRoute: ApiAuthSignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

@@ -2,47 +2,52 @@ import { redirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod'
 
-import { createUser, findUserByEmail, findUserById } from '@/data/auth';
+import { createUser, findUserByEmail, findUserById } from '@/data/auth.repo';
 import { toHashPassword, validatePassword } from '@/utils/bcrypt';
 import { useAppSession } from '@/utils/session';
 
+import { signUpSchema, SignUpInput } from '@/data/auth.validation';
 
-// Sign Up
-const signUpSchema = z.object({
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(8),
-  confirmPassword: z.string().min(8),
-}).refine(data => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-})
+export async function signUpService(rawData: unknown) {
+  const parsed = signUpSchema.safeParse(rawData);
 
-export const signUp = createServerFn({ method: 'POST' })
-  .inputValidator(signUpSchema)
-  .handler(async ({ data }) => {
-		const existingUser = await findUserByEmail(data.email);
+  if (!parsed.success) {
+    return {
+      error: "Invalid request data",
+      details: parsed.error,
+    };
+  }
 
-    if (existingUser) {
-      return { error:  "User already exists"}
-    }
+  const data: SignUpInput = parsed.data;
 
-    const hashedPassword = await toHashPassword(data.password);
 
-    const user = await createUser({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        password: hashedPassword,
-        role: "CUSTOMER"
-    })
+  const existingUser = await findUserByEmail(data.email);
 
-    const session = await useAppSession();
-    await session.update({userId: user.id});
+  if (existingUser) {
+    return { error: "User already exists" };
+  }
 
-    return { success: true, user: { id: user.id, email: user.email }}
-  })
+  const hashedPassword = await toHashPassword(data.password);
+
+  const user = await createUser({
+    firstName: data.firstName,
+    lastName: data.lastName,
+    email: data.email,
+    password: hashedPassword,
+    role: "CUSTOMER",
+  });
+
+
+  const session = await useAppSession();
+  await session.update({ userId: user.id });
+
+  return {
+    success: true,
+    user: { id: user.id, email: user.email },
+  };
+}
+
+
 
 // Sign In
 const signInSchema = z.object({
