@@ -48,7 +48,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className='isolate'>
         {children}
         <TanStackDevtools
           config={{
