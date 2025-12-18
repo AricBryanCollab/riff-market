@@ -6,7 +6,7 @@ import { createUser, findUserByEmail, findUserById } from '@/data/auth.repo';
 import { toHashPassword, validatePassword } from '@/utils/bcrypt';
 import { useAppSession } from '@/utils/session';
 
-import { signUpSchema, SignUpInput } from '@/data/auth.validation';
+import { signUpSchema, SignUpInput } from '@/lib/zod/auth.validation';
 
 export async function signUpService(rawData: unknown) {
   const parsed = signUpSchema.safeParse(rawData);
