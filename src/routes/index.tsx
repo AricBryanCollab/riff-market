@@ -12,7 +12,7 @@ function App() {
       <section className="relative py-20 px-6 text-center overflow-hidden">     
         <h1 className='text-4xl font-semibold text-white'>Test Rendering</h1>
         <div className="my-6">
-          <Button>Test Button</Button>
+          <Button variant='primary'>Test Button</Button>
         </div>
       </section>
     </div>
