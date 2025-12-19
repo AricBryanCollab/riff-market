@@ -1,5 +1,3 @@
-import {Button as BaseButton} from "@base-ui/react";
-
 interface ButtonProps {
   action?: () => void;
   type?: 'submit' | 'reset' | 'button';
@@ -19,9 +17,9 @@ const Button = ({
   loading,
   disabled,
   variant,
-  children
+  children,
 }: ButtonProps) => {
-const getBtnStyle = (variant: string) => {
+  const getBtnStyle = (variant: string) => {
     switch (variant) {
       case 'primary':
         return 'border border-transparent bg-primary text-white hover:bg-primary/70';
@@ -33,9 +31,8 @@ const getBtnStyle = (variant: string) => {
         return 'bg-cyan-600 text-slate-100  hover:bg-teal-500/90 p-0';
     }
   };
-
   return (
-	 <BaseButton
+    <button
       onClick={action}
       disabled={disabled}
       type={type}
@@ -54,8 +51,8 @@ const getBtnStyle = (variant: string) => {
       ) : (
         children
       )}
-    </BaseButton>
-  )
-}
+    </button>
+  );
+};
 
 export default Button;
