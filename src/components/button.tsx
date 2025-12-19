@@ -39,7 +39,7 @@ const getBtnStyle = (variant: string) => {
       onClick={action}
       disabled={disabled}
       type={type}
-      className={`${width} ${fontSize} font-semibold px-3 py-1 rounded-xl disabled:bg-neutral
+      className={`${width} ${fontSize} cursor-pointer font-semibold px-3 py-1 rounded-xl disabled:bg-neutral
         duration-500 ease-in-out
         ${getBtnStyle(variant!)}`}
     >
