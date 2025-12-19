@@ -2,6 +2,7 @@ import Navbar from '@/components/navbar'
 import { createFileRoute } from '@tanstack/react-router'
 
 import Button from '@/components/button'
+import Input from '@/components/input'
 
 export const Route = createFileRoute('/')({ component: App })
 
@@ -16,7 +17,9 @@ function App() {
         <div className="my-6">
           <Button variant="primary">Test Button</Button>
         </div>
-
+        <div className="w-fit">
+          <Input id="test" label="Test" value="" onChange={() => {}} />
+        </div>
       </section>
     </div>
   )
