@@ -1,3 +1,4 @@
+import Input from '@/components/input'
 import Button from '@/components/button'
 import Dialog from '@/components/dialog'
 
@@ -14,7 +15,7 @@ function App() {
       <section className="relative py-20 px-6 text-center overflow-hidden">     
         <h1 className='text-4xl font-semibold text-secondary'>Test Rendering</h1>
         <div className="my-6">
-          <Button variant='primary'>Test Button</Button>
+          <Input/>
         </div>
         <Dialog buttonText='Open It' title="Test Dialog" caption='Hello World. This is a test dialog to confirm if it works' />
       </section>
