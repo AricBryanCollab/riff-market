@@ -2,6 +2,7 @@ import Navbar from '@/components/navbar'
 import { createFileRoute } from '@tanstack/react-router'
 
 import Button from '@/components/button'
+import Select from '@/components/select'
 import Input from '@/components/input'
 import Dialog from '@/components/dialog'
 
@@ -14,15 +15,17 @@ function App() {
   const { setOpenDialog } = useDialogStore();
 
   return (
-    <div className="min-h-screen bg-[#f3f3f2]">
+    <div className="h-screen bg-[#f3f3f2]">
       <Navbar/>
-      <section className="relative py-20 px-6 text-center overflow-hidden">     
+      <section className="relative py-20 px-6 text-center">     
         <h1 className='text-4xl font-semibold text-secondary'>Test Rendering</h1>
         <div className="my-6">
           <Button action={() => setOpenDialog("test")} variant="primary">Test Button</Button>
         </div>
         <div className="w-fit">
           <Input id="test" label="Test" value="" onChange={() => {}} />
+
+          <Select options={['Option 1', 'Option 2', 'Option 3']} onChangeValue={() => {}} value="" />
         </div>
         <Dialog type="test" title="Test Dialog" children={<p>Test Dialog Content</p>} />
       </section>
