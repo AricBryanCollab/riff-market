@@ -4,106 +4,49 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
+@theme {
   /* Core colors */
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --secondary: #64748b;
-  --accent: #8b5cf6;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-secondary: #64748b;
+  --color-accent: #8b5cf6;
 
   /* Neutrals */
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  --color-background: #f4f3f2;
+  --color-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
 
   /* Borders & inputs */
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #2563eb;
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #2563eb;
 
   /* Status colors */
-  --destructive: #ef4444;
-  --success: #10b981;
-  --warning: #f59e0b;
+  --color-destructive: #ef4444;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
 
   /* Radius */
   --radius: 0.5rem;
 }
 
 .dark {
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --secondary: #64748b;
-  --accent: #a78bfa;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-secondary: #64748b;
+  --color-accent: #a78bfa;
 
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
+  --color-background: #0f172a;
+  --color-foreground: #f8fafc;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
 
-  --border: #334155;
-  --input: #334155;
-  --ring: #3b82f6;
+  --color-border: #334155;
+  --color-input: #334155;
+  --color-ring: #3b82f6;
 
-  --destructive: #f87171;
-  --success: #34d399;
-  --warning: #fbbf24;
-}
-
-@layer utilities {
-  /* Backgrounds */
-  .bg-primary {
-    background-color: var(--primary);
-  }
-  .bg-secondary {
-    background-color: var(--secondary);
-  }
-  .bg-accent {
-    background-color: var(--accent);
-  }
-  .bg-background {
-    background-color: var(--background);
-  }
-  .bg-muted {
-    background-color: var(--muted);
-  }
-
-  /* Text */
-  .text-primary {
-    color: var(--primary);
-  }
-  .text-secondary {
-    color: var(--secondary);
-  }
-  .text-accent {
-    color: var(--accent);
-  }
-  .text-foreground {
-    color: var(--foreground);
-  }
-  .text-muted {
-    color: var(--muted-foreground);
-  }
-
-  /* Borders */
-  .border-border {
-    border-color: var(--border);
-  }
-
-  /* Status */
-  .bg-success {
-    background-color: var(--success);
-  }
-  .bg-destructive {
-    background-color: var(--destructive);
-  }
-  .bg-warning {
-    background-color: var(--warning);
-  }
-
-  /* Ring */
-  .ring-primary {
-    --tw-ring-color: var(--ring);
-  }
+  --color-destructive: #f87171;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
 }
