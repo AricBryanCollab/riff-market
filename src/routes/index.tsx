@@ -1,4 +1,6 @@
 import Button from '@/components/button'
+import Dialog from '@/components/dialog'
+
 import { createFileRoute } from '@tanstack/react-router'
 
 
@@ -8,12 +10,13 @@ function App() {
  
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-slate-400 via-slate-600 to-slate-500">
+    <div className="min-h-screen bg-[#f3f3f2]">
       <section className="relative py-20 px-6 text-center overflow-hidden">     
-        <h1 className='text-4xl font-semibold text-white'>Test Rendering</h1>
+        <h1 className='text-4xl font-semibold text-secondary'>Test Rendering</h1>
         <div className="my-6">
           <Button variant='primary'>Test Button</Button>
         </div>
+        <Dialog buttonText='Open It' title="Test Dialog" caption='Hello World. This is a test dialog to confirm if it works' />
       </section>
     </div>
   )
