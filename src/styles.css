@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Righteous&display=swap");
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -160,4 +160,17 @@
   --color-destructive: #b91c1c;
   --color-success: #16a34a;
   --color-warning: #f59e0b;
+}
+
+/*
+ * Base UI Portal Stacking Context
+ * @see https://base-ui.com/react/overview/quick-start
+ *
+ * Creates an isolated stacking context for the application root.
+ * This ensures Base UI portal components (Dialog, Popover, Menu, etc.)
+ * consistently render above all page content, regardless of z-index
+ * values used elsewhere in the application.
+ */
+.root {
+  isolation: isolate;
 }
