@@ -11,10 +11,19 @@ export interface SignUpRequest {
 	email: string;
 	password: string;
 	confirmPassword: string;
+	role?: UserRole;
+}
+
+export interface AuthResponse {
+	success: boolean;
+	user: { id: string; email: string };
+}
+
+export interface SignOutResponse {
+	message: string;
 }
 
 export type SessionData = {
 	userId?: string;
-	email?: string;
 	role?: UserRole;
 };

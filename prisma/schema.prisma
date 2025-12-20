@@ -68,9 +68,9 @@ model UserSettings {
   userId    String @unique
 
   theme      String
-  phone      String
-  address    String
-  profilePic String
+  phone      String?
+  address    String?
+  profilePic String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
