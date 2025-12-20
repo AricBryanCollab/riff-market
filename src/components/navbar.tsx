@@ -1,4 +1,12 @@
+import { Link } from "@tanstack/react-router";
+
 import Button from "@/components/button";
+import { navbarItems } from "@/constants/navbarItems";
+
+interface NavbarItemProps {
+	name: string;
+	link: string;
+}
 
 const Navbar = () => {
 	return (
@@ -8,36 +16,28 @@ const Navbar = () => {
 				<div className="flex items-center gap-8">
 					{/* Logo + Name */}
 					<div className="flex items-center gap-2">
-						<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white font-bold">
+						{/* <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white font-bold">
 							R
-						</div>
-						<span className="text-lg font-semibold text-foreground">
+						</div> */}
+						<Link to="/">
+							<img
+								src="/logo.png"
+								alt="app-logo"
+								className="size-9 rounded-xl"
+							/>
+						</Link>
+						<span className="text-lg font-semibold font-secondary tracking-wider text-foreground">
 							RiffMarket
 						</span>
 					</div>
 
 					{/* Main Menu */}
 					<ul className="hidden md:flex items-center gap-6 text-sm font-medium text-foreground">
-						<li>
-							<a href="#" className="hover:text-foreground transition">
-								Shop
-							</a>
-						</li>
-						<li>
-							<a href="#" className="hover:text-foreground transition">
-								Learn
-							</a>
-						</li>
-						<li>
-							<a href="#" className="hover:text-foreground transition">
-								Guide
-							</a>
-						</li>
-						<li>
-							<a href="#" className="hover:text-foreground transition">
-								Community
-							</a>
-						</li>
+						{navbarItems.map((nav) => {
+							return (
+								<NavbarItem key={nav.id} name={nav.name} link={nav.link} />
+							);
+						})}
 					</ul>
 				</div>
 
@@ -48,6 +48,16 @@ const Navbar = () => {
 				</div>
 			</nav>
 		</header>
+	);
+};
+
+const NavbarItem = ({ name, link }: NavbarItemProps) => {
+	return (
+		<li>
+			<Link to={link} className="hover:text-foreground transition">
+				{name}
+			</Link>
+		</li>
 	);
 };
 

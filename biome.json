@@ -26,8 +26,7 @@
 			"a11y": {
 				"useKeyWithClickEvents": "off",
 				"useButtonType": "warn",
-				"noStaticElementInteractions": "off",
-				"useValidAnchor": "off"
+				"noStaticElementInteractions": "off"
 			}
 		}
 	},
