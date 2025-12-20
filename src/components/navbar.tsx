@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
-import Button from "@/components/button";
 import { navbarItems } from "@/constants/navbarItems";
+import UserMenu from "@/components/usermenu";
 
 interface NavbarItemProps {
 	name: string;
@@ -42,10 +42,7 @@ const Navbar = () => {
 				</div>
 
 				{/* Right: Auth Actions */}
-				<div className="flex items-center gap-3">
-					<Button variant="outline">Login</Button>
-					<Button variant="primary">Get Started</Button>
-				</div>
+				<UserMenu/>
 			</nav>
 		</header>
 	);
