@@ -109,10 +109,11 @@ model Product {
   category    ProductCategory
   brand       String
   model       String
-  image       String
+  image       String[]
   description String
   price       Float
   stock       Int
+  isApproved Boolean
 
   seller User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
