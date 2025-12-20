@@ -13,6 +13,15 @@ export interface SignUpRequest {
 	confirmPassword: string;
 }
 
+export interface AuthResponse {
+	success: boolean;
+	user: { id: string; email: string };
+}
+
+export interface SignOutResponse {
+	message: string;
+}
+
 export type SessionData = {
 	userId?: string;
 	email?: string;
