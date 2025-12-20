@@ -1,19 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: "ADMIN" | "SELLER" | "CUSTOMER";
-  createdAt?: string;
-  updatedAt?: string;
-}
+import { UserProfile } from "@/types/user";
 
 export interface AuthState {
-  user: User | null;
-  setUser: (user: User) => void;
+  user: UserProfile | null;
+  setUser: (user: UserProfile) => void;
   clearUser: () => void;
   isAuthenticated: () => boolean;
 }
