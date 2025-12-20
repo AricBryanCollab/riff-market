@@ -1,19 +1,20 @@
 import { redirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
-import { z } from 'zod'
 
 import { createUser, findUserByEmail, findUserById } from '@/data/auth.repo';
 import { toHashPassword, validatePassword } from '@/utils/bcrypt';
 import { useAppSession } from '@/utils/session';
 
-import { signUpSchema, SignUpInput } from '@/lib/zod/auth.validation';
+import { signUpSchema, SignUpInput, signInSchema, SignInInput } from '@/lib/zod/auth.validation';
+import { SignInRequest, SignUpRequest } from '@/types/auth';
 
-export async function signUpService(rawData: unknown) {
+
+export async function signUpService(rawData: SignUpRequest) {
   const parsed = signUpSchema.safeParse(rawData);
 
   if (!parsed.success) {
     return {
-      error: "Invalid request data",
+      error: "Invalid sign up data",
       details: parsed.error,
     };
   }
@@ -50,26 +51,34 @@ export async function signUpService(rawData: unknown) {
 
 
 // Sign In
-const signInSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1, 'Password is required'),
-})
 
-export const signIn = createServerFn({ method: 'POST' })
-  .inputValidator(signInSchema)
-  .handler(async ({ data }) => {
+export async function signInService(rawData: SignInRequest) {
+    const parsed = signInSchema.safeParse(rawData);
+
+    if(!parsed.success) {
+      return {
+        error: "Invalid sign in data",
+        details: parsed.error
+      }
+    }
+
+    const data: SignInInput = parsed.data;
+
     const user = await findUserByEmail(data.email)
-    if (!user) {
-      return { error: "Invalid email or password" }
+    if(!user) {
+      return { error: "Invalid email or password"}
     }
-    const isValid = await validatePassword(data.password, user.password)
+
+    const isValid = await validatePassword(data.password, user.password);
     if (!isValid) {
-      return { error: "Invalid email or password" }
+      return { error: "Invalid email or password"}  
     }
+
     const session = await useAppSession();
-    await session.update({ userId: user.id });
-    return { success: true, user: { id: user.id, email: user.email } }
-  })
+    await session.update({userId: user.id});
+
+    return { success: true , user: { id: user.id, email: user.email}}
+}
 
 export const getCurrentUserFn = createServerFn({ method: 'GET' }).handler(
   async () => {
