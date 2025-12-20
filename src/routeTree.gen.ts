@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAuthSignupRouteImport } from './routes/api/auth.signup'
+import { Route as ApiAuthSignoutRouteImport } from './routes/api/auth.signout'
+import { Route as ApiAuthSigninRouteImport } from './routes/api/auth.signin'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,30 +24,53 @@ const ApiAuthSignupRoute = ApiAuthSignupRouteImport.update({
   path: '/api/auth/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthSignoutRoute = ApiAuthSignoutRouteImport.update({
+  id: '/api/auth/signout',
+  path: '/api/auth/signout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSigninRoute = ApiAuthSigninRouteImport.update({
+  id: '/api/auth/signin',
+  path: '/api/auth/signin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/auth/signin': typeof ApiAuthSigninRoute
+  '/api/auth/signout': typeof ApiAuthSignoutRoute
   '/api/auth/signup': typeof ApiAuthSignupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/auth/signin': typeof ApiAuthSigninRoute
+  '/api/auth/signout': typeof ApiAuthSignoutRoute
   '/api/auth/signup': typeof ApiAuthSignupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/auth/signin': typeof ApiAuthSigninRoute
+  '/api/auth/signout': typeof ApiAuthSignoutRoute
   '/api/auth/signup': typeof ApiAuthSignupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/auth/signup'
+  fullPaths: '/' | '/api/auth/signin' | '/api/auth/signout' | '/api/auth/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/auth/signup'
-  id: '__root__' | '/' | '/api/auth/signup'
+  to: '/' | '/api/auth/signin' | '/api/auth/signout' | '/api/auth/signup'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/auth/signin'
+    | '/api/auth/signout'
+    | '/api/auth/signup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiAuthSigninRoute: typeof ApiAuthSigninRoute
+  ApiAuthSignoutRoute: typeof ApiAuthSignoutRoute
   ApiAuthSignupRoute: typeof ApiAuthSignupRoute
 }
 
@@ -65,11 +90,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/signout': {
+      id: '/api/auth/signout'
+      path: '/api/auth/signout'
+      fullPath: '/api/auth/signout'
+      preLoaderRoute: typeof ApiAuthSignoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/signin': {
+      id: '/api/auth/signin'
+      path: '/api/auth/signin'
+      fullPath: '/api/auth/signin'
+      preLoaderRoute: typeof ApiAuthSigninRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiAuthSigninRoute: ApiAuthSigninRoute,
+  ApiAuthSignoutRoute: ApiAuthSignoutRoute,
   ApiAuthSignupRoute: ApiAuthSignupRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,4 +1,4 @@
-import { UserRole } from "@/types/enum";
+import type { UserRole } from "@/types/enum";
 
 export interface SignInRequest {
 	email: string;
@@ -7,14 +7,14 @@ export interface SignInRequest {
 
 export interface SignUpRequest {
 	firstName: string;
-	lastName:string;
+	lastName: string;
 	email: string;
-	password:string;
-	confirmPassword:string;
+	password: string;
+	confirmPassword: string;
 }
 
 export type SessionData = {
 	userId?: string;
 	email?: string;
 	role?: UserRole;
-}
+};
