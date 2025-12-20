@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import Button from "@/components/button";
 import Dialog from "@/components/dialog";
 import Input from "@/components/input";
-import Navbar from "@/components/navbar";
 import Select from "@/components/select";
 
 import { useDialogStore } from "@/store/dialog";
@@ -13,8 +12,7 @@ function App() {
 	const { setOpenDialog } = useDialogStore();
 
 	return (
-		<div className="h-screen bg-[#f3f3f2]">
-			<Navbar />
+		<div className="h-screen bg-background">
 			<section className="relative py-20 px-6 text-center">
 				<h1 className="text-4xl font-secondary font-semibold text-secondary">
 					Test Rendering
