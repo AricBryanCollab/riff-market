@@ -36,7 +36,7 @@ export const Dialog = ({
 			>
 				{/* Header */}
 				{title && (
-					<div className="flex items-center justify-between border border-b border-border px-5 py-4">
+					<div className="flex items-center justify-between px-5 py-4">
 						<h2 className="text-lg font-semibold text-foreground">{title}</h2>
 						<button
 							type="button"
