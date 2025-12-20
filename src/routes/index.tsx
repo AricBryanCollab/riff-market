@@ -16,7 +16,7 @@ function App() {
 		<div className="h-screen bg-[#f3f3f2]">
 			<Navbar />
 			<section className="relative py-20 px-6 text-center">
-				<h1 className="text-4xl font-semibold text-secondary">
+				<h1 className="text-4xl font-secondary font-semibold text-secondary">
 					Test Rendering
 				</h1>
 				<div className="my-6">
@@ -25,7 +25,8 @@ function App() {
 					</Button>
 				</div>
 				<div className="w-fit">
-					<Input id="test" label="Test" value="" onChange={() => {}} />
+					{/** biome-ignore lint/correctness/useUniqueElementIds: temporary just for test */}
+					<Input id="test-123" label="Test" value="" onChange={() => {}} />
 
 					<Select
 						options={["Option 1", "Option 2", "Option 3"]}
@@ -33,11 +34,9 @@ function App() {
 						value=""
 					/>
 				</div>
-				<Dialog
-					type="test"
-					title="Test Dialog"
-					children={<p>Test Dialog Content</p>}
-				/>
+				<Dialog type="test" title="Test Dialog">
+					<p>Sample Dialog is rendered here</p>
+				</Dialog>
 			</section>
 		</div>
 	);
