@@ -1,6 +1,4 @@
-import { createServerFn } from "@tanstack/react-start";
-
-import { createUser, findUserByEmail, findUserById } from "@/data/auth.repo";
+import { createUser, findUserByEmail } from "@/data/auth.repo";
 import {
 	type SignInInput,
 	type SignUpInput,
@@ -38,12 +36,12 @@ export async function signUpService(rawData: SignUpRequest) {
 		lastName: data.lastName,
 		email: data.email,
 		password: hashedPassword,
-		role: "CUSTOMER",
+		role: data?.role || "CUSTOMER",
 	});
 
 	const { user } = userAndSettings;
 
-	await session.update({ userId: user.id });
+	await session.update({ userId: user.id, role: user.role });
 
 	return {
 		success: true,
@@ -75,24 +73,10 @@ export async function signInService(rawData: SignInRequest) {
 		return { error: "Invalid email or password" };
 	}
 
-	await session.update({ userId: user.id });
+	await session.update({ userId: user.id, role: user.role });
 
 	return { success: true, user: { id: user.id, email: user.email } };
 }
-
-//  Get User Data
-export const getCurrentUserFn = createServerFn({ method: "GET" }).handler(
-	async () => {
-		const session = await useAppSession();
-		const userId = session.data.userId;
-
-		if (!userId) {
-			return { error: "User is not authenticated" };
-		}
-
-		return await findUserById(userId);
-	},
-);
 
 // Sign Out: Remove User session
 export async function signOutService() {
