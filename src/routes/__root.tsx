@@ -7,8 +7,8 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import Navbar from "@/components/navbar";
+import PageNotFound from "@/components/pagenotfound";
 import { ThemeProvider } from "@/components/themeprovider";
-
 import TanStackQueryDevtools from "@/lib/tanstack-query/devtools";
 import appCss from "../styles.css?url";
 
@@ -44,6 +44,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 	}),
 
 	shellComponent: RootDocument,
+	notFoundComponent: () => <PageNotFound />,
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
