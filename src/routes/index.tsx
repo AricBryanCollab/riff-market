@@ -2,14 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import Button from "@/components/button";
 import Dialog from "@/components/dialog";
 import Input from "@/components/input";
-import Select from "@/components/select";
 
+import Select from "@/components/select";
+import { themeOptions } from "@/constants/themeOptions";
 import { useDialogStore } from "@/store/dialog";
+import { useThemeStore } from "@/store/theme";
 
 export const Route = createFileRoute("/")({ component: App });
 
 function App() {
 	const { setOpenDialog } = useDialogStore();
+	const { theme, setTheme } = useThemeStore();
 
 	return (
 		<div className="h-screen bg-background">
@@ -27,9 +30,17 @@ function App() {
 					<Input id="test-123" label="Test" value="" onChange={() => {}} />
 
 					<Select
-						options={["Option 1", "Option 2", "Option 3"]}
-						onChangeValue={() => {}}
-						value=""
+						options={themeOptions.map((t) => ({
+							label: t.label,
+							value: t.value,
+							icon: t.icon,
+						}))}
+						value={theme}
+						onChangeValue={setTheme}
+						label="Select Theme"
+						placeholder="Search themes..."
+						width="w-48"
+						withSearchBar
 					/>
 				</div>
 				<Dialog type="test" title="Test Dialog">
