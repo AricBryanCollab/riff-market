@@ -1,4 +1,3 @@
-import { redirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 
 import { createUser, findUserByEmail, findUserById } from '@/data/auth.repo';
@@ -8,7 +7,7 @@ import { useAppSession } from '@/utils/session';
 import { signUpSchema, SignUpInput, signInSchema, SignInInput } from '@/lib/zod/auth.validation';
 import { SignInRequest, SignUpRequest } from '@/types/auth';
 
-
+// Sign Up : Register a User
 export async function signUpService(rawData: SignUpRequest) {
   const parsed = signUpSchema.safeParse(rawData);
 
@@ -50,8 +49,7 @@ export async function signUpService(rawData: SignUpRequest) {
 
 
 
-// Sign In
-
+// Sign In : Log in a User with session
 export async function signInService(rawData: SignInRequest) {
     const parsed = signInSchema.safeParse(rawData);
 
@@ -80,23 +78,24 @@ export async function signInService(rawData: SignInRequest) {
     return { success: true , user: { id: user.id, email: user.email}}
 }
 
+
+//  Get User Data
 export const getCurrentUserFn = createServerFn({ method: 'GET' }).handler(
   async () => {
     const session = await useAppSession()
     const userId = session.data.userId
 
     if (!userId) {
-      return null
+      return { error: "User is not authenticated"}
     }
 
     return await findUserById(userId)
   },
 )
 
-export const signOut = createServerFn({method:"POST"})
-  .handler( async () => {
-    const session = await useAppSession();
-    await session.clear();
+// Sign Out: Remove User session
+export async function signOutService() {
+  const session = await useAppSession();
+  await session.clear();
 
-    throw redirect({to: "/"})
-  })
+}
