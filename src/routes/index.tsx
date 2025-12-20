@@ -15,38 +15,36 @@ function App() {
 	const { theme, setTheme } = useThemeStore();
 
 	return (
-		<div className="h-screen bg-background">
-			<section className="relative py-20 px-6 text-center">
-				<h1 className="text-4xl font-secondary font-semibold text-secondary">
-					Test Rendering
-				</h1>
-				<div className="my-6">
-					<Button action={() => setOpenDialog("test")} variant="primary">
-						Test Button
-					</Button>
-				</div>
-				<div className="w-fit">
-					{/** biome-ignore lint/correctness/useUniqueElementIds: temporary just for test */}
-					<Input id="test-123" label="Test" value="" onChange={() => {}} />
+		<section className="relative py-20 px-6 text-center">
+			<h1 className="text-4xl font-secondary font-semibold text-secondary">
+				Test Rendering
+			</h1>
+			<div className="my-6">
+				<Button action={() => setOpenDialog("test")} variant="primary">
+					Test Button
+				</Button>
+			</div>
+			<div className="w-fit">
+				{/** biome-ignore lint/correctness/useUniqueElementIds: temporary just for test */}
+				<Input id="test-123" label="Test" value="" onChange={() => {}} />
 
-					<Select
-						options={themeOptions.map((t) => ({
-							label: t.label,
-							value: t.value,
-							icon: t.icon,
-						}))}
-						value={theme}
-						onChangeValue={setTheme}
-						label="Select Theme"
-						placeholder="Search themes..."
-						width="w-48"
-						withSearchBar
-					/>
-				</div>
-				<Dialog type="test" title="Test Dialog">
-					<p>Sample Dialog is rendered here</p>
-				</Dialog>
-			</section>
-		</div>
+				<Select
+					options={themeOptions.map((t) => ({
+						label: t.label,
+						value: t.value,
+						icon: t.icon,
+					}))}
+					value={theme}
+					onChangeValue={setTheme}
+					label="Select Theme"
+					placeholder="Search themes..."
+					width="w-48"
+					withSearchBar
+				/>
+			</div>
+			<Dialog type="test" title="Test Dialog">
+				<p>Sample Dialog is rendered here</p>
+			</Dialog>
+		</section>
 	);
 }
