@@ -25,7 +25,7 @@ export const Route = createFileRoute('/api/auth/signup')({
               details:
                 error instanceof Error ? error.message : 'Unknown error',
             }),
-            { status: 400 }
+            { status: 500 }
           )
         }
       },
