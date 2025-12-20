@@ -3,6 +3,7 @@ import Button from "@/components/button";
 import Dialog from "@/components/dialog";
 import Input from "@/components/input";
 
+import SectionContainer from "@/components/sectioncontainer";
 import Select from "@/components/select";
 import { themeOptions } from "@/constants/themeOptions";
 import { useDialogStore } from "@/store/dialog";
@@ -15,7 +16,7 @@ function App() {
 	const { theme, setTheme } = useThemeStore();
 
 	return (
-		<section className="relative py-20 px-6 text-center">
+		<SectionContainer>
 			<h1 className="text-4xl font-secondary font-semibold text-secondary">
 				Test Rendering
 			</h1>
@@ -45,6 +46,6 @@ function App() {
 			<Dialog type="test" title="Test Dialog">
 				<p>Sample Dialog is rendered here</p>
 			</Dialog>
-		</section>
+		</SectionContainer>
 	);
 }
