@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useDialogStore } from "@/store/dialog";
-import { useEffect, useState, useCallback } from "react";
 
 interface DialogProps {
 	type: string;
@@ -56,20 +56,22 @@ export const Dialog = ({
 			>
 				{/* Header */}
 				{title && (
-					<div className="flex items-center justify-between px-5 py-4">
-						<h2 className="text-lg font-semibold text-foreground">{title}</h2>
+					<div className="flex items-center justify-between px-6 py-4">
+						<h2 className="text-lg font-semibold text-foreground tracking-wider">
+							{title}
+						</h2>
 						<button
 							type="button"
 							onClick={handleClose}
 							className="rounded-md p-1 text-muted-foreground bg-muted hover:text-foreground cursor-pointer transition-colors"
 						>
-							<X className="w-5 h-5" />
+							<X className="size-5" />
 						</button>
 					</div>
 				)}
 
 				{/* Content */}
-				<div className="px-5 py-4 text-sm text-foreground">{children}</div>
+				<div className="px-4 text-sm text-foreground">{children}</div>
 
 				{/* Footer */}
 				{footer && (
