@@ -1,6 +1,12 @@
-import { KeyRound, Lock, Mail, User } from "lucide-react";
+import { KeyRound, Lock, Mail, User, UserRoundPlus } from "lucide-react";
 import Button from "@/components/button";
 import Input from "@/components/input";
+import Select from "@/components/select";
+
+const roleOptions = [
+	{ value: "SELLER", label: "Sell instruments", icon: "🪇" },
+	{ value: "CUSTOMER", label: "Buy instruments", icon: "🎸" },
+];
 
 const SignUpForm = () => {
 	return (
@@ -49,6 +55,20 @@ const SignUpForm = () => {
 				isPassword
 			/>
 
+			<div className="my-8">
+				<Select
+					options={roleOptions.map((r) => ({
+						label: r.label,
+						value: r.value,
+						icon: r.icon,
+					}))}
+					value=""
+					icon={UserRoundPlus}
+					onChangeValue={() => {}}
+					label="I want to..."
+					withSearchBar={false}
+				/>
+			</div>
 			<div className="mt-8 mb-4 flex justify-between items-center gap-2 ">
 				<div className="">
 					Already have an account?{" "}
