@@ -9,6 +9,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import Dialog from "@/components/dialog";
 import Navbar from "@/components/navbar";
 import PageNotFound from "@/components/pagenotfound";
+import SignInForm from "@/components/signinform";
 import SignUpForm from "@/components/signupform";
 import { ThemeProvider } from "@/components/themeprovider";
 import TanStackQueryDevtools from "@/lib/tanstack-query/devtools";
@@ -73,7 +74,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 							]}
 						/>
 						<Dialog type="signin" title="RiffMarket LogIn">
-							<p>LOG IN FORM HERE</p>
+							<SignInForm />
 						</Dialog>
 
 						<Dialog

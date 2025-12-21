@@ -4,7 +4,7 @@ import Input from "@/components/input";
 
 const SignUpForm = () => {
 	return (
-		<form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+		<form onSubmit={(e) => e.preventDefault()}>
 			<div className="grid grid-cols-2 gap-2 my-2">
 				<Input
 					inputId="firstName"
