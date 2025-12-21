@@ -8,8 +8,8 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import Dialog from "@/components/dialog";
 import Navbar from "@/components/navbar";
-
 import PageNotFound from "@/components/pagenotfound";
+import SignUpForm from "@/components/signupform";
 import { ThemeProvider } from "@/components/themeprovider";
 import TanStackQueryDevtools from "@/lib/tanstack-query/devtools";
 import appCss from "../styles.css?url";
@@ -73,11 +73,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 							]}
 						/>
 						<Dialog type="signin" title="RiffMarket LogIn">
-							<p>Test Dialog Render</p>
+							<p>LOG IN FORM HERE</p>
 						</Dialog>
 
-						<Dialog type="signup" title="Register at RiffMarket">
-							<p>Sign Up Form render here</p>
+						<Dialog
+							type="signup"
+							maxWidth="max-w-lg"
+							title="Register at RiffMarket"
+						>
+							<SignUpForm />
 						</Dialog>
 					</ThemeProvider>
 				</div>
