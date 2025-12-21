@@ -26,6 +26,16 @@ const Input = ({
 		setIsVisible(!isVisible);
 	};
 
+	const getInputType = () => {
+		if (isPassword) {
+			return isVisible ? "text" : "password";
+		}
+		if (inputId === "email") {
+			return "email";
+		}
+		return "text";
+	};
+
 	return (
 		<div className="flex flex-col gap-1 my-2">
 			<label
@@ -42,17 +52,11 @@ const Input = ({
 				)}
 				<input
 					id={inputId}
-					type={
-						inputId.includes("password")
-							? "password"
-							: inputId === "email"
-								? "email"
-								: "text"
-					}
+					type={getInputType()}
 					value={value}
 					onChange={onChange}
 					disabled={disabled}
-					className={`w-full rounded-lg border border-primary bg-muted px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent ${Icon ? "pl-10" : ""}`}
+					className={`w-full rounded-lg border border-primary bg-muted px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent ${Icon ? "pl-10" : ""} ${isPassword ? "pr-10" : ""}`}
 					placeholder={label.toLowerCase()}
 				/>
 
@@ -60,9 +64,9 @@ const Input = ({
 					<button
 						type="button"
 						onClick={toggleVisible}
-						className="absolute z-10 top-3 right-4 cursor-pointer"
+						className="absolute z-10 top-1/2 -translate-y-1/2 right-3 cursor-pointer text-foreground hover:text-primary transition-colors"
 					>
-						{isVisible ? <EyeOff size="20" /> : <Eye size="20" />}
+						{isVisible ? <EyeOff size={20} /> : <Eye size={20} />}
 					</button>
 				)}
 			</div>
