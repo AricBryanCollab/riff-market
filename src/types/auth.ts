@@ -11,7 +11,7 @@ export interface SignUpRequest {
 	email: string;
 	password: string;
 	confirmPassword: string;
-	role?: UserRole | null;
+	role: UserRole | null;
 }
 
 export interface AuthResponse {

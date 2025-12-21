@@ -4,23 +4,29 @@ import Input from "@/components/input";
 import Select from "@/components/select";
 import { roleOptions } from "@/constants/userRole";
 
+import useSignUp from "@/hooks/useSignUp";
+import type { UserRole } from "@/types/enum";
+
 const SignUpForm = () => {
+	const { signUpData, loading, isError, onChange, onChangeRole, handleSubmit } =
+		useSignUp();
+
 	return (
-		<form onSubmit={(e) => e.preventDefault()}>
+		<form onSubmit={handleSubmit}>
 			<div className="grid grid-cols-2 gap-2 my-2">
 				<Input
 					inputId="firstName"
 					label="First Name"
-					value=""
-					onChange={() => {}}
+					value={signUpData.firstName}
+					onChange={onChange}
 					icon={User}
 				/>
 
 				<Input
 					inputId="lastName"
 					label="Last Name"
-					value=""
-					onChange={() => {}}
+					value={signUpData.lastName}
+					onChange={onChange}
 					icon={User}
 				/>
 			</div>
@@ -28,16 +34,16 @@ const SignUpForm = () => {
 			<Input
 				inputId="email"
 				label="Email"
-				value=""
-				onChange={() => {}}
+				value={signUpData.email}
+				onChange={onChange}
 				icon={Mail}
 			/>
 
 			<Input
 				inputId="password"
 				label="Password"
-				value=""
-				onChange={() => {}}
+				value={signUpData.password}
+				onChange={onChange}
 				icon={Lock}
 				isPassword
 			/>
@@ -45,27 +51,34 @@ const SignUpForm = () => {
 			<Input
 				inputId="confirmPassword"
 				label="Confirm Password"
-				value=""
-				onChange={() => {}}
+				value={signUpData.confirmPassword}
+				onChange={onChange}
 				icon={KeyRound}
 				isPassword
 			/>
 
-			<div className="my-8">
+			<div className="mt-8 my-4">
 				<Select
 					options={roleOptions.map((r) => ({
 						label: r.label,
 						value: r.value,
 						icon: r.icon,
 					}))}
-					value=""
+					value={signUpData.role as string}
 					icon={UserRoundPlus}
-					onChangeValue={() => {}}
+					onChangeValue={(value: string) => onChangeRole(value as UserRole)}
 					label="I want to..."
 					withSearchBar={false}
 				/>
 			</div>
-			<div className="mt-8 mb-4 flex justify-between items-center gap-2 ">
+			<div className="h-5 my-2">
+				{isError && (
+					<p className="text-center text-sm text-destructive">
+						*Failed to sign up
+					</p>
+				)}
+			</div>
+			<div className="mb-6 flex justify-between items-center gap-2 ">
 				<div className="">
 					Already have an account?{" "}
 					<button
@@ -76,7 +89,7 @@ const SignUpForm = () => {
 						Sign In
 					</button>
 				</div>
-				<Button variant="primary" action={() => {}}>
+				<Button loading={loading} variant="primary" type="submit">
 					Sign Up
 				</Button>
 			</div>
