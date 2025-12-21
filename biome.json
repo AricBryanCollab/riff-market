@@ -1,10 +1,5 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.3/schema.json",
-	"css": {
-		"parser": {
-			"tailwindDirectives": true
-		}
-	},
 	"vcs": {
 		"enabled": false,
 		"clientKind": "git",
@@ -13,10 +8,11 @@
 	"files": {
 		"ignoreUnknown": false,
 		"includes": [
-			"src/**/*",
-			"index.html",
-			"vite.config.ts",
-			"!src/routeTree.gen.ts"
+   				"src/**/*",
+   				 "*.json",
+   				 "index.html",
+   				 "vite.config.ts",
+   				 "!src/routeTree.gen.ts"
 		]
 	},
 	"formatter": {

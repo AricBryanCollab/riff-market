@@ -42,7 +42,7 @@ const Navbar = () => {
 				</div>
 
 				{/* Right: Auth Actions */}
-				<UserMenu/>
+				<UserMenu />
 			</nav>
 		</header>
 	);
