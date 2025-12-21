@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
-
-import { navbarItems } from "@/constants/navbarItems";
 import UserMenu from "@/components/usermenu";
+import { navbarItems } from "@/constants/navbarItems";
 
 interface NavbarItemProps {
 	name: string;

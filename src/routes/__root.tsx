@@ -6,7 +6,9 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import Dialog from "@/components/dialog";
 import Navbar from "@/components/navbar";
+
 import PageNotFound from "@/components/pagenotfound";
 import { ThemeProvider } from "@/components/themeprovider";
 import TanStackQueryDevtools from "@/lib/tanstack-query/devtools";
@@ -70,6 +72,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 								TanStackQueryDevtools,
 							]}
 						/>
+						<Dialog type="signin" title="RiffMarket LogIn">
+							<p>Test Dialog Render</p>
+						</Dialog>
+
+						<Dialog type="signup" title="Register at RiffMarket">
+							<p>Sign Up Form render here</p>
+						</Dialog>
 					</ThemeProvider>
 				</div>
 				<Scripts />
