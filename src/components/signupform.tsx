@@ -2,11 +2,7 @@ import { KeyRound, Lock, Mail, User, UserRoundPlus } from "lucide-react";
 import Button from "@/components/button";
 import Input from "@/components/input";
 import Select from "@/components/select";
-
-const roleOptions = [
-	{ value: "SELLER", label: "Sell instruments", icon: "🪇" },
-	{ value: "CUSTOMER", label: "Buy instruments", icon: "🎸" },
-];
+import { roleOptions } from "@/constants/userRole";
 
 const SignUpForm = () => {
 	return (
