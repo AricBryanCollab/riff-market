@@ -1,33 +1,25 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: "ADMIN" | "SELLER" | "CUSTOMER";
-  createdAt?: string;
-  updatedAt?: string;
-}
+import { UserProfile } from "@/types/user";
 
 export interface AuthState {
-  user: User | null;
-  setUser: (user: User) => void;
-  clearUser: () => void;
-  isAuthenticated: () => boolean;
+	user: UserProfile | null;
+	setUser: (user: UserProfile) => void;
+	clearUser: () => void;
+	isAuthenticated: () => boolean;
 }
 
 export const useUserStore = create(
 	persist<AuthState>(
-		(set,get) => ({
+		(set, get) => ({
 			user: null,
 			setUser: (user) => set({ user }),
 			clearUser: () => set({ user: null }),
 			isAuthenticated: () => get().user !== null,
-	}),
-	{
-		name: "auth",
-	}
-)
-)
+		}),
+		{
+			name: "auth",
+		},
+	),
+);

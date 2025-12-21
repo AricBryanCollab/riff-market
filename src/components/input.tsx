@@ -2,29 +2,23 @@ import { Eye, EyeOff, type LucideIcon } from "lucide-react";
 import { type ChangeEvent, useState } from "react";
 
 interface FormInputProps {
-	id: string;
-	type?: string;
+	inputId: string;
 	label: string;
 	disabled?: boolean;
-	required?: boolean;
 	isPassword?: boolean;
 	value: string | number;
 	onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 	icon?: LucideIcon;
-	validationMessage?: string;
 }
 
 const Input = ({
-	id,
-	type,
+	inputId,
 	label,
 	disabled,
-	required,
 	isPassword = false,
 	value,
 	onChange,
 	icon: Icon,
-	validationMessage,
 }: FormInputProps) => {
 	const [isVisible, setIsVisible] = useState<boolean>(false);
 
@@ -32,34 +26,49 @@ const Input = ({
 		setIsVisible(!isVisible);
 	};
 
+	const getInputType = () => {
+		if (isPassword) {
+			return isVisible ? "text" : "password";
+		}
+		if (inputId === "email") {
+			return "email";
+		}
+		return "text";
+	};
+
 	return (
-		<div className="relative flex flex-col my-3">
-			<p className="my-2 flex items-center gap-2">
-				{Icon && <Icon size="18" />}
-				<span className="text-sm">{label}</span>
-			</p>
-			<input
-				id={id}
-				type={type === "password" ? (isVisible ? "text" : "password") : type}
-				disabled={disabled}
-				required={required}
-				value={value}
-				onChange={onChange}
-				className={`rounded-xl p-2 h-8 border border-neutral focus:border-primary focus:ring-primary focus:outline-none
-          
-        `}
-			/>
-			{isPassword && (
-				<button
-					type="button"
-					onClick={toggleVisible}
-					className="absolute z-10 top-10.5 right-4 cursor-pointer"
-				>
-					{isVisible ? <EyeOff size="20" /> : <Eye size="20" />}
-				</button>
-			)}
-			<div className="my-2">
-				<p className="text-xs">{validationMessage}</p>
+		<div className="flex flex-col gap-1 my-2">
+			<label
+				htmlFor={inputId}
+				className="block text-sm font-semibold tracking-wide text-foreground"
+			>
+				{label}
+			</label>
+			<div className="relative">
+				{Icon && (
+					<div className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground">
+						<Icon size={18} />
+					</div>
+				)}
+				<input
+					id={inputId}
+					type={getInputType()}
+					value={value}
+					onChange={onChange}
+					disabled={disabled}
+					className={`w-full rounded-lg border border-primary bg-muted px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent ${Icon ? "pl-10" : ""} ${isPassword ? "pr-10" : ""}`}
+					placeholder={label.toLowerCase()}
+				/>
+
+				{isPassword && (
+					<button
+						type="button"
+						onClick={toggleVisible}
+						className="absolute z-10 top-1/2 -translate-y-1/2 right-3 cursor-pointer text-foreground hover:text-primary transition-colors"
+					>
+						{isVisible ? <EyeOff size={20} /> : <Eye size={20} />}
+					</button>
+				)}
 			</div>
 		</div>
 	);

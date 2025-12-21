@@ -26,8 +26,7 @@ function App() {
 				</Button>
 			</div>
 			<div className="w-fit">
-				{/** biome-ignore lint/correctness/useUniqueElementIds: temporary just for test */}
-				<Input id="test-123" label="Test" value="" onChange={() => {}} />
+				<Input inputId="test-123" label="Test" value="" onChange={() => {}} />
 
 				<Select
 					options={themeOptions.map((t) => ({
