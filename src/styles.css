@@ -162,15 +162,3 @@
 	--color-warning: #f59e0b;
 }
 
-/*
- * Base UI Portal Stacking Context
- * @see https://base-ui.com/react/overview/quick-start
- *
- * Creates an isolated stacking context for the application root.
- * This ensures Base UI portal components (Dialog, Popover, Menu, etc.)
- * consistently render above all page content, regardless of z-index
- * values used elsewhere in the application.
- */
-.root {
-	isolation: isolate;
-}
