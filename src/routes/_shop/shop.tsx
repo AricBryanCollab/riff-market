@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import SectionContainer from "@/components/sectioncontainer";
 
 export const Route = createFileRoute("/_shop/shop")({
 	component: RouteComponent,
@@ -6,9 +7,9 @@ export const Route = createFileRoute("/_shop/shop")({
 
 function RouteComponent() {
 	return (
-		<div className="flex w-full flex-col gap-6">
+		<SectionContainer>
 			{/* PAGE HEADER */}
-			<div className="flex flex-col gap-4 rounded-xl bg-white p-4 md:flex-row md:items-center md:justify-between">
+			<div className="flex flex-col gap-6 rounded-xl bg-white p-4 md:flex-row md:items-center md:justify-between">
 				<div>
 					<div className="h-6 w-40 rounded bg-slate-300" />
 					<div className="mt-2 h-4 w-64 rounded bg-slate-200" />
@@ -21,7 +22,7 @@ function RouteComponent() {
 			</div>
 
 			{/* ACTIVE FILTERS */}
-			<div className="flex flex-wrap gap-2">
+			<div className="flex flex-wrap gap-4 my-4">
 				<div className="h-8 w-24 rounded-full bg-indigo-100" />
 				<div className="h-8 w-28 rounded-full bg-indigo-100" />
 				<div className="h-8 w-20 rounded-full bg-indigo-100" />
@@ -47,6 +48,6 @@ function RouteComponent() {
 			<div className="flex justify-center py-6">
 				<div className="h-10 w-40 rounded-full bg-slate-300" />
 			</div>
-		</div>
+		</SectionContainer>
 	);
 }
