@@ -7,7 +7,7 @@ export interface AuthState {
 	user: UserProfile | null;
 	setUser: (user: UserProfile) => void;
 	clearUser: () => void;
-	isAuthenticated: () => boolean;
+	validateAuth: () => boolean;
 }
 
 export const useUserStore = create(
@@ -16,7 +16,7 @@ export const useUserStore = create(
 			user: null,
 			setUser: (user) => set({ user }),
 			clearUser: () => set({ user: null }),
-			isAuthenticated: () => get().user !== null,
+			validateAuth: () => get().user !== null,
 		}),
 		{
 			name: "auth",
