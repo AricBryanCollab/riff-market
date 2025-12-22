@@ -9,22 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as GuideRouteImport } from './routes/guide'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ShopRouteRouteImport } from './routes/_shop/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReviewsIndexRouteImport } from './routes/reviews/index'
 import { Route as ApiUserRouteImport } from './routes/api/user'
 import { Route as ShopShopRouteImport } from './routes/_shop/shop'
 import { Route as ApiAuthSignupRouteImport } from './routes/api/auth.signup'
 import { Route as ApiAuthSignoutRouteImport } from './routes/api/auth.signout'
 import { Route as ApiAuthSigninRouteImport } from './routes/api/auth.signin'
 
-const GuideRoute = GuideRouteImport.update({
-  id: '/guide',
-  path: '/guide',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CommunityRoute = CommunityRouteImport.update({
   id: '/community',
   path: '/community',
@@ -42,6 +37,11 @@ const ShopRouteRoute = ShopRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewsIndexRoute = ReviewsIndexRouteImport.update({
+  id: '/reviews/',
+  path: '/reviews/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUserRoute = ApiUserRouteImport.update({
@@ -74,9 +74,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/community': typeof CommunityRoute
-  '/guide': typeof GuideRoute
   '/shop': typeof ShopShopRoute
   '/api/user': typeof ApiUserRoute
+  '/reviews': typeof ReviewsIndexRoute
   '/api/auth/signin': typeof ApiAuthSigninRoute
   '/api/auth/signout': typeof ApiAuthSignoutRoute
   '/api/auth/signup': typeof ApiAuthSignupRoute
@@ -85,9 +85,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/community': typeof CommunityRoute
-  '/guide': typeof GuideRoute
   '/shop': typeof ShopShopRoute
   '/api/user': typeof ApiUserRoute
+  '/reviews': typeof ReviewsIndexRoute
   '/api/auth/signin': typeof ApiAuthSigninRoute
   '/api/auth/signout': typeof ApiAuthSignoutRoute
   '/api/auth/signup': typeof ApiAuthSignupRoute
@@ -98,9 +98,9 @@ export interface FileRoutesById {
   '/_shop': typeof ShopRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/community': typeof CommunityRoute
-  '/guide': typeof GuideRoute
   '/_shop/shop': typeof ShopShopRoute
   '/api/user': typeof ApiUserRoute
+  '/reviews/': typeof ReviewsIndexRoute
   '/api/auth/signin': typeof ApiAuthSigninRoute
   '/api/auth/signout': typeof ApiAuthSignoutRoute
   '/api/auth/signup': typeof ApiAuthSignupRoute
@@ -111,9 +111,9 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/community'
-    | '/guide'
     | '/shop'
     | '/api/user'
+    | '/reviews'
     | '/api/auth/signin'
     | '/api/auth/signout'
     | '/api/auth/signup'
@@ -122,9 +122,9 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/community'
-    | '/guide'
     | '/shop'
     | '/api/user'
+    | '/reviews'
     | '/api/auth/signin'
     | '/api/auth/signout'
     | '/api/auth/signup'
@@ -134,9 +134,9 @@ export interface FileRouteTypes {
     | '/_shop'
     | '/about'
     | '/community'
-    | '/guide'
     | '/_shop/shop'
     | '/api/user'
+    | '/reviews/'
     | '/api/auth/signin'
     | '/api/auth/signout'
     | '/api/auth/signup'
@@ -147,8 +147,8 @@ export interface RootRouteChildren {
   ShopRouteRoute: typeof ShopRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   CommunityRoute: typeof CommunityRoute
-  GuideRoute: typeof GuideRoute
   ApiUserRoute: typeof ApiUserRoute
+  ReviewsIndexRoute: typeof ReviewsIndexRoute
   ApiAuthSigninRoute: typeof ApiAuthSigninRoute
   ApiAuthSignoutRoute: typeof ApiAuthSignoutRoute
   ApiAuthSignupRoute: typeof ApiAuthSignupRoute
@@ -156,13 +156,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/guide': {
-      id: '/guide'
-      path: '/guide'
-      fullPath: '/guide'
-      preLoaderRoute: typeof GuideRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/community': {
       id: '/community'
       path: '/community'
@@ -189,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reviews/': {
+      id: '/reviews/'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof ReviewsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/user': {
@@ -246,8 +246,8 @@ const rootRouteChildren: RootRouteChildren = {
   ShopRouteRoute: ShopRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   CommunityRoute: CommunityRoute,
-  GuideRoute: GuideRoute,
   ApiUserRoute: ApiUserRoute,
+  ReviewsIndexRoute: ReviewsIndexRoute,
   ApiAuthSigninRoute: ApiAuthSigninRoute,
   ApiAuthSignoutRoute: ApiAuthSignoutRoute,
   ApiAuthSignupRoute: ApiAuthSignupRoute,

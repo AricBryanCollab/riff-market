@@ -11,8 +11,8 @@ export const navbarItems = [
 	},
 	{
 		id: 3,
-		name: "Guide",
-		link: "/guide",
+		name: "Reviews",
+		link: "/reviews",
 	},
 	{
 		id: 4,
