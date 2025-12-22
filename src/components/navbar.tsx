@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import UserMenu from "@/components/usermenu";
 import { navbarItems } from "@/constants/navbarItems";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 interface NavbarItemProps {
 	name: string;
@@ -8,6 +9,8 @@ interface NavbarItemProps {
 }
 
 const Navbar = () => {
+	useAuthUser();
+
 	return (
 		<header className="w-full border-b border-border bg-background">
 			<nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
