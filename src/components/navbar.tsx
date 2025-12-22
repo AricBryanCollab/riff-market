@@ -9,7 +9,7 @@ interface NavbarItemProps {
 
 const Navbar = () => {
 	return (
-		<header className="w-full border-b border-border bg-background">
+		<header className="w-full sticky top-0 z-50 border-b border-border bg-background">
 			<nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
 				{/* Left: Logo + Brand + Main Menu */}
 				<div className="flex items-center gap-8">
