@@ -9,9 +9,11 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import Dialog from "@/components/dialog";
 import Navbar from "@/components/navbar";
 import PageNotFound from "@/components/pagenotfound";
+
 import SignInForm from "@/components/signinform";
 import SignUpForm from "@/components/signupform";
 import { ThemeProvider } from "@/components/themeprovider";
+import Toast from "@/components/toast";
 import TanStackQueryDevtools from "@/lib/tanstack-query/devtools";
 import appCss from "../styles.css?url";
 
@@ -84,6 +86,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						>
 							<SignUpForm />
 						</Dialog>
+						<Toast />
 					</ThemeProvider>
 				</div>
 				<Scripts />
