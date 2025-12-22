@@ -1,3 +1,7 @@
+type ApiResponse<T> = {
+	data: T;
+};
+
 export async function apiFetch<T>(
 	input: RequestInfo,
 	init?: RequestInit,
@@ -15,5 +19,6 @@ export async function apiFetch<T>(
 		throw new Error(error?.message ?? res.statusText);
 	}
 
-	return res.json() as Promise<T>;
+	const json = (await res.json()) as ApiResponse<T>;
+	return json.data;
 }
