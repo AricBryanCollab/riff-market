@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { signInService } from "@/actions/auth";
-import { SignInRequest } from "@/types/auth";
+import type { SignInRequest } from "@/types/auth";
 
 export const Route = createFileRoute("/api/auth/signin")({
 	server: {
