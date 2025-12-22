@@ -1,4 +1,5 @@
 import { Bell, ShoppingCart } from "lucide-react";
+import Avatar from "@/components/avatar";
 import Button from "@/components/button";
 import ClientOnly from "@/components/clientonly";
 import { useSignOut } from "@/hooks/useSignOut";
@@ -18,9 +19,7 @@ const UserMenu = () => {
 		<ClientOnly>
 			{user !== null ? (
 				<div className="flex items-center gap-4">
-					<div className="flex size-10 items-center justify-center rounded-xl bg-primary text-white font-bold">
-						R
-					</div>
+					<Avatar />
 
 					{/* Shopping Cart with Badge */}
 					<button type="button" className="relative">
