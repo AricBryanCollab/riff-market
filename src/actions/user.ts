@@ -1,15 +1,13 @@
+import { createServerFn } from "@tanstack/react-start";
 import { getAllUsers, getUserById } from "@/data/user.repo";
 import { useAppSession } from "@/utils/session";
-import { createServerFn } from "@tanstack/react-start";
 
 export async function getUserByIdService() {
 	const session = await useAppSession();
 	const userId = session.data.userId;
 
 	if (!session || !userId) {
-		return {
-			error: "No authenticated user",
-		};
+		return null;
 	}
 
 	const user = await getUserById(userId);
