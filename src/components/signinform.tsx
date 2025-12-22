@@ -1,11 +1,13 @@
 import { Lock, Mail } from "lucide-react";
 import Button from "@/components/button";
 import Input from "@/components/input";
-
+import useAuthDialog from "@/hooks/useAuthDialog";
 import useSignIn from "@/hooks/useSignIn";
 
 const SignInForm = () => {
 	const { signInData, loading, isError, onChange, handleSubmit } = useSignIn();
+
+	const { handleSwitchAuth } = useAuthDialog();
 
 	return (
 		<form onSubmit={handleSubmit}>
@@ -40,8 +42,8 @@ const SignInForm = () => {
 					Don&apos;t have an account?{" "}
 					<button
 						type="button"
-						className="font-semibold text-primary hover:text-shadow-foreground hover:underline transition-colors"
-						onClick={() => {}}
+						className="font-semibold cursor-pointer text-primary hover:text-shadow-foreground hover:underline transition-colors"
+						onClick={() => handleSwitchAuth("signup")}
 					>
 						Sign Up
 					</button>
