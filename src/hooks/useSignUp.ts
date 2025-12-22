@@ -24,7 +24,7 @@ const useSignUp = () => {
 	const { mutate, isPending, isError } = useMutation({
 		mutationFn: signUp,
 		onSuccess: async () => {
-			await queryClient.invalidateQueries({ queryKey: ["auth", "user"] });
+			queryClient.invalidateQueries({ queryKey: ["auth", "user"] });
 			showToast("You have successfully signed up", "success");
 			setCloseDialog();
 		},
