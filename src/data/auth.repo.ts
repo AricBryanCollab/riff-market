@@ -52,6 +52,9 @@ export const createUser = async (user: ReqUser): Promise<CreateUserResult> => {
 				data: {
 					userId: newUser.id,
 					theme: "light",
+					phone: null,
+					address: null,
+					profilePic: null,
 				},
 			});
 
