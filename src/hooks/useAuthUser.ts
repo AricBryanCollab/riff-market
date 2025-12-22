@@ -4,8 +4,7 @@ import { getCurrentUser } from "@/lib/tanstack-query/user.queries";
 import { useUserStore } from "@/store/user";
 
 export const useAuthUser = () => {
-	const setUser = useUserStore((s) => s.setUser);
-	const clearUser = useUserStore((s) => s.clearUser);
+	const { setUser, clearUser } = useUserStore();
 
 	const userQuery = useQuery({
 		queryKey: ["auth", "user"],
