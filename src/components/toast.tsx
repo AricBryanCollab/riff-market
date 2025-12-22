@@ -52,7 +52,7 @@ const Toast = () => {
 				<button
 					type="button"
 					onClick={hideToast}
-					className="shrink-0 hover:bg-white hover:bg-opacity-20 rounded p-1 transition-colors"
+					className="shrink-0 cursor-pointer hover:bg-foreground hover:bg-opacity-20 rounded p-1 transition-colors"
 					aria-label="Close toast"
 				>
 					<X className="size-4" />

@@ -1,22 +1,25 @@
 import { Bell, ShoppingCart } from "lucide-react";
+import Avatar from "@/components/avatar";
 import Button from "@/components/button";
+import ClientOnly from "@/components/clientonly";
+import { useSignOut } from "@/hooks/useSignOut";
 import { useDialogStore } from "@/store/dialog";
+import { useUserStore } from "@/store/user";
 
 const UserMenu = () => {
 	const { setOpenDialog } = useDialogStore();
+	const { user } = useUserStore();
 
-	const isAuthenticated = false;
+	const { loading: signOutLoading, signOut } = useSignOut();
 
 	const cartCount = 4;
 	const notificationCount = 2;
 
 	return (
-		<>
-			{isAuthenticated ? (
+		<ClientOnly>
+			{user !== null ? (
 				<div className="flex items-center gap-4">
-					<div className="flex size-10 items-center justify-center rounded-xl bg-primary text-white font-bold">
-						R
-					</div>
+					<Avatar />
 
 					{/* Shopping Cart with Badge */}
 					<button type="button" className="relative">
@@ -42,7 +45,9 @@ const UserMenu = () => {
 						)}
 					</button>
 
-					<Button variant="outline">Logout</Button>
+					<Button loading={signOutLoading} variant="outline" action={signOut}>
+						Logout
+					</Button>
 				</div>
 			) : (
 				<div className="flex items-center gap-3">
@@ -54,7 +59,7 @@ const UserMenu = () => {
 					</Button>
 				</div>
 			)}
-		</>
+		</ClientOnly>
 	);
 };
 

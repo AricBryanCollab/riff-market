@@ -14,6 +14,7 @@ import SignInForm from "@/components/signinform";
 import SignUpForm from "@/components/signupform";
 import { ThemeProvider } from "@/components/themeprovider";
 import Toast from "@/components/toast";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import TanStackQueryDevtools from "@/lib/tanstack-query/devtools";
 import appCss from "../styles.css?url";
 
@@ -53,6 +54,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+	useAuthUser();
+
 	return (
 		<html lang="en">
 			<head>

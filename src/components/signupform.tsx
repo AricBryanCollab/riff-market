@@ -3,13 +3,15 @@ import Button from "@/components/button";
 import Input from "@/components/input";
 import Select from "@/components/select";
 import { roleOptions } from "@/constants/userRole";
-
+import useAuthDialog from "@/hooks/useAuthDialog";
 import useSignUp from "@/hooks/useSignUp";
 import type { UserRole } from "@/types/enum";
 
 const SignUpForm = () => {
 	const { signUpData, loading, isError, onChange, onChangeRole, handleSubmit } =
 		useSignUp();
+
+	const { handleSwitchAuth } = useAuthDialog();
 
 	return (
 		<form onSubmit={handleSubmit}>
@@ -83,8 +85,8 @@ const SignUpForm = () => {
 					Already have an account?{" "}
 					<button
 						type="button"
-						className="font-semibold text-primary hover:text-shadow-foreground hover:underline transition-colors"
-						onClick={() => {}}
+						className="font-semibold cursor-pointer text-primary hover:text-shadow-foreground hover:underline transition-colors"
+						onClick={() => handleSwitchAuth("signin")}
 					>
 						Sign In
 					</button>
