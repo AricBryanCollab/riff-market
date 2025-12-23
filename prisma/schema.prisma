@@ -109,7 +109,7 @@ model Product {
   category    ProductCategory
   brand       String
   model       String
-  image       String[]
+  images       String[]
   description String
   price       Float
   stock       Int

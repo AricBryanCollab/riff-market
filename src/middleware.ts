@@ -1,9 +1,9 @@
-import { createMiddleware } from "@tanstack/react-start";
 import { redirect } from "@tanstack/react-router";
-import { useAppSession } from "@/utils/session";
+import { createMiddleware } from "@tanstack/react-start";
+import type { User } from "generated/prisma/client";
 
 import { findUserById } from "@/data/auth.repo";
-import { User } from "generated/prisma/client";
+import { useAppSession } from "@/utils/session";
 
 export const authMiddleware = createMiddleware().server(async ({ next }) => {
 	const session = await useAppSession();
