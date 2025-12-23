@@ -111,7 +111,7 @@ export async function updateProductService(
 
 	const isExistingProduct = await getProductById(productId);
 	if (!isExistingProduct) {
-		return { error: "Product is not found" };
+		return { error: "Product not found" };
 	}
 
 	if (isExistingProduct.sellerId !== sellerId) {
@@ -160,8 +160,23 @@ export async function deleteProductService(productId: string) {
 	}
 
 	const product = await getProductById(productId);
-	if (!product || product.sellerId !== sellerId) {
-		return { error: "Product not found or access denied" };
+	if (!product) {
+		return { error: "Product not found" };
+	}
+
+	if (product.sellerId !== sellerId) {
+		return {
+			error: "Product is not owned by the current user ID, unauthorized access",
+		};
+	}
+
+	if (Array.isArray(product.image) && product.image.length > 0) {
+		await Promise.all(
+			product.image.map((url) => {
+				const publicId = getPublicId(url);
+				return deleteImage(publicId);
+			}),
+		);
 	}
 
 	await deleteProductById(productId);
