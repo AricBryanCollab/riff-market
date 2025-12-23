@@ -7,6 +7,9 @@ export const env = createEnv({
 		DATABASE_URL: z.string(),
 		SESSION_SECRET: z.string().min(32),
 		NODE_ENV: z.string().optional(),
+		CLOUDINARY_CLOUD_NAME: z.string(),
+		CLOUDINARY_API_KEY: z.string(),
+		CLOUDINARY_API_SECRET: z.string(),
 	},
 
 	/**
