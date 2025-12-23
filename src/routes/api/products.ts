@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getApprovedProductsService } from "@/actions/product";
 
-export const Route = createFileRoute("/api/products/")({
+export const Route = createFileRoute("/api/products")({
 	server: {
 		handlers: ({ createHandlers }) =>
 			createHandlers({
@@ -12,13 +12,13 @@ export const Route = createFileRoute("/api/products/")({
 
 							return new Response(JSON.stringify(products), { status: 200 });
 						} catch (error) {
-							console.error(error);
+							console.error(error)
 							return new Response(
 								JSON.stringify({
 									message: "Failed to get all approved products",
 								}),
 								{ status: 500 },
-							);
+							)
 						}
 					},
 				},
