@@ -1,8 +1,9 @@
 import { useSession } from "@tanstack/react-start/server";
+import { env } from "@/env";
 import type { SessionData } from "@/types/auth";
 
 export function useAppSession() {
-	const sessionSecret = process.env.SESSION_SECRET;
+	const sessionSecret = env.SESSION_SECRET;
 	if (!sessionSecret) {
 		throw new Error("SESSION_SECRET environment variable is not defined");
 	}
@@ -10,7 +11,7 @@ export function useAppSession() {
 		name: "auth",
 		password: sessionSecret,
 		cookie: {
-			secure: process.env.NODE_ENV === "production",
+			secure: env.NODE_ENV === "production",
 			sameSite: "lax",
 			httpOnly: true,
 		},

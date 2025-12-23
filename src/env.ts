@@ -16,14 +16,14 @@ export const env = createEnv({
 	clientPrefix: "VITE_",
 
 	client: {
-		VITE_APP_TITLE: z.string().min(1).optional(),
+		VITE_BASE_API: z.string().min(1).optional(),
 	},
 
 	/**
 	 * What object holds the environment variables at runtime. This is usually
 	 * `process.env` or `import.meta.env`.
 	 */
-	runtimeEnv: import.meta.env,
+	runtimeEnv: { ...import.meta.env, ...process.env },
 
 	/**
 	 * By default, this library will feed the environment variables directly to
