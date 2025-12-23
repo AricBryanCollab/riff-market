@@ -43,7 +43,7 @@ const Navbar = () => {
 					</div>
 
 					{/* Desktop Menu */}
-					<ul className="hidden md:flex items-center gap-6 text-sm font-medium text-foreground">
+					<ul className="hidden lg:flex items-center gap-6 text-sm font-medium text-foreground">
 						{navbarItems.map((nav) => {
 							return (
 								<NavbarItem key={nav.id} name={nav.name} link={nav.link} />
@@ -61,7 +61,7 @@ const Navbar = () => {
 					<button
 						type="button"
 						onClick={toggleMobileMenu}
-						className="md:hidden cursor-pointer p-2 text-foreground hover:text-primary transition-colors"
+						className="lg:hidden cursor-pointer p-2 text-foreground hover:text-primary transition-colors"
 						aria-label="Toggle menu"
 					>
 						{isMobileMenuOpen ? (
@@ -75,13 +75,13 @@ const Navbar = () => {
 
 			{/* Mobile Dropdown Menu */}
 			<div
-				className={`absolute w-[35%] right-0 z-50 md:hidden border-t border-border bg-background shadow-lg transition-all duration-300 ease-in-out ${
+				className={`absolute w-[35%] right-0 z-50 lg:hidden border-t border-border bg-background shadow-lg transition-all duration-300 ease-in-out ${
 					isMobileMenuOpen
 						? "translate-y-0 opacity-100 pointer-events-auto"
 						: "-translate-y-30 opacity-0 pointer-events-none"
 				}`}
 			>
-				<ul className="flex flex-col px-4 py-4 space-y-4 text-sm font-medium">
+				<ul className="flex flex-col p-4 gap-4 text-sm font-medium">
 					{navbarItems.map((nav) => {
 						return (
 							<NavbarItem
@@ -92,6 +92,7 @@ const Navbar = () => {
 							/>
 						);
 					})}
+					{user && <NavbarItem name="Settings" link="/settings" />}
 				</ul>
 			</div>
 		</header>
