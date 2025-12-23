@@ -1,0 +1,105 @@
+import type { Product } from "generated/prisma/client";
+import { prisma } from "@/data/connectDb";
+
+type CreateProductRepoInput = Omit<
+	Product,
+	"id" | "createdAt" | "updatedAt" | "isApproved"
+>;
+
+type UpdateProductRepoInput = Partial<
+	Omit<Product, "id" | "sellerId" | "createdAt" | "updatedAt">
+>;
+
+export const createProduct = async (product: CreateProductRepoInput) => {
+	try {
+		return await prisma.product.create({
+			data: {
+				...product,
+				isApproved: false,
+			},
+		});
+	} catch (err) {
+		console.error("Error at createProduct", err);
+		throw err;
+	}
+};
+
+export const getProductById = async (id: string) => {
+	try {
+		return await prisma.product.findFirst({
+			where: { id },
+			include: {
+				seller: {
+					select: {
+						id: true,
+						firstName: true,
+						lastName: true,
+					},
+				},
+				reviews: true,
+			},
+		});
+	} catch (err) {
+		console.error("Error at getProductById", err);
+		throw err;
+	}
+};
+
+export const getProductsBySellerId = async (sellerId: string) => {
+	try {
+		return await prisma.product.findMany({
+			where: { sellerId },
+			orderBy: { createdAt: "desc" },
+		});
+	} catch (err) {
+		console.error("Error at getProductsBySellerId", err);
+		throw err;
+	}
+};
+
+export const getApprovedProducts = async () => {
+	try {
+		return await prisma.product.findMany({
+			where: { isApproved: true },
+			orderBy: { createdAt: "desc" },
+			include: {
+				seller: {
+					select: {
+						id: true,
+						firstName: true,
+						lastName: true,
+					},
+				},
+			},
+		});
+	} catch (err) {
+		console.error("Error at getApprovedProducts", err);
+		throw err;
+	}
+};
+
+export const updateProductById = async (
+	id: string,
+	product: UpdateProductRepoInput,
+): Promise<Product> => {
+	try {
+		return await prisma.product.update({
+			where: { id },
+			data: product,
+		});
+	} catch (err) {
+		console.error("Error at updateProductById", err);
+		throw err;
+	}
+};
+
+export const deleteProductById = async (id: string) => {
+	try {
+		return await prisma.product.delete({
+			where: { id },
+		});
+	} catch (err) {
+		console.error("Error at deleteProductById", err);
+		throw err;
+	}
+};
