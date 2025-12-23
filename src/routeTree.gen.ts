@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ShopRouteRouteImport } from './routes/_shop/route'
@@ -20,6 +21,11 @@ import { Route as ApiAuthSignupRouteImport } from './routes/api/auth.signup'
 import { Route as ApiAuthSignoutRouteImport } from './routes/api/auth.signout'
 import { Route as ApiAuthSigninRouteImport } from './routes/api/auth.signin'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CommunityRoute = CommunityRouteImport.update({
   id: '/community',
   path: '/community',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/community': typeof CommunityRoute
+  '/settings': typeof SettingsRoute
   '/shop': typeof ShopShopRoute
   '/api/user': typeof ApiUserRoute
   '/reviews': typeof ReviewsIndexRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/community': typeof CommunityRoute
+  '/settings': typeof SettingsRoute
   '/shop': typeof ShopShopRoute
   '/api/user': typeof ApiUserRoute
   '/reviews': typeof ReviewsIndexRoute
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/_shop': typeof ShopRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/community': typeof CommunityRoute
+  '/settings': typeof SettingsRoute
   '/_shop/shop': typeof ShopShopRoute
   '/api/user': typeof ApiUserRoute
   '/reviews/': typeof ReviewsIndexRoute
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/community'
+    | '/settings'
     | '/shop'
     | '/api/user'
     | '/reviews'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/community'
+    | '/settings'
     | '/shop'
     | '/api/user'
     | '/reviews'
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
     | '/_shop'
     | '/about'
     | '/community'
+    | '/settings'
     | '/_shop/shop'
     | '/api/user'
     | '/reviews/'
@@ -147,6 +159,7 @@ export interface RootRouteChildren {
   ShopRouteRoute: typeof ShopRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   CommunityRoute: typeof CommunityRoute
+  SettingsRoute: typeof SettingsRoute
   ApiUserRoute: typeof ApiUserRoute
   ReviewsIndexRoute: typeof ReviewsIndexRoute
   ApiAuthSigninRoute: typeof ApiAuthSigninRoute
@@ -156,6 +169,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/community': {
       id: '/community'
       path: '/community'
@@ -246,6 +266,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShopRouteRoute: ShopRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   CommunityRoute: CommunityRoute,
+  SettingsRoute: SettingsRoute,
   ApiUserRoute: ApiUserRoute,
   ReviewsIndexRoute: ReviewsIndexRoute,
   ApiAuthSigninRoute: ApiAuthSigninRoute,

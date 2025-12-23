@@ -1,13 +1,19 @@
-import { Prisma } from "generated/prisma/client";
-
+import type {
+	Prisma,
+	PrismaClient,
+	User,
+	UserSettings,
+} from "generated/prisma/client";
 import { prisma } from "@/data/connectDb";
-import { UserProfile } from "@/types/user";
+import type { UserProfile } from "@/types/user";
+
+type DbClient = PrismaClient | Prisma.TransactionClient;
 
 const getUserProfiles = async (
-	tx: Prisma.TransactionClient,
+	db: DbClient,
 	where?: Prisma.UserWhereInput,
 ): Promise<UserProfile[]> => {
-	const users = await tx.user.findMany({
+	const users = await db.user.findMany({
 		where,
 	});
 
@@ -15,15 +21,17 @@ const getUserProfiles = async (
 
 	const userIds = users.map((u) => u.id);
 
-	const settings = await tx.userSettings.findMany({
+	const settings = await db.userSettings.findMany({
 		where: {
 			userId: { in: userIds },
 		},
 	});
 
-	const settingsMap = new Map(settings.map((s) => [s.userId, s]));
+	const settingsMap = new Map<string, UserSettings>(
+		settings.map((s) => [s.userId, s]),
+	);
 
-	return users.map((user) => {
+	return users.map((user: User) => {
 		const userSettings = settingsMap.get(user.id);
 
 		return {
@@ -40,25 +48,19 @@ const getUserProfiles = async (
 	});
 };
 
-// Get User By ID method
 export const getUserById = async (id: string): Promise<UserProfile | null> => {
 	try {
-		return await prisma.$transaction(async (tx) => {
-			const users = await getUserProfiles(tx, { id });
-			return users[0] ?? null;
-		});
+		const users = await getUserProfiles(prisma, { id });
+		return users[0] ?? null;
 	} catch (err) {
 		console.error("Error at getUserById", err);
 		throw err;
 	}
 };
 
-// Get All Users
 export const getAllUsers = async (): Promise<UserProfile[]> => {
 	try {
-		return await prisma.$transaction(async (tx) => {
-			return getUserProfiles(tx);
-		});
+		return await getUserProfiles(prisma);
 	} catch (err) {
 		console.error("Error at getAllUsers", err);
 		throw err;
