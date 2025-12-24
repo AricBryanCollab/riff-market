@@ -7,21 +7,18 @@ import {
 	updateProductById,
 } from "@/data/product.repo";
 import {
-	type CreateProductInput,
-	createProductSchema,
+	type CreateProductRequest,
+	createProductFormSchema,
 	updateProductSchema,
 } from "@/lib/zod/product.validation";
-import type {
-	CreateProductRequest,
-	UpdateProductRequest,
-} from "@/types/product";
 import { deleteImage, getPublicId, uploadImage } from "@/utils/cloudinary";
+import { fileToTempPath } from "@/utils/filetemplate";
 import { useAppSession } from "@/utils/session";
 
 // Create Product Service
 export async function createProductService(rawData: CreateProductRequest) {
 	const session = await useAppSession();
-	const parsed = createProductSchema.safeParse(rawData);
+	const parsed = createProductFormSchema.safeParse(rawData);
 
 	if (!parsed.success) {
 		return {
@@ -30,16 +27,24 @@ export async function createProductService(rawData: CreateProductRequest) {
 		};
 	}
 
-	const data: CreateProductInput = parsed.data;
+	const data = parsed.data;
 
 	const sellerId = session.data.userId;
 	if (!sellerId) {
 		return { error: "Unauthorized, user must be a seller" };
 	}
 
+	const tempFilePaths = await Promise.all(
+		data.images.map((file) => fileToTempPath(file)),
+	);
+
 	const uploadedImages = await Promise.all(
-		data.image.map((img) =>
-			uploadImage({ filePath: img, folder: "products", deleteLocalFile: true }),
+		tempFilePaths.map((filePath) =>
+			uploadImage({
+				filePath,
+				folder: "products",
+				deleteLocalFile: true,
+			}),
 		),
 	);
 
@@ -47,8 +52,10 @@ export async function createProductService(rawData: CreateProductRequest) {
 
 	const productData = {
 		...data,
+		price: Number(data.price),
+		stock: Number(data.stock),
 		sellerId,
-		image: imageUrls,
+		images: imageUrls,
 	};
 
 	const newProduct = await createProduct(productData);
@@ -88,67 +95,67 @@ export async function getApprovedProductsService() {
 }
 
 // Update Product Service
-export async function updateProductService(
-	productId: string,
-	rawData: UpdateProductRequest,
-) {
-	const session = await useAppSession();
-	const sellerId = session.data.userId;
+// export async function updateProductService(
+// 	productId: string,
+// 	rawData: UpdateProductRequest,
+// ) {
+// 	const session = await useAppSession();
+// 	const sellerId = session.data.userId;
 
-	if (!sellerId) {
-		return { error: "User is unauthorized" };
-	}
+// 	if (!sellerId) {
+// 		return { error: "User is unauthorized" };
+// 	}
 
-	const parsed = updateProductSchema.safeParse(rawData);
-	if (!parsed.success) {
-		return {
-			error: "Invalid product update data",
-			details: parsed.error,
-		};
-	}
+// 	const parsed = updateProductSchema.safeParse(rawData);
+// 	if (!parsed.success) {
+// 		return {
+// 			error: "Invalid product update data",
+// 			details: parsed.error,
+// 		};
+// 	}
 
-	const data = parsed.data;
+// 	const data = parsed.data;
 
-	const isExistingProduct = await getProductById(productId);
-	if (!isExistingProduct) {
-		return { error: "Product not found" };
-	}
+// 	const isExistingProduct = await getProductById(productId);
+// 	if (!isExistingProduct) {
+// 		return { error: "Product not found" };
+// 	}
 
-	if (isExistingProduct.sellerId !== sellerId) {
-		return {
-			error: "Product is not owned by the current user ID, unauthorized access",
-		};
-	}
+// 	if (isExistingProduct.sellerId !== sellerId) {
+// 		return {
+// 			error: "Product is not owned by the current user ID, unauthorized access",
+// 		};
+// 	}
 
-	if (data.image && data.image.length > 0) {
-		const uploadedImages = await Promise.all(
-			data.image.map((img) =>
-				uploadImage({
-					filePath: img,
-					folder: "products",
-					deleteLocalFile: true,
-				}),
-			),
-		);
+// 	if (data.image && data.image.length > 0) {
+// 		const uploadedImages = await Promise.all(
+// 			data.image.map((img) =>
+// 				uploadImage({
+// 					filePath: img,
+// 					folder: "products",
+// 					deleteLocalFile: true,
+// 				}),
+// 			),
+// 		);
 
-		const newImageUrls = uploadedImages.map((img) => img.url);
+// 		const newImageUrls = uploadedImages.map((img) => img.url);
 
-		if (Array.isArray(isExistingProduct.image)) {
-			await Promise.all(
-				isExistingProduct.image.map((url) => {
-					const publicId = getPublicId(url);
-					return deleteImage(publicId);
-				}),
-			);
-		}
+// 		if (Array.isArray(isExistingProduct.images)) {
+// 			await Promise.all(
+// 				isExistingProduct.images.map((url) => {
+// 					const publicId = getPublicId(url);
+// 					return deleteImage(publicId);
+// 				}),
+// 			);
+// 		}
 
-		data.image = newImageUrls;
-	}
+// 		data.image = newImageUrls;
+// 	}
 
-	const updatedProduct = await updateProductById(productId, data);
+// 	const updatedProduct = await updateProductById(productId, data);
 
-	return updatedProduct;
-}
+// 	return updatedProduct;
+// }
 
 // Delete Product Service
 export async function deleteProductService(productId: string) {
@@ -170,9 +177,9 @@ export async function deleteProductService(productId: string) {
 		};
 	}
 
-	if (Array.isArray(product.image) && product.image.length > 0) {
+	if (Array.isArray(product.images) && product.images.length > 0) {
 		await Promise.all(
-			product.image.map((url) => {
+			product.images.map((url) => {
 				const publicId = getPublicId(url);
 				return deleteImage(publicId);
 			}),
