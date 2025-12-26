@@ -5,7 +5,7 @@ export interface CreateProductRequest {
 	category: ProductCategory;
 	brand: string;
 	model: string;
-	images: File[];
+	images: string[];
 	description: string;
 	price: number;
 	stock: number;
@@ -25,8 +25,8 @@ export interface BaseProduct {
 	price: number;
 	stock: number;
 	isApproved: boolean;
-	createdAt: string;
-	updatedAt: string;
+	createdAt?: string;
+	updatedAt?: string;
 }
 
 export interface ProductResponse {

@@ -16,6 +16,7 @@ import { Route as ShopRouteRouteImport } from './routes/_shop/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReviewsIndexRouteImport } from './routes/reviews/index'
 import { Route as ApiUserRouteImport } from './routes/api/user'
+import { Route as ApiUploadimageRouteImport } from './routes/api/uploadimage'
 import { Route as ApiProductsRouteImport } from './routes/api/products'
 import { Route as ShopShopRouteImport } from './routes/_shop/shop'
 import { Route as ApiProductsSellerRouteImport } from './routes/api/products.seller'
@@ -56,6 +57,11 @@ const ReviewsIndexRoute = ReviewsIndexRouteImport.update({
 const ApiUserRoute = ApiUserRouteImport.update({
   id: '/api/user',
   path: '/api/user',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadimageRoute = ApiUploadimageRouteImport.update({
+  id: '/api/uploadimage',
+  path: '/api/uploadimage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiProductsRoute = ApiProductsRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopShopRoute
   '/api/products': typeof ApiProductsRouteWithChildren
+  '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
   '/reviews': typeof ReviewsIndexRoute
   '/api/auth/signin': typeof ApiAuthSigninRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopShopRoute
   '/api/products': typeof ApiProductsRouteWithChildren
+  '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
   '/reviews': typeof ReviewsIndexRoute
   '/api/auth/signin': typeof ApiAuthSigninRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/_shop/shop': typeof ShopShopRoute
   '/api/products': typeof ApiProductsRouteWithChildren
+  '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
   '/reviews/': typeof ReviewsIndexRoute
   '/api/auth/signin': typeof ApiAuthSigninRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shop'
     | '/api/products'
+    | '/api/uploadimage'
     | '/api/user'
     | '/reviews'
     | '/api/auth/signin'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shop'
     | '/api/products'
+    | '/api/uploadimage'
     | '/api/user'
     | '/reviews'
     | '/api/auth/signin'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/_shop/shop'
     | '/api/products'
+    | '/api/uploadimage'
     | '/api/user'
     | '/reviews/'
     | '/api/auth/signin'
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   SettingsRoute: typeof SettingsRoute
   ApiProductsRoute: typeof ApiProductsRouteWithChildren
+  ApiUploadimageRoute: typeof ApiUploadimageRoute
   ApiUserRoute: typeof ApiUserRoute
   ReviewsIndexRoute: typeof ReviewsIndexRoute
   ApiAuthSigninRoute: typeof ApiAuthSigninRoute
@@ -253,6 +266,13 @@ declare module '@tanstack/react-router' {
       path: '/api/user'
       fullPath: '/api/user'
       preLoaderRoute: typeof ApiUserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/uploadimage': {
+      id: '/api/uploadimage'
+      path: '/api/uploadimage'
+      fullPath: '/api/uploadimage'
+      preLoaderRoute: typeof ApiUploadimageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/products': {
@@ -340,6 +360,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   SettingsRoute: SettingsRoute,
   ApiProductsRoute: ApiProductsRouteWithChildren,
+  ApiUploadimageRoute: ApiUploadimageRoute,
   ApiUserRoute: ApiUserRoute,
   ReviewsIndexRoute: ReviewsIndexRoute,
   ApiAuthSigninRoute: ApiAuthSigninRoute,
