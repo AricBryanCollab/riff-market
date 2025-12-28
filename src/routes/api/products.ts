@@ -3,7 +3,6 @@ import {
 	createProductService,
 	getApprovedProductsService,
 } from "@/actions/product";
-import type { ProductCategory } from "@/types/enum";
 
 export const Route = createFileRoute("/api/products")({
 	server: {
@@ -29,27 +28,16 @@ export const Route = createFileRoute("/api/products")({
 				POST: {
 					handler: async ({ request }) => {
 						try {
-							const formData = await request.formData();
+							const body = await request.json();
 
-							const rawData = {
-								name: formData.get("name") as string,
-								category: formData.get("category") as ProductCategory,
-								brand: formData.get("brand") as string,
-								model: formData.get("model") as string,
-								description: formData.get("description") as string,
-								price: formData.get("price") as string,
-								stock: formData.get("stock") as string,
-								images: formData.getAll("images") as File[],
-							};
+							const newProduct = await createProductService(body);
 
-							const newProduct = await createProductService(rawData);
 							if ("error" in newProduct) {
 								return new Response(
-									JSON.stringify({
-										message: newProduct.error,
-										errors: newProduct.details,
-									}),
-									{ status: 400 },
+									JSON.stringify({ error: newProduct.error }),
+									{
+										status: 400,
+									},
 								);
 							}
 

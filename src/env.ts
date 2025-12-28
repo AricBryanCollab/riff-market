@@ -7,7 +7,6 @@ export const env = createEnv({
 		DATABASE_URL: z.string(),
 		SESSION_SECRET: z.string().min(32),
 		NODE_ENV: z.string().optional(),
-		CLOUDINARY_URL: z.string(),
 	},
 
 	/**
@@ -18,6 +17,7 @@ export const env = createEnv({
 
 	client: {
 		VITE_BASE_API: z.string().min(1).optional(),
+		VITE_UPLOADTHING_TOKEN: z.string().min(1),
 	},
 
 	/**

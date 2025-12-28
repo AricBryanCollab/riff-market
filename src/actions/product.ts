@@ -7,18 +7,16 @@ import {
 	updateProductById,
 } from "@/data/product.repo";
 import {
-	type CreateProductRequest,
-	createProductFormSchema,
+	type CreateProductInput,
+	createProductSchema,
 	updateProductSchema,
 } from "@/lib/zod/product.validation";
-import { deleteImage, getPublicId, uploadImage } from "@/utils/cloudinary";
-import { fileToTempPath } from "@/utils/filetemplate";
 import { useAppSession } from "@/utils/session";
 
 // Create Product Service
-export async function createProductService(rawData: CreateProductRequest) {
+export async function createProductService(rawData: CreateProductInput) {
 	const session = await useAppSession();
-	const parsed = createProductFormSchema.safeParse(rawData);
+	const parsed = createProductSchema.safeParse(rawData);
 
 	if (!parsed.success) {
 		return {
@@ -34,28 +32,11 @@ export async function createProductService(rawData: CreateProductRequest) {
 		return { error: "Unauthorized, user must be a seller" };
 	}
 
-	const tempFilePaths = await Promise.all(
-		data.images.map((file) => fileToTempPath(file)),
-	);
-
-	const uploadedImages = await Promise.all(
-		tempFilePaths.map((filePath) =>
-			uploadImage({
-				filePath,
-				folder: "products",
-				deleteLocalFile: true,
-			}),
-		),
-	);
-
-	const imageUrls = uploadedImages.map((img) => img.url);
-
 	const productData = {
 		...data,
 		price: Number(data.price),
 		stock: Number(data.stock),
 		sellerId,
-		images: imageUrls,
 	};
 
 	const newProduct = await createProduct(productData);
@@ -177,14 +158,14 @@ export async function deleteProductService(productId: string) {
 		};
 	}
 
-	if (Array.isArray(product.images) && product.images.length > 0) {
-		await Promise.all(
-			product.images.map((url) => {
-				const publicId = getPublicId(url);
-				return deleteImage(publicId);
-			}),
-		);
-	}
+	// if (Array.isArray(product.images) && product.images.length > 0) {
+	// 	await Promise.all(
+	// 		product.images.map((url) => {
+	// 			const publicId = getPublicId(url);
+	// 			return deleteImage(publicId);
+	// 		}),
+	// 	);
+	// }
 
 	await deleteProductById(productId);
 
