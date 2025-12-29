@@ -21,7 +21,7 @@ const Hero = ({ image, title, caption }: HeroProps) => {
 						{title}
 					</h1>
 					{caption && (
-						<p className="mt-4 max-w-xl text-lg opacity-90 text-white">
+						<p className="mt-4 text-base md:text-lg lg:text-xl text-white/90 mx-auto max-w-2xl">
 							{caption}
 						</p>
 					)}

@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import AboutHero from "@/assets/about hero.jpg";
+import Hero from "@/components/hero";
 import SectionContainer from "@/components/sectioncontainer";
 
 export const Route = createFileRoute("/about")({
@@ -8,18 +10,12 @@ export const Route = createFileRoute("/about")({
 function AboutComponent() {
 	return (
 		<>
-			{/* HERO / INTRO */}
-			<SectionContainer>
-				<div className="flex min-h-[50vh] w-full flex-col items-center justify-center rounded-2xl bg-linear-to-br from-slate-900 to-slate-700 p-8 text-center text-white">
-					<h1 className="text-4xl font-bold md:text-5xl">
-						Learn What RiffMarket Is
-					</h1>
-					<p className="mt-4 max-w-2xl text-lg opacity-90">
-						A musician-first marketplace built to help you find, sell, and learn
-						about guitar gear with confidence.
-					</p>
-				</div>
-			</SectionContainer>
+			{/* HERO  */}
+			<Hero
+				title="Learn What RiffMarket Is"
+				caption="A musician-first marketplace where you can discover, sell, and explore guitar gear with confidence and community support"
+				image={AboutHero}
+			/>
 
 			{/* WHAT IS RIFFMARKET */}
 			<SectionContainer>
