@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import HomeHero from "@/assets/home hero.jpg";
+import Hero from "@/components/hero";
 import SectionContainer from "@/components/sectioncontainer";
 
 export const Route = createFileRoute("/")({
@@ -9,17 +11,11 @@ function App() {
 	return (
 		<>
 			{/* HERO */}
-			<SectionContainer>
-				<div className="flex min-h-[70vh] w-full flex-col items-center justify-center rounded-2xl bg-linear-to-br from-teal-500 to-emerald-600 p-8 text-center text-white">
-					<h1 className="text-4xl font-secondary font-bold md:text-6xl">
-						Find Your Perfect Guitar Tone
-					</h1>
-					<p className="mt-4 max-w-xl text-lg opacity-90">
-						A marketplace built for musicians, not just shoppers.
-					</p>
-				</div>
-			</SectionContainer>
-
+			<Hero
+				title="Find Your Perfect Guitar Tone"
+				caption="A marketplace built for musicians, not just shopper "
+				image={HomeHero}
+			/>
 			{/* CATEGORIES */}
 			<SectionContainer>
 				<div className="min-h-[40vh] w-full rounded-2xl bg-slate-100 p-8">

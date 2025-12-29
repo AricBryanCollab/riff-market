@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import CommunityHero from "@/assets/reviews hero.jpg";
+import Hero from "@/components/hero";
 import SectionContainer from "@/components/sectioncontainer";
 
 export const Route = createFileRoute("/community")({
@@ -9,15 +11,11 @@ function CommunityComponent() {
 	return (
 		<>
 			{/* HERO */}
-			<SectionContainer>
-				<div className="flex min-h-[35vh] w-full flex-col items-center justify-center rounded-2xl bg-linear-to-br from-teal-600 to-slate-600 p-8 text-center text-white">
-					<h1 className="text-4xl font-bold">The RiffMarket Community</h1>
-					<p className="mt-4 max-w-xl opacity-90">
-						A growing community of guitarists, musicians, and gear lovers.
-					</p>
-				</div>
-			</SectionContainer>
-
+			<Hero
+				title="The RiffMarket Community"
+				caption="Connect with guitarists, gear enthusiasts, and musicians who share your passion for tone and craft"
+				image={CommunityHero}
+			/>
 			{/* COMMUNITY STATS */}
 			<SectionContainer>
 				<div className="min-h-[25vh] w-full rounded-2xl bg-white p-8">

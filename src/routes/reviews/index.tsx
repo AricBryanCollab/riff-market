@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import ReviewsHero from "@/assets/reviews hero.jpg";
+import Hero from "@/components/hero";
 import SectionContainer from "@/components/sectioncontainer";
 
 export const Route = createFileRoute("/reviews/")({
@@ -9,16 +11,11 @@ function RouteComponent() {
 	return (
 		<>
 			{/* HERO / OVERVIEW */}
-			<SectionContainer>
-				<div className="flex min-h-[35vh] w-full flex-col items-center justify-center rounded-2xl bg-slate-900 p-8 text-center text-white">
-					<h1 className="text-4xl font-bold">
-						Trusted Reviews from Real Musicians
-					</h1>
-					<p className="mt-4 max-w-xl opacity-90">
-						See what the community says about guitars, pedals, and gear.
-					</p>
-				</div>
-			</SectionContainer>
+			<Hero
+				title="Trusted Reviews from Real Musicians"
+				caption="Honest feedback from players who know gear. Make informed decisions based on real experience, not marketing"
+				image={ReviewsHero}
+			/>
 
 			{/* MARKETPLACE RATING */}
 			<SectionContainer>
