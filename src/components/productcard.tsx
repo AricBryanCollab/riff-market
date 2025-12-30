@@ -10,7 +10,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 	const isLowStock = product.stock > 0 && product.stock <= 5;
 
 	return (
-		<div className="flex flex-col rounded-xl bg-white p-4 shadow-sm hover:shadow-md transition-shadow duration-200 group">
+		<div className="flex flex-col rounded-xl bg-background/90 p-4 shadow-sm hover:shadow-md transition-shadow duration-200 group">
 			{/* Image Container - Clickable */}
 			<a
 				href={`/products/${product.id}`}
@@ -45,14 +45,14 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 			</a>
 
 			{/* Brand */}
-			<div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+			<div className="text-xs font-medium text-secondary uppercase tracking-wide mb-1">
 				{product.brand}
 			</div>
 
 			{/* Product Name - Clickable */}
 			<a
 				href={`/products/${product.id}`}
-				className="text-sm font-semibold text-slate-900 line-clamp-2 mb-1 hover:text-blue-600 transition-colors"
+				className="text-sm font-semibold text-black line-clamp-2 mb-1 hover:text-primary transition-colors"
 				onClick={(e) => {
 					if (onClick) {
 						e.preventDefault();
@@ -64,12 +64,12 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 			</a>
 
 			{/* Model */}
-			<div className="text-xs text-slate-600 mb-3">{product.model}</div>
+			<div className="text-xs text-secondary mb-3">{product.model}</div>
 
 			{/* Price and Buy Button */}
 			<div className="mt-auto">
 				<div className="flex items-center justify-between mb-3">
-					<span className="text-lg font-bold text-emerald-600">
+					<span className="text-lg font-bold text-primary">
 						${product.price.toLocaleString()}
 					</span>
 					{!isOutOfStock && (
@@ -84,14 +84,14 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 					<button
 						type="button"
 						disabled
-						className="w-full py-2 px-4 rounded-lg bg-slate-200 text-slate-500 text-sm font-medium cursor-not-allowed"
+						className="w-full py-2 px-4 rounded-lg bg-foreground/30 text-foreground text-sm font-medium cursor-not-allowed"
 					>
 						Out of Stock
 					</button>
 				) : (
 					<a
 						href={`/products/${product.id}`}
-						className="block w-full py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium text-center transition-colors"
+						className="block w-full py-2 px-4 rounded-lg bg-primary hover:bg-accent text-white text-sm font-medium text-center transition-colors"
 						onClick={(e) => {
 							if (onClick) {
 								e.preventDefault();
