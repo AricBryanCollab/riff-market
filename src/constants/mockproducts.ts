@@ -43,7 +43,7 @@ export const mockProducts: BaseProduct[] = [
 		brand: "D'Addario",
 		model: "NYXL-1046",
 		images: [
-			"https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?w=400",
+			"https://images.unsplash.com/photo-1678369268369-3291642ebb11?w=400",
 		],
 		description:
 			"High carbon steel strings with enhanced tuning stability and incredible strength.",
