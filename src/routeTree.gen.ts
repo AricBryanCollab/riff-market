@@ -24,6 +24,7 @@ import { Route as ApiProductsIdRouteImport } from './routes/api/products.$id'
 import { Route as ApiAuthSignupRouteImport } from './routes/api/auth.signup'
 import { Route as ApiAuthSignoutRouteImport } from './routes/api/auth.signout'
 import { Route as ApiAuthSigninRouteImport } from './routes/api/auth.signin'
+import { Route as ShopShopProductIdRouteImport } from './routes/_shop/shop.product.$id'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -99,13 +100,18 @@ const ApiAuthSigninRoute = ApiAuthSigninRouteImport.update({
   path: '/api/auth/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopShopProductIdRoute = ShopShopProductIdRouteImport.update({
+  id: '/product/$id',
+  path: '/product/$id',
+  getParentRoute: () => ShopShopRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
-  '/shop': typeof ShopShopRoute
+  '/shop': typeof ShopShopRouteWithChildren
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
@@ -115,13 +121,14 @@ export interface FileRoutesByFullPath {
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
+  '/shop/product/$id': typeof ShopShopProductIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
-  '/shop': typeof ShopShopRoute
+  '/shop': typeof ShopShopRouteWithChildren
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
+  '/shop/product/$id': typeof ShopShopProductIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -139,7 +147,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
-  '/_shop/shop': typeof ShopShopRoute
+  '/_shop/shop': typeof ShopShopRouteWithChildren
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
+  '/_shop/shop/product/$id': typeof ShopShopProductIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/api/auth/signup'
     | '/api/products/$id'
     | '/api/products/seller'
+    | '/shop/product/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/api/auth/signup'
     | '/api/products/$id'
     | '/api/products/seller'
+    | '/shop/product/$id'
   id:
     | '__root__'
     | '/'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/api/auth/signup'
     | '/api/products/$id'
     | '/api/products/seller'
+    | '/_shop/shop/product/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -324,15 +336,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSigninRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_shop/shop/product/$id': {
+      id: '/_shop/shop/product/$id'
+      path: '/product/$id'
+      fullPath: '/shop/product/$id'
+      preLoaderRoute: typeof ShopShopProductIdRouteImport
+      parentRoute: typeof ShopShopRoute
+    }
   }
 }
 
+interface ShopShopRouteChildren {
+  ShopShopProductIdRoute: typeof ShopShopProductIdRoute
+}
+
+const ShopShopRouteChildren: ShopShopRouteChildren = {
+  ShopShopProductIdRoute: ShopShopProductIdRoute,
+}
+
+const ShopShopRouteWithChildren = ShopShopRoute._addFileChildren(
+  ShopShopRouteChildren,
+)
+
 interface ShopRouteRouteChildren {
-  ShopShopRoute: typeof ShopShopRoute
+  ShopShopRoute: typeof ShopShopRouteWithChildren
 }
 
 const ShopRouteRouteChildren: ShopRouteRouteChildren = {
-  ShopShopRoute: ShopShopRoute,
+  ShopShopRoute: ShopShopRouteWithChildren,
 }
 
 const ShopRouteRouteWithChildren = ShopRouteRoute._addFileChildren(

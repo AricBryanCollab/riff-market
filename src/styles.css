@@ -162,3 +162,17 @@
 	--color-warning: #f59e0b;
 }
 
+.custom-scrollbar::-webkit-scrollbar {
+					width: 6px;
+				}
+				.custom-scrollbar::-webkit-scrollbar-track {
+					background: var(--color-background);
+					border-radius: 8px;
+				}
+				.custom-scrollbar::-webkit-scrollbar-thumb {
+					background: #cbd5e1;
+					border-radius: 8px;
+				}
+				.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+					background: var(--color-muted);
+}
