@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import ProductCard from "@/components/productcard";
 import SectionContainer from "@/components/sectioncontainer";
+import { mockProducts } from "@/constants/mockproducts";
 
 export const Route = createFileRoute("/_shop/shop")({
 	component: RouteComponent,
@@ -30,17 +32,8 @@ function RouteComponent() {
 
 			{/* PRODUCT GRID */}
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-				{Array.from({ length: 12 }).map((_, i) => (
-					<div
-						// biome-ignore lint/suspicious/noArrayIndexKey: just a placeholder
-						key={i}
-						className="flex flex-col rounded-xl bg-white p-4 shadow-sm"
-					>
-						<div className="mb-4 h-40 rounded-lg bg-slate-200" />
-						<div className="h-4 w-3/4 rounded bg-slate-300" />
-						<div className="mt-2 h-4 w-1/2 rounded bg-slate-200" />
-						<div className="mt-4 h-6 w-24 rounded bg-emerald-200" />
-					</div>
+				{mockProducts.map((product) => (
+					<ProductCard key={product.id} product={product} />
 				))}
 			</div>
 

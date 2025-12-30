@@ -1,0 +1,132 @@
+import type { BaseProduct } from "@/types/product";
+
+export const mockProducts: BaseProduct[] = [
+	{
+		id: "1",
+		sellerId: "seller1",
+		name: "Fender Stratocaster American Professional II",
+		category: "ELECTRIC",
+		brand: "Fender",
+		model: "Stratocaster",
+		images: [
+			"https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400",
+		],
+		description:
+			"The iconic American-made Stratocaster with V-Mod II pickups and upgraded electronics for versatile tone.",
+		price: 1799,
+		stock: 12,
+		isApproved: true,
+		createdAt: "2024-01-15",
+	},
+	{
+		id: "2",
+		sellerId: "seller2",
+		name: "Boss DS-1 Distortion Pedal",
+		category: "ACCESSORY",
+		brand: "Boss",
+		model: "DS-1",
+		images: [
+			"https://images.unsplash.com/photo-1527865118650-b28bc059d09a?w=400",
+		],
+		description:
+			"Classic distortion pedal used by countless guitarists worldwide. Delivers smooth sustain and cutting edge.",
+		price: 79,
+		stock: 3,
+		isApproved: true,
+		createdAt: "2024-02-20",
+	},
+	{
+		id: "3",
+		sellerId: "seller3",
+		name: "D'Addario NYXL Premium Guitar Strings",
+		category: "ACCESSORY",
+		brand: "D'Addario",
+		model: "NYXL-1046",
+		images: [
+			"https://images.unsplash.com/photo-1678369268369-3291642ebb11?w=400",
+		],
+		description:
+			"High carbon steel strings with enhanced tuning stability and incredible strength.",
+		price: 15,
+		stock: 0,
+		isApproved: true,
+		createdAt: "2024-03-01",
+	},
+	{
+		id: "4",
+		sellerId: "seller1",
+		name: "Gibson Les Paul Standard",
+		category: "ELECTRIC",
+		brand: "Gibson",
+		model: "Les Paul",
+		images: [
+			"https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=400",
+		],
+		description: "Classic rock tone with mahogany body and maple top.",
+		price: 2499,
+		stock: 8,
+		isApproved: true,
+	},
+	{
+		id: "5",
+		sellerId: "seller2",
+		name: "Ibanez RG Series",
+		category: "ELECTRIC",
+		brand: "Ibanez",
+		model: "RG550",
+		images: [
+			"https://images.unsplash.com/photo-1525201548942-d8732f6617a0?w=400",
+		],
+		description: "Fast playing shred machine with HSH pickup configuration.",
+		price: 899,
+		stock: 15,
+		isApproved: true,
+	},
+	{
+		id: "6",
+		sellerId: "seller3",
+		name: "Ernie Ball Regular Slinky",
+		category: "ACCESSORY",
+		brand: "Ernie Ball",
+		model: "2221",
+		images: [
+			"https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400",
+		],
+		description: "World famous nickel wound guitar strings.",
+		price: 8,
+		stock: 50,
+		isApproved: true,
+	},
+	{
+		id: "7",
+		sellerId: "seller1",
+		name: "Ibanez Tube Screamer TS9",
+		category: "ACCESSORY",
+		brand: "Ibanez",
+		model: "TS9",
+		images: [
+			"https://images.unsplash.com/photo-1612306178575-6611cac27c51?w=400",
+		],
+		description:
+			"Classic overdrive pedal known for its warm midrange boost and smooth clipping.",
+		price: 99,
+		stock: 3,
+		isApproved: true,
+	},
+
+	{
+		id: "8",
+		sellerId: "seller2",
+		name: "Taylor 814ce Acoustic",
+		category: "ACOUSTIC",
+		brand: "Taylor",
+		model: "814ce",
+		images: [
+			"https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=400",
+		],
+		description: "Premium acoustic with V-Class bracing.",
+		price: 3499,
+		stock: 5,
+		isApproved: true,
+	},
+];
