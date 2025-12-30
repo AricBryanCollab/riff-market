@@ -1,8 +1,5 @@
-import fs from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
 import { createFileRoute } from "@tanstack/react-router";
-import { uploadImage } from "@/utils/cloudinary";
+import sharp from "sharp";
 
 export const Route = createFileRoute("/api/uploadimage")({
 	server: {
@@ -21,42 +18,55 @@ export const Route = createFileRoute("/api/uploadimage")({
 					const arrayBuffer = await file.arrayBuffer();
 					const buffer = Buffer.from(arrayBuffer);
 
-					const originalName = (file as any).name || "upload.jpg";
-					const ext = originalName.includes(".")
-						? originalName.split(".").pop()
-						: "jpg";
-					const tmpName = `upload-${Date.now()}-${Math.random()
-						.toString(36)
-						.slice(2)}.${ext}`;
-					const tmpPath = path.join(os.tmpdir(), tmpName);
+					// Compress the image to stay under 10MB
+					const compressedBuffer = await sharp(buffer)
+						.resize(2400, 2400, {
+							fit: "inside",
+							withoutEnlargement: true,
+						})
+						.jpeg({ quality: 85 })
+						.toBuffer();
 
-					await fs.writeFile(tmpPath, buffer);
+					console.log(
+						`Original size: ${buffer.length}, Compressed: ${compressedBuffer.length}`,
+					);
 
-					try {
-						const imageUrl = await uploadImage({
-							filePath: tmpPath,
-							folder: "product",
-							deleteLocalFile: true,
-						});
+					// Create form data for Cloudinary
+					const cloudinaryForm = new FormData();
+					cloudinaryForm.append(
+						"file",
+						new Blob([new Uint8Array(compressedBuffer)]),
+						file.name,
+					);
+					cloudinaryForm.append("upload_preset", "riff_market_product");
+					cloudinaryForm.append("folder", "product");
 
-						return new Response(JSON.stringify({ url: imageUrl }), {
-							status: 200,
-						});
-					} catch (uploadErr) {
-						try {
-							await fs.unlink(tmpPath).catch(() => {});
-						} catch {}
-						console.error("Cloudinary upload failed:", uploadErr);
+					// Upload directly to Cloudinary
+					const cloudinaryResponse = await fetch(
+						`https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`,
+						{
+							method: "POST",
+							body: cloudinaryForm,
+						},
+					);
+
+					if (!cloudinaryResponse.ok) {
+						const error = await cloudinaryResponse.json();
+						console.error("Cloudinary error:", error);
 						return new Response(
 							JSON.stringify({
-								error:
-									uploadErr instanceof Error
-										? uploadErr.message
-										: "Upload to Cloudinary failed",
+								error: error.error?.message || "Upload failed",
 							}),
 							{ status: 500 },
 						);
 					}
+
+					const data = await cloudinaryResponse.json();
+
+					return new Response(JSON.stringify({ url: data.secure_url }), {
+						status: 200,
+						headers: { "Content-Type": "application/json" },
+					});
 				} catch (err) {
 					console.error("Upload error:", err);
 					return new Response(
