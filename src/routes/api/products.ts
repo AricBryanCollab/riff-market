@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import type { ProductCategory } from "generated/prisma/enums";
 import {
 	createProductService,
 	getApprovedProductsService,
@@ -28,20 +29,38 @@ export const Route = createFileRoute("/api/products")({
 				POST: {
 					handler: async ({ request }) => {
 						try {
-							const body = await request.json();
+							const formData = await request.formData();
 
-							const newProduct = await createProductService(body);
+							const name = formData.get("name") as string;
+							const category = formData.get("category") as ProductCategory;
+							const brand = formData.get("brand") as string;
+							const model = formData.get("model") as string;
+							const description = formData.get("description") as string;
+							const price = formData.get("price") as string;
+							const stock = formData.get("stock") as string;
+
+							const images = formData.getAll("image") as File[];
+
+							const newProduct = await createProductService({
+								name,
+								category,
+								brand,
+								model,
+								description,
+								price: Number(price),
+								stock: Number(stock),
+								images,
+							});
 
 							if ("error" in newProduct) {
 								return new Response(
-									JSON.stringify({ error: newProduct.error }),
-									{
-										status: 400,
-									},
+									JSON.stringify({
+										message: newProduct.error,
+										details: newProduct.details,
+									}),
+									{ status: 400 },
 								);
 							}
-
-							return new Response(JSON.stringify(newProduct), { status: 201 });
 						} catch (error) {
 							console.error(error);
 							return new Response(

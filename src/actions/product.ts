@@ -11,6 +11,9 @@ import {
 	createProductSchema,
 	updateProductSchema,
 } from "@/lib/zod/product.validation";
+import { unsignedUploadImage } from "@/utils/cloudinary";
+
+import { compressImage } from "@/utils/compressimage";
 import { useAppSession } from "@/utils/session";
 
 // Create Product Service
@@ -32,10 +35,44 @@ export async function createProductService(rawData: CreateProductInput) {
 		return { error: "Unauthorized, user must be a seller" };
 	}
 
+	const imageUrls: string[] = [];
+
+	try {
+		for (const imageFile of data.images) {
+			const compressedImage = await compressImage({
+				file: imageFile,
+				options: {
+					maxSize: 2400,
+					quality: 85,
+					format: "jpeg",
+				},
+			});
+
+			const uploadResult = await unsignedUploadImage({
+				buffer: compressedImage.buffer,
+				filename: imageFile.name,
+				uploadPreset: "riff_market",
+				folder: "products",
+			});
+
+			imageUrls.push(uploadResult.secure_url);
+		}
+	} catch (error) {
+		return {
+			error: "Failed to upload images",
+			details: error instanceof Error ? error.message : "Unknown error",
+		};
+	}
+
 	const productData = {
-		...data,
+		name: data.name,
+		category: data.category,
+		brand: data.brand,
+		model: data.model,
+		description: data.description,
 		price: Number(data.price),
 		stock: Number(data.stock),
+		images: imageUrls,
 		sellerId,
 	};
 
