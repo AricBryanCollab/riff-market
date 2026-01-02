@@ -13,7 +13,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 		<div className="flex flex-col rounded-xl bg-background/90 p-4 shadow-sm hover:shadow-md transition-shadow duration-200 group">
 			{/* Image Container - Clickable */}
 			<a
-				href={`/products/${product.id}`}
+				href={`/product/${product.id}`}
 				className="relative mb-4 h-40 rounded-lg bg-slate-200 overflow-hidden block"
 				onClick={(e) => {
 					if (onClick) {
@@ -51,7 +51,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 
 			{/* Product Name - Clickable */}
 			<a
-				href={`/products/${product.id}`}
+				href={`/product/${product.id}`}
 				className="text-sm font-semibold text-black line-clamp-2 mb-1 hover:text-primary transition-colors"
 				onClick={(e) => {
 					if (onClick) {
@@ -90,7 +90,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 					</button>
 				) : (
 					<a
-						href={`/products/${product.id}`}
+						href={`/product/${product.id}`}
 						className="block w-full py-2 px-4 rounded-lg bg-primary hover:bg-accent text-white text-sm font-medium text-center transition-colors"
 						onClick={(e) => {
 							if (onClick) {
