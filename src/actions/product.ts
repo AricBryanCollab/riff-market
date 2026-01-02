@@ -6,13 +6,13 @@ import {
 	getProductsBySellerId,
 	updateProductById,
 } from "@/data/product.repo";
+import { env } from "@/env";
 import {
 	type CreateProductInput,
 	createProductSchema,
 	updateProductSchema,
 } from "@/lib/zod/product.validation";
 import { unsignedUploadImage } from "@/utils/cloudinary";
-
 import { compressImage } from "@/utils/compressimage";
 import { useAppSession } from "@/utils/session";
 
@@ -51,7 +51,7 @@ export async function createProductService(rawData: CreateProductInput) {
 			const uploadResult = await unsignedUploadImage({
 				buffer: compressedImage.buffer,
 				filename: imageFile.name,
-				uploadPreset: "riff_market",
+				uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
 				folder: "products",
 			});
 
