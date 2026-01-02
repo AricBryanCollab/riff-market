@@ -10,6 +10,7 @@ export const env = createEnv({
 		CLOUDINARY_CLOUD_NAME: z.string(),
 		CLOUDINARY_API_KEY: z.string(),
 		CLOUDINARY_API_SECRET: z.string(),
+		CLOUDINARY_UPLOAD_PRESET: z.string(),
 	},
 
 	/**
