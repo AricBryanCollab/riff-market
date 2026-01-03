@@ -4,6 +4,7 @@ import {
 	createProductService,
 	getApprovedProductsService,
 } from "@/actions/product";
+import { extractFormData } from "@/utils/extractFormData";
 
 export const Route = createFileRoute("/api/products")({
 	server: {
@@ -31,13 +32,31 @@ export const Route = createFileRoute("/api/products")({
 						try {
 							const formData = await request.formData();
 
-							const name = formData.get("name") as string;
-							const category = formData.get("category") as ProductCategory;
-							const brand = formData.get("brand") as string;
-							const model = formData.get("model") as string;
-							const description = formData.get("description") as string;
-							const price = formData.get("price") as string;
-							const stock = formData.get("stock") as string;
+							const {
+								name,
+								category,
+								brand,
+								model,
+								description,
+								price,
+								stock,
+							} = extractFormData<{
+								name: string;
+								category: ProductCategory;
+								brand: string;
+								model: string;
+								description: string;
+								price: string;
+								stock: string;
+							}>(formData, [
+								"name",
+								"category",
+								"brand",
+								"model",
+								"description",
+								"price",
+								"stock",
+							]);
 
 							const images = formData.getAll("image") as File[];
 
@@ -61,6 +80,13 @@ export const Route = createFileRoute("/api/products")({
 									{ status: 400 },
 								);
 							}
+
+							return new Response(
+								JSON.stringify({
+									newProduct,
+									message: "New product has been added",
+								}),
+							);
 						} catch (error) {
 							console.error(error);
 							return new Response(
