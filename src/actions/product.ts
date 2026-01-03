@@ -2,7 +2,6 @@ import {
 	createProduct,
 	deleteProductById,
 	getApprovedProducts,
-	getProductById,
 	getProductsBySellerId,
 	updateProductById,
 } from "@/data/product.repo";
@@ -10,11 +9,17 @@ import { env } from "@/env";
 import {
 	type CreateProductInput,
 	createProductSchema,
+	type UpdateProductInput,
 	updateProductSchema,
 } from "@/lib/zod/product.validation";
-import { unsignedUploadImage } from "@/utils/cloudinary";
+import {
+	deleteImage,
+	getPublicId,
+	unsignedUploadImage,
+} from "@/utils/cloudinary";
 import { compressImage } from "@/utils/compressimage";
 import { useAppSession } from "@/utils/session";
+import { getProductById } from "../data/product.repo";
 
 // Create Product Service
 export async function createProductService(rawData: CreateProductInput) {
@@ -112,68 +117,99 @@ export async function getApprovedProductsService() {
 	return products;
 }
 
-// Update Product Service
-// export async function updateProductService(
-// 	productId: string,
-// 	rawData: UpdateProductRequest,
-// ) {
-// 	const session = await useAppSession();
-// 	const sellerId = session.data.userId;
+//Update Product Service
+export async function updateProductService(
+	productId: string,
+	rawData: UpdateProductInput,
+) {
+	const session = await useAppSession();
+	const sellerId = session.data.userId;
 
-// 	if (!sellerId) {
-// 		return { error: "User is unauthorized" };
-// 	}
+	if (!sellerId) {
+		return { error: "User is unauthorized" };
+	}
 
-// 	const parsed = updateProductSchema.safeParse(rawData);
-// 	if (!parsed.success) {
-// 		return {
-// 			error: "Invalid product update data",
-// 			details: parsed.error,
-// 		};
-// 	}
+	const existingProduct = await getProductById(productId);
+	if (!existingProduct) {
+		return { error: "Product not found" };
+	}
 
-// 	const data = parsed.data;
+	if (existingProduct.sellerId !== sellerId) {
+		return { error: "Product is not owned by the authenticated user" };
+	}
 
-// 	const isExistingProduct = await getProductById(productId);
-// 	if (!isExistingProduct) {
-// 		return { error: "Product not found" };
-// 	}
+	const parsed = updateProductSchema.safeParse(rawData);
 
-// 	if (isExistingProduct.sellerId !== sellerId) {
-// 		return {
-// 			error: "Product is not owned by the current user ID, unauthorized access",
-// 		};
-// 	}
+	if (!parsed.success) {
+		return {
+			error: "Invalid data to update product",
+			details: parsed.error,
+		};
+	}
 
-// 	if (data.image && data.image.length > 0) {
-// 		const uploadedImages = await Promise.all(
-// 			data.image.map((img) =>
-// 				uploadImage({
-// 					filePath: img,
-// 					folder: "products",
-// 					deleteLocalFile: true,
-// 				}),
-// 			),
-// 		);
+	const data = parsed.data;
 
-// 		const newImageUrls = uploadedImages.map((img) => img.url);
+	let imageUrls: string[] = existingProduct.images;
 
-// 		if (Array.isArray(isExistingProduct.images)) {
-// 			await Promise.all(
-// 				isExistingProduct.images.map((url) => {
-// 					const publicId = getPublicId(url);
-// 					return deleteImage(publicId);
-// 				}),
-// 			);
-// 		}
+	if (data.images && data.images.length > 0) {
+		const newImageUrls: string[] = [];
 
-// 		data.image = newImageUrls;
-// 	}
+		try {
+			for (const imageFile of data.images) {
+				const compressedImage = await compressImage({
+					file: imageFile,
+					options: {
+						maxSize: 2400,
+						quality: 85,
+						format: "jpeg",
+					},
+				});
 
-// 	const updatedProduct = await updateProductById(productId, data);
+				const uploadResult = await unsignedUploadImage({
+					buffer: compressedImage.buffer,
+					filename: imageFile.name,
+					uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
+					folder: "products",
+				});
 
-// 	return updatedProduct;
-// }
+				newImageUrls.push(uploadResult.secure_url);
+			}
+
+			imageUrls = newImageUrls;
+			if (
+				Array.isArray(existingProduct.images) &&
+				existingProduct.images.length > 0
+			) {
+				await Promise.all(
+					existingProduct.images.map((url) => {
+						const publicId = getPublicId(url);
+						return deleteImage(publicId);
+					}),
+				);
+			}
+		} catch (error) {
+			return {
+				error: "Failed to upload images",
+				details: error instanceof Error ? error.message : "Unknown error",
+			};
+		}
+
+		const updateData = {
+			...(data.name && { name: data.name }),
+			...(data.category && { category: data.category }),
+			...(data.brand && { brand: data.brand }),
+			...(data.model && { model: data.model }),
+			...(data.description && { description: data.description }),
+			...(data.price && { price: Number(data.price) }),
+			...(data.stock !== undefined && { stock: Number(data.stock) }),
+			images: imageUrls,
+		};
+
+		const updatedProduct = await updateProductById(productId, updateData);
+
+		return updatedProduct;
+	}
+}
 
 // Delete Product Service
 export async function deleteProductService(productId: string) {
