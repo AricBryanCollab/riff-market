@@ -6,3 +6,5 @@ export type ProductCategory =
 	| "KEYBOARD"
 	| "PEDALS"
 	| "ACCESSORY";
+
+export type PaymentMethod = "CASH" | "PAYPAL" | "VISA";
