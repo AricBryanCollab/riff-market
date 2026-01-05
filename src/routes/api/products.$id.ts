@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getProductByIdService, updateProductService } from "@/actions/product";
 import type { UpdateProductInput } from "@/lib/zod/product.validation";
-import { extractFormData } from "@/utils/extractFormData";
+import { extractPartialFormData } from "@/utils/extractFormData";
 
 export const Route = createFileRoute("/api/products/$id")({
 	server: {
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/products/$id")({
 							const { id } = params;
 							const formData = await request.formData();
 
-							const extractedData = extractFormData(formData, [
+							const extractedData = extractPartialFormData(formData, [
 								"name",
 								"category",
 								"brand",
@@ -46,12 +46,29 @@ export const Route = createFileRoute("/api/products/$id")({
 
 							const rawData: UpdateProductInput = {
 								...extractedData,
+
+								...(extractedData.price && {
+									price: Number(extractedData.price),
+								}),
+								...(extractedData.stock && {
+									stock: Number(extractedData.stock),
+								}),
 								...(images.length > 0 && { images }),
 							};
+							const updatedProduct = await updateProductService(id, rawData);
 
-							const result = await updateProductService(id, rawData);
+							if ("error" in updatedProduct) {
+								return new Response(
+									JSON.stringify({
+										message: updatedProduct.error,
+									}),
+									{ status: 400 },
+								);
+							}
 
-							return new Response(JSON.stringify(result), { status: 200 });
+							return new Response(JSON.stringify(updatedProduct), {
+								status: 200,
+							});
 						} catch (error) {
 							console.error(error);
 							return new Response(

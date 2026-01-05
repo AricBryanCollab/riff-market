@@ -176,6 +176,8 @@ export async function updateProductService(
 			}
 
 			imageUrls = newImageUrls;
+
+			// Delete old images
 			if (
 				Array.isArray(existingProduct.images) &&
 				existingProduct.images.length > 0
@@ -193,22 +195,28 @@ export async function updateProductService(
 				details: error instanceof Error ? error.message : "Unknown error",
 			};
 		}
-
-		const updateData = {
-			...(data.name && { name: data.name }),
-			...(data.category && { category: data.category }),
-			...(data.brand && { brand: data.brand }),
-			...(data.model && { model: data.model }),
-			...(data.description && { description: data.description }),
-			...(data.price && { price: Number(data.price) }),
-			...(data.stock !== undefined && { stock: Number(data.stock) }),
-			images: imageUrls,
-		};
-
-		const updatedProduct = await updateProductById(productId, updateData);
-
-		return updatedProduct;
 	}
+
+	const updateData = {
+		...(data.name && { name: data.name }),
+		...(data.category && { category: data.category }),
+		...(data.brand && { brand: data.brand }),
+		...(data.model && { model: data.model }),
+		...(data.description && { description: data.description }),
+		...(data.price && { price: Number(data.price) }),
+		...(data.stock !== undefined && { stock: Number(data.stock) }),
+		images: imageUrls,
+	};
+
+	const updatedProduct = await updateProductById(productId, updateData);
+
+	if (!updatedProduct) {
+		return {
+			error: "Failed to update the product",
+		};
+	}
+
+	return updatedProduct;
 }
 
 // Delete Product Service
