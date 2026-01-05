@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getProductByIdService, updateProductService } from "@/actions/product";
+import {
+	deleteProductService,
+	getProductByIdService,
+	updateProductService,
+} from "@/actions/product";
 import type { UpdateProductInput } from "@/lib/zod/product.validation";
 import { extractPartialFormData } from "@/utils/extractFormData";
 
@@ -74,6 +78,40 @@ export const Route = createFileRoute("/api/products/$id")({
 							return new Response(
 								JSON.stringify({
 									message: "Failed to get to update a product",
+								}),
+								{ status: 500 },
+							);
+						}
+					},
+				},
+				DELETE: {
+					handler: async ({ params }) => {
+						try {
+							const { id } = params;
+
+							const deletedProduct = await deleteProductService(id);
+
+							if ("error" in deletedProduct) {
+								return new Response(
+									JSON.stringify({
+										message: deletedProduct.error,
+									}),
+									{ status: 400 },
+								);
+							}
+
+							return new Response(
+								JSON.stringify({
+									message: "Product deleted successfully",
+									product: deletedProduct,
+								}),
+								{ status: 200 },
+							);
+						} catch (error) {
+							console.error(error);
+							return new Response(
+								JSON.stringify({
+									message: "Failed to delete the product",
 								}),
 								{ status: 500 },
 							);

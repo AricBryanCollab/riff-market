@@ -225,7 +225,7 @@ export async function deleteProductService(productId: string) {
 	const sellerId = session.data.userId;
 
 	if (!sellerId) {
-		return { error: "Unauthorized" };
+		return { error: "User is unauthorized" };
 	}
 
 	const product = await getProductById(productId);
@@ -239,16 +239,30 @@ export async function deleteProductService(productId: string) {
 		};
 	}
 
-	// if (Array.isArray(product.images) && product.images.length > 0) {
-	// 	await Promise.all(
-	// 		product.images.map((url) => {
-	// 			const publicId = getPublicId(url);
-	// 			return deleteImage(publicId);
-	// 		}),
-	// 	);
-	// }
+	if (Array.isArray(product.images) && product.images.length > 0) {
+		try {
+			await Promise.all(
+				product.images.map(async (url) => {
+					const publicId = getPublicId(url);
+					return deleteImage(publicId);
+				}),
+			);
+		} catch (error) {
+			console.error("Failed to delete images from Cloudinary:", error);
+			return {
+				error: "Failed to delete product images",
+				details: error instanceof Error ? error.message : "Unknown error",
+			};
+		}
+	}
 
-	await deleteProductById(productId);
+	const deletedProduct = await deleteProductById(productId);
+
+	if (!deletedProduct) {
+		return {
+			error: "Failed to delete the product",
+		};
+	}
 
 	return { message: "Product deleted successfully" };
 }
