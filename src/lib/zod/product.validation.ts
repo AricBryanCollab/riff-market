@@ -16,7 +16,7 @@ const fileSchema = z
 
 export const createProductSchema = z.object({
 	name: z.string().trim().min(1, "Product name is required"),
-	category: z.enum(["ELECTRIC", "ACOUSTIC", "KEYBOARD", "ACCESSORY"]),
+	category: z.enum(["ELECTRIC", "ACOUSTIC", "KEYBOARD", "PEDALS", "ACCESSORY"]),
 	brand: z.string().trim().min(1, "Brand is required"),
 	model: z.string().trim().min(1, "Model is required"),
 	images: z
