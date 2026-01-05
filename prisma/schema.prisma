@@ -23,6 +23,7 @@ enum ProductCategory {
   ELECTRIC
   ACOUSTIC
   KEYBOARD
+  PEDALS
   ACCESSORY
 }
 

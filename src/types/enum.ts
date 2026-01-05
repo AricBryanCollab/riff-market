@@ -4,4 +4,5 @@ export type ProductCategory =
 	| "ELECTRIC"
 	| "ACOUSTIC"
 	| "KEYBOARD"
+	| "PEDALS"
 	| "ACCESSORY";
