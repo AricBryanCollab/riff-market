@@ -45,6 +45,33 @@ export const getProductById = async (id: string) => {
 	}
 };
 
+export const getProductsByIds = async (productIds: string[]) => {
+	try {
+		const products = await prisma.product.findMany({
+			where: {
+				id: {
+					in: productIds,
+				},
+			},
+			select: {
+				id: true,
+				name: true,
+				price: true,
+				stock: true,
+				isApproved: true,
+				images: true,
+				category: true,
+				brand: true,
+			},
+		});
+
+		return products;
+	} catch (err) {
+		console.error("Error at findProductsByIds:", err);
+		throw err;
+	}
+};
+
 export const getProductsBySellerId = async (sellerId: string) => {
 	try {
 		return await prisma.product.findMany({
