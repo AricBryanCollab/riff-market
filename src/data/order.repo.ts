@@ -1,39 +1,78 @@
 import { prisma } from "@/data/connectDb";
-import type { OrderRequest } from "@/types/order";
+import type { CreateOrderRepoData } from "@/types/order";
 
-export const createOrder = async (order: OrderRequest) => {
+export const createOrder = async (orderData: CreateOrderRepoData) => {
 	try {
-		const { userId, shippingAddress, paymentMethod, items } = order;
+		const { items, ...order } = orderData;
 
-		return await prisma.$transaction(async (tx) => {
-			const products = await tx.product.findMany({
-				where: {
-					id: { in: items.map((i) => i.productId) },
-					isApproved: true,
+		const result = await prisma.$transaction(async (tx) => {
+			const createdOrder = await tx.order.create({
+				data: {
+					userId: order.userId,
+					orderDate: order.orderDate,
+					totalAmount: order.totalAmount,
+					shippingAddress: order.shippingAddress,
+					paymentMethod: order.paymentMethod,
+					trackingNumber: order.trackingNumber,
+					items: {
+						create: items.map((item) => ({
+							productId: item.productId,
+							quantity: item.quantity,
+							unitPrice: item.unitPrice,
+							subTotal: item.subTotal,
+						})),
+					},
+				},
+				include: {
+					items: {
+						include: {
+							product: {
+								select: {
+									id: true,
+									name: true,
+									images: true,
+									price: true,
+								},
+							},
+						},
+					},
+					user: {
+						select: {
+							id: true,
+							email: true,
+							firstName: true,
+							lastName: true,
+						},
+					},
 				},
 			});
 
-			if (products.length !== items.length) {
-				throw new Error("One or more products are invalid or unavailable");
+			for (const item of items) {
+				await tx.product.update({
+					where: { id: item.productId },
+					data: {
+						stock: {
+							decrement: item.quantity,
+						},
+					},
+				});
 			}
 
-			const orderItemsData = items.map((item) => {
-				const product = products.find((p) => p.id === item.productId)!;
-
-				if (product.stock < item.quantity) {
-					throw new Error(`Insufficient stock for ${product.name}`);
-				}
-
-				return {
-					productId: product.id,
-					quantity: item.quantity,
-					unitPrice: product.price,
-					subTotal: product.price * item.quantity,
-				};
+			await tx.notification.create({
+				data: {
+					userId: order.userId,
+					orderId: createdOrder.id,
+					message: `Your order #${order.trackingNumber} has been placed successfully! Total: $${order.totalAmount.toFixed(2)}`,
+					isRead: false,
+				},
 			});
+
+			return createdOrder;
 		});
+
+		return result;
 	} catch (err) {
-		console.error("Error at createOrder", err);
+		console.error("Error at createOrder:", err);
 		throw err;
 	}
 };
