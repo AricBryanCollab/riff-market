@@ -1,11 +1,23 @@
-import { createOrderSchema } from "@/lib/zod/order.validation";
-import type { OrderRequest } from "@/types/order";
+import { createOrder } from "@/data/order.repo";
+import { getProductsByIds } from "@/data/product.repo";
+import {
+	type PlaceOrderInput,
+	placeOrderSchema,
+} from "@/lib/zod/order.validation";
+import type {
+	CreateOrderRepoData,
+	OrderErrorResponse,
+	OrderResponse,
+} from "@/types/order";
+
 import { generateTrackingNumber } from "@/utils/generateTrackingNumber";
 import { useAppSession } from "@/utils/session";
 
-export async function placeOrderService(rawData: OrderRequest) {
+export async function createOrderService(
+	rawData: PlaceOrderInput,
+): Promise<OrderResponse | OrderErrorResponse> {
 	const session = await useAppSession();
-	const parsed = createOrderSchema.safeParse(rawData);
+	const parsed = placeOrderSchema.safeParse(rawData);
 
 	if (!parsed.success) {
 		return {
@@ -20,12 +32,67 @@ export async function placeOrderService(rawData: OrderRequest) {
 		return { error: "Unauthorized, user must be a customer" };
 	}
 
-	const totalAmount = data.items.reduce(
-		(sum, item) => sum + item.unitPrice * item.quantity,
-		0,
-	);
-
 	const trackingNumber = generateTrackingNumber();
+
+	const productIds = data.items.map((item) => item.productId);
+	const products = await getProductsByIds(productIds);
+
+	if (products.length !== productIds.length) {
+		return { error: "One or more products not found" };
+	}
+
+	const orderItems = [];
+	let totalAmount = 0;
+
+	for (const item of data.items) {
+		const product = products.find((p) => p.id === item.productId);
+
+		if (!product) {
+			return { error: `Product ${item.productId} not found` };
+		}
+
+		if (!product.isApproved) {
+			return {
+				error: `Product ${product.name} is not approved for sale`,
+			};
+		}
+
+		if (product.stock < item.quantity) {
+			return {
+				error: `Insufficient stock for "${product.name}". Available: ${product.stock}, Requested: ${item.quantity}`,
+			};
+		}
+
+		const subTotal = product.price * item.quantity;
+		totalAmount += subTotal;
+
+		orderItems.push({
+			productId: product.id,
+			quantity: item.quantity,
+			unitPrice: product.price,
+			subTotal,
+		});
+	}
+
+	const orderData: CreateOrderRepoData = {
+		userId: customerId,
+		orderDate: new Date(),
+		totalAmount,
+		shippingAddress: data.shippingAddress,
+		paymentMethod: data.paymentMethod,
+		trackingNumber,
+		items: orderItems,
+	};
+
+	try {
+		const order = await createOrder(orderData);
+		return order;
+	} catch (error) {
+		console.error("Error in createOrderService:", error);
+		return {
+			error: "Failed to create order. Please try again.",
+		};
+	}
 }
 
 export function getOrdersList() {}
