@@ -56,3 +56,12 @@ export interface OrderErrorResponse {
 	error: string;
 	details?: string | unknown;
 }
+
+export interface GetUserOrdersResponse {
+	orders: OrderResponse[];
+	total: number;
+}
+
+export interface GetUserOrdersErrorResponse {
+	error: string;
+}
