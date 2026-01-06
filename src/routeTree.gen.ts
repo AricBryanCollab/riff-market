@@ -19,6 +19,7 @@ import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as ApiUserRouteImport } from './routes/api/user'
 import { Route as ApiUploadimageRouteImport } from './routes/api/uploadimage'
 import { Route as ApiProductsRouteImport } from './routes/api/products'
+import { Route as ApiOrdersRouteImport } from './routes/api/orders'
 import { Route as ShopShopRouteImport } from './routes/_shop/shop'
 import { Route as ApiProductsSellerRouteImport } from './routes/api/products.seller'
 import { Route as ApiProductsIdRouteImport } from './routes/api/products.$id'
@@ -75,6 +76,11 @@ const ApiProductsRoute = ApiProductsRouteImport.update({
   path: '/api/products',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOrdersRoute = ApiOrdersRouteImport.update({
+  id: '/api/orders',
+  path: '/api/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopShopRoute = ShopShopRouteImport.update({
   id: '/shop',
   path: '/shop',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopShopRoute
+  '/api/orders': typeof ApiOrdersRoute
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopShopRoute
+  '/api/orders': typeof ApiOrdersRoute
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
   '/_shop/shop': typeof ShopShopRoute
+  '/api/orders': typeof ApiOrdersRoute
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/settings'
     | '/shop'
+    | '/api/orders'
     | '/api/products'
     | '/api/uploadimage'
     | '/api/user'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/settings'
     | '/shop'
+    | '/api/orders'
     | '/api/products'
     | '/api/uploadimage'
     | '/api/user'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/settings'
     | '/_shop/shop'
+    | '/api/orders'
     | '/api/products'
     | '/api/uploadimage'
     | '/api/user'
@@ -220,6 +232,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CommunityRoute: typeof CommunityRoute
   SettingsRoute: typeof SettingsRoute
+  ApiOrdersRoute: typeof ApiOrdersRoute
   ApiProductsRoute: typeof ApiProductsRouteWithChildren
   ApiUploadimageRoute: typeof ApiUploadimageRoute
   ApiUserRoute: typeof ApiUserRoute
@@ -302,6 +315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProductsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/orders': {
+      id: '/api/orders'
+      path: '/api/orders'
+      fullPath: '/api/orders'
+      preLoaderRoute: typeof ApiOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_shop/shop': {
       id: '/_shop/shop'
       path: '/shop'
@@ -379,6 +399,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   CommunityRoute: CommunityRoute,
   SettingsRoute: SettingsRoute,
+  ApiOrdersRoute: ApiOrdersRoute,
   ApiProductsRoute: ApiProductsRouteWithChildren,
   ApiUploadimageRoute: ApiUploadimageRoute,
   ApiUserRoute: ApiUserRoute,
