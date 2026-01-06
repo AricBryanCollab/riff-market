@@ -1,5 +1,5 @@
 import { prisma } from "@/data/connectDb";
-import type { CreateOrderRepoData } from "@/types/order";
+import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
 
 export const createOrder = async (orderData: CreateOrderRepoData) => {
 	try {
@@ -73,6 +73,46 @@ export const createOrder = async (orderData: CreateOrderRepoData) => {
 		return result;
 	} catch (err) {
 		console.error("Error at createOrder:", err);
+		throw err;
+	}
+};
+
+export const getUserOrders = async (
+	userId: string,
+): Promise<OrderResponse[]> => {
+	try {
+		const orders = await prisma.order.findMany({
+			where: { userId },
+			include: {
+				items: {
+					include: {
+						product: {
+							select: {
+								id: true,
+								name: true,
+								images: true,
+								price: true,
+							},
+						},
+					},
+				},
+				user: {
+					select: {
+						id: true,
+						email: true,
+						firstName: true,
+						lastName: true,
+					},
+				},
+			},
+			orderBy: {
+				orderDate: "desc",
+			},
+		});
+
+		return orders;
+	} catch (err) {
+		console.error("Error at getUserOrders:", err);
 		throw err;
 	}
 };
