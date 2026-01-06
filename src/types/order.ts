@@ -5,14 +5,54 @@ interface OrderItem {
 	quantity: number;
 }
 
-export interface OrderRequest {
+interface OrderItemWithPricing extends OrderItem {
+	unitPrice: number;
+	subTotal: number;
+}
+
+interface BaseOrderData {
 	userId: string;
 	shippingAddress: string;
 	paymentMethod: PaymentMethod;
+}
+
+export interface OrderRequest extends BaseOrderData {
 	items: OrderItem[];
 }
 
-export interface OrderResponse {
-	message: string;
-	order: OrderItem[];
+export interface CreateOrderRepoData extends BaseOrderData {
+	orderDate: Date;
+	totalAmount: number;
+	trackingNumber: string;
+	items: OrderItemWithPricing[];
+}
+
+interface OrderItemResponse extends OrderItemWithPricing {
+	id: string;
+	orderId: string;
+	product: {
+		id: string;
+		name: string;
+		images: string[];
+		price: number;
+	};
+}
+
+export interface OrderResponse extends BaseOrderData {
+	id: string;
+	orderDate: Date;
+	totalAmount: number;
+	trackingNumber: string;
+	items: OrderItemResponse[];
+	user: {
+		id: string;
+		email: string;
+		firstName: string;
+		lastName: string;
+	};
+}
+
+export interface OrderErrorResponse {
+	error: string;
+	details?: string | unknown;
 }
