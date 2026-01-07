@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Plus, Search } from "lucide-react";
 import ProductCard from "@/components/productcard";
 import SectionContainer from "@/components/sectioncontainer";
 import { mockProducts } from "@/constants/mockproducts";
@@ -13,21 +14,48 @@ function RouteComponent() {
 			{/* PAGE HEADER */}
 			<div className="flex flex-col gap-6 rounded-xl bg-white p-4 md:flex-row md:items-center md:justify-between">
 				<div>
-					<div className="h-6 w-40 rounded bg-slate-300" />
-					<div className="mt-2 h-4 w-64 rounded bg-slate-200" />
+					<h1 className="text-2xl font-bold text-foreground">
+						Browse Music Tools
+					</h1>
+					<p className="mt-1 text-sm text-muted-foreground">
+						Discover guitars, pedals, keyboards, and accessories in this
+						community-based marketplace
+					</p>
 				</div>
 
-				<div className="flex gap-2">
-					<div className="h-10 w-32 rounded bg-slate-200" />
-					<div className="h-10 w-32 rounded bg-slate-200" />
+				<div className="flex flex-col md:flex-row items-center gap-2">
+					<div className="flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2">
+						<Search className="h-4 w-4 text-slate-400" />
+						<input
+							type="text"
+							placeholder="Search products"
+							className="outline-none text-sm text-slate-700 placeholder:text-slate-400 bg-transparent w-48"
+						/>
+					</div>
+					<button
+						type="button"
+						className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-accent transition-colors whitespace-nowrap"
+					>
+						<Plus className="h-4 w-4" />
+						Add Product
+					</button>
 				</div>
 			</div>
 
 			{/* ACTIVE FILTERS */}
 			<div className="flex flex-wrap gap-4 my-4">
-				<div className="h-8 w-24 rounded-full bg-indigo-100" />
-				<div className="h-8 w-28 rounded-full bg-indigo-100" />
-				<div className="h-8 w-20 rounded-full bg-indigo-100" />
+				<div className="px-4 py-1 rounded-full border shadow-md">
+					<p>Guitars</p>
+				</div>
+				<div className="px-4 py-1 rounded-full border shadow-md">
+					<p>Pedals</p>
+				</div>
+				<div className="px-4 py-1 rounded-full border shadow-md">
+					<p>Accessories</p>
+				</div>
+				<div className="px-4 py-1 rounded-full border shadow-md">
+					<p>Keyboard</p>
+				</div>
 			</div>
 
 			{/* PRODUCT GRID */}
