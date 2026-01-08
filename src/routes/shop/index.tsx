@@ -36,6 +36,7 @@ function RouteComponent() {
 					</div>
 					<button
 						type="button"
+						onClick={() => navigate({ to: "/product/new" })}
 						className="flex items-center cursor-pointer gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-accent transition-colors whitespace-nowrap"
 					>
 						<Plus className="size-4" />
@@ -72,5 +73,5 @@ function RouteComponent() {
 				<div className="h-10 w-40 rounded-full bg-slate-300" />
 			</div>
 		</SectionContainer>
-	)
+	);
 }

@@ -1,7 +1,7 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import SectionContainer from "@/components/sectioncontainer";
 
-export const Route = createFileRoute("/product/$id")({
+export const Route = createFileRoute("/product/edit/$id")({
 	component: RouteComponent,
 });
 
@@ -10,10 +10,7 @@ function RouteComponent() {
 
 	return (
 		<SectionContainer>
-			<div className="border border-teal-500 px-2 py-3">
-				<h1 className="font-semibold">Initialize dynamic product page</h1>
-				<p>Test Product ID: {id}</p>
-			</div>
+			<h1>Edit Product {id} Here</h1>
 		</SectionContainer>
 	);
 }

@@ -16,11 +16,13 @@ import { Route as ShopRouteRouteImport } from './routes/shop/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopIndexRouteImport } from './routes/shop/index'
 import { Route as ReviewsIndexRouteImport } from './routes/reviews/index'
-import { Route as ProductIdRouteImport } from './routes/product.$id'
+import { Route as ProductNewRouteImport } from './routes/product/new'
+import { Route as ProductIdRouteImport } from './routes/product/$id'
 import { Route as ApiUserRouteImport } from './routes/api/user'
 import { Route as ApiUploadimageRouteImport } from './routes/api/uploadimage'
 import { Route as ApiProductsRouteImport } from './routes/api/products'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
+import { Route as ProductEditIdRouteImport } from './routes/product/edit.$id'
 import { Route as ApiProductsSellerRouteImport } from './routes/api/products.seller'
 import { Route as ApiProductsIdRouteImport } from './routes/api/products.$id'
 import { Route as ApiAuthSignupRouteImport } from './routes/api/auth.signup'
@@ -62,6 +64,11 @@ const ReviewsIndexRoute = ReviewsIndexRouteImport.update({
   path: '/reviews/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductNewRoute = ProductNewRouteImport.update({
+  id: '/product/new',
+  path: '/product/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductIdRoute = ProductIdRouteImport.update({
   id: '/product/$id',
   path: '/product/$id',
@@ -85,6 +92,11 @@ const ApiProductsRoute = ApiProductsRouteImport.update({
 const ApiOrdersRoute = ApiOrdersRouteImport.update({
   id: '/api/orders',
   path: '/api/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductEditIdRoute = ProductEditIdRouteImport.update({
+  id: '/product/edit/$id',
+  path: '/product/edit/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiProductsSellerRoute = ApiProductsSellerRouteImport.update({
@@ -124,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
   '/product/$id': typeof ProductIdRoute
+  '/product/new': typeof ProductNewRoute
   '/reviews': typeof ReviewsIndexRoute
   '/shop/': typeof ShopIndexRoute
   '/api/auth/signin': typeof ApiAuthSigninRoute
@@ -131,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
+  '/product/edit/$id': typeof ProductEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -142,6 +156,7 @@ export interface FileRoutesByTo {
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
   '/product/$id': typeof ProductIdRoute
+  '/product/new': typeof ProductNewRoute
   '/reviews': typeof ReviewsIndexRoute
   '/shop': typeof ShopIndexRoute
   '/api/auth/signin': typeof ApiAuthSigninRoute
@@ -149,6 +164,7 @@ export interface FileRoutesByTo {
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
+  '/product/edit/$id': typeof ProductEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -162,6 +178,7 @@ export interface FileRoutesById {
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRoute
   '/product/$id': typeof ProductIdRoute
+  '/product/new': typeof ProductNewRoute
   '/reviews/': typeof ReviewsIndexRoute
   '/shop/': typeof ShopIndexRoute
   '/api/auth/signin': typeof ApiAuthSigninRoute
@@ -169,6 +186,7 @@ export interface FileRoutesById {
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
+  '/product/edit/$id': typeof ProductEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -183,6 +201,7 @@ export interface FileRouteTypes {
     | '/api/uploadimage'
     | '/api/user'
     | '/product/$id'
+    | '/product/new'
     | '/reviews'
     | '/shop/'
     | '/api/auth/signin'
@@ -190,6 +209,7 @@ export interface FileRouteTypes {
     | '/api/auth/signup'
     | '/api/products/$id'
     | '/api/products/seller'
+    | '/product/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -201,6 +221,7 @@ export interface FileRouteTypes {
     | '/api/uploadimage'
     | '/api/user'
     | '/product/$id'
+    | '/product/new'
     | '/reviews'
     | '/shop'
     | '/api/auth/signin'
@@ -208,6 +229,7 @@ export interface FileRouteTypes {
     | '/api/auth/signup'
     | '/api/products/$id'
     | '/api/products/seller'
+    | '/product/edit/$id'
   id:
     | '__root__'
     | '/'
@@ -220,6 +242,7 @@ export interface FileRouteTypes {
     | '/api/uploadimage'
     | '/api/user'
     | '/product/$id'
+    | '/product/new'
     | '/reviews/'
     | '/shop/'
     | '/api/auth/signin'
@@ -227,6 +250,7 @@ export interface FileRouteTypes {
     | '/api/auth/signup'
     | '/api/products/$id'
     | '/api/products/seller'
+    | '/product/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -240,10 +264,12 @@ export interface RootRouteChildren {
   ApiUploadimageRoute: typeof ApiUploadimageRoute
   ApiUserRoute: typeof ApiUserRoute
   ProductIdRoute: typeof ProductIdRoute
+  ProductNewRoute: typeof ProductNewRoute
   ReviewsIndexRoute: typeof ReviewsIndexRoute
   ApiAuthSigninRoute: typeof ApiAuthSigninRoute
   ApiAuthSignoutRoute: typeof ApiAuthSignoutRoute
   ApiAuthSignupRoute: typeof ApiAuthSignupRoute
+  ProductEditIdRoute: typeof ProductEditIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -297,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/product/new': {
+      id: '/product/new'
+      path: '/product/new'
+      fullPath: '/product/new'
+      preLoaderRoute: typeof ProductNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/product/$id': {
       id: '/product/$id'
       path: '/product/$id'
@@ -330,6 +363,13 @@ declare module '@tanstack/react-router' {
       path: '/api/orders'
       fullPath: '/api/orders'
       preLoaderRoute: typeof ApiOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/product/edit/$id': {
+      id: '/product/edit/$id'
+      path: '/product/edit/$id'
+      fullPath: '/product/edit/$id'
+      preLoaderRoute: typeof ProductEditIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/products/seller': {
@@ -407,10 +447,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUploadimageRoute: ApiUploadimageRoute,
   ApiUserRoute: ApiUserRoute,
   ProductIdRoute: ProductIdRoute,
+  ProductNewRoute: ProductNewRoute,
   ReviewsIndexRoute: ReviewsIndexRoute,
   ApiAuthSigninRoute: ApiAuthSigninRoute,
   ApiAuthSignoutRoute: ApiAuthSignoutRoute,
   ApiAuthSignupRoute: ApiAuthSignupRoute,
+  ProductEditIdRoute: ProductEditIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
