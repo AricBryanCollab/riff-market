@@ -86,6 +86,7 @@ export const Route = createFileRoute("/api/products")({
 									newProduct,
 									message: "New product has been added",
 								}),
+								{ status: 201 },
 							);
 						} catch (error) {
 							console.error(error);
