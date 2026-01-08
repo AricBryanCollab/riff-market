@@ -29,9 +29,9 @@ export interface BaseProduct {
 	updatedAt?: string;
 }
 
-export interface ProductResponse {
+export interface CreateProductResponse {
 	message: string;
-	product: BaseProduct;
+	newProduct: BaseProduct;
 }
 
 export interface ApproveProductRequest {
