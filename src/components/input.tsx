@@ -8,6 +8,7 @@ interface FormInputProps {
 	isPassword?: boolean;
 	value: string | number;
 	onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+	placeholder?: string;
 	icon?: LucideIcon;
 }
 
@@ -18,6 +19,7 @@ const Input = ({
 	isPassword = false,
 	value,
 	onChange,
+	placeholder,
 	icon: Icon,
 }: FormInputProps) => {
 	const [isVisible, setIsVisible] = useState<boolean>(false);
@@ -57,7 +59,7 @@ const Input = ({
 					onChange={onChange}
 					disabled={disabled}
 					className={`w-full rounded-lg border border-primary bg-muted px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent ${Icon ? "pl-10" : ""} ${isPassword ? "pr-10" : ""}`}
-					placeholder={label.toLowerCase()}
+					placeholder={placeholder || label.toLowerCase()}
 				/>
 
 				{isPassword && (
