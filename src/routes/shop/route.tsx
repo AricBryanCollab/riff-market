@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import ShopSidebar from "@/components/shopsidebar";
 
-export const Route = createFileRoute("/_shop")({
+export const Route = createFileRoute("/shop")({
 	component: ShopLayoutComponent,
 });
 
@@ -15,5 +15,5 @@ function ShopLayoutComponent() {
 				<Outlet />
 			</main>
 		</div>
-	);
+	)
 }

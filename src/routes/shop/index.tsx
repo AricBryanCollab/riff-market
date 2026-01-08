@@ -1,14 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
 import ProductCard from "@/components/productcard";
 import SectionContainer from "@/components/sectioncontainer";
 import { mockProducts } from "@/constants/mockproducts";
 
-export const Route = createFileRoute("/_shop/shop")({
+export const Route = createFileRoute("/shop/")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
+	const navigate = useNavigate();
+
 	return (
 		<SectionContainer>
 			{/* PAGE HEADER */}
@@ -34,9 +36,9 @@ function RouteComponent() {
 					</div>
 					<button
 						type="button"
-						className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-accent transition-colors whitespace-nowrap"
+						className="flex items-center cursor-pointer gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-accent transition-colors whitespace-nowrap"
 					>
-						<Plus className="h-4 w-4" />
+						<Plus className="size-4" />
 						Add Product
 					</button>
 				</div>
@@ -70,5 +72,5 @@ function RouteComponent() {
 				<div className="h-10 w-40 rounded-full bg-slate-300" />
 			</div>
 		</SectionContainer>
-	);
+	)
 }
