@@ -70,9 +70,15 @@ export const Route = createFileRoute("/api/products/$id")({
 								);
 							}
 
-							return new Response(JSON.stringify(updatedProduct), {
-								status: 200,
-							});
+							return new Response(
+								JSON.stringify({
+									message: "Product has been updated",
+									product: updatedProduct,
+								}),
+								{
+									status: 200,
+								},
+							);
 						} catch (error) {
 							console.error(error);
 							return new Response(

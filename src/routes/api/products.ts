@@ -83,7 +83,7 @@ export const Route = createFileRoute("/api/products")({
 
 							return new Response(
 								JSON.stringify({
-									newProduct,
+									product: newProduct,
 									message: "New product has been added",
 								}),
 								{ status: 201 },

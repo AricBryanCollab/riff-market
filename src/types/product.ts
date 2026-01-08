@@ -35,9 +35,25 @@ export interface BaseProduct {
 	seller: SellerDetails;
 }
 
-export interface CreateProductResponse {
+export interface MutateProductResponse {
+	id: string;
+	sellerId: string;
+	name: string;
+	category: ProductCategory;
+	brand: string;
+	model: string;
+	images: string[];
+	description: string;
+	price: number;
+	stock: number;
+	isApproved: boolean;
+	createdAt?: string;
+	updatedAt?: string;
+}
+
+export interface ProductResponse {
 	message: string;
-	newProduct: BaseProduct;
+	product: MutateProductResponse;
 }
 
 export interface ApproveProductRequest {
