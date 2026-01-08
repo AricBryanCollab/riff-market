@@ -85,7 +85,7 @@ model Order {
   paymentMethod    PaymentMethod
   trackingNumber   String
 
-  user         User        @relation(fields: [userId], references: [id])
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   items        OrderItem[]
   notifications Notification[]
 }
@@ -100,7 +100,7 @@ model OrderItem {
   subTotal  Float
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Product {
