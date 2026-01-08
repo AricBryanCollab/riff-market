@@ -10,6 +10,7 @@ type UpdateProductRepoInput = Partial<
 	Omit<Product, "id" | "sellerId" | "createdAt" | "updatedAt">
 >;
 
+// Create Product
 export const createProduct = async (product: CreateProductRepoInput) => {
 	try {
 		return await prisma.product.create({
@@ -45,6 +46,30 @@ export const getProductById = async (id: string) => {
 	}
 };
 
+// Get Products
+const baseProductQuery = {
+	id: true,
+	name: true,
+	category: true,
+	brand: true,
+	model: true,
+	images: true,
+	description: true,
+	price: true,
+	stock: true,
+	isApproved: true,
+	createdAt: true,
+	updatedAt: true,
+
+	seller: {
+		select: {
+			firstName: true,
+			lastName: true,
+			email: true,
+		},
+	},
+};
+
 export const getProductsByIds = async (productIds: string[]) => {
 	try {
 		const products = await prisma.product.findMany({
@@ -53,16 +78,7 @@ export const getProductsByIds = async (productIds: string[]) => {
 					in: productIds,
 				},
 			},
-			select: {
-				id: true,
-				name: true,
-				price: true,
-				stock: true,
-				isApproved: true,
-				images: true,
-				category: true,
-				brand: true,
-			},
+			select: baseProductQuery,
 		});
 
 		return products;
@@ -77,6 +93,7 @@ export const getProductsBySellerId = async (sellerId: string) => {
 		return await prisma.product.findMany({
 			where: { sellerId },
 			orderBy: { createdAt: "desc" },
+			select: baseProductQuery,
 		});
 	} catch (err) {
 		console.error("Error at getProductsBySellerId", err);
@@ -89,15 +106,7 @@ export const getApprovedProducts = async () => {
 		return await prisma.product.findMany({
 			where: { isApproved: true },
 			orderBy: { createdAt: "desc" },
-			include: {
-				seller: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-					},
-				},
-			},
+			select: baseProductQuery,
 		});
 	} catch (err) {
 		console.error("Error at getApprovedProducts", err);
@@ -105,6 +114,7 @@ export const getApprovedProducts = async () => {
 	}
 };
 
+// Update Product By ID
 export const updateProductById = async (
 	id: string,
 	product: UpdateProductRepoInput,
@@ -120,6 +130,7 @@ export const updateProductById = async (
 	}
 };
 
+//  Delete Product By ID
 export const deleteProductById = async (id: string) => {
 	try {
 		return await prisma.product.delete({

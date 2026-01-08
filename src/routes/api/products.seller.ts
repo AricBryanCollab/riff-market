@@ -8,9 +8,12 @@ export const Route = createFileRoute("/api/products/seller")({
 			createHandlers({
 				GET: {
 					middleware: [authMiddleware],
-					handler: async () => {
+					handler: async ({ context }) => {
 						try {
-							const products = await getProductsBySellerService();
+							const products = await getProductsBySellerService(
+								context.id,
+								context.role,
+							);
 							return new Response(JSON.stringify(products), { status: 200 });
 						} catch (error) {
 							console.error(error);

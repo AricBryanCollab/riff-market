@@ -3,7 +3,6 @@ import type { BaseProduct } from "@/types/product";
 export const mockProducts: BaseProduct[] = [
 	{
 		id: "1",
-		sellerId: "seller1",
 		name: "Fender Stratocaster American Professional II",
 		category: "ELECTRIC",
 		brand: "Fender",
@@ -17,16 +16,20 @@ export const mockProducts: BaseProduct[] = [
 		stock: 12,
 		isApproved: true,
 		createdAt: "2024-01-15",
+		seller: {
+			firstName: "Kurt",
+			lastName: "Cobain",
+			email: "nirvana@gmail.com",
+		},
 	},
 	{
 		id: "2",
-		sellerId: "seller2",
 		name: "Boss DS-1 Distortion Pedal",
 		category: "ACCESSORY",
 		brand: "Boss",
 		model: "DS-1",
 		images: [
-			"https://images.unsplash.com/photo-1527865118650-b28bc059d09a?w=400",
+			"https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=400",
 		],
 		description:
 			"Classic distortion pedal used by countless guitarists worldwide. Delivers smooth sustain and cutting edge.",
@@ -34,10 +37,14 @@ export const mockProducts: BaseProduct[] = [
 		stock: 3,
 		isApproved: true,
 		createdAt: "2024-02-20",
+		seller: {
+			firstName: "Slash",
+			lastName: "",
+			email: "gunsnroses@gmail.com",
+		},
 	},
 	{
 		id: "3",
-		sellerId: "seller3",
 		name: "D'Addario NYXL Premium Guitar Strings",
 		category: "ACCESSORY",
 		brand: "D'Addario",
@@ -51,25 +58,33 @@ export const mockProducts: BaseProduct[] = [
 		stock: 0,
 		isApproved: true,
 		createdAt: "2024-03-01",
+		seller: {
+			firstName: "Mark",
+			lastName: "Knopfler",
+			email: "direstraits@gmail.com",
+		},
 	},
 	{
 		id: "4",
-		sellerId: "seller1",
 		name: "Gibson Les Paul Standard",
 		category: "ELECTRIC",
 		brand: "Gibson",
 		model: "Les Paul",
 		images: [
-			"https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=400",
+			"https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400",
 		],
 		description: "Classic rock tone with mahogany body and maple top.",
 		price: 2499,
 		stock: 8,
 		isApproved: true,
+		seller: {
+			firstName: "Billy",
+			lastName: "Corgan",
+			email: "smashingpumpkins@gmail.com",
+		},
 	},
 	{
 		id: "5",
-		sellerId: "seller2",
 		name: "Ibanez RG Series",
 		category: "ELECTRIC",
 		brand: "Ibanez",
@@ -81,10 +96,14 @@ export const mockProducts: BaseProduct[] = [
 		price: 899,
 		stock: 15,
 		isApproved: true,
+		seller: {
+			firstName: "Gerard",
+			lastName: "Way",
+			email: "mychemicalromance@gmail.com",
+		},
 	},
 	{
 		id: "6",
-		sellerId: "seller3",
 		name: "Ernie Ball Regular Slinky",
 		category: "ACCESSORY",
 		brand: "Ernie Ball",
@@ -96,10 +115,14 @@ export const mockProducts: BaseProduct[] = [
 		price: 8,
 		stock: 50,
 		isApproved: true,
+		seller: {
+			firstName: "Kurt",
+			lastName: "Cobain",
+			email: "nirvana@gmail.com",
+		},
 	},
 	{
 		id: "7",
-		sellerId: "seller1",
 		name: "Ibanez Tube Screamer TS9",
 		category: "ACCESSORY",
 		brand: "Ibanez",
@@ -112,11 +135,14 @@ export const mockProducts: BaseProduct[] = [
 		price: 99,
 		stock: 3,
 		isApproved: true,
+		seller: {
+			firstName: "Slash",
+			lastName: "",
+			email: "gunsnroses@gmail.com",
+		},
 	},
-
 	{
 		id: "8",
-		sellerId: "seller2",
 		name: "Taylor 814ce Acoustic",
 		category: "ACOUSTIC",
 		brand: "Taylor",
@@ -128,5 +154,10 @@ export const mockProducts: BaseProduct[] = [
 		price: 3499,
 		stock: 5,
 		isApproved: true,
+		seller: {
+			firstName: "Mark",
+			lastName: "Knopfler",
+			email: "direstraits@gmail.com",
+		},
 	},
 ];

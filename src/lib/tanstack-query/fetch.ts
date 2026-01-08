@@ -2,16 +2,28 @@ type ApiResponse<T> = {
 	data: T;
 };
 
+type ApiFetchOptions = RequestInit & {
+	contentType?: "application/json" | "multipart/form-data";
+};
+
 export async function apiFetch<T>(
 	input: RequestInfo,
-	init?: RequestInit,
+	init?: ApiFetchOptions,
 ): Promise<T> {
+	const { contentType = "application/json", ...restInit } = init || {};
+
+	const headers: HeadersInit =
+		contentType === "multipart/form-data"
+			? {}
+			: { "Content-Type": contentType };
+
 	const res = await fetch(input, {
 		credentials: "include",
 		headers: {
-			"Content-Type": "application/json",
+			...headers,
+			...(restInit.headers || {}),
 		},
-		...init,
+		...restInit,
 	});
 
 	if (!res.ok) {

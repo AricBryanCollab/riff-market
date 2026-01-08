@@ -13,7 +13,29 @@ export interface CreateProductRequest {
 
 export type UpdateProductRequest = Partial<CreateProductRequest>;
 
+interface SellerDetails {
+	firstName: string;
+	lastName: string;
+	email: string;
+}
+
 export interface BaseProduct {
+	id: string;
+	name: string;
+	category: ProductCategory;
+	brand: string;
+	model: string;
+	images: string[];
+	description: string;
+	price: number;
+	stock: number;
+	isApproved: boolean;
+	createdAt?: string;
+	updatedAt?: string;
+	seller: SellerDetails;
+}
+
+export interface MutateProductResponse {
 	id: string;
 	sellerId: string;
 	name: string;
@@ -31,7 +53,7 @@ export interface BaseProduct {
 
 export interface ProductResponse {
 	message: string;
-	product: BaseProduct;
+	product: MutateProductResponse;
 }
 
 export interface ApproveProductRequest {

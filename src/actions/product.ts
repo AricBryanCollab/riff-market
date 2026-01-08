@@ -18,12 +18,14 @@ import {
 	unsignedUploadImage,
 } from "@/utils/cloudinary";
 import { compressImage } from "@/utils/compressimage";
-import { useAppSession } from "@/utils/session";
 import { getProductById } from "../data/product.repo";
 
 // Create Product Service
-export async function createProductService(rawData: CreateProductInput) {
-	const session = await useAppSession();
+export async function createProductService(
+	sellerId: string,
+	authRole: string,
+	rawData: CreateProductInput,
+) {
 	const parsed = createProductSchema.safeParse(rawData);
 
 	if (!parsed.success) {
@@ -35,8 +37,7 @@ export async function createProductService(rawData: CreateProductInput) {
 
 	const data = parsed.data;
 
-	const sellerId = session.data.userId;
-	if (!sellerId) {
+	if (authRole !== "SELLER" || !sellerId) {
 		return { error: "Unauthorized, user must be a seller" };
 	}
 
@@ -78,7 +79,7 @@ export async function createProductService(rawData: CreateProductInput) {
 		price: Number(data.price),
 		stock: Number(data.stock),
 		images: imageUrls,
-		sellerId,
+		sellerId: sellerId,
 	};
 
 	const newProduct = await createProduct(productData);
@@ -98,15 +99,13 @@ export async function getProductByIdService(productId: string) {
 }
 
 // Get Product By Seller Service
-export async function getProductsBySellerService() {
-	const session = await useAppSession();
-	const sellerId = session.data.userId;
-
-	if (!sellerId) {
-		return { error: "User is unauthorized" };
+export async function getProductsBySellerService(id: string, role: string) {
+	const userId = id;
+	if (role !== "SELLER" || !userId) {
+		return { error: "Unauthorized, user must be a seller" };
 	}
 
-	const products = await getProductsBySellerId(sellerId);
+	const products = await getProductsBySellerId(userId);
 
 	return products;
 }
@@ -120,11 +119,9 @@ export async function getApprovedProductsService() {
 //Update Product Service
 export async function updateProductService(
 	productId: string,
+	sellerId: string,
 	rawData: UpdateProductInput,
 ) {
-	const session = await useAppSession();
-	const sellerId = session.data.userId;
-
 	if (!sellerId) {
 		return { error: "User is unauthorized" };
 	}
@@ -220,10 +217,10 @@ export async function updateProductService(
 }
 
 // Delete Product Service
-export async function deleteProductService(productId: string) {
-	const session = await useAppSession();
-	const sellerId = session.data.userId;
-
+export async function deleteProductService(
+	productId: string,
+	sellerId: string,
+) {
 	if (!sellerId) {
 		return { error: "User is unauthorized" };
 	}
