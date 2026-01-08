@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import SectionContainer from "@/components/sectioncontainer";
+
 export const Route = createFileRoute("/product/new")({
 	component: RouteComponent,
 });
