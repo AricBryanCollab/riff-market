@@ -4,6 +4,7 @@ import {
 	createProductService,
 	getApprovedProductsService,
 } from "@/actions/product";
+import { authMiddleware } from "@/middleware";
 import { extractFormData } from "@/utils/extractFormData";
 
 export const Route = createFileRoute("/api/products")({
@@ -28,8 +29,11 @@ export const Route = createFileRoute("/api/products")({
 					},
 				},
 				POST: {
-					handler: async ({ request }) => {
+					middleware: [authMiddleware],
+					handler: async ({ request, context }) => {
 						try {
+							const sellerId = context.id;
+							const authRole = context.role;
 							const formData = await request.formData();
 
 							const {
@@ -60,7 +64,7 @@ export const Route = createFileRoute("/api/products")({
 
 							const images = formData.getAll("image") as File[];
 
-							const newProduct = await createProductService({
+							const rawData = {
 								name,
 								category,
 								brand,
@@ -69,7 +73,13 @@ export const Route = createFileRoute("/api/products")({
 								price: Number(price),
 								stock: Number(stock),
 								images,
-							});
+							};
+
+							const newProduct = await createProductService(
+								sellerId,
+								authRole,
+								rawData,
+							);
 
 							if ("error" in newProduct) {
 								return new Response(

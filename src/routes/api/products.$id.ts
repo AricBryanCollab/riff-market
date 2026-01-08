@@ -33,9 +33,11 @@ export const Route = createFileRoute("/api/products/$id")({
 					},
 				},
 				PUT: {
-					handler: async ({ request, params }) => {
+					middleware: [authMiddleware],
+					handler: async ({ request, params, context }) => {
 						try {
 							const { id } = params;
+							const sellerId = context.id;
 							const formData = await request.formData();
 
 							const extractedData = extractPartialFormData(formData, [
@@ -61,7 +63,11 @@ export const Route = createFileRoute("/api/products/$id")({
 								}),
 								...(images.length > 0 && { images }),
 							};
-							const updatedProduct = await updateProductService(id, rawData);
+							const updatedProduct = await updateProductService(
+								id,
+								sellerId,
+								rawData,
+							);
 
 							if ("error" in updatedProduct) {
 								return new Response(
@@ -93,11 +99,13 @@ export const Route = createFileRoute("/api/products/$id")({
 					},
 				},
 				DELETE: {
-					handler: async ({ params }) => {
+					middleware: [authMiddleware],
+					handler: async ({ params, context }) => {
 						try {
+							const sellerId = context.id;
 							const { id } = params;
 
-							const deletedProduct = await deleteProductService(id);
+							const deletedProduct = await deleteProductService(id, sellerId);
 
 							if ("error" in deletedProduct) {
 								return new Response(
