@@ -56,7 +56,7 @@ const TextArea = ({
 					disabled={disabled}
 					rows={rows}
 					maxLength={maxLength}
-					className={`w-full rounded-lg border border-primary bg-muted px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent ${Icon ? "pl-10" : ""} ${resizeClass}`}
+					className={`w-full rounded-lg border border-primary bg-muted px-4 py-2.5 text-sm h-41.25 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent ${Icon ? "pl-10" : ""} ${resizeClass}`}
 					placeholder={placeholder || label.toLowerCase()}
 				/>
 				{showCounter && maxLength && (
@@ -65,11 +65,6 @@ const TextArea = ({
 					</div>
 				)}
 			</div>
-			{showCounter && maxLength && (
-				<div className="text-xs text-foreground/60 text-right">
-					{currentLength}/{maxLength} characters
-				</div>
-			)}
 		</div>
 	);
 };
