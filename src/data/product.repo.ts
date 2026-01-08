@@ -89,12 +89,25 @@ export const getApprovedProducts = async () => {
 		return await prisma.product.findMany({
 			where: { isApproved: true },
 			orderBy: { createdAt: "desc" },
-			include: {
+			select: {
+				id: true,
+				name: true,
+				category: true,
+				brand: true,
+				model: true,
+				images: true,
+				description: true,
+				price: true,
+				stock: true,
+				isApproved: true,
+				createdAt: true,
+				updatedAt: true,
+
 				seller: {
 					select: {
-						id: true,
 						firstName: true,
 						lastName: true,
+						email: true,
 					},
 				},
 			},

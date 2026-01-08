@@ -13,9 +13,14 @@ export interface CreateProductRequest {
 
 export type UpdateProductRequest = Partial<CreateProductRequest>;
 
+interface SellerDetails {
+	firstName: string;
+	lastName: string;
+	email: string;
+}
+
 export interface BaseProduct {
 	id: string;
-	sellerId: string;
 	name: string;
 	category: ProductCategory;
 	brand: string;
@@ -27,6 +32,7 @@ export interface BaseProduct {
 	isApproved: boolean;
 	createdAt?: string;
 	updatedAt?: string;
+	seller: SellerDetails;
 }
 
 export interface CreateProductResponse {
