@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FileMusic } from "lucide-react";
+import { Camera, FileMusic } from "lucide-react";
 import { Counter } from "@/components/counter";
+import ImageUploader from "@/components/imageuploader";
 import Input from "@/components/input";
 import NumberInput from "@/components/numberinput";
 import SectionContainer from "@/components/sectioncontainer";
@@ -24,71 +25,86 @@ function RouteComponent() {
 					marketplace.
 				</Body>
 			</div>
-			<form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-				<Input
-					inputId="name"
-					label="Product Name"
-					onChange={() => {}}
-					value=""
-				/>
-
-				<Input
-					inputId="brand"
-					label="Product Brand"
-					placeholder="eg. Fender, Gibson, Yamaha, Taylor"
-					onChange={() => {}}
-					value=""
-				/>
-
-				<Input
-					inputId="model"
-					label="Model Specification"
-					placeholder="eg. American Standard, Jimi Hendrix Special Edition"
-					onChange={() => {}}
-					value=""
-				/>
-
-				<Select
-					options={productCategoryOptions.map((p) => ({
-						label: p.label,
-						value: p.value,
-						icon: p.icon,
-					}))}
-					value=""
-					icon={FileMusic}
-					onChangeValue={() => {}}
-					label="Product Classification"
-				/>
-
-				<TextArea
-					inputId="description"
-					label="Product Description"
-					value=""
-					onChange={() => {}}
-					placeholder="Please provide a description for the product you want to sell. This gives the customer insights about the instrument/gear/accessory you want to sell."
-					maxLength={200}
-					resize="none"
-					showCounter
-				/>
-
-				<div className="flex flex-col gap-3">
-					<Counter
-						inputId="stock"
-						label="Stock Quantity"
-						value={0}
+			<form>
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<Input
+						inputId="name"
+						label="Product Name"
 						onChange={() => {}}
-						min={0}
-						max={30}
-						step={1}
-						showInput={true}
+						value=""
 					/>
 
-					<NumberInput
-						inputId="price"
-						label="Product Price Per Unit"
-						value={100}
-						decimalPlaces={2}
+					<Input
+						inputId="brand"
+						label="Product Brand"
+						placeholder="eg. Fender, Gibson, Yamaha, Taylor"
 						onChange={() => {}}
+						value=""
+					/>
+
+					<Input
+						inputId="model"
+						label="Model Specification"
+						placeholder="eg. American Standard, Jimi Hendrix Special Edition"
+						onChange={() => {}}
+						value=""
+					/>
+
+					<Select
+						options={productCategoryOptions.map((p) => ({
+							label: p.label,
+							value: p.value,
+							icon: p.icon,
+						}))}
+						value=""
+						icon={FileMusic}
+						onChangeValue={() => {}}
+						label="Product Classification"
+					/>
+
+					<TextArea
+						inputId="description"
+						label="Product Description"
+						value=""
+						onChange={() => {}}
+						placeholder="Please provide a description for the product you want to sell. This gives the customer insights about the instrument/gear/accessory you want to sell."
+						maxLength={200}
+						resize="none"
+						showCounter
+					/>
+
+					<div className="flex flex-col gap-3">
+						<Counter
+							inputId="stock"
+							label="Stock Quantity"
+							value={0}
+							onChange={() => {}}
+							min={0}
+							max={30}
+							step={1}
+							showInput={true}
+						/>
+
+						<NumberInput
+							inputId="price"
+							label="Product Price Per Unit"
+							value={100}
+							decimalPlaces={2}
+							onChange={() => {}}
+						/>
+					</div>
+				</div>
+				<div className="max-w-4xl mx-auto">
+					<ImageUploader
+						inputId="product-images"
+						label="Product Photos"
+						images={[""]}
+						onChange={() => {}}
+						maxImages={5}
+						maxSizeMB={5}
+						acceptFormats="image/jpeg,image/png"
+						icon={Camera}
+						disabled={false}
 					/>
 				</div>
 			</form>
