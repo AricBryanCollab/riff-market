@@ -99,12 +99,9 @@ export async function getProductByIdService(productId: string) {
 }
 
 // Get Product By Seller Service
-export async function getProductsBySellerService() {
-	const session = await useAppSession();
-
-	const authRole = session.data.role;
-	const userId = session.data.userId;
-	if (authRole !== "SELLER" || !userId) {
+export async function getProductsBySellerService(id: string, role: string) {
+	const userId = id;
+	if (role !== "SELLER" || !userId) {
 		return { error: "Unauthorized, user must be a seller" };
 	}
 

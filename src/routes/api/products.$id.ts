@@ -5,6 +5,7 @@ import {
 	updateProductService,
 } from "@/actions/product";
 import type { UpdateProductInput } from "@/lib/zod/product.validation";
+import { authMiddleware } from "@/middleware";
 import { extractPartialFormData } from "@/utils/extractFormData";
 
 export const Route = createFileRoute("/api/products/$id")({
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/api/products/$id")({
 		handlers: ({ createHandlers }) =>
 			createHandlers({
 				GET: {
+					middleware: [authMiddleware],
 					handler: async ({ params }) => {
 						try {
 							const { id } = params;

@@ -1,4 +1,3 @@
-import { redirect } from "@tanstack/react-router";
 import { createMiddleware } from "@tanstack/react-start";
 import type { User } from "generated/prisma/client";
 
@@ -8,13 +7,22 @@ import { useAppSession } from "@/utils/session";
 export const authMiddleware = createMiddleware().server(async ({ next }) => {
 	const session = await useAppSession();
 
-	if (!session?.id) {
-		throw redirect({ to: "/" });
+	const userId = session.data.userId;
+
+	if (!session.data || !userId) {
+		return new Response(
+			JSON.stringify({ error: "Access Denied. Unauthorized" }),
+			{
+				status: 401,
+			},
+		);
 	}
 
-	const user = await findUserById(session.id);
+	const user = await findUserById(userId);
 	if (!user) {
-		throw redirect({ to: "/" });
+		return new Response(JSON.stringify({ error: "User not found" }), {
+			status: 401,
+		});
 	}
 
 	return next({ context: user });
