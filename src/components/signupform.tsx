@@ -2,7 +2,7 @@ import { KeyRound, Lock, Mail, User, UserRoundPlus } from "lucide-react";
 import Button from "@/components/button";
 import Input from "@/components/input";
 import Select from "@/components/select";
-import { roleOptions } from "@/constants/userRole";
+import { roleOptions } from "@/constants/selectOptions";
 import useAuthDialog from "@/hooks/useAuthDialog";
 import useSignUp from "@/hooks/useSignUp";
 import type { UserRole } from "@/types/enum";
