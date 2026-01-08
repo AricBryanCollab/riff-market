@@ -6,7 +6,7 @@ export const Route = createFileRoute("/product/edit/$id")({
 });
 
 function RouteComponent() {
-	const { id } = useParams({ from: "/product/$id" });
+	const { id } = useParams({ from: "/product/edit/$id" });
 
 	return (
 		<SectionContainer>
