@@ -1,4 +1,5 @@
 import SectionContainer from "@/components/sectioncontainer";
+import { H1, H4 } from "@/components/typography";
 
 interface HeroProps {
 	image: string;
@@ -16,15 +17,11 @@ const Hero = ({ image, title, caption }: HeroProps) => {
 					}}
 					className="absolute -z-10 inset-0 bg-cover bg-center"
 				/>
-				<div className="rounded-2xl bg-foreground/45 px-4 py-3">
-					<h1 className="text-4xl font-secondary tracking-wider font-bold md:text-6xl text-background">
+				<div className="rounded-2xl bg-foreground/45 px-4 py-3 text-white">
+					<H1 className="text-4xlmd:text-6xl" secondary>
 						{title}
-					</h1>
-					{caption && (
-						<p className="mt-4 text-base md:text-lg lg:text-xl text-white/90 mx-auto max-w-2xl">
-							{caption}
-						</p>
-					)}
+					</H1>
+					{caption && <H4 className="mt-2 lg:text-left">{caption}</H4>}
 				</div>
 			</div>
 		</SectionContainer>

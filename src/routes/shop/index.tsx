@@ -1,26 +1,27 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
 import ProductCard from "@/components/productcard";
 import SectionContainer from "@/components/sectioncontainer";
+import { Body, BodySmall, H3 } from "@/components/typography";
 import { mockProducts } from "@/constants/mockproducts";
 
-export const Route = createFileRoute("/_shop/shop")({
+export const Route = createFileRoute("/shop/")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
+	const navigate = useNavigate();
+
 	return (
 		<SectionContainer>
 			{/* PAGE HEADER */}
 			<div className="flex flex-col gap-6 rounded-xl bg-white p-4 md:flex-row md:items-center md:justify-between">
 				<div>
-					<h1 className="text-2xl font-bold text-foreground">
-						Browse Music Tools
-					</h1>
-					<p className="mt-1 text-sm text-muted-foreground">
+					<H3 className="tracking-wider">Browse Music Tools</H3>
+					<Body className="mt-1">
 						Discover guitars, pedals, keyboards, and accessories in this
 						community-based marketplace
-					</p>
+					</Body>
 				</div>
 
 				<div className="flex flex-col md:flex-row items-center gap-2">
@@ -34,10 +35,11 @@ function RouteComponent() {
 					</div>
 					<button
 						type="button"
-						className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-accent transition-colors whitespace-nowrap"
+						onClick={() => navigate({ to: "/product/new" })}
+						className="flex items-center cursor-pointer gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-accent transition-colors whitespace-nowrap"
 					>
-						<Plus className="h-4 w-4" />
-						Add Product
+						<Plus className="size-4" />
+						<BodySmall>Add Button</BodySmall>
 					</button>
 				</div>
 			</div>
