@@ -1,122 +1,39 @@
 import { type LucideIcon, Upload, X } from "lucide-react";
-import { useRef, useState } from "react";
-
-interface ImageFile {
-	file: File;
-	preview: string;
-}
+import useUploadImage, { type ImageFile } from "@/hooks/useUploadImage";
 
 interface ImageUploaderProps {
 	inputId: string;
 	label: string;
-	disabled?: boolean;
 	images: ImageFile[];
 	onChange: (images: ImageFile[]) => void;
 	maxImages?: number;
 	icon?: LucideIcon;
-	acceptFormats?: string;
 	maxSizeMB?: number;
 }
 
 const ImageUploader = ({
 	inputId,
 	label,
-	disabled,
 	images,
 	onChange,
 	maxImages = 5,
 	icon: Icon,
-	acceptFormats = "image/jpeg,image/png,image/webp,image/gif",
 	maxSizeMB = 5,
 }: ImageUploaderProps) => {
-	const fileInputRef = useRef<HTMLInputElement>(null);
-	const [dragActive, setDragActive] = useState(false);
-	const [error, setError] = useState<string>("");
-
-	const handleFileSelect = async (files: FileList | null) => {
-		if (!files || files.length === 0) return;
-
-		setError("");
-
-		const remainingSlots = maxImages - images.length;
-		if (files.length > remainingSlots) {
-			setError(`You can only upload ${remainingSlots} more image(s)`);
-			return;
-		}
-
-		const newImages: ImageFile[] = [];
-
-		for (let i = 0; i < files.length; i++) {
-			const file = files[i];
-
-			if (file.size > maxSizeMB * 1024 * 1024) {
-				setError(`${file.name} exceeds ${maxSizeMB}MB limit`);
-				continue;
-			}
-
-			if (
-				!acceptFormats.split(",").some((format) => file.type === format.trim())
-			) {
-				setError(`${file.name} is not a supported format`);
-				continue;
-			}
-
-			const preview = URL.createObjectURL(file);
-			newImages.push({ file, preview });
-		}
-
-		if (newImages.length > 0) {
-			onChange([...images, ...newImages]);
-		}
-	};
-
-	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		handleFileSelect(e.target.files);
-		e.target.value = "";
-	};
-
-	const handleRemoveImage = (index: number) => {
-		URL.revokeObjectURL(images[index].preview);
-
-		const newImages = images.filter((_, i) => i !== index);
-		onChange(newImages);
-		setError("");
-	};
-
-	const handleDragEnter = (e: React.DragEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		setDragActive(true);
-	};
-
-	const handleDragLeave = (e: React.DragEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		setDragActive(false);
-	};
-
-	const handleDragOver = (e: React.DragEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-	};
-
-	const handleDrop = (e: React.DragEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		setDragActive(false);
-
-		if (disabled) return;
-
-		const files = e.dataTransfer.files;
-		handleFileSelect(files);
-	};
-
-	const triggerFileInput = () => {
-		fileInputRef.current?.click();
-	};
-
-	const canAddMore = images.length < maxImages;
-
+	const {
+		dragActive,
+		error,
+		canAddMore,
+		fileInputRef,
+		acceptFormats,
+		triggerFileInput,
+		handleDragEnter,
+		handleRemoveImage,
+		handleDrop,
+		handleInputChange,
+		handleDragLeave,
+		handleDragOver,
+	} = useUploadImage(images, maxImages, maxSizeMB, onChange);
 	return (
 		<div className="flex flex-col gap-1 my-2">
 			<label
@@ -139,7 +56,7 @@ const ImageUploader = ({
 								dragActive
 									? "border-primary bg-accent"
 									: "border-primary bg-muted hover:bg-accent"
-							} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+							}`}
 						>
 							<input
 								ref={fileInputRef}
@@ -148,7 +65,6 @@ const ImageUploader = ({
 								multiple
 								accept={acceptFormats}
 								onChange={handleInputChange}
-								disabled={disabled}
 								className="hidden"
 							/>
 							<div className="flex flex-col items-center justify-center h-full py-8 px-4">
@@ -204,16 +120,15 @@ const ImageUploader = ({
 										className="w-full h-full object-cover"
 									/>
 									{/* Remove Button */}
-									{!disabled && (
-										<button
-											type="button"
-											onClick={() => handleRemoveImage(index)}
-											className="absolute top-2 right-2 cursor-pointer bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-											title="Remove image"
-										>
-											<X size={16} />
-										</button>
-									)}
+									<button
+										type="button"
+										onClick={() => handleRemoveImage(index)}
+										className="absolute top-2 right-2 cursor-pointer bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+										title="Remove image"
+									>
+										<X size={16} />
+									</button>
+
 									{/* Image Number & File Name */}
 									<div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-2 py-1">
 										<div className="font-semibold">{index + 1}</div>

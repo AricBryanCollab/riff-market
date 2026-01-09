@@ -106,7 +106,6 @@ function RouteComponent() {
 						maxImages={5}
 						maxSizeMB={5}
 						icon={Camera}
-						disabled={false}
 					/>
 				</div>
 
