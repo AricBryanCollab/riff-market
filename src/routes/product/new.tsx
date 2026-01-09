@@ -21,6 +21,7 @@ function RouteComponent() {
 	const {
 		product,
 		images,
+		loading,
 		onChange,
 		onCategoryChange,
 		onImagesChange,
@@ -124,13 +125,14 @@ function RouteComponent() {
 
 				<div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start md:justify-end">
 					<Button
+						loading={loading}
 						variant="outline"
 						type="button"
 						action={clearCreateProductForm}
 					>
 						Clear
 					</Button>
-					<Button variant="primary" type="submit">
+					<Button loading={loading} variant="primary" type="submit">
 						Add Product
 					</Button>
 				</div>
