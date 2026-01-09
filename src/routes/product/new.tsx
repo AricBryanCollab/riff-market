@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Camera, FileMusic } from "lucide-react";
+import Button from "@/components/button";
 import { Counter } from "@/components/counter";
 import ImageUploader from "@/components/imageuploader";
 import Input from "@/components/input";
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/product/new")({
 function RouteComponent() {
 	return (
 		<SectionContainer>
-			<div className="my-4 max-w-3xl flex flex-col gap-3">
+			<div className="my-4 max-w-6xl flex flex-col gap-3">
 				<H4>Add A New Product To Sell</H4>
 				<Body>
 					Fill up the form to add the product. RiffMarket App admin would check
@@ -26,7 +27,7 @@ function RouteComponent() {
 				</Body>
 			</div>
 			<form>
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 					<Input
 						inputId="name"
 						label="Product Name"
@@ -71,9 +72,10 @@ function RouteComponent() {
 						maxLength={200}
 						resize="none"
 						showCounter
+						rows={5}
 					/>
 
-					<div className="flex flex-col gap-3">
+					<div className="lg:col-span-1">
 						<Counter
 							inputId="stock"
 							label="Stock Quantity"
@@ -94,18 +96,27 @@ function RouteComponent() {
 						/>
 					</div>
 				</div>
-				<div className="max-w-4xl mx-auto">
+
+				<div className="mt-6 ">
 					<ImageUploader
-						inputId="product-images"
+						inputId="images"
 						label="Product Photos"
-						images={[""]}
+						images={[]}
 						onChange={() => {}}
 						maxImages={5}
 						maxSizeMB={5}
-						acceptFormats="image/jpeg,image/png"
 						icon={Camera}
 						disabled={false}
 					/>
+				</div>
+
+				<div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start md:justify-end">
+					<Button variant="outline" type="button">
+						Clear
+					</Button>
+					<Button variant="primary" type="submit">
+						Add Product
+					</Button>
 				</div>
 			</form>
 		</SectionContainer>
