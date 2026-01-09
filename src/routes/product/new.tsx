@@ -10,12 +10,24 @@ import Select from "@/components/select";
 import TextArea from "@/components/textarea";
 import { Body, H4 } from "@/components/typography";
 import { productCategoryOptions } from "@/constants/selectOptions";
+import useCreateProduct from "@/hooks/useCreateProduct";
+import type { ProductCategory } from "@/types/enum";
 
 export const Route = createFileRoute("/product/new")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
+	const {
+		product,
+		images,
+		onChange,
+		onCategoryChange,
+		onImagesChange,
+		clearCreateProductForm,
+		handleSubmit,
+	} = useCreateProduct();
+
 	return (
 		<SectionContainer>
 			<div className="my-4 max-w-6xl flex flex-col gap-3">
@@ -26,29 +38,29 @@ function RouteComponent() {
 					marketplace.
 				</Body>
 			</div>
-			<form>
+			<form onSubmit={handleSubmit}>
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 					<Input
 						inputId="name"
 						label="Product Name"
-						onChange={() => {}}
-						value=""
+						onChange={onChange}
+						value={product.name}
 					/>
 
 					<Input
 						inputId="brand"
 						label="Product Brand"
 						placeholder="eg. Fender, Gibson, Yamaha, Taylor"
-						onChange={() => {}}
-						value=""
+						onChange={onChange}
+						value={product.brand}
 					/>
 
 					<Input
 						inputId="model"
 						label="Model Specification"
 						placeholder="eg. American Standard, Jimi Hendrix Special Edition"
-						onChange={() => {}}
-						value=""
+						onChange={onChange}
+						value={product.model}
 					/>
 
 					<Select
@@ -57,17 +69,19 @@ function RouteComponent() {
 							value: p.value,
 							icon: p.icon,
 						}))}
-						value=""
+						value={product.category}
 						icon={FileMusic}
-						onChangeValue={() => {}}
+						onChangeValue={(value: string) =>
+							onCategoryChange(value as ProductCategory)
+						}
 						label="Product Classification"
 					/>
 
 					<TextArea
 						inputId="description"
 						label="Product Description"
-						value=""
-						onChange={() => {}}
+						value={product.description}
+						onChange={onChange}
 						placeholder="Please provide a description for the product you want to sell. This gives the customer insights about the instrument/gear/accessory you want to sell."
 						maxLength={200}
 						resize="none"
@@ -79,20 +93,19 @@ function RouteComponent() {
 						<Counter
 							inputId="stock"
 							label="Stock Quantity"
-							value={0}
-							onChange={() => {}}
+							value={product.stock}
+							onChange={onChange}
 							min={0}
-							max={30}
-							step={1}
+							max={10}
 							showInput={true}
 						/>
 
 						<NumberInput
 							inputId="price"
 							label="Product Price Per Unit"
-							value={100}
+							value={product.price}
 							decimalPlaces={2}
-							onChange={() => {}}
+							onChange={onChange}
 						/>
 					</div>
 				</div>
@@ -101,8 +114,8 @@ function RouteComponent() {
 					<ImageUploader
 						inputId="images"
 						label="Product Photos"
-						images={[]}
-						onChange={() => {}}
+						images={images}
+						onChange={onImagesChange}
 						maxImages={5}
 						maxSizeMB={5}
 						icon={Camera}
@@ -110,7 +123,11 @@ function RouteComponent() {
 				</div>
 
 				<div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start md:justify-end">
-					<Button variant="outline" type="button">
+					<Button
+						variant="outline"
+						type="button"
+						action={clearCreateProductForm}
+					>
 						Clear
 					</Button>
 					<Button variant="primary" type="submit">

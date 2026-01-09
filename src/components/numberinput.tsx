@@ -5,7 +5,7 @@ interface NumberInputProps {
 	label: string;
 	disabled?: boolean;
 	value: number;
-	onChange: (value: number) => void;
+	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	placeholder?: string;
 	icon?: LucideIcon;
 	min?: number;
@@ -37,7 +37,15 @@ const NumberInput = ({
 		const inputValue = e.target.value;
 
 		if (inputValue === "") {
-			onChange(0);
+			const syntheticEvent = {
+				...e,
+				target: {
+					...e.target,
+					id: inputId,
+					value: "0",
+				},
+			} as React.ChangeEvent<HTMLInputElement>;
+			onChange(syntheticEvent);
 			return;
 		}
 
@@ -55,13 +63,19 @@ const NumberInput = ({
 		if (min !== undefined && numValue < min) return;
 		if (max !== undefined && numValue > max) return;
 
-		onChange(numValue);
+		onChange(e);
 	};
 
-	const handleBlur = () => {
+	const handleBlur = (_: React.FocusEvent<HTMLInputElement>) => {
 		const formatted = Number(value.toFixed(decimalPlaces));
 		if (formatted !== value) {
-			onChange(formatted);
+			const syntheticEvent = {
+				target: {
+					id: inputId,
+					value: String(formatted),
+				},
+			} as React.ChangeEvent<HTMLInputElement>;
+			onChange(syntheticEvent);
 		}
 	};
 
