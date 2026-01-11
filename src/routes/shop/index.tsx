@@ -1,9 +1,11 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
 import ProductCard from "@/components/productcard";
 import SectionContainer from "@/components/sectioncontainer";
 import { Body, BodySmall, H3 } from "@/components/typography";
 import { mockProducts } from "@/constants/mockproducts";
+import { getApprovedProducts } from "@/lib/tanstack-query/product.queries";
 
 export const Route = createFileRoute("/shop/")({
 	component: RouteComponent,
@@ -12,6 +14,14 @@ export const Route = createFileRoute("/shop/")({
 function RouteComponent() {
 	const navigate = useNavigate();
 
+	const { data, isError, isPending } = useQuery({
+		queryKey: ["product"],
+		queryFn: getApprovedProducts,
+		retry: false,
+	});
+
+	console.log(data);
+	console.log("Loading state", isPending);
 	return (
 		<SectionContainer>
 			{/* PAGE HEADER */}
@@ -39,7 +49,7 @@ function RouteComponent() {
 						className="flex items-center cursor-pointer gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-accent transition-colors whitespace-nowrap"
 					>
 						<Plus className="size-4" />
-						<BodySmall>Add Button</BodySmall>
+						<BodySmall>Add Product</BodySmall>
 					</button>
 				</div>
 			</div>
