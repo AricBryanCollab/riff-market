@@ -1,7 +1,3 @@
-type ApiResponse<T> = {
-	data: T;
-};
-
 type ApiFetchOptions = RequestInit & {
 	contentType?: "application/json" | "multipart/form-data";
 };
@@ -31,6 +27,5 @@ export async function apiFetch<T>(
 		throw new Error(error?.message ?? res.statusText);
 	}
 
-	const json = (await res.json()) as ApiResponse<T>;
-	return json.data;
+	return res.json() as Promise<T>;
 }
