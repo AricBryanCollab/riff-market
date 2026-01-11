@@ -40,15 +40,11 @@ export function createProduct(data: CreateProductInput) {
 }
 
 export function getProductDetailsById(id: string) {
-	return apiFetch<BaseProduct>(`/api/products/${id}`, {
-		method: "GET",
-	});
+	return apiFetch<BaseProduct>(`/api/products/${id}`);
 }
 
 export function getApprovedProducts() {
-	return apiFetch<BaseProduct[]>("/api/products", {
-		method: "GET",
-	});
+	return apiFetch<BaseProduct[]>("/api/products");
 }
 
 export function updateProduct(id: string, data: UpdateProductInput) {
