@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
+
+import AnimatedLoader from "@/components/animatedloader";
 import ProductCard from "@/components/productcard";
 import SectionContainer from "@/components/sectioncontainer";
 import { Body, BodySmall, H3 } from "@/components/typography";
-import { mockProducts } from "@/constants/mockproducts";
+
 import { getApprovedProducts } from "@/lib/tanstack-query/product.queries";
 
 export const Route = createFileRoute("/shop/")({
@@ -14,14 +16,24 @@ export const Route = createFileRoute("/shop/")({
 function RouteComponent() {
 	const navigate = useNavigate();
 
-	const { data, isError, isPending } = useQuery({
+	const {
+		data: productList,
+		isError,
+		isPending,
+	} = useQuery({
 		queryKey: ["product"],
 		queryFn: getApprovedProducts,
 		retry: false,
 	});
 
-	console.log(data);
-	console.log("Loading state", isPending);
+	if (isPending) {
+		return (
+			<SectionContainer>
+				<AnimatedLoader text="Gathering available instruments" />
+			</SectionContainer>
+		);
+	}
+
 	return (
 		<SectionContainer>
 			{/* PAGE HEADER */}
@@ -72,9 +84,17 @@ function RouteComponent() {
 
 			{/* PRODUCT GRID */}
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-				{mockProducts.map((product) => (
-					<ProductCard key={product.id} product={product} />
-				))}
+				{productList && productList.length > 0 && !isError ? (
+					productList.map((product) => (
+						<ProductCard key={product.id} product={product} />
+					))
+				) : (
+					<div className="col-span-full text-center py-12">
+						<p className="text-muted-foreground text-lg">
+							No products available
+						</p>
+					</div>
+				)}
 			</div>
 
 			{/* PAGINATION / LOAD MORE */}
