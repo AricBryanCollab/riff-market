@@ -26,17 +26,8 @@ function RouteComponent() {
 		retry: false,
 	});
 
-	if (isPending) {
-		return (
-			<SectionContainer>
-				<AnimatedLoader text="Gathering available instruments" />
-			</SectionContainer>
-		);
-	}
-
 	return (
 		<SectionContainer>
-			{/* PAGE HEADER */}
 			<div className="flex flex-col gap-6 rounded-xl bg-white p-4 md:flex-row md:items-center md:justify-between">
 				<div>
 					<H3 className="tracking-wider">Browse Music Tools</H3>
@@ -66,7 +57,6 @@ function RouteComponent() {
 				</div>
 			</div>
 
-			{/* ACTIVE FILTERS */}
 			<div className="flex flex-wrap gap-4 my-4">
 				<div className="px-4 py-1 rounded-full border shadow-md">
 					<p>Guitars</p>
@@ -82,22 +72,26 @@ function RouteComponent() {
 				</div>
 			</div>
 
-			{/* PRODUCT GRID */}
-			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-				{productList && productList.length > 0 && !isError ? (
-					productList.map((product) => (
-						<ProductCard key={product.id} product={product} />
-					))
-				) : (
-					<div className="col-span-full text-center py-12">
-						<p className="text-muted-foreground text-lg">
-							No products available
-						</p>
-					</div>
-				)}
-			</div>
+			{isPending ? (
+				<div className="border rounded-xl shadow-md">
+					<AnimatedLoader text="Gathering available instruments" />
+				</div>
+			) : (
+				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					{productList && productList.length > 0 && !isError ? (
+						productList.map((product) => (
+							<ProductCard key={product.id} product={product} />
+						))
+					) : (
+						<div className="col-span-full text-center py-12">
+							<p className="text-muted-foreground text-lg">
+								No products available
+							</p>
+						</div>
+					)}
+				</div>
+			)}
 
-			{/* PAGINATION / LOAD MORE */}
 			<div className="flex justify-center py-6">
 				<div className="h-10 w-40 rounded-full bg-slate-300" />
 			</div>
