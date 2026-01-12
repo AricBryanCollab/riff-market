@@ -1,3 +1,4 @@
+import { User } from "lucide-react";
 import type { BaseProduct } from "@/types/product";
 
 interface ProductCardProps {
@@ -8,6 +9,7 @@ interface ProductCardProps {
 const ProductCard = ({ product, onClick }: ProductCardProps) => {
 	const isOutOfStock = product.stock === 0;
 	const isLowStock = product.stock > 0 && product.stock <= 5;
+	const sellerName = `${product.seller.firstName} ${product.seller.lastName}`;
 
 	return (
 		<div className="flex flex-col rounded-xl bg-background/90 p-4 shadow-sm hover:shadow-md transition-shadow duration-200 group">
@@ -65,6 +67,12 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 
 			{/* Model */}
 			<div className="text-xs text-secondary mb-3">{product.model}</div>
+
+			{/* Seller Info */}
+			<div className="flex items-center gap-1.5 mb-3 text-xs text-muted-foreground">
+				<User className="size-4" />
+				<span>By {sellerName}</span>
+			</div>
 
 			{/* Price and Buy Button */}
 			<div className="mt-auto">
