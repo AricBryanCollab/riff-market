@@ -1,42 +1,72 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Search } from "lucide-react";
-
+import { createFileRoute } from "@tanstack/react-router";
+import { ListMusic } from "lucide-react";
+import { useState } from "react";
 import AnimatedLoader from "@/components/animatedloader";
+import Button from "@/components/button";
+import ProductActions from "@/components/productactions";
 import ProductCard from "@/components/productcard";
 import SectionContainer from "@/components/sectioncontainer";
-import { Body, BodySmall, H3 } from "@/components/typography";
-
-import { getApprovedProducts } from "@/lib/tanstack-query/product.queries";
+import { Body, H3 } from "@/components/typography";
+import { productsQueryOpt } from "@/routes/shop/route";
 
 export const Route = createFileRoute("/shop/")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	const navigate = useNavigate();
-
+	const [searchTerm, setSearchTerm] = useState("");
 	const {
 		data: productList,
-		isError,
 		isPending,
-	} = useQuery({
-		queryKey: ["product"],
-		queryFn: getApprovedProducts,
-		retry: false,
-	});
+		isError,
+		refetch,
+	} = useQuery(productsQueryOpt);
 
-	if (isPending) {
+	if (isError) {
 		return (
-			<SectionContainer>
-				<AnimatedLoader text="Gathering available instruments" />
-			</SectionContainer>
+			<div className="flex flex-col justify-center items-center w-full min-h-screen gap-4">
+				<p className="text-destructive text-lg my-4">
+					Error gathering the products
+				</p>
+				<Button variant="primary" action={() => refetch()}>
+					Try Again
+				</Button>
+			</div>
 		);
 	}
 
+	if (isPending && !productList) {
+		return (
+			<div className="flex flex-col items-center py-12">
+				<AnimatedLoader text="Gathering available instruments" />
+			</div>
+		);
+	}
+
+	if (!productList || productList.length === 0) {
+		return (
+			<div className="col-span-full text-center py-12">
+				<p className="text-muted-foreground text-lg">No products available</p>
+			</div>
+		);
+	}
+
+	const filteredProducts = productList.filter((product) => {
+		const query = searchTerm.toLowerCase();
+		return (
+			product.name.toLowerCase().includes(query) ||
+			product.brand.toLowerCase().includes(query) ||
+			product.model.toLowerCase().includes(query)
+		);
+	});
+
+	const handleSearchChange = (value: string) => {
+		setSearchTerm(value);
+	};
+
 	return (
 		<SectionContainer>
-			{/* PAGE HEADER */}
 			<div className="flex flex-col gap-6 rounded-xl bg-white p-4 md:flex-row md:items-center md:justify-between">
 				<div>
 					<H3 className="tracking-wider">Browse Music Tools</H3>
@@ -47,26 +77,13 @@ function RouteComponent() {
 				</div>
 
 				<div className="flex flex-col md:flex-row items-center gap-2">
-					<div className="flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2">
-						<Search className="h-4 w-4 text-slate-400" />
-						<input
-							type="text"
-							placeholder="Search products"
-							className="outline-none text-sm text-slate-700 placeholder:text-slate-400 bg-transparent w-48"
-						/>
-					</div>
-					<button
-						type="button"
-						onClick={() => navigate({ to: "/product/new" })}
-						className="flex items-center cursor-pointer gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-accent transition-colors whitespace-nowrap"
-					>
-						<Plus className="size-4" />
-						<BodySmall>Add Product</BodySmall>
-					</button>
+					<ProductActions
+						searchTerm={searchTerm}
+						handleSearchTerm={handleSearchChange}
+					/>
 				</div>
 			</div>
 
-			{/* ACTIVE FILTERS */}
 			<div className="flex flex-wrap gap-4 my-4">
 				<div className="px-4 py-1 rounded-full border shadow-md">
 					<p>Guitars</p>
@@ -82,22 +99,19 @@ function RouteComponent() {
 				</div>
 			</div>
 
-			{/* PRODUCT GRID */}
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-				{productList && productList.length > 0 && !isError ? (
-					productList.map((product) => (
+				{filteredProducts.length > 0 ? (
+					filteredProducts.map((product) => (
 						<ProductCard key={product.id} product={product} />
 					))
 				) : (
-					<div className="col-span-full text-center py-12">
-						<p className="text-muted-foreground text-lg">
-							No products available
-						</p>
+					<div className="col-span-full flex justify-center items-center gap-4 text-center py-8 text-muted-foreground">
+						<ListMusic size={28} />
+						<p>No products match your search here</p>
 					</div>
 				)}
 			</div>
 
-			{/* PAGINATION / LOAD MORE */}
 			<div className="flex justify-center py-6">
 				<div className="h-10 w-40 rounded-full bg-slate-300" />
 			</div>
