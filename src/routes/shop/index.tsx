@@ -1,30 +1,52 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Search } from "lucide-react";
-
+import { createFileRoute } from "@tanstack/react-router";
+import { Search } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
+import Button from "@/components/button";
 import ProductCard from "@/components/productcard";
 import SectionContainer from "@/components/sectioncontainer";
-import { Body, BodySmall, H3 } from "@/components/typography";
-
-import { getApprovedProducts } from "@/lib/tanstack-query/product.queries";
-
+import { Body, H3 } from "@/components/typography";
+import { productsQueryOpt } from "@/routes/shop/route";
 export const Route = createFileRoute("/shop/")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	const navigate = useNavigate();
-
 	const {
 		data: productList,
-		isError,
 		isPending,
-	} = useQuery({
-		queryKey: ["product"],
-		queryFn: getApprovedProducts,
-		retry: false,
-	});
+		isError,
+		refetch,
+	} = useQuery(productsQueryOpt);
+
+	if (isError) {
+		return (
+			<div className="flex flex-col justify-center items-center w-full min-h-screen gap-4">
+				<p className="text-destructive text-lg my-4">
+					Error gathering the products
+				</p>
+				<Button variant="primary" action={() => refetch()}>
+					Try Again
+				</Button>
+			</div>
+		);
+	}
+
+	if (isPending && !productList) {
+		return (
+			<div className="flex flex-col items-center py-12">
+				<AnimatedLoader text="Gathering available instruments" />
+			</div>
+		);
+	}
+
+	if (!productList || productList.length === 0) {
+		return (
+			<div className="col-span-full text-center py-12">
+				<p className="text-muted-foreground text-lg">No products available</p>
+			</div>
+		);
+	}
 
 	return (
 		<SectionContainer>
@@ -46,14 +68,14 @@ function RouteComponent() {
 							className="outline-none text-sm text-slate-700 placeholder:text-slate-400 bg-transparent w-48"
 						/>
 					</div>
-					<button
+					{/* <button
 						type="button"
 						onClick={() => navigate({ to: "/product/new" })}
 						className="flex items-center cursor-pointer gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-accent transition-colors whitespace-nowrap"
 					>
 						<Plus className="size-4" />
 						<BodySmall>Add Product</BodySmall>
-					</button>
+					</button> */}
 				</div>
 			</div>
 
@@ -72,25 +94,11 @@ function RouteComponent() {
 				</div>
 			</div>
 
-			{isPending ? (
-				<div className="border rounded-xl shadow-md">
-					<AnimatedLoader text="Gathering available instruments" />
-				</div>
-			) : (
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-					{productList && productList.length > 0 && !isError ? (
-						productList.map((product) => (
-							<ProductCard key={product.id} product={product} />
-						))
-					) : (
-						<div className="col-span-full text-center py-12">
-							<p className="text-muted-foreground text-lg">
-								No products available
-							</p>
-						</div>
-					)}
-				</div>
-			)}
+			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+				{productList.map((product) => (
+					<ProductCard key={product.id} product={product} />
+				))}
+			</div>
 
 			<div className="flex justify-center py-6">
 				<div className="h-10 w-40 rounded-full bg-slate-300" />
