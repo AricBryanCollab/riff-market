@@ -2,6 +2,7 @@ import {
 	createProduct,
 	deleteProductById,
 	getApprovedProducts,
+	getPendingApprovalProducts,
 	getProductsBySellerId,
 	updateProductById,
 } from "@/data/product.repo";
@@ -113,6 +114,12 @@ export async function getProductsBySellerService(id: string, role: string) {
 // Get Approved Products
 export async function getApprovedProductsService() {
 	const products = await getApprovedProducts();
+	return products;
+}
+
+// Get Pending Products
+export async function getPendingProductsService() {
+	const products = await getPendingApprovalProducts();
 	return products;
 }
 

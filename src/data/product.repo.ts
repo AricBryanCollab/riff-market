@@ -114,6 +114,19 @@ export const getApprovedProducts = async () => {
 	}
 };
 
+export const getPendingApprovalProducts = async () => {
+	try {
+		return await prisma.product.findMany({
+			where: { isApproved: false },
+			orderBy: { createdAt: "desc" },
+			select: baseProductQuery,
+		});
+	} catch (err) {
+		console.error("Error at getPendingApprovalProducts", err);
+		throw err;
+	}
+};
+
 // Update Product By ID
 export const updateProductById = async (
 	id: string,
