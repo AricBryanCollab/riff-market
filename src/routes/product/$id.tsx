@@ -12,11 +12,11 @@ import {
 	Star,
 	Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AnimatedLoader from "@/components/animatedloader";
 import SectionContainer from "@/components/sectioncontainer";
 import { productCategoryOptions } from "@/constants/selectOptions";
-import { productsQueryOpt } from "@/routes/shop/route";
+import { pendingProductsQueryOpt, productsQueryOpt } from "@/routes/shop/route";
 
 export const Route = createFileRoute("/product/$id")({
 	component: RouteComponent,
@@ -24,8 +24,20 @@ export const Route = createFileRoute("/product/$id")({
 
 function RouteComponent() {
 	const { id } = useParams({ from: "/product/$id" });
-	const { data: productList, isPending } = useQuery(productsQueryOpt);
+	const { data: approvedProducts, isPending: isLoadingApproved } =
+		useQuery(productsQueryOpt);
+	const { data: pendingProducts, isPending: isLoadingPending } = useQuery(
+		pendingProductsQueryOpt,
+	);
+	const isPending = isLoadingApproved || isLoadingPending;
+
 	const navigate = useNavigate();
+
+	const allProducts = useMemo(() => {
+		const approved = approvedProducts || [];
+		const pending = pendingProducts || [];
+		return [...approved, ...pending];
+	}, [approvedProducts, pendingProducts]);
 
 	// Product category render
 	const getCategoryDisplay = (category: string) => {
@@ -37,7 +49,7 @@ function RouteComponent() {
 	const [quantity, setQuantity] = useState(1);
 	const [selectedImage, setSelectedImage] = useState(0);
 
-	const product = productList?.find((p) => p.id === id);
+	const product = allProducts?.find((p) => p.id === id);
 
 	if (isPending) {
 		return (
@@ -47,7 +59,7 @@ function RouteComponent() {
 		);
 	}
 
-	if (!productList || !product) {
+	if (!allProducts || !product) {
 		return (
 			<div className="flex flex-col justify-center items-center min-h-screen">
 				<p className="text-lg text-gray-500">Product not found</p>

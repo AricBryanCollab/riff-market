@@ -9,8 +9,7 @@ import ProductCard from "@/components/productcard";
 import SectionContainer from "@/components/sectioncontainer";
 import { Body, H3 } from "@/components/typography";
 import { productCategoryOptions } from "@/constants/selectOptions";
-import { getPendingApprovalProducts } from "@/lib/tanstack-query/product.queries";
-import { productsQueryOpt } from "@/routes/shop/route";
+import { pendingProductsQueryOpt, productsQueryOpt } from "@/routes/shop/route";
 
 export const Route = createFileRoute("/shop/")({
 	component: RouteComponent,
@@ -32,12 +31,7 @@ function RouteComponent() {
 		data: pendingProductList,
 		isPending: isPendingProduct,
 		isError: isPendingProductError,
-	} = useQuery({
-		queryKey: ["pendingProducts"],
-		queryFn: getPendingApprovalProducts,
-		retry: false,
-		enabled: showPending,
-	});
+	} = useQuery({ ...pendingProductsQueryOpt, enabled: showPending });
 
 	if (isError || isPendingProductError) {
 		return (
