@@ -4,10 +4,18 @@ import {
 	useNavigate,
 	useParams,
 } from "@tanstack/react-router";
-import { ArrowLeft, Package, ShoppingCart, Star } from "lucide-react";
+import {
+	ArrowLeft,
+	Package,
+	Pencil,
+	ShoppingCart,
+	Star,
+	Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import AnimatedLoader from "@/components/animatedloader";
 import SectionContainer from "@/components/sectioncontainer";
+import { productCategoryOptions } from "@/constants/selectOptions";
 import { productsQueryOpt } from "@/routes/shop/route";
 
 export const Route = createFileRoute("/product/$id")({
@@ -18,6 +26,14 @@ function RouteComponent() {
 	const { id } = useParams({ from: "/product/$id" });
 	const { data: productList, isPending } = useQuery(productsQueryOpt);
 	const navigate = useNavigate();
+
+	// Product category render
+	const getCategoryDisplay = (category: string) => {
+		const option = productCategoryOptions.find((opt) => opt.value === category);
+		return option || { value: category, label: category, icon: Package };
+	};
+
+	// Handling product page interaction
 	const [quantity, setQuantity] = useState(1);
 	const [selectedImage, setSelectedImage] = useState(0);
 
@@ -98,13 +114,33 @@ function RouteComponent() {
 					{/* PRODUCT INFO */}
 					<div className="rounded-2xl bg-white p-6 space-y-6">
 						{/* TITLE & BRAND */}
-						<div>
-							<h1 className="text-3xl font-bold text-gray-900 mb-2">
-								{product.name}
-							</h1>
-							<p className="text-lg text-gray-600">
-								{product.brand} {product.model && `• ${product.model}`}
-							</p>
+						<div className="flex items-start justify-between gap-4">
+							<div className="flex-1">
+								<h1 className="text-3xl font-bold text-gray-900 mb-2">
+									{product.name}
+								</h1>
+								<p className="text-lg text-gray-600">
+									{product.brand} {product.model && `• ${product.model}`}
+								</p>
+							</div>
+							<div className="flex gap-2">
+								<button
+									type="button"
+									onClick={() => {}}
+									className="size-10 flex items-center justify-center rounded-lg bg-primary text-background hover:bg-accent transition-colors"
+									title="Edit product"
+								>
+									<Pencil size={18} />
+								</button>
+								<button
+									type="button"
+									onClick={() => {}}
+									className="size-10 flex items-center justify-center rounded-lg bg-destructive text-rose-200 hover:bg-destructive/80 transition-colors"
+									title="Delete product"
+								>
+									<Trash2 size={18} />
+								</button>
+							</div>
 						</div>
 
 						{/* RATING */}
@@ -129,9 +165,16 @@ function RouteComponent() {
 
 						{/* CATEGORY & STOCK */}
 						<div className="flex items-center gap-3">
-							<span className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
-								{product.category}
-							</span>
+							{(() => {
+								const categoryDisplay = getCategoryDisplay(product.category);
+								const CategoryIcon = categoryDisplay.icon;
+								return (
+									<span className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium flex items-center gap-2">
+										<CategoryIcon size={16} />
+										{categoryDisplay.label}
+									</span>
+								);
+							})()}
 							<span
 								className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${
 									product.stock > 0
@@ -151,9 +194,7 @@ function RouteComponent() {
 							<p className="text-4xl font-bold text-gray-900">
 								${product.price.toFixed(2)}
 							</p>
-							<p className="text-sm text-gray-500 mt-1">
-								Price per unit • Tax included
-							</p>
+							<p className="text-sm text-gray-500 mt-1">Price per unit</p>
 						</div>
 
 						{/* QUANTITY SELECTOR */}
