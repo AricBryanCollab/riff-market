@@ -47,6 +47,10 @@ export function getApprovedProducts() {
 	return apiFetch<BaseProduct[]>("/api/products");
 }
 
+export function getPendingApprovalProducts() {
+	return apiFetch<BaseProduct[]>("/api/products/pending");
+}
+
 export function updateProduct(id: string, data: UpdateProductInput) {
 	const formData = prepareProductFormData(data);
 
