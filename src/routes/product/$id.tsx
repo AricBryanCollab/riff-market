@@ -4,16 +4,10 @@ import {
 	useNavigate,
 	useParams,
 } from "@tanstack/react-router";
-import {
-	ArrowLeft,
-	Package,
-	Pencil,
-	ShoppingCart,
-	Star,
-	Trash2,
-} from "lucide-react";
+import { ArrowLeft, Package, Pencil, Star, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import AnimatedLoader from "@/components/animatedloader";
+import { ProductDetailsActions } from "@/components/productactions";
 import SectionContainer from "@/components/sectioncontainer";
 import { productCategoryOptions } from "@/constants/selectOptions";
 import { pendingProductsQueryOpt, productsQueryOpt } from "@/routes/shop/route";
@@ -67,8 +61,8 @@ function RouteComponent() {
 		);
 	}
 
-	const handleQuantityChange = (delta: number) => {
-		setQuantity((prev) => Math.max(1, Math.min(product.stock, prev + delta)));
+	const handleQuantityChange = (quant: number) => {
+		setQuantity((prev) => Math.max(1, Math.min(product.stock, prev + quant)));
 	};
 
 	// Mock rating data
@@ -109,7 +103,7 @@ function RouteComponent() {
 									onClick={() => setSelectedImage(idx)}
 									className={`h-20 w-full rounded-lg overflow-hidden transition-all ${
 										selectedImage === idx
-											? "ring-2 ring-blue-500"
+											? "ring-2 ring-primary"
 											: "opacity-70 hover:opacity-100"
 									}`}
 								>
@@ -123,7 +117,6 @@ function RouteComponent() {
 						</div>
 					</div>
 
-					{/* PRODUCT INFO */}
 					<div className="rounded-2xl bg-white p-6 space-y-6">
 						{/* TITLE & BRAND */}
 						<div className="flex items-start justify-between gap-4">
@@ -209,51 +202,12 @@ function RouteComponent() {
 							<p className="text-sm text-gray-500 mt-1">Price per unit</p>
 						</div>
 
-						{/* QUANTITY SELECTOR */}
-						<div className="flex items-center gap-4">
-							<span className="text-sm font-medium text-gray-700">
-								Quantity:
-							</span>
-							<div className="flex items-center border-2 border-slate-300 rounded-lg overflow-hidden">
-								<button
-									type="button"
-									onClick={() => handleQuantityChange(-1)}
-									disabled={quantity <= 1}
-									className="h-10 w-12 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-semibold"
-								>
-									−
-								</button>
-								<div className="h-10 w-16 border-x-2 border-slate-300 bg-white flex items-center justify-center font-medium">
-									{quantity}
-								</div>
-								<button
-									type="button"
-									onClick={() => handleQuantityChange(1)}
-									disabled={quantity >= product.stock}
-									className="h-10 w-12 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-semibold"
-								>
-									+
-								</button>
-							</div>
-						</div>
-
-						{/* ACTION BUTTONS */}
-						<div className="flex gap-4 pt-4">
-							<button
-								type="button"
-								disabled={product.stock === 0}
-								className="flex-1 h-12 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
-							>
-								<ShoppingCart size={20} />
-								Add to Cart
-							</button>
-							<button
-								type="button"
-								className="h-12 px-6 rounded-lg bg-slate-200 hover:bg-slate-300 font-semibold transition-colors"
-							>
-								♡
-							</button>
-						</div>
+						{/* ACTIONS */}
+						<ProductDetailsActions
+							quantity={quantity}
+							stock={product.stock}
+							handleQuantityChange={handleQuantityChange}
+						/>
 
 						{/* DESCRIPTION */}
 						<div className="pt-6 border-t">
@@ -323,7 +277,7 @@ function RouteComponent() {
 						</div>
 					</div>
 
-					{/* INDIVIDUAL REVIEWS - Keep as scaffold */}
+					{/* INDIVIDUAL REVIEWS  */}
 					<div className="space-y-6">
 						{[1, 2, 3].map((i) => (
 							<div key={i} className="border rounded-xl p-6 bg-slate-50">
