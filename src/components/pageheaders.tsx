@@ -1,4 +1,4 @@
-import ProductActions from "@/components/productactions";
+import { ShopPageProductActions } from "@/components/productactions";
 import { Body, H3 } from "@/components/typography";
 
 interface ProductHeaderProps {
@@ -21,7 +21,7 @@ export function ShopPageHeader({
 			</div>
 
 			<div className="flex flex-col md:flex-row items-center gap-2">
-				<ProductActions
+				<ShopPageProductActions
 					searchTerm={searchTerm}
 					handleSearchTerm={onSearchChange}
 				/>

@@ -5,15 +5,15 @@ import { BodySmall } from "@/components/typography";
 import { useDialogStore } from "@/store/dialog";
 import { useUserStore } from "@/store/user";
 
-interface ProductActionsProps {
+interface ShopPageProductActionsProps {
 	searchTerm: string;
 	handleSearchTerm: (value: string) => void;
 }
 
-const ProductActions = ({
+export function ShopPageProductActions({
 	searchTerm,
 	handleSearchTerm,
-}: ProductActionsProps) => {
+}: ShopPageProductActionsProps) {
 	const { user } = useUserStore();
 	const navigate = useNavigate();
 	const { setOpenDialog } = useDialogStore();
@@ -67,6 +67,4 @@ const ProductActions = ({
 			<div className="min-w-36">{ButtonByRole()}</div>
 		</div>
 	);
-};
-
-export default ProductActions;
+}
