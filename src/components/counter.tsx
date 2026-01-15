@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import { type LucideIcon, Minus, Plus } from "lucide-react";
 
 interface CounterProps {
 	inputId: string;
@@ -10,6 +10,7 @@ interface CounterProps {
 	max?: number;
 	icon?: LucideIcon;
 	showInput?: boolean;
+	showLimit?: boolean;
 }
 
 export const Counter = ({
@@ -22,6 +23,7 @@ export const Counter = ({
 	max = 999,
 	icon: Icon,
 	showInput = true,
+	showLimit = true,
 }: CounterProps) => {
 	const createSyntheticEvent = (
 		newValue: number,
@@ -75,7 +77,7 @@ export const Counter = ({
 						disabled={disabled || value <= min}
 						className="px-4 py-2.5 text-white bg-primary hover:bg-accent cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed font-semibold"
 					>
-						−
+						<Minus size={18} />
 					</button>
 					{showInput ? (
 						<input
@@ -100,10 +102,10 @@ export const Counter = ({
 						disabled={disabled || value >= max}
 						className="px-4 py-2.5 text-white bg-primary hover:bg-accent cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed font-semibold"
 					>
-						+
+						<Plus size={18} />
 					</button>
 				</div>
-				{(min !== undefined || max !== undefined) && (
+				{showLimit && (min !== undefined || max !== undefined) && (
 					<div className="flex flex-col text-xs text-foreground/60">
 						({min} - {max})
 					</div>
