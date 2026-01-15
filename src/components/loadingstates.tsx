@@ -7,3 +7,11 @@ export function ProductLoadingState() {
 		</div>
 	);
 }
+
+export function ProductDetailsLoadingState() {
+	return (
+		<div className="flex justify-center items-center min-h-screen">
+			<AnimatedLoader text="Loading Product Details" />
+		</div>
+	);
+}
