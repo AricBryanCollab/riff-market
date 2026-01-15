@@ -27,7 +27,7 @@ const ProductFilterBadges = ({
 				onClick={onShowAll}
 				className={`px-5 py-2 rounded-full border-2 font-medium transition-all ${
 					!showPending && selectedCategory === null
-						? "bg-blue-500 text-white border-blue-500 shadow-lg scale-105"
+						? "bg-primary text-white border-secondary shadow-lg scale-105"
 						: "bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:bg-blue-50 shadow-sm"
 				}`}
 			>
@@ -41,8 +41,8 @@ const ProductFilterBadges = ({
 					onClick={onShowPending}
 					className={`px-5 py-2 rounded-full border-2 font-medium transition-all ${
 						showPending
-							? "bg-orange-500 text-white border-orange-500 shadow-lg scale-105"
-							: "bg-white text-gray-700 border-gray-300 hover:border-orange-300 hover:bg-orange-50 shadow-sm"
+							? "bg-accent text-white border-accent/80 shadow-lg scale-105"
+							: "bg-white text-gray-700 border-gray-300 hover:border-accent hover:bg-primary hover:text-white shadow-sm"
 					}`}
 				>
 					Pending
