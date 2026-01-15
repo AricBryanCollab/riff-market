@@ -9,13 +9,13 @@ interface ProductFilterBadgesProps {
 	onCategorySelect: (category: string) => void;
 }
 
-export function ProductFilterBadges({
+const ProductFilterBadges = ({
 	showPending,
 	selectedCategory,
 	onShowAll,
 	onShowPending,
 	onCategorySelect,
-}: ProductFilterBadgesProps) {
+}: ProductFilterBadgesProps) => {
 	const { user } = useUserStore();
 	const isAdmin = user?.role === "ADMIN";
 
@@ -73,4 +73,6 @@ export function ProductFilterBadges({
 				})}
 		</div>
 	);
-}
+};
+
+export default ProductFilterBadges;
