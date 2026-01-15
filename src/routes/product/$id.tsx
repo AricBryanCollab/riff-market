@@ -4,9 +4,9 @@ import {
 	useNavigate,
 	useParams,
 } from "@tanstack/react-router";
-import { ArrowLeft, Package, Pencil, Star, Trash2 } from "lucide-react";
+import { ArrowLeft, Package, Star } from "lucide-react";
 import { useMemo, useState } from "react";
-import AnimatedLoader from "@/components/animatedloader";
+import { ProductDetailsLoadingState } from "@/components/loadingstates";
 import { ProductDetailsActions } from "@/components/productactions";
 import SectionContainer from "@/components/sectioncontainer";
 import { productCategoryOptions } from "@/constants/selectOptions";
@@ -46,11 +46,7 @@ function RouteComponent() {
 	const product = allProducts?.find((p) => p.id === id);
 
 	if (isPending) {
-		return (
-			<div className="flex justify-center items-center min-h-screen">
-				<AnimatedLoader text="Loading Product Details" />
-			</div>
-		);
+		return <ProductDetailsLoadingState />;
 	}
 
 	if (!allProducts || !product) {
@@ -61,8 +57,8 @@ function RouteComponent() {
 		);
 	}
 
-	const handleQuantityChange = (quant: number) => {
-		setQuantity((prev) => Math.max(1, Math.min(product.stock, prev + quant)));
+	const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setQuantity(Number(e.target.value));
 	};
 
 	// Mock rating data
@@ -127,24 +123,6 @@ function RouteComponent() {
 								<p className="text-lg text-gray-600">
 									{product.brand} {product.model && `• ${product.model}`}
 								</p>
-							</div>
-							<div className="flex gap-2">
-								<button
-									type="button"
-									onClick={() => {}}
-									className="size-10 flex items-center justify-center rounded-lg bg-primary text-background hover:bg-accent transition-colors"
-									title="Edit product"
-								>
-									<Pencil size={18} />
-								</button>
-								<button
-									type="button"
-									onClick={() => {}}
-									className="size-10 flex items-center justify-center rounded-lg bg-destructive text-rose-200 hover:bg-destructive/80 transition-colors"
-									title="Delete product"
-								>
-									<Trash2 size={18} />
-								</button>
 							</div>
 						</div>
 

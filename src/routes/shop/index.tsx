@@ -19,7 +19,6 @@ function RouteComponent() {
 		showPending,
 		filteredProducts,
 		productList,
-		pendingProductList,
 		isPending,
 		isError,
 		handleSearchChange,
@@ -33,7 +32,7 @@ function RouteComponent() {
 		return <ProductLoadingState />;
 	}
 
-	if (isError || !productList || !pendingProductList) {
+	if (isError || !productList) {
 		return <ProductErrorState refetch={refetch} />;
 	}
 

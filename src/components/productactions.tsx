@@ -1,6 +1,17 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Heart, Plus, Search, ShoppingBag, ShoppingCart } from "lucide-react";
+import {
+	CheckCircle,
+	Heart,
+	Pencil,
+	Plus,
+	Search,
+	ShoppingBag,
+	ShoppingCart,
+	Trash2,
+	XCircle,
+} from "lucide-react";
 import Button from "@/components/button";
+import { Counter } from "@/components/counter";
 import { BodySmall } from "@/components/typography";
 import { useDialogStore } from "@/store/dialog";
 import { useUserStore } from "@/store/user";
@@ -72,7 +83,7 @@ export function ShopPageProductActions({
 interface ProductDetailsActionsProps {
 	quantity: number;
 	stock: number;
-	handleQuantityChange: (quantity: number) => void;
+	handleQuantityChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function ProductDetailsActions({
@@ -80,51 +91,107 @@ export function ProductDetailsActions({
 	stock,
 	handleQuantityChange,
 }: ProductDetailsActionsProps) {
+	const { user } = useUserStore();
+	const role = user?.role;
+
+	const ActionButtonsByRole = () => {
+		switch (role) {
+			case "CUSTOMER":
+				return (
+					<>
+						<button
+							type="button"
+							disabled={stock === 0}
+							className="flex-1 h-12 rounded-lg cursor-pointer bg-primary hover:bg-accent disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
+						>
+							<ShoppingCart size={20} />
+							Add to Cart
+						</button>
+						<button
+							type="button"
+							className="h-12 px-6 rounded-lg bg-slate-200 hover:bg-slate-300 font-semibold transition-colors"
+						>
+							<Heart />
+						</button>
+					</>
+				);
+			case "SELLER":
+				return (
+					<>
+						<button
+							type="button"
+							disabled={stock === 0}
+							className="flex-1 h-12 rounded-lg cursor-pointer bg-primary hover:bg-accent disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
+						>
+							<Pencil size={20} />
+							Edit
+						</button>
+						<button
+							type="button"
+							disabled={stock === 0}
+							className="flex-1 h-12 rounded-lg cursor-pointer bg-destructive hover:bg-rose-400 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
+						>
+							<Trash2 size={20} />
+							Delete
+						</button>
+					</>
+				);
+			case "ADMIN":
+				return (
+					<>
+						<button
+							type="button"
+							disabled={stock === 0}
+							className="flex-1 h-12 rounded-lg cursor-pointer bg-success hover:bg-emerald-300 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
+						>
+							<CheckCircle size={20} />
+							Accept
+						</button>
+						<button
+							type="button"
+							disabled={stock === 0}
+							className="flex-1 h-12 rounded-lg cursor-pointer bg-destructive hover:bg-rose-400 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
+						>
+							<XCircle size={20} />
+							Decline
+						</button>
+					</>
+				);
+			default:
+				return (
+					<>
+						<button
+							type="button"
+							disabled={stock === 0}
+							className="flex-1 h-12 rounded-lg cursor-pointer bg-primary hover:bg-accent disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
+						>
+							<ShoppingCart size={20} />
+							Add to Cart
+						</button>
+						<button
+							type="button"
+							className="h-12 px-6 rounded-lg bg-slate-200 hover:bg-slate-300 font-semibold transition-colors"
+						>
+							<Heart />
+						</button>
+					</>
+				);
+		}
+	};
+
 	return (
 		<div className="my-2">
-			{/* QUANTITY SELECTOR */}
-			<div className="flex items-center gap-2">
-				<span className="text-sm font-medium text-gray-700">Quantity:</span>
-				<div className="flex items-center border-2 border-slate-300 rounded-lg overflow-hidden">
-					<button
-						type="button"
-						onClick={() => handleQuantityChange(-1)}
-						disabled={quantity <= 1}
-						className="h-10 w-12 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-semibold"
-					>
-						−
-					</button>
-					<div className="h-10 w-16 border-x-2 border-slate-300 bg-white flex items-center justify-center font-medium">
-						{quantity}
-					</div>
-					<button
-						type="button"
-						onClick={() => handleQuantityChange(1)}
-						disabled={quantity >= stock}
-						className="h-10 w-12 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center font-semibold"
-					>
-						+
-					</button>
-				</div>
-			</div>
+			<Counter
+				inputId="quantity"
+				label="Quantity"
+				value={quantity}
+				onChange={handleQuantityChange}
+				min={1}
+				max={stock}
+				showLimit={false}
+			/>
 
-			{/* ACTION BUTTONS */}
-			<div className="flex gap-4 pt-4">
-				<button
-					type="button"
-					disabled={stock === 0}
-					className="flex-1 h-12 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
-				>
-					<ShoppingCart size={20} />
-					Add to Cart
-				</button>
-				<button
-					type="button"
-					className="h-12 px-6 rounded-lg bg-slate-200 hover:bg-slate-300 font-semibold transition-colors"
-				>
-					<Heart />
-				</button>
-			</div>
+			<div className="flex gap-4 my-4">{ActionButtonsByRole()}</div>
 		</div>
 	);
 }
