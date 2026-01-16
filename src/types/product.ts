@@ -59,3 +59,9 @@ export interface ProductResponse {
 export interface ApproveProductRequest {
 	isApproved: boolean;
 }
+
+export interface UpdateProductStatusResult {
+	id: string;
+	name: string;
+	isApproved: boolean;
+}
