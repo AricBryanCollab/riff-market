@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { ArrowLeft, Package, Star } from "lucide-react";
 import { useMemo, useState } from "react";
+import Dialog from "@/components/dialog";
 import { ProductDetailsLoadingState } from "@/components/loadingstates";
 import { ProductDetailsActions } from "@/components/productactions";
 import SectionContainer from "@/components/sectioncontainer";
@@ -205,6 +206,11 @@ function RouteComponent() {
 							<p className="text-sm text-blue-700">{product.seller.email}</p>
 						</div>
 					</div>
+
+					<Dialog type="deleteProduct" title="Delete Product Confirmation">
+						{/* Todo: Actual Delete Confirmation Modal */}
+						<p className="my-4">Are you sure you want to delete</p>
+					</Dialog>
 				</div>
 
 				{/* REVIEWS SECTION */}

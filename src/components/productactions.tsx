@@ -1,20 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
-import {
-	CheckCircle,
-	Heart,
-	Pencil,
-	Plus,
-	Search,
-	ShoppingBag,
-	ShoppingCart,
-	Trash2,
-	XCircle,
-} from "lucide-react";
+import { Plus, Search, ShoppingBag } from "lucide-react";
 import Button from "@/components/button";
 import { Counter } from "@/components/counter";
 import { BodySmall } from "@/components/typography";
+import { ButtonStyles, RoleActionConfigs } from "@/constants/roleactionconfigs";
 import { useDialogStore } from "@/store/dialog";
 import { useUserStore } from "@/store/user";
+import type { UserRole } from "@/types/enum";
 
 interface ShopPageProductActionsProps {
 	searchTerm: string;
@@ -92,90 +84,33 @@ export function ProductDetailsActions({
 	handleQuantityChange,
 }: ProductDetailsActionsProps) {
 	const { user } = useUserStore();
-	const role = user?.role;
+	const { setOpenDialog } = useDialogStore();
 
-	const ActionButtonsByRole = () => {
-		switch (role) {
-			case "CUSTOMER":
-				return (
-					<>
-						<button
-							type="button"
-							disabled={stock === 0}
-							className="flex-1 h-12 rounded-lg cursor-pointer bg-primary hover:bg-accent disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
-						>
-							<ShoppingCart size={20} />
-							Add to Cart
-						</button>
-						<button
-							type="button"
-							className="h-12 px-6 rounded-lg bg-slate-200 hover:bg-slate-300 font-semibold transition-colors"
-						>
-							<Heart />
-						</button>
-					</>
-				);
-			case "SELLER":
-				return (
-					<>
-						<button
-							type="button"
-							disabled={stock === 0}
-							className="flex-1 h-12 rounded-lg cursor-pointer bg-primary hover:bg-accent disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
-						>
-							<Pencil size={20} />
-							Edit
-						</button>
-						<button
-							type="button"
-							disabled={stock === 0}
-							className="flex-1 h-12 rounded-lg cursor-pointer bg-destructive hover:bg-rose-400 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
-						>
-							<Trash2 size={20} />
-							Delete
-						</button>
-					</>
-				);
-			case "ADMIN":
-				return (
-					<>
-						<button
-							type="button"
-							disabled={stock === 0}
-							className="flex-1 h-12 rounded-lg cursor-pointer bg-success hover:bg-emerald-300 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
-						>
-							<CheckCircle size={20} />
-							Accept
-						</button>
-						<button
-							type="button"
-							disabled={stock === 0}
-							className="flex-1 h-12 rounded-lg cursor-pointer bg-destructive hover:bg-rose-400 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
-						>
-							<XCircle size={20} />
-							Decline
-						</button>
-					</>
-				);
+	const navigate = useNavigate();
+	const role = user?.role || "CUSTOMER";
+
+	const actions =
+		RoleActionConfigs[role as UserRole] || RoleActionConfigs.CUSTOMER;
+
+	const handleAction = (actionType: string) => {
+		switch (actionType) {
+			case "edit":
+				navigate({ from: "/product/edit/$id" });
+				break;
+			case "delete":
+				setOpenDialog("deleteProduct");
+				break;
+			case "addToCart":
+				break;
+			case "toggleFavorite":
+				// Todo: toggle favorite feature
+				break;
+			case "accept":
+			case "decline":
+				// Todo: updateStatusProduct call
+				break;
 			default:
-				return (
-					<>
-						<button
-							type="button"
-							disabled={stock === 0}
-							className="flex-1 h-12 rounded-lg cursor-pointer bg-primary hover:bg-accent disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold flex items-center justify-center gap-2 transition-colors"
-						>
-							<ShoppingCart size={20} />
-							Add to Cart
-						</button>
-						<button
-							type="button"
-							className="h-12 px-6 rounded-lg bg-slate-200 hover:bg-slate-300 font-semibold transition-colors"
-						>
-							<Heart />
-						</button>
-					</>
-				);
+				return null;
 		}
 	};
 
@@ -191,7 +126,35 @@ export function ProductDetailsActions({
 				showLimit={false}
 			/>
 
-			<div className="flex gap-4 my-4">{ActionButtonsByRole()}</div>
+			<div className="flex gap-4 my-4">
+				{actions.map((action) => {
+					const Icon = action.icon;
+					const isDisabled = action.requiresStock && stock === 0;
+					const isSecondary = action.variant === "secondary";
+
+					return (
+						<button
+							key={action.label}
+							type="button"
+							onClick={() => handleAction(action.onClickKey)}
+							disabled={isDisabled}
+							className={`
+								${isSecondary ? "h-12 px-6" : "flex-1 h-12"} 
+								rounded-lg cursor-pointer font-semibold flex items-center justify-center gap-2 transition-colors
+								${
+									isDisabled
+										? "bg-gray-300 cursor-not-allowed"
+										: ButtonStyles[action.variant]
+								}
+								${isSecondary ? "" : "text-white"}
+							`}
+						>
+							<Icon size={20} />
+							{action.label}
+						</button>
+					);
+				})}
+			</div>
 		</div>
 	);
 }
