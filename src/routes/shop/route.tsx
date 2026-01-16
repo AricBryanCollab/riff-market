@@ -11,13 +11,11 @@ import type { BaseProduct } from "@/types/product";
 export const productsQueryOpt = queryOptions<BaseProduct[]>({
 	queryKey: ["product"],
 	queryFn: getApprovedProducts,
-	retry: false,
 });
 
 export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
 	queryKey: ["pendingProducts"],
 	queryFn: getPendingApprovalProducts,
-	retry: false,
 });
 
 export const Route = createFileRoute("/shop")({
