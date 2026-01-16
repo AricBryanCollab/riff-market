@@ -16,12 +16,10 @@ export const productsQueryOpt = queryOptions<BaseProduct[]>({
 export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
 	queryKey: ["pendingProducts"],
 	queryFn: getPendingApprovalProducts,
+	retry: false,
 });
 
 export const Route = createFileRoute("/shop")({
-	loader: ({ context: { queryClient } }) => {
-		return queryClient.ensureQueryData(productsQueryOpt);
-	},
 	pendingComponent: () => (
 		<div className="flex justify-center items-center w-full min-h-[50%]">
 			<AnimatedLoader text="Gathering available instruments" />

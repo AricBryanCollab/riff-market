@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ListMusic } from "lucide-react";
-import { ProductErrorState } from "@/components/errorstates";
 import { ProductLoadingState } from "@/components/loadingstates";
 import { ShopPageHeader } from "@/components/pageheaders";
 import ProductCard from "@/components/productcard";
@@ -18,22 +17,15 @@ function RouteComponent() {
 		selectedCategory,
 		showPending,
 		filteredProducts,
-		productList,
 		isPending,
-		isError,
 		handleSearchChange,
 		handleCategoryChange,
 		handleShowPending,
 		handleShowAll,
-		refetch,
 	} = useProductFilters();
 
 	if (isPending) {
 		return <ProductLoadingState />;
-	}
-
-	if (isError || !productList) {
-		return <ProductErrorState refetch={refetch} />;
 	}
 
 	return (
