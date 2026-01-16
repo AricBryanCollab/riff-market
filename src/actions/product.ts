@@ -3,8 +3,10 @@ import {
 	deleteProductById,
 	getApprovedProducts,
 	getPendingApprovalProducts,
+	getProductById,
 	getProductsBySellerId,
 	updateProductById,
+	updateProductStatus,
 } from "@/data/product.repo";
 import { env } from "@/env";
 import {
@@ -12,6 +14,7 @@ import {
 	createProductSchema,
 	type UpdateProductInput,
 	updateProductSchema,
+	updateProductStatusSchema,
 } from "@/lib/zod/product.validation";
 import {
 	deleteImage,
@@ -19,7 +22,6 @@ import {
 	unsignedUploadImage,
 } from "@/utils/cloudinary";
 import { compressImage } from "@/utils/compressimage";
-import { getProductById } from "../data/product.repo";
 
 // Create Product Service
 export async function createProductService(
@@ -221,6 +223,37 @@ export async function updateProductService(
 	}
 
 	return updatedProduct;
+}
+
+// Update Product Status Service
+export async function updateProductStatusService(
+	productId: string,
+	rawData: { status: boolean },
+) {
+	const product = await getProductById(productId);
+	if (!product) {
+		return { error: "Product not found" };
+	}
+
+	const parsed = updateProductStatusSchema.safeParse(rawData);
+
+	if (!parsed.success) {
+		return {
+			error: "Invalid data for update product status",
+			details: parsed.error,
+		};
+	}
+
+	const updatedProductStatus = await updateProductStatus(
+		productId,
+		parsed.data.isApproved,
+	);
+
+	if (!updatedProductStatus) {
+		return { error: "Failed to update the product status" };
+	}
+
+	return updatedProductStatus;
 }
 
 // Delete Product Service

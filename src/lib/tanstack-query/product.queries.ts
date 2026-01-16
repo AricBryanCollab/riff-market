@@ -4,7 +4,11 @@ import type {
 	CreateProductInput,
 	UpdateProductInput,
 } from "@/lib/zod/product.validation";
-import type { BaseProduct, ProductResponse } from "@/types/product";
+import type {
+	BaseProduct,
+	ProductResponse,
+	UpdateProductStatusResult,
+} from "@/types/product";
 
 function prepareProductFormData(
 	data: CreateProductInput | UpdateProductInput,
@@ -58,6 +62,13 @@ export function updateProduct(id: string, data: UpdateProductInput) {
 		method: "PUT",
 		body: formData,
 		contentType: "multipart/form-data",
+	});
+}
+
+export function updateProductStatus(id: string, isApproved: boolean) {
+	return apiFetch<UpdateProductStatusResult>(`/api/products/pending/${id}`, {
+		method: "PUT",
+		body: JSON.stringify({ isApproved }),
 	});
 }
 

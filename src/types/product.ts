@@ -56,6 +56,13 @@ export interface ProductResponse {
 	product: MutateProductResponse;
 }
 
-export interface ApproveProductRequest {
+export interface UpdateProductStatusRequest {
+	id: string;
+	isApproved: boolean;
+}
+
+export interface UpdateProductStatusResult {
+	id: string;
+	name: string;
 	isApproved: boolean;
 }

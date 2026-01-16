@@ -15,7 +15,10 @@ export const Route = createFileRoute("/api/products/pending")({
 							return new Response(JSON.stringify(products), { status: 200 });
 						} catch (error) {
 							console.error(error);
-							return new Response(JSON.stringify({}), { status: 500 });
+							return new Response(
+								JSON.stringify({ mesage: "Failed to get pending products" }),
+								{ status: 500 },
+							);
 						}
 					},
 				},

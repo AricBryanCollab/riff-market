@@ -29,6 +29,7 @@ import { Route as ApiProductsIdRouteImport } from './routes/api/products.$id'
 import { Route as ApiAuthSignupRouteImport } from './routes/api/auth.signup'
 import { Route as ApiAuthSignoutRouteImport } from './routes/api/auth.signout'
 import { Route as ApiAuthSigninRouteImport } from './routes/api/auth.signin'
+import { Route as ApiProductsPendingIdRouteImport } from './routes/api/products.pending.$id'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -130,6 +131,11 @@ const ApiAuthSigninRoute = ApiAuthSigninRouteImport.update({
   path: '/api/auth/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProductsPendingIdRoute = ApiProductsPendingIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiProductsPendingRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -149,9 +155,10 @@ export interface FileRoutesByFullPath {
   '/api/auth/signout': typeof ApiAuthSignoutRoute
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/products/$id': typeof ApiProductsIdRoute
-  '/api/products/pending': typeof ApiProductsPendingRoute
+  '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/product/edit/$id': typeof ProductEditIdRoute
+  '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -170,9 +177,10 @@ export interface FileRoutesByTo {
   '/api/auth/signout': typeof ApiAuthSignoutRoute
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/products/$id': typeof ApiProductsIdRoute
-  '/api/products/pending': typeof ApiProductsPendingRoute
+  '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/product/edit/$id': typeof ProductEditIdRoute
+  '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -193,9 +201,10 @@ export interface FileRoutesById {
   '/api/auth/signout': typeof ApiAuthSignoutRoute
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/products/$id': typeof ApiProductsIdRoute
-  '/api/products/pending': typeof ApiProductsPendingRoute
+  '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/product/edit/$id': typeof ProductEditIdRoute
+  '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/seller'
     | '/product/edit/$id'
+    | '/api/products/pending/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/seller'
     | '/product/edit/$id'
+    | '/api/products/pending/$id'
   id:
     | '__root__'
     | '/'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/seller'
     | '/product/edit/$id'
+    | '/api/products/pending/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -426,6 +438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSigninRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/products/pending/$id': {
+      id: '/api/products/pending/$id'
+      path: '/$id'
+      fullPath: '/api/products/pending/$id'
+      preLoaderRoute: typeof ApiProductsPendingIdRouteImport
+      parentRoute: typeof ApiProductsPendingRoute
+    }
   }
 }
 
@@ -441,15 +460,26 @@ const ShopRouteRouteWithChildren = ShopRouteRoute._addFileChildren(
   ShopRouteRouteChildren,
 )
 
+interface ApiProductsPendingRouteChildren {
+  ApiProductsPendingIdRoute: typeof ApiProductsPendingIdRoute
+}
+
+const ApiProductsPendingRouteChildren: ApiProductsPendingRouteChildren = {
+  ApiProductsPendingIdRoute: ApiProductsPendingIdRoute,
+}
+
+const ApiProductsPendingRouteWithChildren =
+  ApiProductsPendingRoute._addFileChildren(ApiProductsPendingRouteChildren)
+
 interface ApiProductsRouteChildren {
   ApiProductsIdRoute: typeof ApiProductsIdRoute
-  ApiProductsPendingRoute: typeof ApiProductsPendingRoute
+  ApiProductsPendingRoute: typeof ApiProductsPendingRouteWithChildren
   ApiProductsSellerRoute: typeof ApiProductsSellerRoute
 }
 
 const ApiProductsRouteChildren: ApiProductsRouteChildren = {
   ApiProductsIdRoute: ApiProductsIdRoute,
-  ApiProductsPendingRoute: ApiProductsPendingRoute,
+  ApiProductsPendingRoute: ApiProductsPendingRouteWithChildren,
   ApiProductsSellerRoute: ApiProductsSellerRoute,
 }
 

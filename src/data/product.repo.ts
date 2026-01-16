@@ -135,10 +135,41 @@ export const updateProductById = async (
 	try {
 		return await prisma.product.update({
 			where: { id },
-			data: product,
+			data: { ...product, isApproved: false },
 		});
 	} catch (err) {
 		console.error("Error at updateProductById", err);
+		throw err;
+	}
+};
+
+// Update Product Status
+export const updateProductStatus = async (id: string, status: boolean) => {
+	try {
+		if (!status) {
+			await prisma.product.delete({
+				where: { id },
+			});
+			return {
+				id,
+				name: null,
+				isApproved: false,
+			};
+		}
+
+		return await prisma.product.update({
+			where: { id },
+			data: {
+				isApproved: status,
+			},
+			select: {
+				id: true,
+				name: true,
+				isApproved: true,
+			},
+		});
+	} catch (err) {
+		console.error("Error at updateProductStatus", err);
 		throw err;
 	}
 };
