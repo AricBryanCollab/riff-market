@@ -53,7 +53,7 @@ export const RoleActionConfigs = {
 			label: "Decline",
 			variant: "destructive" as const,
 			requiresStock: true,
-			onClickKey: "delete" as const,
+			onClickKey: "decline" as const,
 		},
 	],
 } as const;

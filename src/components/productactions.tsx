@@ -1,9 +1,10 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { Plus, Search, ShoppingBag } from "lucide-react";
 import Button from "@/components/button";
 import { Counter } from "@/components/counter";
 import { BodySmall } from "@/components/typography";
 import { ButtonStyles, RoleActionConfigs } from "@/constants/roleactionconfigs";
+import useUpdateProductStatus from "@/hooks/useUpdateProductStatus";
 import { useDialogStore } from "@/store/dialog";
 import { useUserStore } from "@/store/user";
 import type { UserRole } from "@/types/enum";
@@ -85,6 +86,8 @@ export function ProductDetailsActions({
 }: ProductDetailsActionsProps) {
 	const { user } = useUserStore();
 	const { setOpenDialog } = useDialogStore();
+	const { id } = useParams({ strict: false });
+	const { handleUpdateProductStatus, isPending } = useUpdateProductStatus();
 
 	const navigate = useNavigate();
 	const role = user?.role || "CUSTOMER";
@@ -93,6 +96,11 @@ export function ProductDetailsActions({
 		RoleActionConfigs[role as UserRole] || RoleActionConfigs.CUSTOMER;
 
 	const handleAction = (actionType: string) => {
+		if (!id) {
+			console.error("Product ID not found");
+			return;
+		}
+
 		switch (actionType) {
 			case "edit":
 				navigate({ from: "/product/edit/$id" });
@@ -105,9 +113,11 @@ export function ProductDetailsActions({
 			case "toggleFavorite":
 				// Todo: toggle favorite feature
 				break;
-			case "accept":
+			case "approve":
+				handleUpdateProductStatus(id, true);
+				break;
 			case "decline":
-				// Todo: updateStatusProduct call
+				handleUpdateProductStatus(id, false);
 				break;
 			default:
 				return null;
@@ -137,7 +147,7 @@ export function ProductDetailsActions({
 							key={action.label}
 							type="button"
 							onClick={() => handleAction(action.onClickKey)}
-							disabled={isDisabled}
+							disabled={isDisabled || isPending}
 							className={`
 								${isSecondary ? "h-12 px-6" : "flex-1 h-12"} 
 								rounded-lg cursor-pointer font-semibold flex items-center justify-center gap-2 transition-colors
