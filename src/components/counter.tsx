@@ -13,7 +13,7 @@ interface CounterProps {
 	showLimit?: boolean;
 }
 
-export const Counter = ({
+const Counter = ({
 	inputId,
 	label,
 	disabled,
@@ -114,3 +114,5 @@ export const Counter = ({
 		</div>
 	);
 };
+
+export default Counter;

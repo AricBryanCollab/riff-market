@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Camera, FileMusic } from "lucide-react";
 import Button from "@/components/button";
-import { Counter } from "@/components/counter";
+import Counter from "@/components/counter";
 import ImageUploader from "@/components/imageuploader";
 import Input from "@/components/input";
 import NumberInput from "@/components/numberinput";
