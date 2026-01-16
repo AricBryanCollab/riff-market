@@ -32,6 +32,15 @@ export const Route = createFileRoute("/api/products/pending/$id")({
 									{ status: 400 },
 								);
 							}
+
+							return new Response(
+								JSON.stringify({
+									message:
+										"A product status has been accepted or declined successfully",
+									product: validation,
+								}),
+								{ status: 200 },
+							);
 						} catch (error) {
 							console.error(error);
 							return new Response(

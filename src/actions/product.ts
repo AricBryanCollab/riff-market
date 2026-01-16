@@ -228,14 +228,14 @@ export async function updateProductService(
 // Update Product Status Service
 export async function updateProductStatusService(
 	productId: string,
-	status: boolean,
+	rawData: { status: boolean },
 ) {
 	const product = await getProductById(productId);
 	if (!product) {
 		return { error: "Product not found" };
 	}
 
-	const parsed = updateProductStatusSchema.safeParse(status);
+	const parsed = updateProductStatusSchema.safeParse(rawData);
 
 	if (!parsed.success) {
 		return {
@@ -244,11 +244,9 @@ export async function updateProductStatusService(
 		};
 	}
 
-	const data = parsed.data;
-
 	const updatedProductStatus = await updateProductStatus(
 		productId,
-		data.status,
+		parsed.data.isApproved,
 	);
 
 	if (!updatedProductStatus) {

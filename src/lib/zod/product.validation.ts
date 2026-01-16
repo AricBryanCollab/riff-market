@@ -31,7 +31,7 @@ export const createProductSchema = z.object({
 export const updateProductSchema = createProductSchema.partial();
 
 export const updateProductStatusSchema = z.object({
-	status: z.boolean(),
+	isApproved: z.boolean(),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
