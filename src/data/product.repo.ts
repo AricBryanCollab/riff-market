@@ -25,27 +25,6 @@ export const createProduct = async (product: CreateProductRepoInput) => {
 	}
 };
 
-export const getProductById = async (id: string) => {
-	try {
-		return await prisma.product.findFirst({
-			where: { id },
-			include: {
-				seller: {
-					select: {
-						id: true,
-						firstName: true,
-						lastName: true,
-					},
-				},
-				reviews: true,
-			},
-		});
-	} catch (err) {
-		console.error("Error at getProductById", err);
-		throw err;
-	}
-};
-
 // Get Products
 const baseProductQuery = {
 	id: true,
@@ -68,6 +47,18 @@ const baseProductQuery = {
 			email: true,
 		},
 	},
+};
+
+export const getProductById = async (id: string) => {
+	try {
+		return await prisma.product.findFirst({
+			where: { id },
+			select: baseProductQuery,
+		});
+	} catch (err) {
+		console.error("Error at getProductById", err);
+		throw err;
+	}
 };
 
 export const getProductsByIds = async (productIds: string[]) => {
