@@ -12,6 +12,7 @@ import { ProductDetailsActions } from "@/components/productactions";
 import SectionContainer from "@/components/sectioncontainer";
 import { productCategoryOptions } from "@/constants/selectOptions";
 import { pendingProductsQueryOpt, productsQueryOpt } from "@/routes/shop/route";
+import { useUserStore } from "@/store/user";
 
 export const Route = createFileRoute("/product/$id")({
 	component: RouteComponent,
@@ -21,10 +22,14 @@ function RouteComponent() {
 	const { id } = useParams({ from: "/product/$id" });
 	const { data: approvedProducts, isPending: isLoadingApproved } =
 		useQuery(productsQueryOpt);
-	const { data: pendingProducts, isPending: isLoadingPending } = useQuery(
-		pendingProductsQueryOpt,
-	);
-	const isPending = isLoadingApproved || isLoadingPending;
+	const { user } = useUserStore();
+	const isAdmin = user?.role === "ADMIN";
+
+	const { data: pendingProducts, isPending: isLoadingPending } = useQuery({
+		...pendingProductsQueryOpt,
+		enabled: isAdmin,
+	});
+	const isPending = isLoadingApproved && isLoadingPending;
 
 	const navigate = useNavigate();
 
