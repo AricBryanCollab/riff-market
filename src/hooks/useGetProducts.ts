@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
 	getApprovedProducts,
 	getPendingApprovalProducts,
+	getProductDetailsById,
 } from "@/lib/tanstack-query/product.queries";
 import type { BaseProduct } from "@/types/product";
 
@@ -17,8 +18,18 @@ export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
 	retry: false,
 });
 
+export const productbyIdQueryOpt = (id: string) =>
+	queryOptions<BaseProduct>({
+		queryKey: ["product"],
+		queryFn: () => getProductDetailsById(id),
+		retry: false,
+	});
+
 const useGetProducts = () => {
 	const [showPending, setShowPending] = useState<boolean>(false);
+	const [selectedProductId, setSelectedProductId] = useState<string | null>(
+		null,
+	);
 
 	const {
 		data: productList,
@@ -33,6 +44,15 @@ const useGetProducts = () => {
 		isError: isErrorPendingProduct,
 	} = useQuery({ ...pendingProductsQueryOpt, enabled: showPending });
 
+	const {
+		data: product,
+		isPending: loadingProduct,
+		isError: isErrorProduct,
+	} = useQuery({
+		...productbyIdQueryOpt(selectedProductId ?? ""),
+		enabled: !!selectedProductId,
+	});
+
 	return {
 		productList,
 		loadingProductList,
@@ -41,7 +61,11 @@ const useGetProducts = () => {
 		pendingProductList,
 		loadingPendingProduct,
 		isErrorPendingProduct,
+		product,
+		loadingProduct,
+		isErrorProduct,
 		setShowPending,
+		setSelectedProductId,
 		refetchProductList,
 	};
 };
