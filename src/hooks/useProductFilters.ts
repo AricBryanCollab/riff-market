@@ -1,24 +1,21 @@
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { pendingProductsQueryOpt, productsQueryOpt } from "@/routes/shop/route";
+import useGetProducts from "@/hooks/useGetProducts";
 
 const useProductFilters = () => {
 	const [searchTerm, setSearchTerm] = useState<string>("");
 	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-	const [showPending, setShowPending] = useState(false);
 
 	const {
-		data: productList,
-		isPending,
-		isError,
-		refetch,
-	} = useQuery(productsQueryOpt);
-
-	const {
-		data: pendingProductList,
-		isPending: isPendingProduct,
-		isError: isPendingProductError,
-	} = useQuery({ ...pendingProductsQueryOpt, enabled: showPending });
+		productList,
+		loadingProductList,
+		isErrorProductList,
+		showPending,
+		pendingProductList,
+		loadingPendingProduct,
+		isErrorPendingProduct,
+		setShowPending,
+		refetchProductList,
+	} = useGetProducts();
 
 	const productsToDisplay = showPending ? pendingProductList : productList;
 
@@ -62,13 +59,13 @@ const useProductFilters = () => {
 		filteredProducts,
 		productList,
 		pendingProductList,
-		isPending: isPending || (isPendingProduct && showPending),
-		isError: isError || isPendingProductError,
+		isPending: loadingProductList || (loadingPendingProduct && showPending),
+		isError: isErrorProductList || isErrorPendingProduct,
 		handleSearchChange,
 		handleCategoryChange,
 		handleShowPending,
 		handleShowAll,
-		refetch,
+		refetchProductList,
 	};
 };
 

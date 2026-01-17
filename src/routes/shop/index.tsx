@@ -25,7 +25,7 @@ function RouteComponent() {
 		handleCategoryChange,
 		handleShowPending,
 		handleShowAll,
-		refetch,
+		refetchProductList,
 	} = useProductFilters();
 
 	if (isPending) {
@@ -33,7 +33,7 @@ function RouteComponent() {
 	}
 
 	if (isError || !productList) {
-		return <ProductErrorState refetch={refetch} />;
+		return <ProductErrorState refetch={refetchProductList} />;
 	}
 
 	return (

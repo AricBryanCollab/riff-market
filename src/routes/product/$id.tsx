@@ -11,7 +11,10 @@ import { ProductDetailsLoadingState } from "@/components/loadingstates";
 import { ProductDetailsActions } from "@/components/productactions";
 import SectionContainer from "@/components/sectioncontainer";
 import { productCategoryOptions } from "@/constants/selectOptions";
-import { pendingProductsQueryOpt, productsQueryOpt } from "@/routes/shop/route";
+import {
+	pendingProductsQueryOpt,
+	productsQueryOpt,
+} from "@/hooks/useGetProducts";
 import { useUserStore } from "@/store/user";
 
 export const Route = createFileRoute("/product/$id")({
