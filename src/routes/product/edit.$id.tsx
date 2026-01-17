@@ -6,15 +6,17 @@ import {
 import { Camera, FileMusic } from "lucide-react";
 import Button from "@/components/button";
 import Counter from "@/components/counter";
+import { ProductDetailErrorState } from "@/components/errorstates";
 import ImageUploader from "@/components/imageuploader";
 import Input from "@/components/input";
+import { ProductLoadingState } from "@/components/loadingstates";
 import NumberInput from "@/components/numberinput";
 import SectionContainer from "@/components/sectioncontainer";
 import Select from "@/components/select";
 import TextArea from "@/components/textarea";
 import { Body, H4 } from "@/components/typography";
-
 import { productCategoryOptions } from "@/constants/selectOptions";
+import useUpdateProduct from "@/hooks/useUpdateProduct";
 
 export const Route = createFileRoute("/product/edit/$id")({
 	component: RouteComponent,
@@ -23,6 +25,22 @@ export const Route = createFileRoute("/product/edit/$id")({
 function RouteComponent() {
 	const { id } = useParams({ from: "/product/edit/$id" });
 	const navigate = useNavigate();
+
+	const {
+		productData,
+		loadingProduct,
+		isErrorProduct,
+		onChange,
+		refetchProductDetails,
+	} = useUpdateProduct(id);
+
+	if (!productData || isErrorProduct) {
+		return <ProductDetailErrorState refetch={refetchProductDetails} />;
+	}
+
+	if (loadingProduct) {
+		return <ProductLoadingState />;
+	}
 
 	return (
 		<SectionContainer>
@@ -45,24 +63,24 @@ function RouteComponent() {
 					<Input
 						inputId="name"
 						label="Product Name"
-						onChange={() => {}}
-						value={""}
+						onChange={onChange}
+						value={productData.name}
 					/>
 
 					<Input
 						inputId="brand"
 						label="Product Brand"
 						placeholder="eg. Fender, Gibson, Yamaha, Taylor"
-						onChange={() => {}}
-						value={""}
+						onChange={onChange}
+						value={productData.brand}
 					/>
 
 					<Input
 						inputId="model"
 						label="Model Specification"
 						placeholder="eg. American Standard, Jimi Hendrix Special Edition"
-						onChange={() => {}}
-						value={""}
+						onChange={onChange}
+						value={productData.model}
 					/>
 
 					<Select
@@ -71,7 +89,7 @@ function RouteComponent() {
 							value: p.value,
 							icon: p.icon,
 						}))}
-						value={""}
+						value={productData.category}
 						icon={FileMusic}
 						onChangeValue={() => {}}
 						label="Product Classification"

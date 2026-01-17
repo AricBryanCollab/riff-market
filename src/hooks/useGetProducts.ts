@@ -48,6 +48,7 @@ const useGetProducts = () => {
 		data: product,
 		isPending: loadingProduct,
 		isError: isErrorProduct,
+		refetch: refetchProductDetails,
 	} = useQuery({
 		...productbyIdQueryOpt(selectedProductId ?? ""),
 		enabled: !!selectedProductId,
@@ -67,6 +68,7 @@ const useGetProducts = () => {
 		setShowPending,
 		setSelectedProductId,
 		refetchProductList,
+		refetchProductDetails,
 	};
 };
 

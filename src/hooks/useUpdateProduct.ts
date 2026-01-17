@@ -20,6 +20,7 @@ const useUpdateProduct = (id: string) => {
 		loadingProduct,
 		isErrorProduct,
 		setSelectedProductId,
+		refetchProductDetails,
 	} = useGetProducts();
 
 	setSelectedProductId(id);
@@ -37,6 +38,7 @@ const useUpdateProduct = (id: string) => {
 		loadingProduct,
 		isErrorProduct,
 		onChange,
+		refetchProductDetails,
 	};
 };
 
