@@ -34,12 +34,12 @@ function RouteComponent() {
 		refetchProductDetails,
 	} = useUpdateProduct(id);
 
-	if (!productData || isErrorProduct) {
-		return <ProductDetailErrorState refetch={refetchProductDetails} />;
-	}
-
 	if (loadingProduct) {
 		return <ProductLoadingState />;
+	}
+
+	if (!productData || isErrorProduct) {
+		return <ProductDetailErrorState refetch={refetchProductDetails} />;
 	}
 
 	return (
@@ -145,7 +145,7 @@ function RouteComponent() {
 						loading={false}
 						variant="outline"
 						type="button"
-						action={() => navigate({ to: `/products/${id}` })}
+						action={() => navigate({ to: `/shop` })}
 					>
 						Go Back
 					</Button>

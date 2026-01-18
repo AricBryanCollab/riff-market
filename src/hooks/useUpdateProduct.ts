@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useGetProducts from "@/hooks/useGetProducts";
 import type { ProductCategory } from "@/types/enum";
 import type { UpdateProductRequest } from "@/types/product";
@@ -23,7 +23,9 @@ const useUpdateProduct = (id: string) => {
 		refetchProductDetails,
 	} = useGetProducts();
 
-	setSelectedProductId(id);
+	useEffect(() => {
+		setSelectedProductId(id);
+	}, [id, setSelectedProductId]);
 
 	const onChange = (
 		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,

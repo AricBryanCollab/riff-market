@@ -65,6 +65,7 @@ const useGetProducts = () => {
 		product,
 		loadingProduct,
 		isErrorProduct,
+		selectedProductId,
 		setShowPending,
 		setSelectedProductId,
 		refetchProductList,
