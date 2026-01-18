@@ -5,7 +5,7 @@ export interface CreateProductRequest {
 	category: ProductCategory;
 	brand: string;
 	model: string;
-	images: File[];
+	images: File[] | string[];
 	description: string;
 	price: number;
 	stock: number;

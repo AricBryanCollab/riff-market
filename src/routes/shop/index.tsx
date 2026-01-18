@@ -6,8 +6,8 @@ import { ShopPageHeader } from "@/components/pageheaders";
 import ProductCard from "@/components/productcard";
 import ProductFilterBadges from "@/components/productfilterbadges";
 import SectionContainer from "@/components/sectioncontainer";
-
 import useProductFilters from "@/hooks/useProductFilters";
+
 export const Route = createFileRoute("/shop/")({
 	component: RouteComponent,
 });
@@ -25,7 +25,7 @@ function RouteComponent() {
 		handleCategoryChange,
 		handleShowPending,
 		handleShowAll,
-		refetch,
+		refetchProductList,
 	} = useProductFilters();
 
 	if (isPending) {
@@ -33,7 +33,7 @@ function RouteComponent() {
 	}
 
 	if (isError || !productList) {
-		return <ProductErrorState refetch={refetch} />;
+		return <ProductErrorState refetch={refetchProductList} />;
 	}
 
 	return (

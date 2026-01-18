@@ -140,10 +140,6 @@ export async function updateProductService(
 		return { error: "Product not found" };
 	}
 
-	if (existingProduct.sellerId !== sellerId) {
-		return { error: "Product is not owned by the authenticated user" };
-	}
-
 	const parsed = updateProductSchema.safeParse(rawData);
 
 	if (!parsed.success) {
@@ -268,12 +264,6 @@ export async function deleteProductService(
 	const product = await getProductById(productId);
 	if (!product) {
 		return { error: "Product not found" };
-	}
-
-	if (product.sellerId !== sellerId) {
-		return {
-			error: "Product is not owned by the current user ID, unauthorized access",
-		};
 	}
 
 	if (Array.isArray(product.images) && product.images.length > 0) {

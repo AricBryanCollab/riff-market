@@ -3,18 +3,21 @@ import {
 	useNavigate,
 	useParams,
 } from "@tanstack/react-router";
+import type { ProductCategory } from "generated/prisma/enums";
 import { Camera, FileMusic } from "lucide-react";
 import Button from "@/components/button";
 import Counter from "@/components/counter";
+import { ProductDetailErrorState } from "@/components/errorstates";
 import ImageUploader from "@/components/imageuploader";
 import Input from "@/components/input";
+import { ProductLoadingState } from "@/components/loadingstates";
 import NumberInput from "@/components/numberinput";
 import SectionContainer from "@/components/sectioncontainer";
 import Select from "@/components/select";
 import TextArea from "@/components/textarea";
 import { Body, H4 } from "@/components/typography";
-
 import { productCategoryOptions } from "@/constants/selectOptions";
+import useUpdateProduct from "@/hooks/useUpdateProduct";
 
 export const Route = createFileRoute("/product/edit/$id")({
 	component: RouteComponent,
@@ -23,6 +26,26 @@ export const Route = createFileRoute("/product/edit/$id")({
 function RouteComponent() {
 	const { id } = useParams({ from: "/product/edit/$id" });
 	const navigate = useNavigate();
+
+	const {
+		product,
+		images,
+		loadingProduct,
+		isErrorProduct,
+		onChange,
+		onCategoryChange,
+		onImagesChange,
+		handleSubmit,
+		refetchProductDetails,
+	} = useUpdateProduct(id);
+
+	if (loadingProduct) {
+		return <ProductLoadingState />;
+	}
+
+	if (!product || isErrorProduct) {
+		return <ProductDetailErrorState refetch={refetchProductDetails} />;
+	}
 
 	return (
 		<SectionContainer>
@@ -40,29 +63,29 @@ function RouteComponent() {
 				</Body>
 			</div>
 
-			<form onSubmit={() => {}}>
+			<form onSubmit={handleSubmit}>
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 					<Input
 						inputId="name"
 						label="Product Name"
-						onChange={() => {}}
-						value={""}
+						onChange={onChange}
+						value={product?.name || ""}
 					/>
 
 					<Input
 						inputId="brand"
 						label="Product Brand"
 						placeholder="eg. Fender, Gibson, Yamaha, Taylor"
-						onChange={() => {}}
-						value={""}
+						onChange={onChange}
+						value={product?.brand || ""}
 					/>
 
 					<Input
 						inputId="model"
 						label="Model Specification"
 						placeholder="eg. American Standard, Jimi Hendrix Special Edition"
-						onChange={() => {}}
-						value={""}
+						onChange={onChange}
+						value={product?.model || ""}
 					/>
 
 					<Select
@@ -71,17 +94,19 @@ function RouteComponent() {
 							value: p.value,
 							icon: p.icon,
 						}))}
-						value={""}
+						value={product.category || "OTHERS"}
 						icon={FileMusic}
-						onChangeValue={() => {}}
+						onChangeValue={(value: string) =>
+							onCategoryChange(value as ProductCategory)
+						}
 						label="Product Classification"
 					/>
 
 					<TextArea
 						inputId="description"
 						label="Product Description"
-						value={""}
-						onChange={() => {}}
+						value={product.description || ""}
+						onChange={onChange}
 						placeholder="Please provide a description for the product you want to sell. This gives the customer insights about the instrument/gear/accessory you want to sell."
 						maxLength={200}
 						resize="none"
@@ -93,8 +118,8 @@ function RouteComponent() {
 						<Counter
 							inputId="stock"
 							label="Stock Quantity"
-							value={0}
-							onChange={() => {}}
+							value={product.stock || 0}
+							onChange={onChange}
 							min={0}
 							max={10}
 							showInput={true}
@@ -103,9 +128,9 @@ function RouteComponent() {
 						<NumberInput
 							inputId="price"
 							label="Product Price Per Unit"
-							value={0}
+							value={product.price || 0}
 							decimalPlaces={2}
-							onChange={() => {}}
+							onChange={onChange}
 						/>
 					</div>
 				</div>
@@ -114,8 +139,8 @@ function RouteComponent() {
 					<ImageUploader
 						inputId="images"
 						label="Product Photos"
-						images={[]}
-						onChange={() => {}}
+						images={images}
+						onChange={onImagesChange}
 						maxImages={5}
 						maxSizeMB={5}
 						icon={Camera}
@@ -127,7 +152,7 @@ function RouteComponent() {
 						loading={false}
 						variant="outline"
 						type="button"
-						action={() => navigate({ to: `/products/${id}` })}
+						action={() => navigate({ to: `/shop` })}
 					>
 						Go Back
 					</Button>

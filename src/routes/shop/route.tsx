@@ -1,23 +1,6 @@
-import { queryOptions } from "@tanstack/react-query";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import AnimatedLoader from "@/components/animatedloader";
 import ShopSidebar from "@/components/shopsidebar";
-import {
-	getApprovedProducts,
-	getPendingApprovalProducts,
-} from "@/lib/tanstack-query/product.queries";
-import type { BaseProduct } from "@/types/product";
-
-export const productsQueryOpt = queryOptions<BaseProduct[]>({
-	queryKey: ["product"],
-	queryFn: getApprovedProducts,
-});
-
-export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
-	queryKey: ["pendingProducts"],
-	queryFn: getPendingApprovalProducts,
-	retry: false,
-});
 
 export const Route = createFileRoute("/shop")({
 	pendingComponent: () => (
