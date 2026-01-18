@@ -35,6 +35,7 @@ function RouteComponent() {
 		onChange,
 		onCategoryChange,
 		onImagesChange,
+		handleSubmit,
 		refetchProductDetails,
 	} = useUpdateProduct(id);
 
@@ -62,7 +63,7 @@ function RouteComponent() {
 				</Body>
 			</div>
 
-			<form onSubmit={() => {}}>
+			<form onSubmit={handleSubmit}>
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 					<Input
 						inputId="name"

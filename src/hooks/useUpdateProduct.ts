@@ -28,10 +28,21 @@ const useUpdateProduct = (id: string) => {
 			brand: productData.brand,
 			model: productData.model,
 			description: productData.description,
+			images: productData.images,
 			category: productData.category,
 			price: productData.price,
 			stock: productData.stock,
 		});
+
+		if (productData.images && Array.isArray(productData.images)) {
+			const initialImages: ImageFile[] = productData.images.map(
+				(url: string, index: number) => ({
+					file: new File([], `image-${index}`, { type: "image/jpeg" }),
+					preview: url,
+				}),
+			);
+			setImages(initialImages);
+		}
 	}, [productData]);
 
 	const onChange = (
@@ -57,11 +68,18 @@ const useUpdateProduct = (id: string) => {
 		setImages(newImages);
 	};
 
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+
+		console.log(product);
+	};
+
 	return {
 		product,
 		images,
 		loadingProduct,
 		isErrorProduct,
+		handleSubmit,
 		onChange,
 		onCategoryChange,
 		onImagesChange,
