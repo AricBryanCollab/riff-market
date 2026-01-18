@@ -1,20 +1,13 @@
 import { useEffect, useState } from "react";
 import useGetProducts from "@/hooks/useGetProducts";
+import type { ImageFile } from "@/hooks/useUploadImage";
 import type { ProductCategory } from "@/types/enum";
 import type { UpdateProductRequest } from "@/types/product";
 
-const initialProduct = {
-	name: "",
-	category: "ELECTRIC" as ProductCategory,
-	brand: "",
-	model: "",
-	description: "",
-	price: 0,
-	stock: 0,
-};
-
 const useUpdateProduct = (id: string) => {
-	const [product, setProduct] = useState<UpdateProductRequest>(initialProduct);
+	const [product, setProduct] = useState<UpdateProductRequest | null>(null);
+	const [images, setImages] = useState<ImageFile[]>([]);
+
 	const {
 		product: productData,
 		loadingProduct,
@@ -27,19 +20,51 @@ const useUpdateProduct = (id: string) => {
 		setSelectedProductId(id);
 	}, [id, setSelectedProductId]);
 
+	useEffect(() => {
+		if (!productData) return;
+
+		setProduct({
+			name: productData.name,
+			brand: productData.brand,
+			model: productData.model,
+			description: productData.description,
+			category: productData.category,
+			price: productData.price,
+			stock: productData.stock,
+		});
+	}, [productData]);
+
 	const onChange = (
 		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
 	) => {
-		const value =
-			e.target.type === "number" ? Number(e.target.value) : e.target.value;
-		setProduct({ ...product, [e.target.id]: value });
+		const { id, value, type } = e.target;
+
+		setProduct((prev) =>
+			prev
+				? {
+						...prev,
+						[id]: type === "number" ? Number(value) : value,
+					}
+				: prev,
+		);
+	};
+
+	const onCategoryChange = (category: ProductCategory) => {
+		setProduct((prev) => (prev ? { ...prev, category } : prev));
+	};
+
+	const onImagesChange = (newImages: ImageFile[]) => {
+		setImages(newImages);
 	};
 
 	return {
-		productData,
+		product,
+		images,
 		loadingProduct,
 		isErrorProduct,
 		onChange,
+		onCategoryChange,
+		onImagesChange,
 		refetchProductDetails,
 	};
 };

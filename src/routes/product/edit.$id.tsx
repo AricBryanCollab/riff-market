@@ -3,6 +3,7 @@ import {
 	useNavigate,
 	useParams,
 } from "@tanstack/react-router";
+import type { ProductCategory } from "generated/prisma/enums";
 import { Camera, FileMusic } from "lucide-react";
 import Button from "@/components/button";
 import Counter from "@/components/counter";
@@ -27,10 +28,13 @@ function RouteComponent() {
 	const navigate = useNavigate();
 
 	const {
-		productData,
+		product,
+		images,
 		loadingProduct,
 		isErrorProduct,
 		onChange,
+		onCategoryChange,
+		onImagesChange,
 		refetchProductDetails,
 	} = useUpdateProduct(id);
 
@@ -38,7 +42,7 @@ function RouteComponent() {
 		return <ProductLoadingState />;
 	}
 
-	if (!productData || isErrorProduct) {
+	if (!product || isErrorProduct) {
 		return <ProductDetailErrorState refetch={refetchProductDetails} />;
 	}
 
@@ -64,7 +68,7 @@ function RouteComponent() {
 						inputId="name"
 						label="Product Name"
 						onChange={onChange}
-						value={productData.name}
+						value={product?.name || ""}
 					/>
 
 					<Input
@@ -72,7 +76,7 @@ function RouteComponent() {
 						label="Product Brand"
 						placeholder="eg. Fender, Gibson, Yamaha, Taylor"
 						onChange={onChange}
-						value={productData.brand}
+						value={product?.brand || ""}
 					/>
 
 					<Input
@@ -80,7 +84,7 @@ function RouteComponent() {
 						label="Model Specification"
 						placeholder="eg. American Standard, Jimi Hendrix Special Edition"
 						onChange={onChange}
-						value={productData.model}
+						value={product?.model || ""}
 					/>
 
 					<Select
@@ -89,17 +93,19 @@ function RouteComponent() {
 							value: p.value,
 							icon: p.icon,
 						}))}
-						value={productData.category}
+						value={product.category || "OTHERS"}
 						icon={FileMusic}
-						onChangeValue={() => {}}
+						onChangeValue={(value: string) =>
+							onCategoryChange(value as ProductCategory)
+						}
 						label="Product Classification"
 					/>
 
 					<TextArea
 						inputId="description"
 						label="Product Description"
-						value={""}
-						onChange={() => {}}
+						value={product.description || ""}
+						onChange={onChange}
 						placeholder="Please provide a description for the product you want to sell. This gives the customer insights about the instrument/gear/accessory you want to sell."
 						maxLength={200}
 						resize="none"
@@ -111,8 +117,8 @@ function RouteComponent() {
 						<Counter
 							inputId="stock"
 							label="Stock Quantity"
-							value={0}
-							onChange={() => {}}
+							value={product.stock || 0}
+							onChange={onChange}
 							min={0}
 							max={10}
 							showInput={true}
@@ -121,9 +127,9 @@ function RouteComponent() {
 						<NumberInput
 							inputId="price"
 							label="Product Price Per Unit"
-							value={0}
+							value={product.price || 0}
 							decimalPlaces={2}
-							onChange={() => {}}
+							onChange={onChange}
 						/>
 					</div>
 				</div>
@@ -132,8 +138,8 @@ function RouteComponent() {
 					<ImageUploader
 						inputId="images"
 						label="Product Photos"
-						images={[]}
-						onChange={() => {}}
+						images={images}
+						onChange={onImagesChange}
 						maxImages={5}
 						maxSizeMB={5}
 						icon={Camera}
