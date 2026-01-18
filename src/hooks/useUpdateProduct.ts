@@ -1,12 +1,19 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import useGetProducts from "@/hooks/useGetProducts";
 import type { ImageFile } from "@/hooks/useUploadImage";
+import { updateProduct } from "@/lib/tanstack-query/product.queries";
+import { useToastStore } from "@/store/toast";
 import type { ProductCategory } from "@/types/enum";
 import type { UpdateProductRequest } from "@/types/product";
 
 const useUpdateProduct = (id: string) => {
 	const [product, setProduct] = useState<UpdateProductRequest | null>(null);
 	const [images, setImages] = useState<ImageFile[]>([]);
+	const queryClient = useQueryClient();
+	const { showToast } = useToastStore();
+	const navigate = useNavigate();
 
 	const {
 		product: productData,
@@ -68,10 +75,37 @@ const useUpdateProduct = (id: string) => {
 		setImages(newImages);
 	};
 
+	const { mutate, isPending, isError } = useMutation({
+		mutationFn: ({ id, data }: { id: string; data: UpdateProductRequest }) =>
+			updateProduct(id, data),
+		onSuccess: async () => {
+			queryClient.invalidateQueries({ queryKey: ["product"] });
+			showToast(
+				"The product has been updated. Please wait again for admin approval",
+				"success",
+			);
+			navigate({ to: "/shop" });
+		},
+		onError: (error) => {
+			console.error(error);
+			const message =
+				error instanceof Error ? error.message : "Failed to update the product";
+
+			showToast(message, "error");
+		},
+	});
+
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		console.log(product);
+		if (!product) return;
+
+		const productPayload = {
+			...product,
+			images: images.map((img) => img.file),
+		};
+
+		mutate({ id, data: productPayload });
 	};
 
 	return {
