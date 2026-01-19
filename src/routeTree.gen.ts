@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CartRouteImport } from './routes/cart'
@@ -32,6 +33,11 @@ import { Route as ApiAuthSignoutRouteImport } from './routes/api/auth.signout'
 import { Route as ApiAuthSigninRouteImport } from './routes/api/auth.signin'
 import { Route as ApiProductsPendingIdRouteImport } from './routes/api/products.pending.$id'
 
+const UnauthorizedRoute = UnauthorizedRouteImport.update({
+  id: '/unauthorized',
+  path: '/unauthorized',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
+  '/unauthorized': typeof UnauthorizedRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/uploadimage': typeof ApiUploadimageRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
+  '/unauthorized': typeof UnauthorizedRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/uploadimage': typeof ApiUploadimageRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
+  '/unauthorized': typeof UnauthorizedRoute
   '/api/orders': typeof ApiOrdersRoute
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/uploadimage': typeof ApiUploadimageRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/community'
     | '/settings'
+    | '/unauthorized'
     | '/api/orders'
     | '/api/products'
     | '/api/uploadimage'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/community'
     | '/settings'
+    | '/unauthorized'
     | '/api/orders'
     | '/api/products'
     | '/api/uploadimage'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/community'
     | '/settings'
+    | '/unauthorized'
     | '/api/orders'
     | '/api/products'
     | '/api/uploadimage'
@@ -296,6 +308,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CommunityRoute: typeof CommunityRoute
   SettingsRoute: typeof SettingsRoute
+  UnauthorizedRoute: typeof UnauthorizedRoute
   ApiOrdersRoute: typeof ApiOrdersRoute
   ApiProductsRoute: typeof ApiProductsRouteWithChildren
   ApiUploadimageRoute: typeof ApiUploadimageRoute
@@ -311,6 +324,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unauthorized': {
+      id: '/unauthorized'
+      path: '/unauthorized'
+      fullPath: '/unauthorized'
+      preLoaderRoute: typeof UnauthorizedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -514,6 +534,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CommunityRoute: CommunityRoute,
   SettingsRoute: SettingsRoute,
+  UnauthorizedRoute: UnauthorizedRoute,
   ApiOrdersRoute: ApiOrdersRoute,
   ApiProductsRoute: ApiProductsRouteWithChildren,
   ApiUploadimageRoute: ApiUploadimageRoute,
