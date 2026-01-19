@@ -135,3 +135,14 @@ export const updateProfilePicture = async (
 		throw err;
 	}
 };
+
+export const deleteUser = async (id: string): Promise<void> => {
+	try {
+		await prisma.user.delete({
+			where: { id },
+		});
+	} catch (err) {
+		console.error("Error at deleteUser", err);
+		throw err;
+	}
+};
