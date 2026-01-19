@@ -39,8 +39,10 @@ export async function createProductService(
 	}
 
 	const data = parsed.data;
+	const isAdmin = authRole === "ADMIN";
+	const isSeller = authRole === "SELLER";
 
-	if (authRole !== "SELLER" || !sellerId) {
+	if ((!isAdmin && !isSeller) || !sellerId) {
 		return { error: "Unauthorized, user must be a seller" };
 	}
 
