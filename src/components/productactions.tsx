@@ -97,6 +97,14 @@ export function ProductDetailsActions({
 	const actions =
 		RoleActionConfigs[role as UserRole] || RoleActionConfigs.CUSTOMER;
 
+	const handleAddToCart = () => {
+		if (user) {
+			navigate({ from: "/cart" });
+		} else {
+			setOpenDialog("signup");
+		}
+	};
+
 	const handleAction = (actionType: string) => {
 		if (!id) {
 			console.error("Product ID not found");
@@ -111,6 +119,7 @@ export function ProductDetailsActions({
 				setOpenDialog("deleteProduct");
 				break;
 			case "addToCart":
+				handleAddToCart();
 				break;
 			case "toggleFavorite":
 				// Todo: toggle favorite feature
