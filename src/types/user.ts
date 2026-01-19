@@ -17,7 +17,7 @@ export interface UpdateUserRequest {
 	lastName?: string;
 	phone?: string | null;
 	address?: string | null;
-	theme?: string | null;
+	theme?: string;
 }
 
 export interface UpdateUserProfilePictureRequest {
