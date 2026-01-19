@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import SectionContainer from "@/components/sectioncontainer";
+import { requireRole } from "@/utils/requireRole";
 
 export const Route = createFileRoute("/settings")({
+	beforeLoad: () => requireRole(["ADMIN", "SELLER", "CUSTOMER"]),
 	component: SettingsComponent,
 });
 
