@@ -11,3 +11,15 @@ export interface UserProfile {
 	profilePic: string | null;
 	address: string | null;
 }
+
+export interface UpdateUserRequest {
+	firstName?: string;
+	lastName?: string;
+	phone?: string | null;
+	address?: string | null;
+	theme?: string | null;
+}
+
+export interface UpdateUserProfilePictureRequest {
+	profilePic: File;
+}
