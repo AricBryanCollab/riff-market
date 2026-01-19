@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import SectionContainer from "@/components/sectioncontainer";
+import { requireRole } from "@/utils/requireRole";
 
 export const Route = createFileRoute("/cart")({
+	beforeLoad: () => requireRole(["CUSTOMER"]),
 	component: RouteComponent,
 });
 
