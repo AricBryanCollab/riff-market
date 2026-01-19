@@ -12,8 +12,10 @@ import { Body, H4 } from "@/components/typography";
 import { productCategoryOptions } from "@/constants/selectOptions";
 import useCreateProduct from "@/hooks/useCreateProduct";
 import type { ProductCategory } from "@/types/enum";
+import { requireRole } from "@/utils/requireRole";
 
 export const Route = createFileRoute("/product/new")({
+	beforeLoad: () => requireRole(["SELLER", "ADMIN"]),
 	component: RouteComponent,
 });
 

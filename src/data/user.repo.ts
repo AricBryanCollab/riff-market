@@ -5,7 +5,7 @@ import type {
 	UserSettings,
 } from "generated/prisma/client";
 import { prisma } from "@/data/connectDb";
-import type { UserProfile } from "@/types/user";
+import type { UpdateUserRequest, UserProfile } from "@/types/user";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -63,6 +63,86 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
 		return await getUserProfiles(prisma);
 	} catch (err) {
 		console.error("Error at getAllUsers", err);
+		throw err;
+	}
+};
+
+export const updateUser = async (
+	id: string,
+	data: UpdateUserRequest,
+): Promise<UserProfile> => {
+	try {
+		const result = await prisma.$transaction(async (tx) => {
+			if (data.firstName || data.lastName) {
+				await tx.user.update({
+					where: { id },
+					data: {
+						firstName: data.firstName,
+						lastName: data.lastName,
+					},
+				});
+			}
+
+			if (
+				data.phone !== undefined ||
+				data.address !== undefined ||
+				data.theme
+			) {
+				await tx.userSettings.upsert({
+					where: { userId: id },
+					update: {
+						phone: data.phone,
+						address: data.address,
+						theme: data.theme,
+					},
+					create: {
+						userId: id,
+						phone: data.phone ?? null,
+						address: data.address ?? null,
+						theme: data.theme ?? "light",
+					},
+				});
+			}
+
+			const users = await getUserProfiles(tx, { id });
+			return users[0];
+		});
+
+		if (!result) throw new Error("User not found");
+		return result;
+	} catch (err) {
+		console.error("Error at updateUser", err);
+		throw err;
+	}
+};
+
+export const updateProfilePicture = async (
+	userId: string,
+	profilePic: string | null,
+): Promise<void> => {
+	try {
+		await prisma.userSettings.upsert({
+			where: { userId },
+			update: { profilePic },
+			create: {
+				userId,
+				profilePic,
+				theme: "light",
+			},
+		});
+	} catch (err) {
+		console.error("Error at updateProfilePicture", err);
+		throw err;
+	}
+};
+
+export const deleteUser = async (id: string): Promise<void> => {
+	try {
+		await prisma.user.delete({
+			where: { id },
+		});
+	} catch (err) {
+		console.error("Error at deleteUser", err);
 		throw err;
 	}
 };

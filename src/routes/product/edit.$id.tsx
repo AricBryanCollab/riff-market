@@ -18,8 +18,10 @@ import TextArea from "@/components/textarea";
 import { Body, H4 } from "@/components/typography";
 import { productCategoryOptions } from "@/constants/selectOptions";
 import useUpdateProduct from "@/hooks/useUpdateProduct";
+import { requireRole } from "@/utils/requireRole";
 
 export const Route = createFileRoute("/product/edit/$id")({
+	beforeLoad: () => requireRole(["ADMIN", "SELLER"]),
 	component: RouteComponent,
 });
 
