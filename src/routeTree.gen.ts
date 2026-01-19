@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as CommunityRouteImport } from './routes/community'
+import { Route as CartRouteImport } from './routes/cart'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ShopRouteRouteImport } from './routes/shop/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -39,6 +40,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const CommunityRoute = CommunityRouteImport.update({
   id: '/community',
   path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/shop': typeof ShopRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/cart': typeof CartRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
   '/api/orders': typeof ApiOrdersRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cart': typeof CartRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
   '/api/orders': typeof ApiOrdersRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/shop': typeof ShopRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/cart': typeof CartRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
   '/api/orders': typeof ApiOrdersRoute
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
     | '/'
     | '/shop'
     | '/about'
+    | '/cart'
     | '/community'
     | '/settings'
     | '/api/orders'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/cart'
     | '/community'
     | '/settings'
     | '/api/orders'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/'
     | '/shop'
     | '/about'
+    | '/cart'
     | '/community'
     | '/settings'
     | '/api/orders'
@@ -281,6 +293,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ShopRouteRoute: typeof ShopRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  CartRoute: typeof CartRoute
   CommunityRoute: typeof CommunityRoute
   SettingsRoute: typeof SettingsRoute
   ApiOrdersRoute: typeof ApiOrdersRoute
@@ -310,6 +323,13 @@ declare module '@tanstack/react-router' {
       path: '/community'
       fullPath: '/community'
       preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -491,6 +511,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ShopRouteRoute: ShopRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  CartRoute: CartRoute,
   CommunityRoute: CommunityRoute,
   SettingsRoute: SettingsRoute,
   ApiOrdersRoute: ApiOrdersRoute,
