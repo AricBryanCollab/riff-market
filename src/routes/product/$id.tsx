@@ -193,6 +193,7 @@ function RouteComponent() {
 						<ProductDetailsActions
 							quantity={quantity}
 							stock={product.stock}
+							isApproved={product.isApproved}
 							handleQuantityChange={handleQuantityChange}
 						/>
 
