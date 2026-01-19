@@ -31,6 +31,7 @@ function RouteComponent() {
 		product,
 		images,
 		loadingProduct,
+		loadingUpdateProduct,
 		isErrorProduct,
 		onChange,
 		onCategoryChange,
@@ -149,14 +150,18 @@ function RouteComponent() {
 
 				<div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start md:justify-end">
 					<Button
-						loading={false}
+						loading={loadingUpdateProduct}
 						variant="outline"
 						type="button"
 						action={() => navigate({ to: `/shop` })}
 					>
 						Go Back
 					</Button>
-					<Button loading={false} variant="primary" type="submit">
+					<Button
+						loading={loadingUpdateProduct}
+						variant="primary"
+						type="submit"
+					>
 						Update My Product
 					</Button>
 				</div>

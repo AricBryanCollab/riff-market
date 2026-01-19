@@ -76,6 +76,7 @@ export function ShopPageProductActions({
 interface ProductDetailsActionsProps {
 	quantity: number;
 	stock: number;
+	isApproved: boolean;
 	handleQuantityChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -83,6 +84,7 @@ export function ProductDetailsActions({
 	quantity,
 	stock,
 	handleQuantityChange,
+	isApproved,
 }: ProductDetailsActionsProps) {
 	const { user } = useUserStore();
 	const { setOpenDialog } = useDialogStore();
@@ -142,22 +144,24 @@ export function ProductDetailsActions({
 					const isDisabled = action.requiresStock && stock === 0;
 					const isSecondary = action.variant === "secondary";
 
+					const isAdminApproved = role === "ADMIN" && isApproved;
+					const isButtonDisabled = isDisabled || isPending || isAdminApproved;
+
 					return (
 						<button
 							key={action.label}
 							type="button"
 							onClick={() => handleAction(action.onClickKey)}
-							disabled={isDisabled || isPending}
+							disabled={isButtonDisabled}
 							className={`
-								${isSecondary ? "h-12 px-6" : "flex-1 h-12"} 
-								rounded-lg cursor-pointer font-semibold flex items-center justify-center gap-2 transition-colors
-								${
-									isDisabled
-										? "bg-gray-300 cursor-not-allowed"
-										: ButtonStyles[action.variant]
-								}
-								${isSecondary ? "" : "text-white"}
-							`}
+      						${isSecondary ? "h-12 px-6" : "flex-1 h-12"} 
+      						rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors
+      						${
+										isButtonDisabled
+											? "bg-gray-300 cursor-not-allowed text-gray-500"
+											: `${ButtonStyles[action.variant]} cursor-pointer ${isSecondary ? "" : "text-white"}`
+									}
+    					`}
 						>
 							<Icon size={20} />
 							{action.label}

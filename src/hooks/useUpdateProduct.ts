@@ -6,10 +6,10 @@ import type { ImageFile } from "@/hooks/useUploadImage";
 import { updateProduct } from "@/lib/tanstack-query/product.queries";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory } from "@/types/enum";
-import type { UpdateProductRequest } from "@/types/product";
+import type { UpdateProductForm, UpdateProductRequest } from "@/types/product";
 
 const useUpdateProduct = (id: string) => {
-	const [product, setProduct] = useState<UpdateProductRequest | null>(null);
+	const [product, setProduct] = useState<UpdateProductForm | null>(null);
 	const [images, setImages] = useState<ImageFile[]>([]);
 	const queryClient = useQueryClient();
 	const { showToast } = useToastStore();
@@ -43,8 +43,8 @@ const useUpdateProduct = (id: string) => {
 
 		if (productData.images && Array.isArray(productData.images)) {
 			const initialImages: ImageFile[] = productData.images.map(
-				(url: string, index: number) => ({
-					file: new File([], `image-${index}`, { type: "image/jpeg" }),
+				(url: string) => ({
+					file: new File([], `${url}`, { type: "image/jpeg" }),
 					preview: url,
 				}),
 			);
@@ -75,7 +75,11 @@ const useUpdateProduct = (id: string) => {
 		setImages(newImages);
 	};
 
-	const { mutate, isPending, isError } = useMutation({
+	const {
+		mutate,
+		isPending: loadingUpdateProduct,
+		isError: errorUpdateProduct,
+	} = useMutation({
 		mutationFn: ({ id, data }: { id: string; data: UpdateProductRequest }) =>
 			updateProduct(id, data),
 		onSuccess: async () => {
@@ -100,12 +104,16 @@ const useUpdateProduct = (id: string) => {
 
 		if (!product) return;
 
-		const productPayload = {
+		const newFiles = images
+			.filter((img) => !img.file.name.startsWith("https://res.cloudinary.com"))
+			.map((img) => img.file);
+
+		const payload: UpdateProductRequest = {
 			...product,
-			images: images.map((img) => img.file),
+			images: newFiles.length ? newFiles : undefined,
 		};
 
-		mutate({ id, data: productPayload });
+		mutate({ id, data: payload });
 	};
 
 	return {
@@ -113,6 +121,8 @@ const useUpdateProduct = (id: string) => {
 		images,
 		loadingProduct,
 		isErrorProduct,
+		loadingUpdateProduct,
+		errorUpdateProduct,
 		handleSubmit,
 		onChange,
 		onCategoryChange,

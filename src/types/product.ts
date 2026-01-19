@@ -1,17 +1,28 @@
 import type { ProductCategory } from "@/types/enum";
 
-export interface CreateProductRequest {
+interface MutateBaseProduct {
 	name: string;
 	category: ProductCategory;
 	brand: string;
 	model: string;
-	images: File[] | string[];
 	description: string;
 	price: number;
 	stock: number;
 }
 
-export type UpdateProductRequest = Partial<CreateProductRequest>;
+export interface CreateProductRequest extends MutateBaseProduct {
+	images: File[] | string[];
+}
+
+export interface UpdateProductForm extends MutateBaseProduct {
+	images: (File | string)[];
+}
+
+export type UpdateProductRequest = Partial<
+	MutateBaseProduct & {
+		images: File[];
+	}
+>;
 
 interface SellerDetails {
 	firstName: string;
