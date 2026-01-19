@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { ArrowLeft, Package } from "lucide-react";
 import { useMemo, useState } from "react";
+import DeleteProductConfirm from "@/components/deleteproductconfirm";
 import Dialog from "@/components/dialog";
 import { ProductDetailsLoadingState } from "@/components/loadingstates";
 import { ProductDetailsActions } from "@/components/productactions";
@@ -197,8 +198,11 @@ function RouteComponent() {
 					</div>
 
 					<Dialog type="deleteProduct" title="Delete Product Confirmation">
-						{/* Todo: Actual Delete Confirmation Modal */}
-						<p className="my-4">Are you sure you want to delete</p>
+						<DeleteProductConfirm
+							id={id}
+							name={product.name}
+							model={product.model}
+						/>
 					</Dialog>
 				</div>
 
