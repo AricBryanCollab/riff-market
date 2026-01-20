@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
 import Button from "@/components/button";
+import CartCard from "@/components/cartcard";
 import { CartDetailsLoadingState } from "@/components/loadingstates";
 import SectionContainer from "@/components/sectioncontainer";
 import { BodyLarge, BodySmall, H2 } from "@/components/typography";
@@ -19,6 +20,7 @@ function RouteComponent() {
 		totalItems,
 		cartWithDetails,
 		handleRemoveItem,
+		handleQuantityChange,
 	} = useCartDetails();
 
 	if (isLoading) {
@@ -27,9 +29,7 @@ function RouteComponent() {
 
 	return (
 		<SectionContainer>
-			{/* HEADER ROW */}
 			<div className="my-6 relative flex items-center justify-center">
-				{/* BACK TO SHOP */}
 				<div className="absolute left-0 flex items-center gap-3">
 					<button
 						type="button"
@@ -40,8 +40,6 @@ function RouteComponent() {
 					</button>
 					<p className="hidden md:block">Back to Shop</p>
 				</div>
-
-				{/* CART SUMMARY TITLE */}
 				<H2>Cart Summary</H2>
 			</div>
 
@@ -74,53 +72,30 @@ function RouteComponent() {
 				)}
 			</div>
 
-			{/* CART ITEMS */}
 			{!isCartEmpty && (
 				<div className=" w-full rounded-2xl bg-white p-8">
 					<h2 className="mb-6 text-2xl font-semibold">Items in Your Cart</h2>
 					<div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 						{cartWithDetails.map((item) => (
-							<div
+							<CartCard
 								key={item.productId}
-								className="rounded-xl bg-slate-100 p-4 flex flex-col gap-2"
-							>
-								{item.product && (
-									<>
-										<div className="w-full rounded-lg bg-slate-300" />
-										<img src={item.product.images[0]} alt="product-img" />
-										<div className="text-lg font-semibold">
-											{item.product.name}
-										</div>
-										<div className="text-sm text-gray-600">
-											{item.product.brand}
-										</div>
-										<div className="flex justify-between items-center mt-2">
-											<span className="text-md font-medium">
-												$ {item.product.price}
-											</span>
-											<span className="text-sm text-gray-500">
-												Qty: {item.quantity}
-											</span>
-										</div>
-										<button
-											type="button"
-											onClick={() => handleRemoveItem(item.productId)}
-											className="mt-4 w-full rounded bg-amber-200 py-2 font-semibold hover:bg-amber-300 transition"
-										>
-											Remove
-										</button>
-									</>
-								)}
-							</div>
+								cartItem={item}
+								handleRemoveItem={handleRemoveItem}
+								handleQuantityChange={handleQuantityChange}
+							/>
 						))}
 					</div>
 				</div>
 			)}
 
-			{/* CHECKOUT */}
 			{!isCartEmpty && (
 				<div className="flex justify-end">
-					<Button variant="primary">Proceed To Checkout</Button>
+					<Button
+						action={() => navigate({ to: "/checkout" })}
+						variant="primary"
+					>
+						Proceed To Checkout
+					</Button>
 				</div>
 			)}
 		</SectionContainer>
