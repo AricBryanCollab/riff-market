@@ -59,6 +59,7 @@ model User {
   orders        Order[]
   reviews       Review[]
   notifications Notification[]
+  favorites Favorite[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -76,6 +77,12 @@ model UserSettings {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model AppSettings {
+  id Int @id @default(1)
+  currency String @default("USD")
+  updatedAt DateTime @updatedAt
+}
+
 model Order {
   id               String @id @default(uuid())
   userId           String
@@ -84,10 +91,14 @@ model Order {
   shippingAddress  String
   paymentMethod    PaymentMethod
   trackingNumber   String
+  status OrderStatus @default(PENDING)
 
   user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   items        OrderItem[]
   notifications Notification[]
+
+  @@index([userId])
+  @@index([orderDate])
 }
 
 model OrderItem {
@@ -101,6 +112,9 @@ model OrderItem {
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model Product {
@@ -115,6 +129,7 @@ model Product {
   price       Float
   stock       Int
   isApproved Boolean
+  favoritedBy Favorite[]
 
   seller User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
@@ -122,13 +137,14 @@ model Product {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([sellerId])
+  @@index([category])
+  @@index([isApproved])
 }
 
 model ChatBotSession {
   id        String @id @default(uuid())
-  sessionId String
-  role      ChatRole
-
   messages Message[]
 
   createdAt DateTime @default(now())
@@ -137,11 +153,14 @@ model ChatBotSession {
 model Message {
   id        String @id @default(uuid())
   sessionId String
+  role ChatRole
   content   String
 
   session ChatBotSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+
+  @@index([sessionId])
 }
 
 model Review {
@@ -151,22 +170,44 @@ model Review {
   rating    Int
   comment   String
 
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+
+  @@unique([userId, productId]) 
+  @@index([productId])
+  @@index([userId])
+}
+
+model Favorite {
+  id String @id @default(uuid())
+  userId String
+  productId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
 }
 
 model Notification {
   id      String @id @default(uuid())
   userId  String
-  orderId String
+  orderId String?
   message String
   isRead  Boolean @default(false)
 
-  user  User  @relation(fields: [userId], references: [id])
-  order Order @relation(fields: [orderId], references: [id])
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
 }
