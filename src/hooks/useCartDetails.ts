@@ -1,0 +1,45 @@
+import { useQueries } from "@tanstack/react-query";
+import { productbyIdQueryOpt } from "@/hooks/useGetProducts";
+import { useCartStore } from "@/store/cart";
+
+const useCartDetails = () => {
+	const { items: cartItems, removeItem } = useCartStore();
+
+	const productQueries = useQueries({
+		queries: cartItems.map((item) => productbyIdQueryOpt(item.productId)),
+	});
+
+	const cartWithDetails = cartItems.map((cartItem, index) => ({
+		...cartItem,
+		product: productQueries[index].data,
+		isLoading: productQueries[index].isPending,
+		isError: productQueries[index].isError,
+	}));
+
+	const isCartEmpty = cartItems.length === 0;
+	const isLoading = productQueries.some((query) => query.isPending);
+
+	const totalPrice = cartWithDetails.reduce((sum, item) => {
+		if (item.product) {
+			return sum + item.quantity * item.product.price;
+		}
+		return sum;
+	}, 0);
+
+	const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+	const handleRemoveItem = (id: string) => {
+		removeItem(id);
+	};
+
+	return {
+		isCartEmpty,
+		isLoading,
+		totalPrice,
+		totalItems,
+		cartWithDetails,
+		handleRemoveItem,
+	};
+};
+
+export default useCartDetails;
