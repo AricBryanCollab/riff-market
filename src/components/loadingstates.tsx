@@ -15,3 +15,11 @@ export function ProductDetailsLoadingState() {
 		</div>
 	);
 }
+
+export function CartDetailsLoadingState() {
+	return (
+		<div className="flex justify-center items-center min-h-screen">
+			<AnimatedLoader text="Loading Your Cart Items" />
+		</div>
+	);
+}
