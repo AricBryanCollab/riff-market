@@ -91,10 +91,14 @@ model Order {
   shippingAddress  String
   paymentMethod    PaymentMethod
   trackingNumber   String
+  status OrderStatus @default(PENDING)
 
   user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   items        OrderItem[]
   notifications Notification[]
+
+  @@index([userId])
+  @@index([orderDate])
 }
 
 model OrderItem {
