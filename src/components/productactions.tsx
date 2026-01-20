@@ -79,7 +79,7 @@ interface ProductDetailsActionsProps {
 	quantity: number;
 	stock: number;
 	isApproved: boolean;
-	handleQuantityChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	handleQuantityChange: (quantity: number) => void;
 }
 
 export function ProductDetailsActions({
