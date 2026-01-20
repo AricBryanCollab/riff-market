@@ -1,115 +1,101 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShoppingCart } from "lucide-react";
+import Button from "@/components/button";
+import CartCard from "@/components/cartcard";
+import { CartDetailsLoadingState } from "@/components/loadingstates";
 import SectionContainer from "@/components/sectioncontainer";
-import { requireRole } from "@/utils/requireRole";
+import { BodyLarge, BodySmall, H2 } from "@/components/typography";
+import useCartDetails from "@/hooks/useCartDetails";
 
 export const Route = createFileRoute("/cart")({
-	beforeLoad: () => requireRole(["CUSTOMER"]),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const navigate = useNavigate();
+	const {
+		isCartEmpty,
+		isLoading,
+		totalPrice,
+		totalItems,
+		cartWithDetails,
+		handleRemoveItem,
+		handleQuantityChange,
+	} = useCartDetails();
 
-	const cartItems = Array.from({ length: 4 }).map((_, i) => ({
-		id: i,
-		name: `Product ${i + 1}`,
-		brand: "Brand Name",
-		price: `$${(i + 1) * 99}`,
-		quantity: i + 1,
-	}));
-
-	const isCartEmpty = cartItems.length === 0;
+	if (isLoading) {
+		return <CartDetailsLoadingState />;
+	}
 
 	return (
 		<SectionContainer>
-			<div className="flex w-full flex-col gap-8">
-				{/* BACK TO SHOP */}
-				<div className="flex items-center gap-3 rounded-2xl bg-white p-4">
+			<div className="my-6 relative flex items-center justify-center">
+				<div className="absolute left-0 flex items-center gap-3">
 					<button
 						type="button"
 						onClick={() => navigate({ to: "/shop" })}
-						className="size-10 flex justify-center cursor-pointer items-center rounded-full bg-muted-foreground hover:bg-foreground hover:text-white transition-colors"
+						className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-muted-foreground transition-colors hover:bg-foreground hover:text-white"
 					>
 						<ArrowLeft size={28} />
 					</button>
-					<p className="font-medium">Back to Shop</p>
+					<p className="hidden md:block">Back to Shop</p>
 				</div>
+				<H2>Cart Summary</H2>
 			</div>
 
-			<div className=" w-full rounded-2xl bg-white p-8">
-				<h2 className="mb-4 text-2xl font-semibold">Cart Summary</h2>
+			<div className="w-full">
 				{isCartEmpty ? (
-					<p className="text-gray-500">Your cart is empty.</p>
+					<div className="flex justify-center items-center gap-4 text-center py-8 text-muted-foreground">
+						<ShoppingCart size={28} />
+						<p>Your Cart Is Empty</p>
+					</div>
 				) : (
-					<div className="flex flex-col gap-2">
-						<div className="flex justify-between">
-							<span>Total Items:</span>
-							<span>
-								{cartItems.reduce((sum, item) => sum + item.quantity, 0)}
-							</span>
+					<div className="flex w-[50%] flex-col gap-4">
+						<div className="flex w-full items-center justify-between rounded-xl  px-4 py-3">
+							<BodySmall className="font-medium text-secondary">
+								Total Items
+							</BodySmall>
+							<BodyLarge className="font-bold text-primary">
+								{totalItems}
+							</BodyLarge>
 						</div>
-						<div className="flex justify-between font-bold">
-							<span>Total Price:</span>
-							<span>
-								$
-								{cartItems
-									.reduce(
-										(sum, item) =>
-											sum + item.quantity * parseInt(item.price.slice(1), 10),
-										0,
-									)
-									.toFixed(2)}
-							</span>
+
+						<div className="flex w-full items-center justify-between rounded-xl bg-linear-to-br from-primary to-secondary px-4 py-4 text-white">
+							<BodySmall className="font-semibold tracking-wide">
+								Total Price
+							</BodySmall>
+							<BodyLarge className="font-extrabold leading-none">
+								${totalPrice}
+							</BodyLarge>
 						</div>
 					</div>
 				)}
 			</div>
 
-			<div className="min-h-[50vh] w-full rounded-2xl bg-white p-8">
-				<h2 className="mb-6 text-2xl font-semibold">Items in Your Cart</h2>
-				{isCartEmpty ? (
-					<div className="text-center text-gray-500 py-10">
-						No items added yet. Browse products to add them to your cart.
-					</div>
-				) : (
+			{!isCartEmpty && (
+				<div className=" w-full rounded-2xl bg-white p-8">
+					<h2 className="mb-6 text-2xl font-semibold">Items in Your Cart</h2>
 					<div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-						{cartItems.map((item) => (
-							<div
-								key={item.id}
-								className="rounded-xl bg-slate-100 p-4 flex flex-col gap-2"
-							>
-								<div className="h-32 w-full rounded-lg bg-slate-300" />{" "}
-								{/* product image */}
-								<div className="text-lg font-semibold">{item.name}</div>
-								<div className="text-sm text-gray-600">{item.brand}</div>
-								<div className="flex justify-between items-center mt-2">
-									<span className="text-md font-medium">{item.price}</span>
-									<span className="text-sm text-gray-500">
-										Qty: {item.quantity}
-									</span>
-								</div>
-								<button
-									type="button"
-									className="mt-4 w-full rounded bg-amber-200 py-2 font-semibold"
-								>
-									Remove
-								</button>
-							</div>
+						{cartWithDetails.map((item) => (
+							<CartCard
+								key={item.productId}
+								cartItem={item}
+								handleRemoveItem={handleRemoveItem}
+								handleQuantityChange={handleQuantityChange}
+							/>
 						))}
 					</div>
-				)}
-			</div>
+				</div>
+			)}
 
-			{/* CHECKOUT */}
 			{!isCartEmpty && (
 				<div className="flex justify-end">
-					<button
-						type="button"
-						className="rounded-xl bg-emerald-400 px-6 py-3 text-white font-bold hover:bg-emerald-500 transition"
+					<Button
+						action={() => navigate({ to: "/checkout" })}
+						variant="primary"
 					>
-						Proceed to Checkout
-					</button>
+						Proceed To Checkout
+					</Button>
 				</div>
 			)}
 		</SectionContainer>

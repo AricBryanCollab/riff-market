@@ -26,6 +26,7 @@ function RouteComponent() {
 		loading,
 		onChange,
 		onCategoryChange,
+		onQuantityChange,
 		onImagesChange,
 		clearCreateProductForm,
 		handleSubmit,
@@ -97,7 +98,7 @@ function RouteComponent() {
 							inputId="stock"
 							label="Stock Quantity"
 							value={product.stock}
-							onChange={onChange}
+							onChange={onQuantityChange}
 							min={0}
 							max={10}
 							showInput={true}

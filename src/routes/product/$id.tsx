@@ -69,8 +69,8 @@ function RouteComponent() {
 		);
 	}
 
-	const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setQuantity(Number(e.target.value));
+	const handleQuantityChange = (value: number) => {
+		setQuantity(value);
 	};
 
 	return (

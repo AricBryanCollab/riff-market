@@ -58,6 +58,17 @@ const useCreateProduct = () => {
 		setProduct({ ...product, category: category });
 	};
 
+	const onQuantityChange = (stock: number) => {
+		setProduct((prev) =>
+			prev
+				? {
+						...prev,
+						stock,
+					}
+				: prev,
+		);
+	};
+
 	const onImagesChange = (newImages: ImageFile[]) => {
 		setImages(newImages);
 	};
@@ -85,6 +96,7 @@ const useCreateProduct = () => {
 		images,
 		onChange,
 		onCategoryChange,
+		onQuantityChange,
 		onImagesChange,
 		clearCreateProductForm,
 		handleSubmit,

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as CommunityRouteImport } from './routes/community'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ShopRouteRouteImport } from './routes/shop/route'
@@ -46,6 +47,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const CommunityRoute = CommunityRouteImport.update({
   id: '/community',
   path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CartRoute = CartRouteImport.update({
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/shop': typeof ShopRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/shop': typeof ShopRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/community': typeof CommunityRoute
   '/settings': typeof SettingsRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/about'
     | '/cart'
+    | '/checkout'
     | '/community'
     | '/settings'
     | '/unauthorized'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/cart'
+    | '/checkout'
     | '/community'
     | '/settings'
     | '/unauthorized'
@@ -280,6 +291,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/about'
     | '/cart'
+    | '/checkout'
     | '/community'
     | '/settings'
     | '/unauthorized'
@@ -306,6 +318,7 @@ export interface RootRouteChildren {
   ShopRouteRoute: typeof ShopRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   CartRoute: typeof CartRoute
+  CheckoutRoute: typeof CheckoutRoute
   CommunityRoute: typeof CommunityRoute
   SettingsRoute: typeof SettingsRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
@@ -343,6 +356,13 @@ declare module '@tanstack/react-router' {
       path: '/community'
       fullPath: '/community'
       preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cart': {
@@ -532,6 +552,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShopRouteRoute: ShopRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   CartRoute: CartRoute,
+  CheckoutRoute: CheckoutRoute,
   CommunityRoute: CommunityRoute,
   SettingsRoute: SettingsRoute,
   UnauthorizedRoute: UnauthorizedRoute,

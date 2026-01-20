@@ -71,6 +71,17 @@ const useUpdateProduct = (id: string) => {
 		setProduct((prev) => (prev ? { ...prev, category } : prev));
 	};
 
+	const onQuantityChange = (stock: number) => {
+		setProduct((prev) =>
+			prev
+				? {
+						...prev,
+						stock,
+					}
+				: prev,
+		);
+	};
+
 	const onImagesChange = (newImages: ImageFile[]) => {
 		setImages(newImages);
 	};
@@ -126,6 +137,7 @@ const useUpdateProduct = (id: string) => {
 		handleSubmit,
 		onChange,
 		onCategoryChange,
+		onQuantityChange,
 		onImagesChange,
 		refetchProductDetails,
 	};
