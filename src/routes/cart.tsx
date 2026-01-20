@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShoppingCart } from "lucide-react";
 import Button from "@/components/button";
 import { CartDetailsLoadingState } from "@/components/loadingstates";
 import SectionContainer from "@/components/sectioncontainer";
-import { H2 } from "@/components/typography";
+import { BodyLarge, BodySmall, H2 } from "@/components/typography";
 import useCartDetails from "@/hooks/useCartDetails";
 
 export const Route = createFileRoute("/cart")({
@@ -38,30 +38,37 @@ function RouteComponent() {
 					>
 						<ArrowLeft size={28} />
 					</button>
-					<p className="font-medium">Back to Shop</p>
+					<p className="hidden md:block">Back to Shop</p>
 				</div>
 
 				{/* CART SUMMARY TITLE */}
 				<H2>Cart Summary</H2>
 			</div>
 
-			<div className="w-full rounded-2xl bg-white p-8 shadow-lg border border-gray-100">
+			<div className="w-full">
 				{isCartEmpty ? (
-					<div className="text-center py-8">
-						<p className="text-gray-400 text-lg">Your cart is empty</p>
+					<div className="flex justify-center items-center gap-4 text-center py-8 text-muted-foreground">
+						<ShoppingCart size={28} />
+						<p>Your Cart Is Empty</p>
 					</div>
 				) : (
-					<div className="space-y-3">
-						<div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
-							<span className="text-muted-foreground">Total Items</span>
-							<span className="text-lg font-bold text-gray-900">
+					<div className="flex w-[50%] flex-col gap-4">
+						<div className="flex w-full items-center justify-between rounded-xl  px-4 py-3">
+							<BodySmall className="font-medium text-secondary">
+								Total Items
+							</BodySmall>
+							<BodyLarge className="font-bold text-primary">
 								{totalItems}
-							</span>
+							</BodyLarge>
 						</div>
 
-						<div className="flex justify-between items-center p-5 bg-linear-to-br from-primary to-secondary  rounded-xl text-white">
-							<span className="font-semibold text-lg">Total Price</span>
-							<span className="text-3xl font-bold">${totalPrice}</span>
+						<div className="flex w-full items-center justify-between rounded-xl bg-linear-to-br from-primary to-secondary px-4 py-4 text-white">
+							<BodySmall className="font-semibold tracking-wide">
+								Total Price
+							</BodySmall>
+							<BodyLarge className="font-extrabold leading-none">
+								${totalPrice}
+							</BodyLarge>
 						</div>
 					</div>
 				)}
@@ -69,7 +76,7 @@ function RouteComponent() {
 
 			{/* CART ITEMS */}
 			{!isCartEmpty && (
-				<div className="min-h-[50vh] w-full rounded-2xl bg-white p-8">
+				<div className=" w-full rounded-2xl bg-white p-8">
 					<h2 className="mb-6 text-2xl font-semibold">Items in Your Cart</h2>
 					<div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 						{cartWithDetails.map((item) => (
