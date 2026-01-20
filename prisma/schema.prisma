@@ -138,9 +138,6 @@ model Product {
 
 model ChatBotSession {
   id        String @id @default(uuid())
-  sessionId String
-  role      ChatRole
-
   messages Message[]
 
   createdAt DateTime @default(now())
@@ -149,11 +146,14 @@ model ChatBotSession {
 model Message {
   id        String @id @default(uuid())
   sessionId String
+  role ChatRole
   content   String
 
   session ChatBotSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+
+  @@index([sessionId])
 }
 
 model Review {
