@@ -3,7 +3,12 @@ import { productbyIdQueryOpt } from "@/hooks/useGetProducts";
 import { useCartStore } from "@/store/cart";
 
 const useCartDetails = () => {
-	const { items: cartItems, removeItem } = useCartStore();
+	const {
+		items: cartItems,
+		updateQuantity,
+		getTotalItems,
+		removeItem,
+	} = useCartStore();
 
 	const productQueries = useQueries({
 		queries: cartItems.map((item) => productbyIdQueryOpt(item.productId)),
@@ -26,10 +31,14 @@ const useCartDetails = () => {
 		return sum;
 	}, 0);
 
-	const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+	const totalItems = getTotalItems();
 
 	const handleRemoveItem = (id: string) => {
 		removeItem(id);
+	};
+
+	const handleQuantityChange = (quantity: number, productId: string) => {
+		updateQuantity(productId, quantity);
 	};
 
 	return {
@@ -39,6 +48,7 @@ const useCartDetails = () => {
 		totalItems,
 		cartWithDetails,
 		handleRemoveItem,
+		handleQuantityChange,
 	};
 };
 
