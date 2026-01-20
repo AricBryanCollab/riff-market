@@ -86,6 +86,11 @@ const useCreateProduct = () => {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
+		if (product.stock === 0) {
+			showToast("Stock must not be equal to zero", "default");
+			return;
+		}
+
 		mutate(productPayload);
 	};
 
