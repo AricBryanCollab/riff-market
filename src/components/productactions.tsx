@@ -5,7 +5,9 @@ import Counter from "@/components/counter";
 import { BodySmall } from "@/components/typography";
 import { ButtonStyles, RoleActionConfigs } from "@/constants/roleactionconfigs";
 import useUpdateProductStatus from "@/hooks/useUpdateProductStatus";
+import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";
+import { useToastStore } from "@/store/toast";
 import { useUserStore } from "@/store/user";
 import type { UserRole } from "@/types/enum";
 
@@ -87,6 +89,8 @@ export function ProductDetailsActions({
 	isApproved,
 }: ProductDetailsActionsProps) {
 	const { user } = useUserStore();
+	const { showToast } = useToastStore();
+	const { addItem } = useCartStore();
 	const { setOpenDialog } = useDialogStore();
 	const { id } = useParams({ strict: false });
 	const { handleUpdateProductStatus, isPending } = useUpdateProductStatus();
@@ -99,6 +103,12 @@ export function ProductDetailsActions({
 
 	const handleAddToCart = () => {
 		if (user) {
+			if (!id) {
+				showToast("Product ID not found", "error");
+				return;
+			}
+
+			addItem(id, quantity);
 			navigate({ from: "/cart" });
 		} else {
 			setOpenDialog("signup");
@@ -107,7 +117,7 @@ export function ProductDetailsActions({
 
 	const handleAction = (actionType: string) => {
 		if (!id) {
-			console.error("Product ID not found");
+			showToast("Product ID not found", "error");
 			return;
 		}
 
