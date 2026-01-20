@@ -37,6 +37,7 @@ function RouteComponent() {
 		isErrorProduct,
 		onChange,
 		onCategoryChange,
+		onQuantityChange,
 		onImagesChange,
 		handleSubmit,
 		refetchProductDetails,
@@ -122,7 +123,7 @@ function RouteComponent() {
 							inputId="stock"
 							label="Stock Quantity"
 							value={product.stock || 0}
-							onChange={onChange}
+							onChange={onQuantityChange}
 							min={0}
 							max={10}
 							showInput={true}
