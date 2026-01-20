@@ -5,7 +5,7 @@ interface CounterProps {
 	label: string;
 	disabled?: boolean;
 	value: number;
-	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	onChange: (value: number) => void;
 	min?: number;
 	max?: number;
 	icon?: LucideIcon;
@@ -25,34 +25,18 @@ const Counter = ({
 	showInput = true,
 	showLimit = true,
 }: CounterProps) => {
-	const createSyntheticEvent = (
-		newValue: number,
-	): React.ChangeEvent<HTMLInputElement> => {
-		return {
-			target: {
-				id: inputId,
-				value: String(newValue),
-				type: "number",
-			},
-		} as React.ChangeEvent<HTMLInputElement>;
-	};
-
 	const handleIncrement = () => {
-		if (value < max) {
-			onChange(createSyntheticEvent(value + 1));
-		}
+		if (value < max) onChange(value + 1);
 	};
 
 	const handleDecrement = () => {
-		if (value > min) {
-			onChange(createSyntheticEvent(value - 1));
-		}
+		if (value > min) onChange(value - 1);
 	};
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = Number(e.target.value);
 		if (!Number.isNaN(newValue) && newValue >= min && newValue <= max) {
-			onChange(e);
+			onChange(newValue);
 		}
 	};
 
