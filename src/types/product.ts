@@ -32,6 +32,7 @@ interface SellerDetails {
 
 export interface BaseProduct {
 	id: string;
+	sellerId: string;
 	name: string;
 	category: ProductCategory;
 	brand: string;

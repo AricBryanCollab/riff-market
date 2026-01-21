@@ -173,6 +173,7 @@ function RouteComponent() {
 						{/* ACTIONS */}
 						<ProductDetailsActions
 							quantity={quantity}
+							sellerId={product.sellerId}
 							stock={product.stock}
 							isApproved={product.isApproved}
 							handleQuantityChange={handleQuantityChange}
