@@ -3,20 +3,10 @@ import { useThemeStore } from "@/store/theme";
 
 interface ThemeProviderProps {
 	children: React.ReactNode;
-	defaultTheme?: string;
 }
 
-export function ThemeProvider({
-	children,
-	defaultTheme = "default",
-}: ThemeProviderProps) {
-	const { theme, previewTheme, setTheme } = useThemeStore();
-
-	useEffect(() => {
-		if (!theme) {
-			setTheme(defaultTheme);
-		}
-	}, [theme, defaultTheme, setTheme]);
+export function ThemeProvider({ children }: ThemeProviderProps) {
+	const { theme, previewTheme } = useThemeStore();
 
 	useEffect(() => {
 		const root = document.documentElement;
