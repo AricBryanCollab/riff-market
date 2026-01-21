@@ -109,14 +109,18 @@ function SettingsComponent() {
 				{/* SECURITY */}
 				<div className="flex flex-col gap-4">
 					<H4>Security</H4>
-					<div className="space-y-4">
-						<div className="h-12 rounded bg-slate-200" />
-						<div className="h-12 rounded bg-slate-200" />
+					<div className="flex justify-between max-w-xl items-center gap-4">
+						<div className="">
+							<BodyLarge>Reset Password</BodyLarge>
+						</div>
+						<div className="">
+							<BodyLarge>Email Notifications</BodyLarge>
+						</div>
 					</div>
 				</div>
 
 				{/* ORDERS */}
-				<div className="rounded-2xl bg-slate-50 p-6">
+				<div className="flex flex-col gap-4">
 					<H4>Recent Orders</H4>
 					<div className="space-y-3">
 						<div className="h-16 rounded bg-slate-200" />
@@ -125,8 +129,18 @@ function SettingsComponent() {
 					</div>
 				</div>
 
+				{/* Favorites */}
+				<div className="flex flex-col gap-4">
+					<H4>Your Product Favorites</H4>
+					<div className="space-y-3">
+						<div className="h-16 rounded bg-slate-200" />
+						<div className="h-16 rounded bg-slate-200" />
+						<div className="h-16 rounded bg-slate-200" />
+					</div>
+				</div>
+
 				{/* REVIEWS */}
-				<div className="rounded-2xl bg-white p-6">
+				<div className="flex flex-col gap-4">
 					<H4>Your Reviews</H4>
 					<div className="grid gap-4 md:grid-cols-2">
 						<div className="h-24 rounded bg-slate-200" />
@@ -135,7 +149,7 @@ function SettingsComponent() {
 				</div>
 
 				{/* NOTIFICATIONS */}
-				<div className="rounded-2xl bg-slate-50 p-6">
+				<div className="flex flex-col gap-4">
 					<H4>Notifications</H4>
 					<div className="space-y-3">
 						<div className="h-14 rounded bg-slate-200" />
