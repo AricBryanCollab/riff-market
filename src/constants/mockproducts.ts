@@ -3,6 +3,7 @@ import type { BaseProduct } from "@/types/product";
 export const mockProducts: BaseProduct[] = [
 	{
 		id: "1",
+		sellerId: "10",
 		name: "Fender Stratocaster American Professional II",
 		category: "ELECTRIC",
 		brand: "Fender",
@@ -24,6 +25,7 @@ export const mockProducts: BaseProduct[] = [
 	},
 	{
 		id: "2",
+		sellerId: "10",
 		name: "Boss DS-1 Distortion Pedal",
 		category: "ACCESSORY",
 		brand: "Boss",
@@ -45,6 +47,7 @@ export const mockProducts: BaseProduct[] = [
 	},
 	{
 		id: "3",
+		sellerId: "11",
 		name: "D'Addario NYXL Premium Guitar Strings",
 		category: "ACCESSORY",
 		brand: "D'Addario",
@@ -66,6 +69,7 @@ export const mockProducts: BaseProduct[] = [
 	},
 	{
 		id: "4",
+		sellerId: "11",
 		name: "Gibson Les Paul Standard",
 		category: "ELECTRIC",
 		brand: "Gibson",
@@ -85,6 +89,7 @@ export const mockProducts: BaseProduct[] = [
 	},
 	{
 		id: "5",
+		sellerId: "10",
 		name: "Ibanez RG Series",
 		category: "ELECTRIC",
 		brand: "Ibanez",
@@ -104,6 +109,7 @@ export const mockProducts: BaseProduct[] = [
 	},
 	{
 		id: "6",
+		sellerId: "12",
 		name: "Ernie Ball Regular Slinky",
 		category: "ACCESSORY",
 		brand: "Ernie Ball",
@@ -123,6 +129,7 @@ export const mockProducts: BaseProduct[] = [
 	},
 	{
 		id: "7",
+		sellerId: "12",
 		name: "Ibanez Tube Screamer TS9",
 		category: "ACCESSORY",
 		brand: "Ibanez",
@@ -143,6 +150,7 @@ export const mockProducts: BaseProduct[] = [
 	},
 	{
 		id: "8",
+		sellerId: "11",
 		name: "Taylor 814ce Acoustic",
 		category: "ACOUSTIC",
 		brand: "Taylor",
