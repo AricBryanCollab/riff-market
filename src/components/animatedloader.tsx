@@ -18,7 +18,7 @@ const AnimatedLoader = ({ text = "Loading" }: AnimatedLoaderProps) => {
 					className="relative z-10"
 					style={{ animation: "bounce 1.5s ease-in-out infinite" }}
 				>
-					<GuitarPick size={200} className="text-blue-600 drop-shadow-2xl" />
+					<GuitarPick size={200} className="text-primary drop-shadow-2xl" />
 				</div>
 			</div>
 

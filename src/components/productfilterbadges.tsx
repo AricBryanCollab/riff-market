@@ -28,7 +28,7 @@ const ProductFilterBadges = ({
 				className={`px-5 py-2 rounded-full border-2 font-medium transition-all ${
 					!showPending && selectedCategory === null
 						? "bg-primary text-white border-secondary shadow-lg scale-105"
-						: "bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:bg-blue-50 shadow-sm"
+						: "bg-white text-black border-gray-300 hover:border-primary hover:bg-accent hover:text-white shadow-sm"
 				}`}
 			>
 				All
@@ -42,7 +42,7 @@ const ProductFilterBadges = ({
 					className={`px-5 py-2 rounded-full border-2 font-medium transition-all ${
 						showPending
 							? "bg-accent text-white border-accent/80 shadow-lg scale-105"
-							: "bg-white text-gray-700 border-gray-300 hover:border-accent hover:bg-primary hover:text-white shadow-sm"
+							: "bg-white text-secondary border-gray-300 hover:border-accent hover:bg-primary hover:text-white shadow-sm"
 					}`}
 				>
 					Pending
@@ -62,8 +62,8 @@ const ProductFilterBadges = ({
 							onClick={() => onCategorySelect(category.value)}
 							className={`px-5 py-2 rounded-full border-2 font-medium transition-all flex items-center gap-2 ${
 								isSelected
-									? "bg-blue-500 text-white border-blue-500 shadow-lg scale-105"
-									: "bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:bg-blue-50 shadow-sm"
+									? "bg-primary text-white border-secondary shadow-lg scale-105"
+									: "bg-white text-black border-gray-300 hover:border-primary hover:bg-accent hover:text-white shadow-sm"
 							}`}
 						>
 							<CategoryIcon size={16} />
