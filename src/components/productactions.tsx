@@ -10,7 +10,9 @@ import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import { useUserStore } from "@/store/user";
 import type { UserRole } from "@/types/enum";
+import { canModifyProduct, isActionDisabled } from "@/utils/canModifyProduct";
 
+//  Shop Page Actions at the right side of the header
 interface ShopPageProductActionsProps {
 	searchTerm: string;
 	handleSearchTerm: (value: string) => void;
@@ -75,16 +77,19 @@ export function ShopPageProductActions({
 	);
 }
 
+// Product Details Actions Button By Role and Permissions
 interface ProductDetailsActionsProps {
 	quantity: number;
 	stock: number;
+	sellerId: string;
 	isApproved: boolean;
-	handleQuantityChange: (quantity: number) => void;
+	handleQuantityChange: (value: number) => void;
 }
 
 export function ProductDetailsActions({
 	quantity,
 	stock,
+	sellerId,
 	handleQuantityChange,
 	isApproved,
 }: ProductDetailsActionsProps) {
@@ -92,56 +97,73 @@ export function ProductDetailsActions({
 	const { showToast } = useToastStore();
 	const { addItem } = useCartStore();
 	const { setOpenDialog } = useDialogStore();
+
 	const { id } = useParams({ strict: false });
+	const navigate = useNavigate();
+
 	const { handleUpdateProductStatus, isPending } = useUpdateProductStatus();
 
-	const navigate = useNavigate();
-	const role = user?.role || "CUSTOMER";
+	const role: UserRole = user?.role ?? "CUSTOMER";
 
-	const actions =
-		RoleActionConfigs[role as UserRole] || RoleActionConfigs.CUSTOMER;
+	// 🔐 Permission derived once
+	const canEditOrDelete = canModifyProduct(user, sellerId);
+
+	const actions = RoleActionConfigs[role] ?? RoleActionConfigs.CUSTOMER;
 
 	const handleAddToCart = () => {
-		if (user) {
-			if (!id) {
-				showToast("Product ID not found", "error");
-				return;
-			}
-
-			addItem(id, quantity);
-			navigate({ from: "/cart" });
-		} else {
-			setOpenDialog("signup");
-		}
-	};
-
-	const handleAction = (actionType: string) => {
 		if (!id) {
 			showToast("Product ID not found", "error");
 			return;
 		}
 
-		switch (actionType) {
+		if (!user) {
+			setOpenDialog("signup");
+			return;
+		}
+
+		addItem(id, quantity);
+		navigate({ from: "/cart" });
+	};
+
+	const handleAction = (actionKey: string) => {
+		if (!id) {
+			showToast("Product ID not found", "error");
+			return;
+		}
+
+		switch (actionKey) {
 			case "edit":
-				navigate({ from: "/product/edit/$id" });
-				break;
 			case "delete":
-				setOpenDialog("deleteProduct");
+				if (!canEditOrDelete) {
+					showToast("You are not allowed to modify this product", "error");
+					return;
+				}
+
+				if (actionKey === "edit") {
+					navigate({ from: "/product/edit/$id" });
+				} else {
+					setOpenDialog("deleteProduct");
+				}
 				break;
+
 			case "addToCart":
 				handleAddToCart();
 				break;
+
 			case "toggleFavorite":
-				// Todo: toggle favorite feature
+				// TODO: favorite logic
 				break;
+
 			case "approve":
 				handleUpdateProductStatus(id, true);
 				break;
+
 			case "decline":
 				handleUpdateProductStatus(id, false);
 				break;
+
 			default:
-				return null;
+				return;
 		}
 	};
 
@@ -160,11 +182,18 @@ export function ProductDetailsActions({
 			<div className="flex gap-4 my-4">
 				{actions.map((action) => {
 					const Icon = action.icon;
-					const isDisabled = action.requiresStock && stock === 0;
 					const isSecondary = action.variant === "secondary";
 
-					const isAdminApproved = role === "ADMIN" && isApproved;
-					const isButtonDisabled = isDisabled || isPending || isAdminApproved;
+					const isOutOfStock = action.requiresStock && stock === 0;
+
+					const permissionDisabled = isActionDisabled(
+						action.onClickKey,
+						canEditOrDelete,
+						isPending,
+						isApproved,
+					);
+
+					const isButtonDisabled = isOutOfStock || permissionDisabled;
 
 					return (
 						<button
@@ -172,15 +201,27 @@ export function ProductDetailsActions({
 							type="button"
 							onClick={() => handleAction(action.onClickKey)}
 							disabled={isButtonDisabled}
+							title={
+								!canEditOrDelete &&
+								(action.onClickKey === "edit" || action.onClickKey === "delete")
+									? "You can only modify your own products"
+									: isApproved &&
+											(action.onClickKey === "approve" ||
+												action.onClickKey === "decline")
+										? "Product is already approved"
+										: undefined
+							}
 							className={`
-      						${isSecondary ? "h-12 px-6" : "flex-1 h-12"} 
-      						rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors
-      						${
-										isButtonDisabled
-											? "bg-gray-300 cursor-not-allowed text-gray-500"
-											: `${ButtonStyles[action.variant]} cursor-pointer ${isSecondary ? "" : "text-white"}`
-									}
-    					`}
+								${isSecondary ? "h-12 px-6" : "flex-1 h-12"}
+								rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors
+								${
+									isButtonDisabled
+										? "bg-gray-300 cursor-not-allowed text-gray-500"
+										: `${ButtonStyles[action.variant]} cursor-pointer ${
+												isSecondary ? "" : "text-white"
+											}`
+								}
+							`}
 						>
 							<Icon size={20} />
 							{action.label}
