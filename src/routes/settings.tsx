@@ -8,6 +8,8 @@ import SectionContainer from "@/components/sectioncontainer";
 import Select from "@/components/select";
 import { BodyLarge, BodySmall, H2, H4 } from "@/components/typography";
 import { themeOptions } from "@/constants/selectOptions";
+import useThemeChange from "@/hooks/useThemeChange";
+import { useThemeStore } from "@/store/theme";
 import { useUserStore } from "@/store/user";
 import { getRoleInfo, requireRole } from "@/utils/requireRole";
 
@@ -19,6 +21,9 @@ export const Route = createFileRoute("/settings")({
 function SettingsComponent() {
 	const { user } = useUserStore();
 	const navigate = useNavigate();
+	const { previewTheme } = useThemeStore();
+	const { themeValue, handleThemeSelectChange, handleClearTheme } =
+		useThemeChange();
 
 	useEffect(() => {
 		if (!user) {
@@ -80,17 +85,21 @@ function SettingsComponent() {
 										value: t.value,
 										icon: t.icon,
 									}))}
-									onChangeValue={() => {}}
-									value={user?.theme}
+									onChangeValue={handleThemeSelectChange}
+									value={themeValue}
 									width="w-[200px]"
 								/>
-								<div className="flex items-center gap-3">
-									<Button variant="primary" action={() => {}}>
-										Save
-									</Button>
-									<Button variant="outline" action={() => {}}>
-										Cancel
-									</Button>
+								<div className="min-w-45">
+									{previewTheme && (
+										<div className="flex items-center gap-3">
+											<Button variant="primary" action={() => {}}>
+												Save
+											</Button>
+											<Button variant="outline" action={handleClearTheme}>
+												Cancel
+											</Button>
+										</div>
+									)}
 								</div>
 							</div>
 						</div>

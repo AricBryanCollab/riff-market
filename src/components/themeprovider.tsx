@@ -10,7 +10,7 @@ export function ThemeProvider({
 	children,
 	defaultTheme = "default",
 }: ThemeProviderProps) {
-	const { theme, setTheme } = useThemeStore();
+	const { theme, previewTheme, setTheme } = useThemeStore();
 
 	useEffect(() => {
 		if (!theme) {
@@ -34,10 +34,12 @@ export function ThemeProvider({
 			root.classList.remove(t);
 		});
 
-		if (theme) {
-			root.classList.add(theme);
+		const activeTheme = previewTheme || theme;
+
+		if (activeTheme) {
+			root.classList.add(activeTheme);
 		}
-	}, [theme]);
+	}, [theme, previewTheme]);
 
 	return <>{children}</>;
 }
