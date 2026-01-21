@@ -22,7 +22,7 @@ const Select = ({
 	options,
 	onChangeValue,
 	width = "w-full",
-	label = "Select Options",
+	label,
 	value,
 	icon: Icon,
 	placeholder = "Search for Options",
@@ -35,7 +35,7 @@ const Select = ({
 	const openSelections = () => setIsSelectOpened(!isSelectOpened);
 
 	const selectedOption = options.find((opt) => opt.value === value);
-	const displayText = selectedOption?.label ?? "Select an option";
+	const displayText = selectedOption?.label;
 	const displayIcon = selectedOption?.icon;
 
 	const renderIcon = (icon: string | LucideIcon | undefined) => {
@@ -85,7 +85,7 @@ const Select = ({
 					<p className="flex items-center gap-2 text-sm">
 						{Icon && <Icon size={18} />}
 						{renderIcon(displayIcon)}
-						<span>{displayText}</span>
+						{displayText && <span>{displayText}</span>}
 					</p>
 					<ChevronDown
 						size={20}
