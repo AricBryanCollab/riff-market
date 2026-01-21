@@ -20,7 +20,7 @@ export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
 
 export const productbyIdQueryOpt = (id: string) =>
 	queryOptions<BaseProduct>({
-		queryKey: ["product"],
+		queryKey: ["product", id],
 		queryFn: () => getProductDetailsById(id),
 		retry: false,
 	});

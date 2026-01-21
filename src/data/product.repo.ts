@@ -28,6 +28,7 @@ export const createProduct = async (product: CreateProductRepoInput) => {
 // Get Products
 const baseProductQuery = {
 	id: true,
+	sellerId: true,
 	name: true,
 	category: true,
 	brand: true,
