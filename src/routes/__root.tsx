@@ -63,7 +63,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				<div className="root">
-					<ThemeProvider defaultTheme="light">
+					<ThemeProvider>
 						<Navbar />
 						{children}
 						<TanStackDevtools

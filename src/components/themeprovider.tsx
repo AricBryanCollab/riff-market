@@ -3,20 +3,10 @@ import { useThemeStore } from "@/store/theme";
 
 interface ThemeProviderProps {
 	children: React.ReactNode;
-	defaultTheme?: string;
 }
 
-export function ThemeProvider({
-	children,
-	defaultTheme = "default",
-}: ThemeProviderProps) {
-	const { theme, setTheme } = useThemeStore();
-
-	useEffect(() => {
-		if (!theme) {
-			setTheme(defaultTheme);
-		}
-	}, [theme, defaultTheme, setTheme]);
+export function ThemeProvider({ children }: ThemeProviderProps) {
+	const { theme, previewTheme } = useThemeStore();
 
 	useEffect(() => {
 		const root = document.documentElement;
@@ -34,10 +24,12 @@ export function ThemeProvider({
 			root.classList.remove(t);
 		});
 
-		if (theme) {
-			root.classList.add(theme);
+		const activeTheme = previewTheme || theme;
+
+		if (activeTheme) {
+			root.classList.add(activeTheme);
 		}
-	}, [theme]);
+	}, [theme, previewTheme]);
 
 	return <>{children}</>;
 }
