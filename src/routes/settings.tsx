@@ -1,38 +1,67 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import SectionContainer from "@/components/sectioncontainer";
-import { requireRole } from "@/utils/requireRole";
+import { useUserStore } from "@/store/user";
+import { getRoleInfo, requireRole } from "@/utils/requireRole";
 
 export const Route = createFileRoute("/settings")({
 	beforeLoad: () => requireRole(["ADMIN", "SELLER", "CUSTOMER"]),
 	component: SettingsComponent,
 });
 
+import Avatar from "@/components/avatar";
+import { ProfileInfoField } from "@/components/profilefield";
+import { BodySmall, H2, H4 } from "@/components/typography";
+
 function SettingsComponent() {
+	const { user } = useUserStore();
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		if (!user) {
+			navigate({ to: "/unauthorized" });
+		}
+	}, [user, navigate]);
+
+	if (!user) return null;
+	const roleInfo = getRoleInfo(user?.role);
+
 	return (
 		<SectionContainer>
 			<div className="flex w-full flex-col gap-8">
 				{/* PAGE HEADER */}
 				<div className="flex items-center justify-between rounded-2xl bg-white p-6">
 					<div>
-						<h1 className="text-3xl font-bold font-secondary tracking-wider">
+						<H2 className="text-3xl font-bold font-secondary tracking-wider">
 							Account Settings
-						</h1>
-						<p className="mt-1 text-slate-500">
+						</H2>
+						<BodySmall>
 							Manage your profile, preferences, and activity
-						</p>
+						</BodySmall>
 					</div>
-					<div className="h-14 w-32 rounded-full bg-slate-200" />
+					<div className="flex flex-col items-center">
+						<H4>
+							{user?.firstName} {user?.lastName}
+						</H4>
+					</div>
 				</div>
 
 				{/* PROFILE */}
 				<div className="rounded-2xl bg-white p-6">
 					<h2 className="mb-6 text-xl font-semibold">Profile Information</h2>
 					<div className="flex flex-col gap-6 md:flex-row">
-						<div className="h-28 w-28 rounded-full bg-slate-200" />
-						<div className="flex-1 space-y-3">
-							<div className="h-4 w-1/3 rounded bg-slate-300" />
-							<div className="h-4 w-1/2 rounded bg-slate-200" />
-							<div className="h-4 w-2/3 rounded bg-slate-200" />
+						<Avatar size="xl" />
+						<div className="grid grid-cols-2 min-w-xl lg:min-w-2xl gap-4">
+							<ProfileInfoField label="First Name" value={user?.firstName} />
+							<ProfileInfoField label="Last Name" value={user?.lastName} />
+							<ProfileInfoField label="Email Address" value={user?.email} />
+							<ProfileInfoField label="Address" value={user?.address} />
+							<ProfileInfoField label="Phone Number" value={user?.phone} />
+							<ProfileInfoField
+								label="Community Role"
+								value={roleInfo.label}
+								description={roleInfo.description}
+							/>
 						</div>
 					</div>
 				</div>
@@ -40,7 +69,7 @@ function SettingsComponent() {
 				{/* PREFERENCES */}
 				<div className="rounded-2xl bg-slate-50 p-6">
 					<h2 className="mb-6 text-xl font-semibold">Preferences</h2>
-					<div className="grid gap-4 md:grid-cols-2">
+					<div className="grid gap-6 md:grid-cols-2">
 						<div className="h-12 rounded bg-slate-200" />
 						<div className="h-12 rounded bg-slate-200" />
 						<div className="h-12 rounded bg-slate-200" />
