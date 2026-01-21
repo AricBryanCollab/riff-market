@@ -1,7 +1,8 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { Plus, Search, ShoppingBag } from "lucide-react";
+import { Pencil, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
 import Button from "@/components/button";
 import Counter from "@/components/counter";
+import IconButton from "@/components/iconbutton";
 import { BodySmall } from "@/components/typography";
 import { ButtonStyles, RoleActionConfigs } from "@/constants/roleactionconfigs";
 import useUpdateProductStatus from "@/hooks/useUpdateProductStatus";
@@ -105,7 +106,6 @@ export function ProductDetailsActions({
 
 	const role: UserRole = user?.role ?? "CUSTOMER";
 
-	// 🔐 Permission derived once
 	const canEditOrDelete = canModifyProduct(user, sellerId);
 
 	const actions = RoleActionConfigs[role] ?? RoleActionConfigs.CUSTOMER;
@@ -168,7 +168,7 @@ export function ProductDetailsActions({
 	};
 
 	return (
-		<div className="my-2">
+		<div className="relative my-2">
 			<Counter
 				inputId="quantity"
 				label="Quantity"
@@ -194,7 +194,6 @@ export function ProductDetailsActions({
 					);
 
 					const isButtonDisabled = isOutOfStock || permissionDisabled;
-
 					return (
 						<button
 							key={action.label}
@@ -228,6 +227,21 @@ export function ProductDetailsActions({
 						</button>
 					);
 				})}
+				{role === "ADMIN" && (
+					<div className="absolute right-0 top-6 flex gap-4">
+						<IconButton
+							icon={Pencil}
+							disabled={isPending || !canEditOrDelete}
+							onClick={() => navigate({ from: "/product/edit/$id" })}
+						/>
+						<IconButton
+							icon={Trash2}
+							disabled={isPending || !canEditOrDelete}
+							onClick={() => setOpenDialog("deleteProduct")}
+							backgroundColor="bg-destructive hover:bg-rose-400"
+						/>
+					</div>
+				)}
 			</div>
 		</div>
 	);
