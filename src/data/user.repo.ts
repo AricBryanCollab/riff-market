@@ -5,7 +5,8 @@ import type {
 	UserSettings,
 } from "generated/prisma/client";
 import { prisma } from "@/data/connectDb";
-import type { UpdateUserRequest, UserProfile } from "@/types/user";
+import type { UpdateUserInput } from "@/lib/zod/user.validation";
+import type { UserProfile } from "@/types/user";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -69,7 +70,7 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
 
 export const updateUser = async (
 	id: string,
-	data: UpdateUserRequest,
+	data: UpdateUserInput,
 ): Promise<UserProfile> => {
 	try {
 		const result = await prisma.$transaction(async (tx) => {
@@ -91,8 +92,8 @@ export const updateUser = async (
 				await tx.userSettings.upsert({
 					where: { userId: id },
 					update: {
-						phone: data.phone,
-						address: data.address,
+						phone: data.phone ?? null,
+						address: data.address ?? null,
 						theme: data.theme,
 					},
 					create: {
@@ -108,7 +109,6 @@ export const updateUser = async (
 			return users[0];
 		});
 
-		if (!result) throw new Error("User not found");
 		return result;
 	} catch (err) {
 		console.error("Error at updateUser", err);
