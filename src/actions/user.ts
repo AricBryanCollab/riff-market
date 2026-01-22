@@ -18,16 +18,8 @@ import {
 	unsignedUploadImage,
 } from "@/utils/cloudinary";
 import { compressImage } from "@/utils/compressimage";
-import { useAppSession } from "@/utils/session";
 
-export async function getUserByIdService() {
-	const session = await useAppSession();
-	const userId = session.data.userId;
-
-	if (!session || !userId) {
-		return null;
-	}
-
+export async function getUserByIdService(userId: string) {
 	const user = await getUserById(userId);
 	if (!user) {
 		return {

@@ -1,12 +1,16 @@
-import { getUserByIdService } from "@/actions/user";
 import { createFileRoute } from "@tanstack/react-router";
+import { getUserByIdService } from "@/actions/user";
+import { authMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/user")({
 	server: {
+		middleware: [authMiddleware],
 		handlers: {
-			GET: async () => {
+			GET: async ({ context }) => {
 				try {
-					const user = await getUserByIdService();
+					const userId = context.id;
+
+					const user = await getUserByIdService(userId);
 
 					return new Response(JSON.stringify(user));
 				} catch (error) {
