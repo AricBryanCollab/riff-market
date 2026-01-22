@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import {
+	deleteUser,
 	getAllUsers,
 	getUserById,
 	updateProfilePicture,
@@ -140,4 +141,24 @@ export async function updateUserProfilePicService(
 	await updateProfilePicture(userId, profPicUrl);
 
 	return profPicUrl;
+}
+
+export async function deleteUserService(userId: string, email: string) {
+	const existingUser = await getUserById(userId);
+
+	if (!existingUser) {
+		return {
+			error: "User not found",
+		};
+	}
+
+	if (existingUser?.email !== email) {
+		return {
+			error: "Email verification failed for account deletion",
+		};
+	}
+
+	await deleteUser(userId);
+
+	return;
 }
