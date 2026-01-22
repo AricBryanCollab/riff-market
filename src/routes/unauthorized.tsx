@@ -17,11 +17,14 @@ function RouteComponent() {
 				<p className="text-lg font-medium text-secondary">
 					Unauthorized Access
 				</p>
-
-				<p className="p-4 text-secondary leading-relaxed">
-					The page you're trying to access is restricted to certain user roles.
-					You don't have the necessary permissions to view this content.
-				</p>
+				<div className="mt-4 flex flex-col gap-2 w-[80%] md:w-full mx-auto">
+					<p className="text-secondary leading-relaxed">
+						The page you're trying to access is restricted to certain user roles
+					</p>
+					<p className="text-secondary leading-relaxed">
+						You don't have the necessary permissions to view this content
+					</p>
+				</div>
 			</div>
 			<Button action={() => navigate({ to: "/" })} variant="outline">
 				Home Page

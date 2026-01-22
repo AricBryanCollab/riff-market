@@ -1,3 +1,4 @@
+import type { themeClasses } from "@/constants/themeClasses";
 import type { UserRole } from "@/types/enum";
 
 export interface UserProfile {
@@ -17,7 +18,7 @@ export interface UpdateUserRequest {
 	lastName?: string;
 	phone?: string | null;
 	address?: string | null;
-	theme?: string;
+	theme?: (typeof themeClasses)[number];
 }
 
 export interface UpdateUserProfilePictureRequest {

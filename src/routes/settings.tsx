@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { Palette } from "lucide-react";
 import { useEffect } from "react";
 import Avatar from "@/components/avatar";
@@ -11,10 +11,15 @@ import { themeOptions } from "@/constants/selectOptions";
 import useThemeChange from "@/hooks/useThemeChange";
 import { useThemeStore } from "@/store/theme";
 import { useUserStore } from "@/store/user";
-import { getRoleInfo, requireRole } from "@/utils/requireRole";
+import { getRoleInfo } from "@/utils/requireRole";
 
 export const Route = createFileRoute("/settings")({
-	beforeLoad: () => requireRole(["ADMIN", "SELLER", "CUSTOMER"]),
+	beforeLoad: () => {
+		const user = useUserStore.getState().user;
+		if (!user) {
+			throw redirect({ to: "/" });
+		}
+	},
 	component: SettingsComponent,
 });
 
