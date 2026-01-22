@@ -1,6 +1,7 @@
-import { Link } from "@tanstack/react-router";
-import { Menu, X } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Menu, Search, X } from "lucide-react";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import UserMenu from "@/components/usermenu";
 import { navbarItems } from "@/constants/navbarItems";
 import { useUserStore } from "@/store/user";
@@ -13,6 +14,8 @@ interface NavbarItemProps {
 
 const Navbar = () => {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+	const [query, setQuery] = useState("");
+	const navigate = useNavigate();
 	const { user } = useUserStore();
 
 	const toggleMobileMenu = () => {
@@ -23,12 +26,17 @@ const Navbar = () => {
 		setIsMobileMenuOpen(false);
 	};
 
+	const handleSearch = (e: React.FormEvent) => {
+		e.preventDefault();
+		if (query.trim()) {
+			navigate({ to: "/shop", search: { q: query.trim() } });
+		}
+	};
+
 	return (
 		<header className="w-full sticky top-0 z-50 border-b border-border bg-background">
-			<nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-				{/* Left: Logo + Brand + Main Menu */}
+			<nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
 				<div className="flex items-center gap-8">
-					{/* Logo + Name */}
 					<div className="flex items-center gap-2">
 						<Link to="/">
 							<img
@@ -37,27 +45,35 @@ const Navbar = () => {
 								className="size-9 rounded-xl"
 							/>
 						</Link>
-						<span className="text-lg font-semibold font-secondary tracking-wider text-foreground">
+						<span className="text-lg font-semibold tracking-wider text-foreground">
 							RiffMarket
 						</span>
 					</div>
 
-					{/* Desktop Menu */}
-					<ul className="hidden lg:flex items-center gap-6 text-sm font-medium text-foreground">
-						{navbarItems.map((nav) => {
-							return (
-								<NavbarItem key={nav.id} name={nav.name} link={nav.link} />
-							);
-						})}
+					<ul className="hidden lg:flex items-center gap-6 text-sm font-medium text-muted-foreground">
+						{navbarItems.map((nav) => (
+							<NavbarItem key={nav.id} name={nav.name} link={nav.link} />
+						))}
 						{user && <NavbarItem name="Settings" link="/settings" />}
 					</ul>
 				</div>
 
-				{/* Right: Auth Actions + Mobile Menu Button */}
+				<form onSubmit={handleSearch} className="hidden sm:flex flex-1 max-w-md mx-4">
+					<div className="relative w-full">
+						<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+						<Input
+							type="text"
+							value={query}
+							onChange={(e) => setQuery(e.target.value)}
+							placeholder="Search gear..."
+							className="pl-10"
+						/>
+					</div>
+				</form>
+
 				<div className="flex items-center gap-4">
 					<UserMenu />
 
-					{/* Mobile Menu Button */}
 					<button
 						type="button"
 						onClick={toggleMobileMenu}
@@ -73,7 +89,6 @@ const Navbar = () => {
 				</div>
 			</nav>
 
-			{/* Mobile Dropdown Menu */}
 			<div
 				className={`absolute w-[35%] right-0 z-50 lg:hidden border-t border-border bg-background shadow-lg transition-all duration-300 ease-in-out ${
 					isMobileMenuOpen
@@ -82,16 +97,14 @@ const Navbar = () => {
 				}`}
 			>
 				<ul className="flex flex-col p-4 gap-4 text-sm font-medium">
-					{navbarItems.map((nav) => {
-						return (
-							<NavbarItem
-								key={nav.id}
-								name={nav.name}
-								link={nav.link}
-								onClick={closeMobileMenu}
-							/>
-						);
-					})}
+					{navbarItems.map((nav) => (
+						<NavbarItem
+							key={nav.id}
+							name={nav.name}
+							link={nav.link}
+							onClick={closeMobileMenu}
+						/>
+					))}
 					{user && <NavbarItem name="Settings" link="/settings" />}
 				</ul>
 			</div>
@@ -105,7 +118,7 @@ const NavbarItem = ({ name, link, onClick }: NavbarItemProps) => {
 			<Link
 				to={link}
 				onClick={onClick}
-				className="text-foreground hover:text-primary hover:underline duration-200 transition-colors"
+				className="hover:text-foreground transition-colors"
 			>
 				{name}
 			</Link>

@@ -78,3 +78,12 @@ export interface UpdateProductStatusResult {
 	name: string;
 	isApproved: boolean;
 }
+
+export type ProductCondition = "new" | "used" | "mint";
+
+export interface CategoryMeta {
+	category: ProductCategory;
+	label: string;
+	icon: string;
+	count: number;
+}
