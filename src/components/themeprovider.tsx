@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { themeClasses } from "@/constants/themeClasses";
 import { useThemeStore } from "@/store/theme";
 
 interface ThemeProviderProps {
@@ -11,15 +12,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 	useEffect(() => {
 		const root = document.documentElement;
 
-		const themeClasses = [
-			"light",
-			"dark",
-			"coffee",
-			"forest",
-			"ocean",
-			"sunset",
-			"crimson",
-		];
 		themeClasses.forEach((t) => {
 			root.classList.remove(t);
 		});
