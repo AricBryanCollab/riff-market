@@ -152,5 +152,8 @@ export async function deleteUserService(userId: string, email: string) {
 
 	await deleteUser(userId);
 
-	return;
+	return {
+		message: "Account has been deleted successfully",
+		deletedUserId: userId,
+	};
 }
