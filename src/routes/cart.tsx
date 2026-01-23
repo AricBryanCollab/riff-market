@@ -19,7 +19,7 @@ function RouteComponent() {
 		isCartEmpty,
 		isLoading,
 		totalPrice,
-		totalItems,
+		cartCount,
 		cartWithDetails,
 		handleRemoveItem,
 		handleQuantityChange,
@@ -58,7 +58,7 @@ function RouteComponent() {
 								Total Items
 							</BodySmall>
 							<BodyLarge className="font-bold text-primary">
-								{totalItems}
+								{cartCount}
 							</BodyLarge>
 						</div>
 
