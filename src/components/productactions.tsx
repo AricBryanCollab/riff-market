@@ -121,7 +121,7 @@ export function ProductDetailsActions({
 			return;
 		}
 
-		addItem(id, quantity);
+		addItem(id, user.id, role, quantity);
 		navigate({ from: "/cart" });
 	};
 
