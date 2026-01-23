@@ -10,9 +10,11 @@ export const Route = createFileRoute("/api/orders")({
 			POST: async ({ request, context }) => {
 				try {
 					const userId = context.id;
+					const userRole = context.role;
+
 					const body = (await request.json()) as OrderRequest;
 
-					const order = await createOrderService(userId, body);
+					const order = await createOrderService(userId, userRole, body);
 
 					if ("error" in order) {
 						return new Response(JSON.stringify({ error: order.error }), {
