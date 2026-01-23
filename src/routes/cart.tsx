@@ -6,8 +6,10 @@ import { CartDetailsLoadingState } from "@/components/loadingstates";
 import SectionContainer from "@/components/sectioncontainer";
 import { BodyLarge, BodySmall, H2 } from "@/components/typography";
 import useCartDetails from "@/hooks/useCartDetails";
+import { requireRole } from "@/utils/requireRole";
 
 export const Route = createFileRoute("/cart")({
+	beforeLoad: () => requireRole(["CUSTOMER"]),
 	component: RouteComponent,
 });
 
