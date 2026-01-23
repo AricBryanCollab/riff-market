@@ -11,12 +11,23 @@ import type {
 } from "@/types/order";
 
 import { generateTrackingNumber } from "@/utils/generateTrackingNumber";
-import { useAppSession } from "@/utils/session";
 
 export async function createOrderService(
+	userId: string,
+	role: string,
 	rawData: PlaceOrderInput,
 ): Promise<OrderResponse | OrderErrorResponse> {
-	const session = await useAppSession();
+	if (!userId) {
+		return { error: "User ID not found" };
+	}
+
+	if (role !== "CUSTOMER") {
+		return {
+			error:
+				"Unauthorized, only user with customer role are allowed to place order",
+		};
+	}
+
 	const parsed = placeOrderSchema.safeParse(rawData);
 
 	if (!parsed.success) {
@@ -27,10 +38,6 @@ export async function createOrderService(
 	}
 
 	const data = parsed.data;
-	const customerId = session.data.userId;
-	if (!customerId) {
-		return { error: "Unauthorized, user must be a customer" };
-	}
 
 	const trackingNumber = generateTrackingNumber();
 
@@ -75,7 +82,7 @@ export async function createOrderService(
 	}
 
 	const orderData: CreateOrderRepoData = {
-		userId: customerId,
+		userId: userId,
 		orderDate: new Date(),
 		totalAmount,
 		shippingAddress: data.shippingAddress,

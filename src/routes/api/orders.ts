@@ -1,15 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createOrderService } from "@/actions/order";
+import { authMiddleware } from "@/middleware";
 import type { OrderRequest } from "@/types/order";
 
 export const Route = createFileRoute("/api/orders")({
 	server: {
+		middleware: [authMiddleware],
 		handlers: {
-			POST: async ({ request }) => {
+			POST: async ({ request, context }) => {
 				try {
+					const userId = context.id;
 					const body = (await request.json()) as OrderRequest;
 
-					const order = await createOrderService(body);
+					const order = await createOrderService(userId, body);
 
 					if ("error" in order) {
 						return new Response(JSON.stringify({ error: order.error }), {
