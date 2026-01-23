@@ -5,6 +5,7 @@ import CartList from "@/components/cartlist";
 import ClientOnly from "@/components/clientonly";
 import Dropdown from "@/components/dropdown";
 import NavbarIconButtons from "@/components/navbariconbuttons";
+import useCartDetails from "@/hooks/useCartDetails";
 import { useSignOut } from "@/hooks/useSignOut";
 import { useDialogStore } from "@/store/dialog";
 import { useUserStore } from "@/store/user";
@@ -13,6 +14,7 @@ import type { UserRole } from "@/types/enum";
 const UserMenu = () => {
 	const { setOpenDialog } = useDialogStore();
 	const { user } = useUserStore();
+	const { cartCount } = useCartDetails();
 	const role = user?.role || "CUSTOMER";
 
 	const { loading: signOutLoading, signOut } = useSignOut();
@@ -69,7 +71,6 @@ const UserMenu = () => {
 		}
 	};
 
-	const cartCount = 4;
 	const notificationCount = 2;
 	const orderCount = 2;
 	const pendingApprovalCount = 4;

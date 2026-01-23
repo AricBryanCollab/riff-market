@@ -6,7 +6,7 @@ import { BodySmall, H5 } from "@/components/typography";
 import useCartDetails from "@/hooks/useCartDetails";
 
 const CartList = () => {
-	const { isCartEmpty, isLoading, totalPrice, totalItems, cartWithDetails } =
+	const { isCartEmpty, isLoading, totalPrice, cartCount, cartWithDetails } =
 		useCartDetails();
 
 	return (
@@ -15,7 +15,7 @@ const CartList = () => {
 				<H5 className="font-semibold text-foreground">Shopping Cart</H5>
 				{!isCartEmpty && (
 					<BodySmall className="text-muted-foreground mt-0.5">
-						{totalItems} {totalItems === 1 ? "item" : "items"}
+						{cartCount} {cartCount === 1 ? "item" : "items"}
 					</BodySmall>
 				)}
 			</div>
