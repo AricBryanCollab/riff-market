@@ -1,28 +1,79 @@
-import { Bell, ShoppingCart } from "lucide-react";
+import { Bell, Package, PackageSearch, ShoppingCart } from "lucide-react";
 import Avatar from "@/components/avatar";
 import Button from "@/components/button";
+import CartList from "@/components/cartlist";
 import ClientOnly from "@/components/clientonly";
 import Dropdown from "@/components/dropdown";
+import NavbarIconButtons from "@/components/navbariconbuttons";
+import useCartDetails from "@/hooks/useCartDetails";
 import { useSignOut } from "@/hooks/useSignOut";
 import { useDialogStore } from "@/store/dialog";
 import { useUserStore } from "@/store/user";
-
-interface CartButtonProps {
-	cartCount: number;
-}
-
-interface NotificationButtonProps {
-	notificationCount: number;
-}
+import type { UserRole } from "@/types/enum";
 
 const UserMenu = () => {
 	const { setOpenDialog } = useDialogStore();
 	const { user } = useUserStore();
+	const { cartCount } = useCartDetails();
+	const role = user?.role || "CUSTOMER";
 
 	const { loading: signOutLoading, signOut } = useSignOut();
 
-	const cartCount = 4;
+	const handleActionButtonsByRole = (role: UserRole) => {
+		switch (role) {
+			case "CUSTOMER":
+				return (
+					<Dropdown
+						trigger={
+							<NavbarIconButtons
+								icon={ShoppingCart}
+								count={cartCount}
+								ariaLabel="Shopping cart"
+							/>
+						}
+						align="right"
+					>
+						<CartList />
+					</Dropdown>
+				);
+			case "SELLER":
+				return (
+					<Dropdown
+						trigger={
+							<NavbarIconButtons
+								icon={Package}
+								count={orderCount}
+								ariaLabel="Orders"
+							/>
+						}
+						align="right"
+					>
+						<DropdownContentPlaceholder title="Products Ordered" />
+					</Dropdown>
+				);
+			case "ADMIN":
+				return (
+					<Dropdown
+						trigger={
+							<NavbarIconButtons
+								icon={PackageSearch}
+								count={pendingApprovalCount}
+								ariaLabel="Pending Products"
+							/>
+						}
+						align="right"
+					>
+						<DropdownContentPlaceholder title="Pending Products" />
+					</Dropdown>
+				);
+			default:
+				return null;
+		}
+	};
+
 	const notificationCount = 2;
+	const orderCount = 2;
+	const pendingApprovalCount = 4;
 
 	return (
 		<ClientOnly>
@@ -30,31 +81,19 @@ const UserMenu = () => {
 				<div className="flex items-center gap-4">
 					<Avatar />
 
-					{/* Shopping Cart with Badge */}
-					<Dropdown
-						trigger={<CartButton cartCount={cartCount} />}
-						align="right"
-					>
-						<div className="p-4">
-							<h3 className="font-semibold mb-2">Shopping Cart</h3>
-							<p className="text-sm text-muted-foreground">
-								Your cart items here
-							</p>
-						</div>
-					</Dropdown>
-					{/* Notifications with Badge */}
+					{handleActionButtonsByRole(role)}
+
 					<Dropdown
 						trigger={
-							<NotificationButton notificationCount={notificationCount} />
+							<NavbarIconButtons
+								icon={Bell}
+								count={notificationCount}
+								ariaLabel="Notifications"
+							/>
 						}
 						align="right"
 					>
-						<div className="p-4">
-							<h3 className="font-semibold mb-2">Notifications</h3>
-							<p className="text-sm text-muted-foreground">
-								Your notifications here
-							</p>
-						</div>
+						<CartList />
 					</Dropdown>
 
 					<Button loading={signOutLoading} variant="outline" action={signOut}>
@@ -75,53 +114,12 @@ const UserMenu = () => {
 	);
 };
 
-const CartButton = ({ cartCount }: CartButtonProps) => {
+const DropdownContentPlaceholder = ({ title }: { title: string }) => {
 	return (
-		<button
-			type="button"
-			className="relative cursor-pointer hover:bg-accent/20 rounded-full p-1"
-		>
-			<ShoppingCart size={24} className="text-primary" />
-			{cartCount > 0 && (
-				<div className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-rose-500">
-					<span className="text-xs font-semibold text-white leading-none">
-						{cartCount > 9 ? "9+" : cartCount}
-					</span>
-				</div>
-			)}
-			{cartCount > 0 && (
-				<div className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-rose-500">
-					<span className="text-xs font-semibold text-white leading-none">
-						{cartCount > 9 ? "9+" : cartCount}
-					</span>
-				</div>
-			)}
-		</button>
-	);
-};
-
-const NotificationButton = ({ notificationCount }: NotificationButtonProps) => {
-	return (
-		<button
-			type="button"
-			className="relative cursor-pointer hover:bg-accent/20 rounded-full p-1"
-		>
-			<Bell size={24} className="text-primary" />
-			{notificationCount > 0 && (
-				<div className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-rose-500">
-					<span className="text-xs font-semibold text-white leading-none">
-						{notificationCount > 9 ? "9+" : notificationCount}
-					</span>
-				</div>
-			)}
-			{notificationCount > 0 && (
-				<div className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-rose-500">
-					<span className="text-xs font-semibold text-white leading-none">
-						{notificationCount > 9 ? "9+" : notificationCount}
-					</span>
-				</div>
-			)}
-		</button>
+		<div className="p-4">
+			<h3 className="font-semibold mb-2">{title}</h3>
+			<p className="text-sm text-muted-foreground">Your items here</p>
+		</div>
 	);
 };
 
