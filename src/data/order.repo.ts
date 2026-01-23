@@ -1,4 +1,5 @@
 import { prisma } from "@/data/connectDb";
+import { createNotification } from "@/data/notification";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
 
 export const createOrder = async (orderData: CreateOrderRepoData) => {
@@ -58,14 +59,15 @@ export const createOrder = async (orderData: CreateOrderRepoData) => {
 				});
 			}
 
-			await tx.notification.create({
-				data: {
+			await createNotification(
+				{
 					userId: order.userId,
 					orderId: createdOrder.id,
 					message: `Your order #${order.trackingNumber} has been placed successfully! Total: $${order.totalAmount.toFixed(2)}`,
 					isRead: false,
 				},
-			});
+				tx,
+			);
 
 			return createdOrder;
 		});
