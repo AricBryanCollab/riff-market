@@ -58,7 +58,10 @@ const Navbar = () => {
 					</ul>
 				</div>
 
-				<form onSubmit={handleSearch} className="hidden sm:flex flex-1 max-w-md mx-4">
+				<form
+					onSubmit={handleSearch}
+					className="hidden sm:flex flex-1 max-w-md mx-4"
+				>
 					<div className="relative w-full">
 						<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
 						<Input

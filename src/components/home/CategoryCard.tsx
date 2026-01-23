@@ -27,7 +27,9 @@ const CategoryCard = ({ category }: CategoryCardProps) => {
 			</div>
 			<div>
 				<h3 className="font-medium text-foreground">{category.label}</h3>
-				<p className="text-sm text-muted-foreground">{category.count} listings</p>
+				<p className="text-sm text-muted-foreground">
+					{category.count} listings
+				</p>
 			</div>
 		</Link>
 	);

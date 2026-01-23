@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { Product } from "@/types/product";
 import ConditionBadge from "./ConditionBadge";
@@ -106,7 +106,10 @@ const HeroCarousel = ({
 						{product.brand} · {product.model}
 					</p>
 					<p className="text-3xl font-semibold text-foreground mt-6">
-						${product.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+						$
+						{product.price.toLocaleString("en-US", {
+							minimumFractionDigits: 2,
+						})}
 					</p>
 					<p className="text-sm text-muted-foreground mt-2">
 						Sold by {product.sellerName}

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import HeroCarousel from "@/components/home/HeroCarousel";
-import { mockCategories, featuredProducts } from "@/components/home/mocks";
+import { featuredProducts, mockCategories } from "@/components/home/mocks";
 import RecentListings from "@/components/home/RecentListings";
 import SectionContainer from "@/components/sectioncontainer";
 

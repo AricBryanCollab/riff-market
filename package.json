@@ -4,12 +4,16 @@
 	"type": "module",
 	"scripts": {
 		"dev": "bun --bun vite dev --port 3000",
-		"preview": "vite preview",
+		"build": "bun --bun vite build",
+		"preview": "bun --bun vite preview",
 		"deploy": "vite build",
 		"test": "vitest run",
 		"format": "biome format",
+		"format:fix": "biome format --write",
 		"lint": "biome lint",
-		"check": "biome check"
+		"lint:fix": "biome lint --write",
+		"check": "biome check",
+		"check:fix": "biome check --write"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.1.0",
