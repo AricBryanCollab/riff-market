@@ -1,17 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { cva, type VariantProps } from "class-variance-authority";
 import {
-	Shield,
-	Users,
-	Sparkles,
-	Search,
-	ShoppingBag,
-	Handshake,
-	ChevronDown,
 	ArrowRight,
+	ChevronDown,
+	Handshake,
+	Search,
+	Shield,
+	ShoppingBag,
+	Sparkles,
+	Users,
 } from "lucide-react";
 import { useState } from "react";
 import AboutHero from "@/assets/about hero.jpg";
 import SectionContainer from "@/components/sectioncontainer";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/about")({
 	component: AboutComponent,
@@ -34,7 +36,9 @@ function AboutComponent() {
 						</p>
 						<h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[0.9] max-w-4xl">
 							Where Musicians
-							<span className="block text-muted-foreground">Find Their Sound</span>
+							<span className="block text-muted-foreground">
+								Find Their Sound
+							</span>
 						</h1>
 					</div>
 				</SectionContainer>
@@ -52,12 +56,14 @@ function AboutComponent() {
 						<div className="md:col-span-8">
 							<p className="text-2xl md:text-3xl lg:text-4xl font-medium leading-snug text-foreground/90">
 								RiffMarket is the marketplace built by musicians, for musicians.
-								We connect passionate players with the gear that shapes their sound—whether
-								you're hunting for a vintage Stratocaster or selling your first pedal.
+								We connect passionate players with the gear that shapes their
+								sound—whether you're hunting for a vintage Stratocaster or
+								selling your first pedal.
 							</p>
 							<p className="mt-8 text-lg text-muted-foreground leading-relaxed max-w-2xl">
-								Every listing is verified. Every seller is vetted. Every transaction
-								is protected. Because your gear isn't just equipment—it's your voice.
+								Every listing is verified. Every seller is vetted. Every
+								transaction is protected. Because your gear isn't just
+								equipment—it's your voice.
 							</p>
 						</div>
 					</div>
@@ -195,22 +201,17 @@ function AboutComponent() {
 							<span className="block">Your Sound?</span>
 						</h2>
 						<p className="text-xl text-muted-foreground mb-10 max-w-xl mx-auto">
-							Join thousands of musicians already buying and selling on RiffMarket.
+							Join thousands of musicians already buying and selling on
+							RiffMarket.
 						</p>
 						<div className="flex flex-col sm:flex-row gap-4 justify-center">
-							<Link
-								to="/shop"
-								className="inline-flex items-center justify-center gap-2 bg-foreground text-background px-8 py-4 text-lg font-semibold rounded-full hover:bg-foreground/90 transition-colors"
-							>
+							<LinkButton to="/shop" variant="primary">
 								Start Shopping
 								<ArrowRight className="w-5 h-5" />
-							</Link>
-							<Link
-								to="/shop"
-								className="inline-flex items-center justify-center gap-2 border-2 border-foreground text-foreground px-8 py-4 text-lg font-semibold rounded-full hover:bg-foreground hover:text-background transition-colors"
-							>
+							</LinkButton>
+							<LinkButton to="/shop" variant="outline">
 								Sell Your Gear
-							</Link>
+							</LinkButton>
 						</div>
 					</div>
 				</SectionContainer>
@@ -219,34 +220,88 @@ function AboutComponent() {
 	);
 }
 
+const linkButtonVariants = cva(
+	"inline-flex items-center justify-center gap-2 rounded-full text-lg font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+	{
+		variants: {
+			variant: {
+				primary: "bg-foreground text-background hover:bg-foreground/90",
+				outline:
+					"border-2 border-foreground text-foreground hover:bg-foreground hover:text-background",
+			},
+			size: {
+				default: "px-8 py-4",
+				sm: "px-6 py-3 text-base",
+			},
+		},
+		defaultVariants: {
+			variant: "primary",
+			size: "default",
+		},
+	},
+);
+
+interface LinkButtonProps extends VariantProps<typeof linkButtonVariants> {
+	to: string;
+	children: React.ReactNode;
+	className?: string;
+}
+
+function LinkButton({
+	to,
+	variant,
+	size,
+	className,
+	children,
+}: LinkButtonProps) {
+	return (
+		<Link
+			to={to}
+			className={cn(linkButtonVariants({ variant, size, className }))}
+		>
+			{children}
+		</Link>
+	);
+}
+
+const benefitCardVariants = cva("grid md:grid-cols-12 gap-6 items-start", {
+	variants: {
+		alignment: {
+			left: "",
+			right: "md:text-right",
+		},
+	},
+	defaultVariants: {
+		alignment: "left",
+	},
+});
+
+interface BenefitCardProps extends VariantProps<typeof benefitCardVariants> {
+	icon: React.ReactNode;
+	number: string;
+	title: string;
+	description: string;
+}
+
 function BenefitCard({
 	icon,
 	number,
 	title,
 	description,
-	alignment,
-}: {
-	icon: React.ReactNode;
-	number: string;
-	title: string;
-	description: string;
-	alignment: "left" | "right";
-}) {
+	alignment = "left",
+}: BenefitCardProps) {
+	const isRight = alignment === "right";
+
 	return (
-		<div
-			className={`grid md:grid-cols-12 gap-6 items-start ${
-				alignment === "right" ? "md:text-right" : ""
-			}`}
-		>
+		<div className={cn(benefitCardVariants({ alignment }))}>
 			<div
-				className={`md:col-span-5 ${
-					alignment === "right" ? "md:order-2 md:col-start-8" : ""
-				}`}
+				className={cn("md:col-span-5", isRight && "md:order-2 md:col-start-8")}
 			>
 				<div
-					className={`flex items-center gap-4 mb-4 ${
-						alignment === "right" ? "md:justify-end" : ""
-					}`}
+					className={cn(
+						"flex items-center gap-4 mb-4",
+						isRight && "md:justify-end",
+					)}
 				>
 					<div className="p-3 bg-secondary rounded-xl">{icon}</div>
 					<span className="text-6xl md:text-7xl font-bold text-secondary">
@@ -255,9 +310,10 @@ function BenefitCard({
 				</div>
 			</div>
 			<div
-				className={`md:col-span-6 ${
-					alignment === "right" ? "md:order-1 md:col-start-1" : "md:col-start-7"
-				}`}
+				className={cn(
+					"md:col-span-6",
+					isRight ? "md:order-1 md:col-start-1" : "md:col-start-7",
+				)}
 			>
 				<h3 className="text-2xl md:text-3xl font-bold mb-3">{title}</h3>
 				<p className="text-lg text-muted-foreground leading-relaxed">
@@ -268,19 +324,36 @@ function BenefitCard({
 	);
 }
 
+const stepCardVariants = cva("text-center p-8 md:p-10", {
+	variants: {
+		highlight: {
+			true: "bg-card rounded-2xl shadow-sm",
+			false: "",
+		},
+	},
+	defaultVariants: {
+		highlight: false,
+	},
+});
+
+interface StepCardProps extends VariantProps<typeof stepCardVariants> {
+	icon: React.ReactNode;
+	step: string;
+	title: string;
+	description: string;
+	className?: string;
+}
+
 function StepCard({
 	icon,
 	step,
 	title,
 	description,
-}: {
-	icon: React.ReactNode;
-	step: string;
-	title: string;
-	description: string;
-}) {
+	highlight,
+	className,
+}: StepCardProps) {
 	return (
-		<div className="text-center p-8 md:p-10">
+		<div className={cn(stepCardVariants({ highlight, className }))}>
 			<div className="inline-flex items-center justify-center p-4 bg-foreground text-background rounded-2xl mb-6">
 				{icon}
 			</div>
@@ -293,13 +366,24 @@ function StepCard({
 	);
 }
 
-function FAQItem({
-	question,
-	answer,
-}: {
+const faqItemVariants = cva("overflow-hidden transition-all duration-300", {
+	variants: {
+		open: {
+			true: "max-h-48 opacity-100 mt-4",
+			false: "max-h-0 opacity-0",
+		},
+	},
+	defaultVariants: {
+		open: false,
+	},
+});
+
+interface FAQItemProps {
 	question: string;
 	answer: string;
-}) {
+}
+
+function FAQItem({ question, answer }: FAQItemProps) {
 	const [isOpen, setIsOpen] = useState(false);
 
 	return (
@@ -313,16 +397,13 @@ function FAQItem({
 					{question}
 				</span>
 				<ChevronDown
-					className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${
-						isOpen ? "rotate-180" : ""
-					}`}
+					className={cn(
+						"w-5 h-5 flex-shrink-0 transition-transform duration-300",
+						isOpen && "rotate-180",
+					)}
 				/>
 			</button>
-			<div
-				className={`overflow-hidden transition-all duration-300 ${
-					isOpen ? "max-h-48 opacity-100 mt-4" : "max-h-0 opacity-0"
-				}`}
-			>
+			<div className={cn(faqItemVariants({ open: isOpen }))}>
 				<p className="text-muted-foreground leading-relaxed">{answer}</p>
 			</div>
 		</div>
