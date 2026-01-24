@@ -10,7 +10,7 @@ function RouteComponent() {
 	return (
 		<div className="flex flex-col gap-6 min-h-screen justify-center items-center">
 			<div className="text-center">
-				<h1 className="mt-4 font-secondary text-4xl font-semibold tracking-wide text-gray-900">
+				<h1 className="mt-4 text-4xl font-semibold tracking-wide text-gray-900">
 					Access Denied
 				</h1>
 

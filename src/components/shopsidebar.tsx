@@ -45,7 +45,7 @@ const ShopSidebar = () => {
 			>
 				{isExpanded && (
 					<div className="flex items-center gap-2">
-						<h1 className="text-xl font-bold font-secondary tracking-wide text-slate-800">
+						<h1 className="text-xl font-bold tracking-wide text-slate-800">
 							RiffMarket
 						</h1>
 					</div>

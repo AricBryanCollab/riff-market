@@ -6,7 +6,7 @@ const PageNotFound = () => {
 	return (
 		<div className="flex flex-col gap-6 min-h-screen justify-center items-center">
 			<div className="flex flex-col gap-2 justify-center items-center">
-				<h1 className="text-4xl font-semibold font-secondary tracking-wider">
+				<h1 className="text-4xl font-semibold tracking-wider">
 					Page Not Found
 				</h1>
 				<p className="text-muted-foreground w-md text-center">

@@ -7,7 +7,7 @@ const HeroSection = () => {
 
 	return (
 		<div className="text-center py-16">
-			<h1 className="text-4xl md:text-5xl font-secondary font-bold text-foreground">
+			<h1 className="text-4xl md:text-5xl font-bold text-foreground">
 				Buy & Sell Music Gear
 			</h1>
 			<p className="text-lg text-muted-foreground mt-4 max-w-xl mx-auto">
