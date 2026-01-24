@@ -1,40 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-python - <<'PY'
-import fnmatch
-import json
-import os
-import subprocess
-import sys
+node <<'NODE'
+const { execSync, spawnSync } = require("node:child_process");
+const path = require("node:path");
+const ts = require("typescript");
 
-root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
-staged = subprocess.check_output(
-    ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR"],
-    text=True,
-).splitlines()
+const root = execSync("git rev-parse --show-toplevel", { encoding: "utf8" }).trim();
+const staged = execSync("git diff --cached --name-only --diff-filter=ACMR", { encoding: "utf8" })
+	.split("\n")
+	.filter(Boolean);
 
-if not staged:
-    sys.exit(0)
+if (staged.length === 0) {
+	process.exit(0);
+}
 
-with open(os.path.join(root, "tsconfig.json"), "r", encoding="utf-8") as fh:
-    config = json.load(fh)
+const configPath = path.join(root, "tsconfig.json");
+const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
+if (configFile.error) {
+	const formatHost = {
+		getCurrentDirectory: ts.sys.getCurrentDirectory,
+		getCanonicalFileName: (file) => file,
+		getNewLine: () => ts.sys.newLine,
+	};
+	console.error(ts.formatDiagnosticsWithColorAndContext([configFile.error], formatHost));
+	process.exit(1);
+}
 
-includes = config.get("include", ["**/*.ts", "**/*.tsx"])
-excludes = config.get("exclude", [])
+const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, root);
+const included = new Set(
+	parsed.fileNames.map((file) =>
+		path.relative(root, file).split(path.sep).join("/"),
+	),
+);
 
-def matches(path: str, patterns: list[str]) -> bool:
-    return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
+const filtered = staged.filter((file) => included.has(file));
+if (filtered.length === 0) {
+	process.exit(0);
+}
 
-filtered = [
-    path
-    for path in staged
-    if matches(path, includes) and not matches(path, excludes)
-]
-
-if not filtered:
-    sys.exit(0)
-
-print("Running biome lint on staged TypeScript files...")
-subprocess.run(["bun", "x", "biome", "lint", *filtered], check=True)
-PY
+console.log("Running biome lint on staged TypeScript files...");
+const result = spawnSync("bun", ["x", "biome", "lint", ...filtered], {
+	cwd: root,
+	stdio: "inherit",
+});
+process.exit(result.status ?? 0);
+NODE
