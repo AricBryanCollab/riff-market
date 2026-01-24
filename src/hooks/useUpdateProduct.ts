@@ -5,7 +5,7 @@ import useGetProducts from "@/hooks/useGetProducts";
 import type { ImageFile } from "@/hooks/useUploadImage";
 import { updateProduct } from "@/lib/tanstack-query/product.queries";
 import { useToastStore } from "@/store/toast";
-import type { ProductCategory } from "@/types/enum";
+import type { ProductCategory, ProductCondition } from "@/types/enum";
 import type { UpdateProductForm, UpdateProductRequest } from "@/types/product";
 
 const useUpdateProduct = (id: string) => {
@@ -34,6 +34,7 @@ const useUpdateProduct = (id: string) => {
 			name: productData.name,
 			brand: productData.brand,
 			model: productData.model,
+			condition: productData.condition,
 			description: productData.description,
 			images: productData.images,
 			category: productData.category,
@@ -67,8 +68,11 @@ const useUpdateProduct = (id: string) => {
 		);
 	};
 
-	const onCategoryChange = (category: ProductCategory) => {
-		setProduct((prev) => (prev ? { ...prev, category } : prev));
+	const onSelectChange = <T extends ProductCategory | ProductCondition>(
+		field: "category" | "condition",
+		value: T,
+	) => {
+		setProduct((prev) => (prev ? { ...prev, [field]: value } : prev));
 	};
 
 	const onQuantityChange = (stock: number) => {
@@ -136,7 +140,7 @@ const useUpdateProduct = (id: string) => {
 		errorUpdateProduct,
 		handleSubmit,
 		onChange,
-		onCategoryChange,
+		onSelectChange,
 		onQuantityChange,
 		onImagesChange,
 		refetchProductDetails,
