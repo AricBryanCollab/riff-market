@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E "\\.(ts|tsx|js|jsx|json|css|md|mdx)$" || true)
+
+if [ -z "$STAGED_FILES" ]; then
+	exit 0
+fi
+
+echo "Running biome lint on staged files..."
+bun x biome lint $STAGED_FILES

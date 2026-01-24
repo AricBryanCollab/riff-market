@@ -9,6 +9,16 @@ npm install
 npm run start
 ```
 
+## Development
+
+Install the repo git hooks:
+
+```bash
+npm run hooks:install
+```
+
+The pre-commit hook runs `bun x biome lint` on staged files.
+
 # Building For Production
 
 To build this application for production:
