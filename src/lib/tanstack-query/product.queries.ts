@@ -17,6 +17,8 @@ function prepareProductFormData(
 
 	if (data.name !== undefined) formData.append("name", data.name);
 	if (data.category !== undefined) formData.append("category", data.category);
+	if (data.condition !== undefined)
+		formData.append("condition", data.condition);
 	if (data.brand !== undefined) formData.append("brand", data.brand);
 	if (data.model !== undefined) formData.append("model", data.model);
 	if (data.description !== undefined)

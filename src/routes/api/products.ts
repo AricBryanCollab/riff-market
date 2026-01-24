@@ -57,6 +57,7 @@ export const Route = createFileRoute("/api/products")({
 							}>(formData, [
 								"name",
 								"category",
+								"condition",
 								"brand",
 								"model",
 								"description",
@@ -77,6 +78,8 @@ export const Route = createFileRoute("/api/products")({
 								stock: Number(stock),
 								images,
 							};
+
+							console.log(rawData.condition);
 
 							const newProduct = await createProductService(
 								sellerId,

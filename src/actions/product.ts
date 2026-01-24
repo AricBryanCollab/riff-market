@@ -79,6 +79,7 @@ export async function createProductService(
 		name: data.name,
 		category: data.category,
 		brand: data.brand,
+		condition: data.condition,
 		model: data.model,
 		description: data.description,
 		price: Number(data.price),
