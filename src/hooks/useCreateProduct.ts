@@ -4,12 +4,13 @@ import { useState } from "react";
 import type { ImageFile } from "@/hooks/useUploadImage";
 import { createProduct } from "@/lib/tanstack-query/product.queries";
 import { useToastStore } from "@/store/toast";
-import type { ProductCategory } from "@/types/enum";
+import type { ProductCategory, ProductCondition } from "@/types/enum";
 import type { CreateProductRequest } from "@/types/product";
 
 const initialProduct = {
 	name: "",
 	category: "ELECTRIC" as ProductCategory,
+	condition: "NEW" as ProductCondition,
 	brand: "",
 	model: "",
 	description: "",
@@ -54,10 +55,12 @@ const useCreateProduct = () => {
 		setProduct({ ...product, [e.target.id]: value });
 	};
 
-	const onCategoryChange = (category: ProductCategory) => {
-		setProduct({ ...product, category: category });
+	const onSelectChange = <T extends ProductCategory | ProductCondition>(
+		field: "category" | "condition",
+		value: T,
+	) => {
+		setProduct({ ...product, [field]: value });
 	};
-
 	const onQuantityChange = (stock: number) => {
 		setProduct((prev) =>
 			prev
@@ -100,7 +103,7 @@ const useCreateProduct = () => {
 		isError,
 		images,
 		onChange,
-		onCategoryChange,
+		onSelectChange,
 		onQuantityChange,
 		onImagesChange,
 		clearCreateProductForm,
