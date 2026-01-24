@@ -29,10 +29,36 @@ npm run build
 
 ## Testing
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+This project uses [Vitest](https://vitest.dev/) for testing.
 
 ```bash
-npm run test
+bun run test
+```
+
+### Browser component tests
+
+Browser-mode component tests are co-located with source files and named:
+
+```
+src/**/*.browser.test.tsx
+```
+
+Run them with:
+
+```bash
+bun run test:browser
+```
+
+Run in headed mode:
+
+```bash
+bun run test:browser:headed
+```
+
+If Playwright browsers are not installed yet:
+
+```bash
+bunx playwright install chromium
 ```
 
 ## Styling
