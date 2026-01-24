@@ -8,6 +8,7 @@
 		"preview": "bun --bun vite preview",
 		"deploy": "vite build",
 		"test": "vitest run",
+		"test:unit": "vitest run --config vitest.config.ts",
 		"test:browser": "vitest run --config vitest.browser.config.ts",
 		"test:browser:headed": "vitest run --config vitest.browser.config.ts --browser.headless=false",
 		"format": "biome format",
