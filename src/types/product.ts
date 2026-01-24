@@ -1,8 +1,9 @@
-import type { ProductCategory } from "@/types/enum";
+import type { ProductCategory, ProductCondition } from "@/types/enum";
 
 interface MutateBaseProduct {
 	name: string;
 	category: ProductCategory;
+	condition: ProductCondition;
 	brand: string;
 	model: string;
 	description: string;
@@ -35,6 +36,7 @@ export interface BaseProduct {
 	sellerId: string;
 	name: string;
 	category: ProductCategory;
+	condition: ProductCondition;
 	brand: string;
 	model: string;
 	images: string[];
@@ -78,8 +80,6 @@ export interface UpdateProductStatusResult {
 	name: string;
 	isApproved: boolean;
 }
-
-export type ProductCondition = "new" | "used" | "mint";
 
 export interface CategoryMeta {
 	category: ProductCategory;

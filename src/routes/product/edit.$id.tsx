@@ -36,7 +36,7 @@ function RouteComponent() {
 		loadingUpdateProduct,
 		isErrorProduct,
 		onChange,
-		onCategoryChange,
+		onSelectChange,
 		onQuantityChange,
 		onImagesChange,
 		handleSubmit,
@@ -101,7 +101,7 @@ function RouteComponent() {
 						value={product.category || "OTHERS"}
 						icon={FileMusic}
 						onChangeValue={(value: string) =>
-							onCategoryChange(value as ProductCategory)
+							onSelectChange("category", value as ProductCategory)
 						}
 						label="Product Classification"
 					/>

@@ -7,4 +7,6 @@ export type ProductCategory =
 	| "PEDALS"
 	| "ACCESSORY";
 
+export type ProductCondition = "NEW" | "USED" | "MINT";
+
 export type PaymentMethod = "CASH" | "PAYPAL" | "VISA";

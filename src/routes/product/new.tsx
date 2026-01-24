@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Camera, FileMusic } from "lucide-react";
+import { Camera } from "lucide-react";
 import Button from "@/components/button";
 import Counter from "@/components/counter";
 import ImageUploader from "@/components/imageuploader";
@@ -9,9 +9,12 @@ import SectionContainer from "@/components/sectioncontainer";
 import Select from "@/components/select";
 import TextArea from "@/components/textarea";
 import { Body, H4 } from "@/components/typography";
-import { productCategoryOptions } from "@/constants/selectOptions";
+import {
+	productCategoryOptions,
+	productConditionOptions,
+} from "@/constants/selectOptions";
 import useCreateProduct from "@/hooks/useCreateProduct";
-import type { ProductCategory } from "@/types/enum";
+import type { ProductCategory, ProductCondition } from "@/types/enum";
 import { requireRole } from "@/utils/requireRole";
 
 export const Route = createFileRoute("/product/new")({
@@ -25,7 +28,7 @@ function RouteComponent() {
 		images,
 		loading,
 		onChange,
-		onCategoryChange,
+		onSelectChange,
 		onQuantityChange,
 		onImagesChange,
 		clearCreateProductForm,
@@ -67,20 +70,6 @@ function RouteComponent() {
 						value={product.model}
 					/>
 
-					<Select
-						options={productCategoryOptions.map((p) => ({
-							label: p.label,
-							value: p.value,
-							icon: p.icon,
-						}))}
-						value={product.category}
-						icon={FileMusic}
-						onChangeValue={(value: string) =>
-							onCategoryChange(value as ProductCategory)
-						}
-						label="Product Classification"
-					/>
-
 					<TextArea
 						inputId="description"
 						label="Product Description"
@@ -92,6 +81,34 @@ function RouteComponent() {
 						showCounter
 						rows={5}
 					/>
+
+					<div className="lg:col-span-1">
+						<Select
+							options={productCategoryOptions.map((p) => ({
+								label: p.label,
+								value: p.value,
+								icon: p.icon,
+							}))}
+							value={product.category}
+							onChangeValue={(value: string) =>
+								onSelectChange("category", value as ProductCategory)
+							}
+							label="Product Classification"
+						/>
+
+						<Select
+							options={productConditionOptions.map((p) => ({
+								label: p.label,
+								value: p.value,
+								icon: p.icon,
+							}))}
+							value={product.condition}
+							onChangeValue={(value: string) =>
+								onSelectChange("condition", value as ProductCondition)
+							}
+							label="Product Condition"
+						/>
+					</div>
 
 					<div className="lg:col-span-1">
 						<Counter

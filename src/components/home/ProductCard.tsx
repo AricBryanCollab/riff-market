@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import type { Product } from "@/types/product";
+import type { BaseProduct } from "@/types/product";
 import ConditionBadge from "./ConditionBadge";
 
 interface ProductCardProps {
-	product: Product;
+	product: BaseProduct;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {

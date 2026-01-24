@@ -27,6 +27,12 @@ enum ProductCategory {
   ACCESSORY
 }
 
+enum ProductCondtion {
+  NEW
+  USED
+  MINT
+}
+
 enum PaymentMethod {
   CASH
   PAYPAL
@@ -122,6 +128,7 @@ model Product {
   sellerId    String
   name        String
   category    ProductCategory
+  condition   ProductCondtion
   brand       String
   model       String
   images       String[]

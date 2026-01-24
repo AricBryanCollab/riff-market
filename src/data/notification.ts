@@ -8,7 +8,10 @@ export const createNotification = async (
 ) => {
 	try {
 		return await prismaClient.notification.create({
-			data: notificationData,
+			data: {
+				...notificationData,
+				orderId: notificationData.orderId || undefined,
+			},
 		});
 	} catch (err) {
 		console.error("Error at createNotification", err);

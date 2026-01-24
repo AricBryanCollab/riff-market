@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type { ProductCategory } from "generated/prisma/enums";
 import {
 	createProductService,
 	getApprovedProductsService,
 } from "@/actions/product";
 import { authMiddleware } from "@/middleware";
+import type { ProductCategory, ProductCondition } from "@/types/enum";
 import { extractFormData } from "@/utils/extractFormData";
 
 export const Route = createFileRoute("/api/products")({
@@ -39,6 +39,7 @@ export const Route = createFileRoute("/api/products")({
 							const {
 								name,
 								category,
+								condition,
 								brand,
 								model,
 								description,
@@ -47,6 +48,7 @@ export const Route = createFileRoute("/api/products")({
 							} = extractFormData<{
 								name: string;
 								category: ProductCategory;
+								condition: ProductCondition;
 								brand: string;
 								model: string;
 								description: string;
@@ -67,6 +69,7 @@ export const Route = createFileRoute("/api/products")({
 							const rawData = {
 								name,
 								category,
+								condition,
 								brand,
 								model,
 								description,
