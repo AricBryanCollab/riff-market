@@ -1,8 +1,8 @@
-import type { Product } from "@/types/product";
+import type { BaseProduct } from "@/types/product";
 import ProductCard from "./ProductCard";
 
 interface ProductGridProps {
-	products: Product[];
+	products: BaseProduct[];
 }
 
 const ProductGrid = ({ products }: ProductGridProps) => {

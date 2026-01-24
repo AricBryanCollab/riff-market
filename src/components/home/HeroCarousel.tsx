@@ -2,11 +2,11 @@ import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import type { Product } from "@/types/product";
+import type { BaseProduct } from "@/types/product";
 import ConditionBadge from "./ConditionBadge";
 
 interface HeroCarouselProps {
-	products: Product[];
+	products: BaseProduct[];
 	autoPlayInterval?: number;
 }
 
@@ -112,7 +112,7 @@ const HeroCarousel = ({
 						})}
 					</p>
 					<p className="text-sm text-muted-foreground mt-2">
-						Sold by {product.sellerName}
+						Sold by {product.seller.firstName}{" "}
 					</p>
 
 					<Link
