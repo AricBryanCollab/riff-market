@@ -25,7 +25,10 @@ const Navbar = () => {
 		<header className="w-full border-b border-border bg-background">
 			<nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
 				<div className="flex items-center gap-8">
-					<Link to="/" className="text-lg font-semibold tracking-wider text-foreground">
+					<Link
+						to="/"
+						className="text-lg font-semibold tracking-wider text-foreground"
+					>
 						RiffMarket
 					</Link>
 
@@ -36,18 +39,27 @@ const Navbar = () => {
 					</ul>
 				</div>
 
-				<form onSubmit={handleSearch} className="hidden sm:flex flex-1 max-w-md mx-4">
-					<div className="relative w-full">
-						<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-						<Input
-							type="text"
-							value={query}
-							onChange={(e) => setQuery(e.target.value)}
-							placeholder="Search gear..."
-							className="pl-10"
-						/>
-					</div>
-				</form>
+				<search className="hidden sm:flex flex-1 max-w-md mx-4">
+					<form onSubmit={handleSearch} className="w-full">
+						<div className="relative">
+							<Search
+								className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+								aria-hidden="true"
+							/>
+							<label htmlFor="navbar-search" className="sr-only">
+								Search gear
+							</label>
+							<Input
+								id="navbar-search"
+								type="search"
+								value={query}
+								onChange={(e) => setQuery(e.target.value)}
+								placeholder="Search gear..."
+								className="pl-10"
+							/>
+						</div>
+					</form>
+				</search>
 
 				<UserMenu />
 			</nav>
