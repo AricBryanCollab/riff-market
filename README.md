@@ -17,7 +17,7 @@ Install the repo git hooks:
 npm run hooks:install
 ```
 
-The pre-commit hook runs `bun x biome lint` on staged files.
+The pre-commit hook runs `bun x biome lint` on staged files that match `tsconfig.json` include/exclude patterns.
 
 # Building For Production
 
