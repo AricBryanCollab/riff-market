@@ -3,6 +3,7 @@ import type { ProductCategory, ProductCondition } from "@/types/enum";
 interface MutateBaseProduct {
 	name: string;
 	category: ProductCategory;
+	condition: ProductCondition;
 	brand: string;
 	model: string;
 	description: string;
