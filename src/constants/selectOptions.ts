@@ -8,9 +8,12 @@ import {
 	Music,
 	Package,
 	PackageCheck,
+	PackageOpen,
 	Piano,
 	Settings,
 	ShoppingCart,
+	Sparkles,
+	Star,
 	Store,
 	Truck,
 	User,
@@ -31,6 +34,13 @@ export const productCategoryOptions = [
 	{ value: "KEYBOARD", label: "Keyboard/Piano", icon: Piano },
 	{ value: "PEDALS", label: "Pedals & Effects", icon: Settings },
 	{ value: "ACCESSORY", label: "Accessories", icon: Package },
+] as const;
+
+// Product Condition options
+export const productConditionOptions = [
+	{ value: "NEW", label: "Brand New", icon: Sparkles },
+	{ value: "MINT", label: "Mint Condition", icon: Star },
+	{ value: "USED", label: "Used", icon: PackageOpen },
 ] as const;
 
 // Payment Method options
