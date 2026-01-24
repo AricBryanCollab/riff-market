@@ -39,21 +39,27 @@ const Navbar = () => {
 					</ul>
 				</div>
 
-				<form
-					onSubmit={handleSearch}
-					className="hidden sm:flex flex-1 max-w-md mx-4"
-				>
-					<div className="relative w-full">
-						<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-						<Input
-							type="text"
-							value={query}
-							onChange={(e) => setQuery(e.target.value)}
-							placeholder="Search gear..."
-							className="pl-10"
-						/>
-					</div>
-				</form>
+				<search className="hidden sm:flex flex-1 max-w-md mx-4">
+					<form onSubmit={handleSearch} className="w-full">
+						<div className="relative">
+							<Search
+								className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+								aria-hidden="true"
+							/>
+							<label htmlFor="navbar-search" className="sr-only">
+								Search gear
+							</label>
+							<Input
+								id="navbar-search"
+								type="search"
+								value={query}
+								onChange={(e) => setQuery(e.target.value)}
+								placeholder="Search gear..."
+								className="pl-10"
+							/>
+						</div>
+					</form>
+				</search>
 
 				<UserMenu />
 			</nav>

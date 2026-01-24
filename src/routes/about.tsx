@@ -10,7 +10,7 @@ import {
 	Sparkles,
 	Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import AboutHero from "@/assets/about hero.jpg";
 import SectionContainer from "@/components/sectioncontainer";
 import { cn } from "@/lib/utils";
@@ -24,9 +24,11 @@ function AboutComponent() {
 		<div className="overflow-hidden">
 			{/* HERO - Full bleed editorial style */}
 			<section className="relative min-h-[90vh] flex items-end">
-				<div
-					className="absolute inset-0 bg-cover bg-center"
-					style={{ backgroundImage: `url(${AboutHero})` }}
+				<img
+					src={AboutHero}
+					alt=""
+					fetchPriority="high"
+					className="absolute inset-0 w-full h-full object-cover"
 				/>
 				<div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 				<SectionContainer>
@@ -96,21 +98,21 @@ function AboutComponent() {
 
 					<div className="space-y-16 md:space-y-24">
 						<BenefitCard
-							icon={<Shield className="w-8 h-8" />}
+							icon={<Shield className="w-8 h-8" aria-hidden="true" />}
 							number="01"
 							title="Verified & Protected"
 							description="Every seller goes through our verification process. Every transaction is backed by our buyer protection guarantee. No surprises, no scams."
 							alignment="left"
 						/>
 						<BenefitCard
-							icon={<Users className="w-8 h-8" />}
+							icon={<Users className="w-8 h-8" aria-hidden="true" />}
 							number="02"
 							title="Community First"
 							description="Join thousands of musicians who buy, sell, and trade gear daily. Read real reviews, connect with sellers, and become part of something bigger."
 							alignment="right"
 						/>
 						<BenefitCard
-							icon={<Sparkles className="w-8 h-8" />}
+							icon={<Sparkles className="w-8 h-8" aria-hidden="true" />}
 							number="03"
 							title="Curated Quality"
 							description="No mass-produced junk. Every listing is reviewed for quality and accuracy. We're picky so you don't have to be."
@@ -134,19 +136,19 @@ function AboutComponent() {
 
 					<div className="grid md:grid-cols-3 gap-8 md:gap-4">
 						<StepCard
-							icon={<Search className="w-10 h-10" />}
+							icon={<Search className="w-10 h-10" aria-hidden="true" />}
 							step="01"
 							title="Discover"
 							description="Browse thousands of verified listings. Filter by brand, condition, price—find exactly what you're looking for."
 						/>
 						<StepCard
-							icon={<ShoppingBag className="w-10 h-10" />}
+							icon={<ShoppingBag className="w-10 h-10" aria-hidden="true" />}
 							step="02"
 							title="Purchase"
 							description="Buy with confidence. Secure checkout, buyer protection, and transparent seller ratings on every transaction."
 						/>
 						<StepCard
-							icon={<Handshake className="w-10 h-10" />}
+							icon={<Handshake className="w-10 h-10" aria-hidden="true" />}
 							step="03"
 							title="Connect"
 							description="Join the community. Leave reviews, follow sellers, and become part of the RiffMarket family."
@@ -207,7 +209,7 @@ function AboutComponent() {
 						<div className="flex flex-col sm:flex-row gap-4 justify-center">
 							<LinkButton to="/shop" variant="primary">
 								Start Shopping
-								<ArrowRight className="w-5 h-5" />
+								<ArrowRight className="w-5 h-5" aria-hidden="true" />
 							</LinkButton>
 							<LinkButton to="/shop" variant="outline">
 								Sell Your Gear
@@ -366,17 +368,20 @@ function StepCard({
 	);
 }
 
-const faqItemVariants = cva("overflow-hidden transition-all duration-300", {
-	variants: {
-		open: {
-			true: "max-h-48 opacity-100 mt-4",
-			false: "max-h-0 opacity-0",
+const faqContentVariants = cva(
+	"grid transition-[grid-template-rows,opacity] duration-300",
+	{
+		variants: {
+			open: {
+				true: "grid-rows-[1fr] opacity-100",
+				false: "grid-rows-[0fr] opacity-0",
+			},
+		},
+		defaultVariants: {
+			open: false,
 		},
 	},
-	defaultVariants: {
-		open: false,
-	},
-});
+);
 
 interface FAQItemProps {
 	question: string;
@@ -385,13 +390,19 @@ interface FAQItemProps {
 
 function FAQItem({ question, answer }: FAQItemProps) {
 	const [isOpen, setIsOpen] = useState(false);
+	const id = useId();
+	const buttonId = `${id}-button`;
+	const contentId = `${id}-content`;
 
 	return (
 		<div className="py-6">
 			<button
+				id={buttonId}
 				onClick={() => setIsOpen(!isOpen)}
 				className="w-full flex items-center justify-between text-left group"
 				type="button"
+				aria-expanded={isOpen}
+				aria-controls={contentId}
 			>
 				<span className="text-lg md:text-xl font-semibold pr-4 group-hover:text-foreground/70 transition-colors">
 					{question}
@@ -401,11 +412,18 @@ function FAQItem({ question, answer }: FAQItemProps) {
 						"w-5 h-5 flex-shrink-0 transition-transform duration-300",
 						isOpen && "rotate-180",
 					)}
+					aria-hidden="true"
 				/>
 			</button>
-			<div className={cn(faqItemVariants({ open: isOpen }))}>
-				<p className="text-muted-foreground leading-relaxed">{answer}</p>
-			</div>
+			<section
+				id={contentId}
+				aria-labelledby={buttonId}
+				className={cn(faqContentVariants({ open: isOpen }))}
+			>
+				<div className="overflow-hidden">
+					<p className="text-muted-foreground leading-relaxed pt-4">{answer}</p>
+				</div>
+			</section>
 		</div>
 	);
 }
