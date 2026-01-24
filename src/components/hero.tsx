@@ -18,7 +18,7 @@ const Hero = ({ image, title, caption }: HeroProps) => {
 					className="absolute -z-10 inset-0 bg-cover bg-center"
 				/>
 				<div className="rounded-2xl bg-foreground/45 px-4 py-3 text-white">
-					<H1 className="text-4xlmd:text-6xl" secondary>
+					<H1 className="text-4xlmd:text-6xl">
 						{title}
 					</H1>
 					{caption && <H4 className="mt-2 lg:text-left">{caption}</H4>}

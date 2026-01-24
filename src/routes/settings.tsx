@@ -45,7 +45,7 @@ function SettingsComponent() {
 				{/* PAGE HEADER */}
 				<div className="flex items-center justify-between my-6">
 					<div className="py-2">
-						<H2 className="text-3xl font-bold font-secondary tracking-wider">
+						<H2 className="text-3xl font-bold tracking-wider">
 							Account Settings
 						</H2>
 						<BodySmall className="mt-3 text-muted-foreground">
