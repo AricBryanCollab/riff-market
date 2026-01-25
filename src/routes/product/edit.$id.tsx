@@ -5,7 +5,6 @@ import {
 } from "@tanstack/react-router";
 import type { ProductCategory } from "generated/prisma/enums";
 import { Camera, FileMusic } from "lucide-react";
-import Button from "@/components/button";
 import Counter from "@/components/counter";
 import { ProductDetailErrorState } from "@/components/errorstates";
 import ImageUploader from "@/components/imageuploader";
@@ -16,6 +15,7 @@ import SectionContainer from "@/components/sectioncontainer";
 import Select from "@/components/select";
 import TextArea from "@/components/textarea";
 import { Body, H4 } from "@/components/typography";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { productCategoryOptions } from "@/constants/selectOptions";
 import useUpdateProduct from "@/hooks/useUpdateProduct";
 import { requireRole } from "@/utils/requireRole";
@@ -152,21 +152,17 @@ function RouteComponent() {
 				</div>
 
 				<div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start md:justify-end">
-					<Button
+					<LoadingButton
 						loading={loadingUpdateProduct}
 						variant="outline"
 						type="button"
-						action={() => navigate({ to: `/shop` })}
+						onClick={() => navigate({ to: `/shop` })}
 					>
 						Go Back
-					</Button>
-					<Button
-						loading={loadingUpdateProduct}
-						variant="primary"
-						type="submit"
-					>
+					</LoadingButton>
+					<LoadingButton loading={loadingUpdateProduct} type="submit">
 						Update My Product
-					</Button>
+					</LoadingButton>
 				</div>
 			</form>
 		</SectionContainer>

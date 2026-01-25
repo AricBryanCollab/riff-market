@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
-import Button from "@/components/button";
 import { BodySmall, H5 } from "@/components/typography";
+import { Button } from "@/components/ui/button";
 import useCartDetails from "@/hooks/useCartDetails";
 
 const CartList = () => {
@@ -102,7 +102,7 @@ const CartList = () => {
 							${totalPrice.toFixed(2)}
 						</span>
 					</div>
-					<Button variant="primary">
+					<Button asChild>
 						<Link
 							to="/cart"
 							className="flex items-center justify-center gap-2 w-full"

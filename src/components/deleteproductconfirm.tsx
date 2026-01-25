@@ -1,6 +1,6 @@
 import { Box, Settings } from "lucide-react";
-import Button from "@/components/button";
 import { BodySmall } from "@/components/typography";
+import { LoadingButton } from "@/components/ui/loading-button";
 import useDeleteProduct from "@/hooks/useDeleteProduct";
 import { useDialogStore } from "@/store/dialog";
 
@@ -38,20 +38,20 @@ const DeleteProductConfirm = ({
 			</div>
 
 			<div className="flex justify-end items-center gap-2 my-4">
-				<Button
+				<LoadingButton
 					loading={loadingDeleteProduct}
-					action={() => handleDeleteProduct(id)}
-					variant="danger"
+					onClick={() => handleDeleteProduct(id)}
+					variant="destructive"
 				>
 					Confirm Delete
-				</Button>
-				<Button
+				</LoadingButton>
+				<LoadingButton
 					loading={loadingDeleteProduct}
-					action={setCloseDialog}
+					onClick={setCloseDialog}
 					variant="outline"
 				>
 					Cancel
-				</Button>
+				</LoadingButton>
 			</div>
 		</div>
 	);

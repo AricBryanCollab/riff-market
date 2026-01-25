@@ -2,11 +2,11 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { Palette } from "lucide-react";
 import { useEffect } from "react";
 import Avatar from "@/components/avatar";
-import Button from "@/components/button";
 import { ProfileInfoField } from "@/components/profilefield";
 import SectionContainer from "@/components/sectioncontainer";
 import Select from "@/components/select";
 import { BodyLarge, BodySmall, H2, H4 } from "@/components/typography";
+import { Button } from "@/components/ui/button";
 import { themeOptions } from "@/constants/selectOptions";
 import useThemeChange from "@/hooks/useThemeChange";
 import { useThemeStore } from "@/store/theme";
@@ -97,10 +97,8 @@ function SettingsComponent() {
 								<div className="min-w-45">
 									{previewTheme && (
 										<div className="flex items-center gap-3">
-											<Button variant="primary" action={() => {}}>
-												Save
-											</Button>
-											<Button variant="outline" action={handleClearTheme}>
+											<Button onClick={() => {}}>Save</Button>
+											<Button variant="outline" onClick={handleClearTheme}>
 												Cancel
 											</Button>
 										</div>

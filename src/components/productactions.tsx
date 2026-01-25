@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Pencil, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
-import Button from "@/components/button";
 import Counter from "@/components/counter";
 import IconButton from "@/components/iconbutton";
 import { BodySmall } from "@/components/typography";
+import { Button } from "@/components/ui/button";
 import { ButtonStyles, RoleActionConfigs } from "@/constants/roleactionconfigs";
 import useUpdateProductStatus from "@/hooks/useUpdateProductStatus";
 import { useCartStore } from "@/store/cart";
@@ -33,10 +33,7 @@ export function ShopPageProductActions({
 			case "ADMIN":
 			case "SELLER":
 				return (
-					<Button
-						action={() => navigate({ from: "/product/new" })}
-						variant="primary"
-					>
+					<Button onClick={() => navigate({ from: "/product/new" })}>
 						<div className="flex items-center gap-2">
 							<Plus className="size-4" />
 							<BodySmall>Add Product</BodySmall>
@@ -45,7 +42,7 @@ export function ShopPageProductActions({
 				);
 			case "CUSTOMER":
 				return (
-					<Button variant="primary">
+					<Button>
 						<div className="flex items-center gap-2">
 							<ShoppingBag className="size-4" />
 							<BodySmall>My Orders</BodySmall>
@@ -54,7 +51,7 @@ export function ShopPageProductActions({
 				);
 			default:
 				return (
-					<Button action={() => setOpenDialog("signup")} variant="primary">
+					<Button onClick={() => setOpenDialog("signup")}>
 						<p className="flex items-center gap-2">Register Now</p>
 					</Button>
 				);

@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Camera } from "lucide-react";
-import Button from "@/components/button";
 import Counter from "@/components/counter";
 import ImageUploader from "@/components/imageuploader";
 import Input from "@/components/input";
@@ -9,6 +8,7 @@ import SectionContainer from "@/components/sectioncontainer";
 import Select from "@/components/select";
 import TextArea from "@/components/textarea";
 import { Body, H4 } from "@/components/typography";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
 	productCategoryOptions,
 	productConditionOptions,
@@ -144,17 +144,17 @@ function RouteComponent() {
 				</div>
 
 				<div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start md:justify-end">
-					<Button
+					<LoadingButton
 						loading={loading}
 						variant="outline"
 						type="button"
-						action={clearCreateProductForm}
+						onClick={clearCreateProductForm}
 					>
 						Clear
-					</Button>
-					<Button loading={loading} variant="primary" type="submit">
+					</LoadingButton>
+					<LoadingButton loading={loading} type="submit">
 						Add Product
-					</Button>
+					</LoadingButton>
 				</div>
 			</form>
 		</SectionContainer>
