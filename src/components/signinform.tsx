@@ -1,6 +1,6 @@
 import { Lock, Mail } from "lucide-react";
-import Button from "@/components/button";
 import Input from "@/components/input";
+import { LoadingButton } from "@/components/ui/loading-button";
 import useAuthDialog from "@/hooks/useAuthDialog";
 import useSignIn from "@/hooks/useSignIn";
 
@@ -48,9 +48,9 @@ const SignInForm = () => {
 						Sign Up
 					</button>
 				</div>
-				<Button loading={loading} variant="primary" type="submit">
+				<LoadingButton loading={loading} type="submit">
 					Sign In
-				</Button>
+				</LoadingButton>
 			</div>
 		</form>
 	);

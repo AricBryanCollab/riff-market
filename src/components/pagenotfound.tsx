@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import Button from "@/components/button";
+import { Button } from "@/components/ui/button";
 
 const PageNotFound = () => {
 	const navigate = useNavigate();
@@ -14,7 +14,7 @@ const PageNotFound = () => {
 					to go back to our home page.
 				</p>
 			</div>
-			<Button action={() => navigate({ to: "/" })} variant="outline">
+			<Button onClick={() => navigate({ to: "/" })} variant="outline">
 				Home Page
 			</Button>
 		</div>

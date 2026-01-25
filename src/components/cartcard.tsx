@@ -1,5 +1,5 @@
-import Button from "@/components/button";
 import Counter from "@/components/counter";
+import { Button } from "@/components/ui/button";
 import type { CartItem } from "@/types/cart";
 
 interface CartCardProps {
@@ -51,7 +51,10 @@ const CartCard = ({
 						handleQuantityChange(newQuantity, productId)
 					}
 				/>
-				<Button action={() => handleRemoveItem(productId)} variant="danger">
+				<Button
+					onClick={() => handleRemoveItem(productId)}
+					variant="destructive"
+				>
 					Remove
 				</Button>
 			</div>

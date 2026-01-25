@@ -1,10 +1,11 @@
 import { Bell, Package, PackageSearch, ShoppingCart } from "lucide-react";
 import Avatar from "@/components/avatar";
-import Button from "@/components/button";
 import CartList from "@/components/cartlist";
 import ClientOnly from "@/components/clientonly";
 import Dropdown from "@/components/dropdown";
 import NavbarIconButtons from "@/components/navbariconbuttons";
+import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import useCartDetails from "@/hooks/useCartDetails";
 import { useSignOut } from "@/hooks/useSignOut";
 import { useDialogStore } from "@/store/dialog";
@@ -96,18 +97,20 @@ const UserMenu = () => {
 						<CartList />
 					</Dropdown>
 
-					<Button loading={signOutLoading} variant="outline" action={signOut}>
+					<LoadingButton
+						loading={signOutLoading}
+						variant="outline"
+						onClick={signOut}
+					>
 						Logout
-					</Button>
+					</LoadingButton>
 				</div>
 			) : (
 				<div className="flex items-center gap-3">
-					<Button action={() => setOpenDialog("signin")} variant="outline">
+					<Button onClick={() => setOpenDialog("signin")} variant="outline">
 						Login
 					</Button>
-					<Button action={() => setOpenDialog("signup")} variant="primary">
-						Get Started
-					</Button>
+					<Button onClick={() => setOpenDialog("signup")}>Get Started</Button>
 				</div>
 			)}
 		</ClientOnly>

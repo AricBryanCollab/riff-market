@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import Button from "@/components/button";
+import { Button } from "@/components/ui/button";
 import { useDialogStore } from "@/store/dialog";
 
 const HeroSection = () => {
@@ -15,15 +15,13 @@ const HeroSection = () => {
 				gear a new home.
 			</p>
 			<div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-				<Link to="/shop">
-					<Button variant="primary" fontSize="text-lg">
-						Shop Now
-					</Button>
-				</Link>
+				<Button asChild size="lg">
+					<Link to="/shop">Shop Now</Link>
+				</Button>
 				<Button
 					variant="outline"
-					fontSize="text-lg"
-					action={() => setOpenDialog("signup")}
+					size="lg"
+					onClick={() => setOpenDialog("signup")}
 				>
 					Start Selling
 				</Button>

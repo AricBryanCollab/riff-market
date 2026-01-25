@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import Button from "@/components/button";
+import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/unauthorized")({
 	component: RouteComponent,
 });
@@ -26,7 +26,7 @@ function RouteComponent() {
 					</p>
 				</div>
 			</div>
-			<Button action={() => navigate({ to: "/" })} variant="outline">
+			<Button onClick={() => navigate({ to: "/" })} variant="outline">
 				Home Page
 			</Button>
 		</div>

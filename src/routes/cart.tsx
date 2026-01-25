@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
-import Button from "@/components/button";
 import CartCard from "@/components/cartcard";
 import { CartDetailsLoadingState } from "@/components/loadingstates";
 import SectionContainer from "@/components/sectioncontainer";
 import { BodyLarge, BodySmall, H2 } from "@/components/typography";
+import { Button } from "@/components/ui/button";
 import useCartDetails from "@/hooks/useCartDetails";
 import { requireRole } from "@/utils/requireRole";
 
@@ -92,10 +92,7 @@ function RouteComponent() {
 
 			{!isCartEmpty && (
 				<div className="flex justify-end">
-					<Button
-						action={() => navigate({ to: "/checkout" })}
-						variant="primary"
-					>
+					<Button onClick={() => navigate({ to: "/checkout" })}>
 						Proceed To Checkout
 					</Button>
 				</div>

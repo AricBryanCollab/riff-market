@@ -1,7 +1,7 @@
 import { KeyRound, Lock, Mail, User, UserRoundPlus } from "lucide-react";
-import Button from "@/components/button";
 import Input from "@/components/input";
 import Select from "@/components/select";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { roleOptions } from "@/constants/selectOptions";
 import useAuthDialog from "@/hooks/useAuthDialog";
 import useSignUp from "@/hooks/useSignUp";
@@ -91,9 +91,9 @@ const SignUpForm = () => {
 						Sign In
 					</button>
 				</div>
-				<Button loading={loading} variant="primary" type="submit">
+				<LoadingButton loading={loading} type="submit">
 					Sign Up
-				</Button>
+				</LoadingButton>
 			</div>
 		</form>
 	);
