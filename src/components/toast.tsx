@@ -19,11 +19,11 @@ const Toast = () => {
 	const getStatusStyles = (status: ToastStatus) => {
 		switch (status) {
 			case "success":
-				return "bg-success border-green-600";
+				return "bg-chart-2 border-green-600";
 			case "error":
 				return "bg-destructive border-red-600";
 			default:
-				return "bg-warning border-yellow-700";
+				return "bg-chart-3 border-yellow-700";
 		}
 	};
 

@@ -79,8 +79,6 @@ export const Route = createFileRoute("/api/products")({
 								images,
 							};
 
-							console.log(rawData.condition);
-
 							const newProduct = await createProductService(
 								sellerId,
 								authRole,
