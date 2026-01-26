@@ -63,12 +63,23 @@ export const readNotificationById = async (notificationId: string) => {
 
 export const readAllNotifications = async (userId: string) => {
 	try {
-		return await prisma.notification.updateMany({
+		const notifications = await prisma.notification.findMany({
+			where: { userId, isRead: false },
+			select: { id: true },
+		});
+
+		if (notifications.length === 0) {
+			return { count: 0 };
+		}
+
+		const result = await prisma.notification.updateMany({
 			where: { userId, isRead: false },
 			data: {
 				isRead: true,
 			},
 		});
+
+		return result;
 	} catch (err) {
 		console.error("Error at readAllNotifications", err);
 		throw err;
