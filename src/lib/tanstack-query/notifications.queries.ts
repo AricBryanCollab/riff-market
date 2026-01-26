@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/tanstack-query/fetch";
+
 import type { NotificationData } from "@/types/notification";
 
 export function getUserNotifications() {
@@ -19,7 +20,8 @@ export function readNotificationById(id: string) {
 	});
 }
 
-// To do:
-// export function readAllNotifications() {
-// 	return apiFetch
-// }
+export function readAllNotifications() {
+	return apiFetch<{ count: number }>("/api/notifications/read-all", {
+		method: "PUT",
+	});
+}
