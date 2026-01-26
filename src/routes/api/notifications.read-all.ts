@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { readAllNotificationsService } from "@/actions/notifications";
 import { authMiddleware } from "@/middleware";
 
-export const Route = createFileRoute("/api/notfiications/read-all")({
+export const Route = createFileRoute("/api/notifications/read-all")({
 	server: {
 		middleware: [authMiddleware],
 		handlers: {
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/api/notfiications/read-all")({
 				try {
 					const userId = context.id;
 
-					const notification = readAllNotificationsService(userId);
+					const notification = await readAllNotificationsService(userId);
 
 					if ("error" in notification) {
 						return new Response(
@@ -19,15 +19,19 @@ export const Route = createFileRoute("/api/notfiications/read-all")({
 									notification.error || "Failed to read all notifications",
 							}),
 							{ status: 400 },
-						);
+						)
 					}
 
 					return new Response(JSON.stringify(notification), { status: 200 });
 				} catch (error) {
-					JSON.stringify({
-						error: "Failed to read all notifications",
-						details: error instanceof Error ? error.message : "Unknown error",
-					});
+					console.error(error);
+					return new Response(
+						JSON.stringify({
+							error: "Failed to read all notifications",
+							details: error instanceof Error ? error.message : "Unknown error",
+						}),
+						{ status: 500 },
+					)
 				}
 			},
 		},

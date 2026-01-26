@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getNotificationsCountService } from "@/actions/notifications";
 import { authMiddleware } from "@/middleware";
 
-export const Route = createFileRoute("/api/notifications/count")({
+export const Route = createFileRoute("/api/notifications/unread/count")({
 	server: {
 		middleware: [authMiddleware],
 		handlers: {

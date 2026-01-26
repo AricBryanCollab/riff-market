@@ -99,7 +99,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 				) : (
 					<a
 						href={`/product/${product.id}`}
-						className="block w-full py-2 px-4 rounded-lg bg-primary hover:bg-accent text-white text-sm font-medium text-center transition-colors"
+						className="block w-full py-2 px-4 rounded-lg bg-primary hover:bg-secondary text-white hover:text-foreground text-sm font-medium text-center transition-colors"
 						onClick={(e) => {
 							if (onClick) {
 								e.preventDefault();
