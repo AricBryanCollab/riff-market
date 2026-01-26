@@ -1,4 +1,4 @@
-import { createOrder } from "@/data/order.repo";
+import { createOrder, getUserOrders } from "@/data/order.repo";
 import { getProductsByIds } from "@/data/product.repo";
 import {
 	type PlaceOrderInput,
@@ -93,6 +93,7 @@ export async function createOrderService(
 
 	try {
 		const order = await createOrder(orderData);
+
 		return order;
 	} catch (error) {
 		console.error("Error in createOrderService:", error);
@@ -102,10 +103,25 @@ export async function createOrderService(
 	}
 }
 
-export function getOrdersList() {}
+export async function getOrdersByUserService(userId: string, role: string) {
+	if (!userId) {
+		return { error: "User ID not found" };
+	}
 
-export function getOrderItem() {}
+	if (role !== "CUSTOMER") {
+		return {
+			error:
+				"Unauthorized, only user with customer role are allowed to place order",
+		};
+	}
 
-export function updateOrderStatus() {}
+	const orders = await getUserOrders(userId);
 
-export function cancelOrder() {}
+	return orders;
+}
+
+export async function getOrderItem() {}
+
+export async function updateOrderStatus() {}
+
+export async function cancelOrder() {}
