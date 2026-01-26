@@ -1,58 +1,10 @@
 import { prisma } from "@/data/connectDb";
 import { createNotification } from "@/data/notification";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
-
-// Order Base Query
-const orderBaseQuery = {
-	items: {
-		include: {
-			product: {
-				select: {
-					id: true,
-					name: true,
-					images: true,
-					price: true,
-					seller: {
-						select: {
-							id: true,
-							firstName: true,
-							lastName: true,
-							email: true,
-						},
-					},
-				},
-			},
-		},
-	},
-	user: {
-		select: {
-			id: true,
-			email: true,
-			firstName: true,
-			lastName: true,
-		},
-	},
-} as const;
-
-type InferOrderResult = Awaited<ReturnType<typeof getOrderSample>>;
-
-async function getOrderSample() {
-	return await prisma.order.findFirst({
-		include: orderBaseQuery,
-	});
-}
-
-type PrismaOrderWithRelations = NonNullable<InferOrderResult>;
-
-const transformOrderResponse = (
-	order: PrismaOrderWithRelations,
-): OrderResponse => {
-	const { user, ...rest } = order;
-	return {
-		...rest,
-		customer: user,
-	};
-};
+import {
+	orderBaseQuery,
+	transformOrderResponse,
+} from "@/utils/transformOrderQueryResponse";
 
 // Create Order
 export const createOrder = async (
@@ -113,6 +65,7 @@ export const createOrder = async (
 	}
 };
 
+// Get Order By User
 export const getUserOrders = async (
 	userId: string,
 ): Promise<OrderResponse[]> => {
@@ -131,3 +84,6 @@ export const getUserOrders = async (
 		throw err;
 	}
 };
+
+// Get Order By ID
+export const getOrderById = async () => {};
