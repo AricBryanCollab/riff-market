@@ -10,3 +10,10 @@ export type ProductCategory =
 export type ProductCondition = "NEW" | "USED" | "MINT";
 
 export type PaymentMethod = "CASH" | "PAYPAL" | "VISA";
+
+export type OrderStatus =
+	| "PENDING"
+	| "PROCESSING"
+	| "SHIPPED"
+	| "DELIVERED"
+	| "CANCELED";
