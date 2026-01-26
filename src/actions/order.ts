@@ -1,9 +1,17 @@
-import { createOrder } from "@/data/order.repo";
+import {
+	createOrder,
+	getOrderById,
+	getUserOrders,
+	updateOrderStatus,
+} from "@/data/order.repo";
 import { getProductsByIds } from "@/data/product.repo";
 import {
+	orderStatusSchema,
 	type PlaceOrderInput,
 	placeOrderSchema,
+	validOrderTransitions,
 } from "@/lib/zod/order.validation";
+import type { OrderStatus } from "@/types/enum";
 import type {
 	CreateOrderRepoData,
 	OrderErrorResponse,
@@ -93,6 +101,7 @@ export async function createOrderService(
 
 	try {
 		const order = await createOrder(orderData);
+
 		return order;
 	} catch (error) {
 		console.error("Error in createOrderService:", error);
@@ -102,10 +111,109 @@ export async function createOrderService(
 	}
 }
 
-export function getOrdersList() {}
+export async function getOrdersByUserService(userId: string, role: string) {
+	if (!userId) {
+		return { error: "User ID not found" };
+	}
 
-export function getOrderItem() {}
+	if (role !== "CUSTOMER") {
+		return {
+			error:
+				"Unauthorized, only user with customer role are allowed to place order",
+		};
+	}
 
-export function updateOrderStatus() {}
+	const orders = await getUserOrders(userId);
 
-export function cancelOrder() {}
+	return orders;
+}
+
+export async function getOrderByIdService(role: string, orderId: string) {
+	if (!orderId) {
+		return { error: "Order ID not found" };
+	}
+
+	if (role !== "CUSTOMER") {
+		return {
+			error:
+				"Unauthorized, only user with customer role are allowed to place order",
+		};
+	}
+
+	const order = await getOrderById(orderId);
+
+	if (!order) {
+		return {
+			error: "Order not found with the provided order ID",
+		};
+	}
+
+	return order;
+}
+
+export async function updateOrderStatusService(
+	userId: string,
+	role: string,
+	orderId: string,
+	status: OrderStatus,
+) {
+	if (!userId || !orderId || !status) {
+		return { error: "Missing required fields" };
+	}
+
+	const statusValidation = orderStatusSchema.safeParse(status);
+	if (!statusValidation.success) {
+		return {
+			error: "Invalid order status",
+			details: statusValidation.error,
+		};
+	}
+
+	const orderStatus = statusValidation.data;
+
+	// Check Role authorization
+	if (role !== "CUSTOMER" && role !== "SELLER" && role !== "ADMIN") {
+		return { error: "Unauthorized user role" };
+	}
+
+	if (role === "CUSTOMER" && orderStatus !== "CANCELED") {
+		return {
+			error: "Unauthorized, customers can only cancel orders",
+		};
+	}
+
+	// Get Order
+	const order = await getOrderById(orderId);
+
+	if (!order) {
+		return { error: "Order not found with the provided order ID" };
+	}
+
+	// Order ownership validation by customer
+	if (role === "CUSTOMER" && order.userId !== userId) {
+		return { error: "Unauthorized, you can only modify your own orders" };
+	}
+
+	const currentStatus = order.status;
+	if (currentStatus === orderStatus) {
+		return order;
+	}
+
+	// Order Status Transition Validation
+	const allowedOrderTransition = validOrderTransitions[currentStatus];
+	if (!allowedOrderTransition.includes(orderStatus)) {
+		return {
+			error: `Cannot change order status from ${currentStatus} to ${orderStatus}`,
+		};
+	}
+
+	try {
+		const updatedOrder = await updateOrderStatus(orderId, orderStatus);
+		return updatedOrder;
+	} catch (err) {
+		console.error("Error updating order status", err);
+		return { error: "Failed to update order status" };
+	}
+}
+
+export async function cancelOrder() {}

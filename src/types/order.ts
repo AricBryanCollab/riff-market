@@ -27,6 +27,12 @@ export interface CreateOrderRepoData extends BaseOrderData {
 	items: OrderItemWithPricing[];
 }
 
+interface SellerDetails {
+	firstName: string;
+	lastName: string;
+	email: string;
+}
+
 interface OrderItemResponse extends OrderItemWithPricing {
 	id: string;
 	orderId: string;
@@ -35,6 +41,7 @@ interface OrderItemResponse extends OrderItemWithPricing {
 		name: string;
 		images: string[];
 		price: number;
+		seller: SellerDetails;
 	};
 }
 
@@ -44,8 +51,7 @@ export interface OrderResponse extends BaseOrderData {
 	totalAmount: number;
 	trackingNumber: string;
 	items: OrderItemResponse[];
-	user: {
-		id: string;
+	customer: {
 		email: string;
 		firstName: string;
 		lastName: string;

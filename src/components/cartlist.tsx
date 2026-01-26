@@ -102,7 +102,7 @@ const CartList = () => {
 							${totalPrice.toFixed(2)}
 						</span>
 					</div>
-					<Button asChild>
+					<Button>
 						<Link
 							to="/cart"
 							className="flex items-center justify-center gap-2 w-full"

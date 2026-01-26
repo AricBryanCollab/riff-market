@@ -1,8 +1,16 @@
+import type { OrderStatus } from "generated/prisma/enums";
 import { prisma } from "@/data/connectDb";
 import { createNotification } from "@/data/notification";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
+import {
+	orderBaseQuery,
+	transformOrderResponse,
+} from "@/utils/transformOrderQueryResponse";
 
-export const createOrder = async (orderData: CreateOrderRepoData) => {
+// Create Order
+export const createOrder = async (
+	orderData: CreateOrderRepoData,
+): Promise<OrderResponse> => {
 	try {
 		const { items, ...order } = orderData;
 
@@ -24,28 +32,7 @@ export const createOrder = async (orderData: CreateOrderRepoData) => {
 						})),
 					},
 				},
-				include: {
-					items: {
-						include: {
-							product: {
-								select: {
-									id: true,
-									name: true,
-									images: true,
-									price: true,
-								},
-							},
-						},
-					},
-					user: {
-						select: {
-							id: true,
-							email: true,
-							firstName: true,
-							lastName: true,
-						},
-					},
-				},
+				include: orderBaseQuery,
 			});
 
 			for (const item of items) {
@@ -72,41 +59,18 @@ export const createOrder = async (orderData: CreateOrderRepoData) => {
 			return createdOrder;
 		});
 
-		return result;
+		return transformOrderResponse(result);
 	} catch (err) {
 		console.error("Error at createOrder:", err);
 		throw err;
 	}
 };
 
-export const getUserOrders = async (
-	userId: string,
-): Promise<OrderResponse[]> => {
+// Get Order By User
+export const getUserOrders = async (userId: string) => {
 	try {
 		const orders = await prisma.order.findMany({
 			where: { userId },
-			include: {
-				items: {
-					include: {
-						product: {
-							select: {
-								id: true,
-								name: true,
-								images: true,
-								price: true,
-							},
-						},
-					},
-				},
-				user: {
-					select: {
-						id: true,
-						email: true,
-						firstName: true,
-						lastName: true,
-					},
-				},
-			},
 			orderBy: {
 				orderDate: "desc",
 			},
@@ -115,6 +79,37 @@ export const getUserOrders = async (
 		return orders;
 	} catch (err) {
 		console.error("Error at getUserOrders:", err);
+		throw err;
+	}
+};
+
+// Get Order By ID
+export const getOrderById = async (orderId: string) => {
+	try {
+		return await prisma.order.findFirst({
+			where: { id: orderId },
+			include: orderBaseQuery,
+		});
+	} catch (err) {
+		console.error("Error at getOrderById:", err);
+		throw err;
+	}
+};
+
+// Update OrderStatus
+export const updateOrderStatus = async (
+	orderId: string,
+	status: OrderStatus,
+) => {
+	try {
+		return await prisma.order.update({
+			where: { id: orderId },
+			data: {
+				status,
+			},
+		});
+	} catch (err) {
+		console.error("Error at updateOrderStatus", err);
 		throw err;
 	}
 };

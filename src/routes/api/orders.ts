@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createOrderService } from "@/actions/order";
+import { createOrderService, getOrdersByUserService } from "@/actions/order";
 import { authMiddleware } from "@/middleware";
 import type { OrderRequest } from "@/types/order";
 
@@ -27,12 +27,36 @@ export const Route = createFileRoute("/api/orders")({
 							message: "An order has been placed",
 							order: order,
 						}),
-						{ status: 200 },
+						{ status: 201 },
 					);
 				} catch (error) {
 					return new Response(
 						JSON.stringify({
 							error: "Invalid request data",
+							details: error instanceof Error ? error.message : "Unknown error",
+						}),
+						{ status: 500 },
+					);
+				}
+			},
+			GET: async ({ context }) => {
+				try {
+					const userId = context.id;
+					const role = context.role;
+
+					const orders = await getOrdersByUserService(userId, role);
+
+					if ("error" in orders) {
+						return new Response(JSON.stringify({ error: orders.error }), {
+							status: 400,
+						});
+					}
+
+					return new Response(JSON.stringify(orders), { status: 200 });
+				} catch (error) {
+					return new Response(
+						JSON.stringify({
+							error: "Failed to query order by user data",
 							details: error instanceof Error ? error.message : "Unknown error",
 						}),
 						{ status: 500 },
