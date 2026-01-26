@@ -10,7 +10,7 @@ export const Route = createFileRoute("/api/notfiications/read-all")({
 				try {
 					const userId = context.id;
 
-					const notification = readAllNotificationsService(userId);
+					const notification = await readAllNotificationsService(userId);
 
 					if ("error" in notification) {
 						return new Response(
