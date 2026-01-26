@@ -15,7 +15,7 @@ const HeroSection = () => {
 				gear a new home.
 			</p>
 			<div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-				<Button asChild size="lg">
+				<Button size="lg">
 					<Link to="/shop">Shop Now</Link>
 				</Button>
 				<Button
