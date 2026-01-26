@@ -66,19 +66,16 @@ export const createOrder = async (
 };
 
 // Get Order By User
-export const getUserOrders = async (
-	userId: string,
-): Promise<OrderResponse[]> => {
+export const getUserOrders = async (userId: string) => {
 	try {
 		const orders = await prisma.order.findMany({
 			where: { userId },
-			include: orderBaseQuery,
 			orderBy: {
 				orderDate: "desc",
 			},
 		});
 
-		return orders.map(transformOrderResponse);
+		return orders;
 	} catch (err) {
 		console.error("Error at getUserOrders:", err);
 		throw err;
@@ -86,4 +83,14 @@ export const getUserOrders = async (
 };
 
 // Get Order By ID
-export const getOrderById = async () => {};
+export const getOrderById = async (orderId: string) => {
+	try {
+		return await prisma.order.findFirst({
+			where: { id: orderId },
+			include: orderBaseQuery,
+		});
+	} catch (err) {
+		console.error("Error at getOrderById:", err);
+		throw err;
+	}
+};
