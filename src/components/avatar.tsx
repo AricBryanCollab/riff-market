@@ -1,17 +1,21 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useUserStore } from "@/store/user";
 
 interface AvatarProps {
 	size?: "sm" | "md" | "lg" | "xl";
 	showInfo?: boolean;
 	className?: string;
+	clickable?: boolean;
 }
 
 const Avatar = ({
 	size = "md",
 	showInfo = false,
 	className = "",
+	clickable = false,
 }: AvatarProps) => {
 	const { user } = useUserStore();
+	const navigate = useNavigate();
 
 	if (!user) return null;
 
@@ -29,22 +33,30 @@ const Avatar = ({
 		xl: "size-28 text-3xl",
 	};
 
-	const avatarElement = (
-		<div className={`relative ${className}`}>
-			{profilePic ? (
-				<img
-					src={profilePic}
-					alt={`${firstName}'s profile`}
-					className={`${sizeClasses[size]} rounded-full object-cover border-2 border-primary`}
-				/>
-			) : (
-				<div
-					className={`flex ${sizeClasses[size]} items-center justify-center rounded-full bg-primary text-white font-semibold`}
-				>
-					{getInitial(firstName)}
-				</div>
-			)}
+	const avatarContent = profilePic ? (
+		<img
+			src={profilePic}
+			alt={`${firstName}'s profile`}
+			className={`${sizeClasses[size]} rounded-full object-cover border-2 border-primary`}
+		/>
+	) : (
+		<div
+			className={`flex ${sizeClasses[size]} items-center justify-center rounded-full bg-primary text-white font-semibold`}
+		>
+			{getInitial(firstName)}
 		</div>
+	);
+
+	const avatarElement = clickable ? (
+		<button
+			type="button"
+			onClick={() => navigate({ to: "/settings" })}
+			className={`relative cursor-pointer hover:scale-90 duration-300 ease-in-out ${className}`}
+		>
+			{avatarContent}
+		</button>
+	) : (
+		<div className={`relative ${className}`}>{avatarContent}</div>
 	);
 
 	if (!showInfo) {
