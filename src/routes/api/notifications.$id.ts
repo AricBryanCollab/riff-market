@@ -24,10 +24,14 @@ export const Route = createFileRoute("/api/notifications/$id")({
 
 					return new Response(JSON.stringify(notification), { status: 200 });
 				} catch (error) {
-					JSON.stringify({
-						error: "Failed to read the notification",
-						details: error instanceof Error ? error.message : "Unknown error",
-					});
+					console.error(error);
+					return new Response(
+						JSON.stringify({
+							error: "Failed to read the notification",
+							details: error instanceof Error ? error.message : "Unknown error",
+						}),
+						{ status: 500 },
+					);
 				}
 			},
 		},
