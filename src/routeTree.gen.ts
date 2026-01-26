@@ -32,13 +32,13 @@ import { Route as ApiProductsSellerRouteImport } from './routes/api/products.sel
 import { Route as ApiProductsPendingRouteImport } from './routes/api/products.pending'
 import { Route as ApiProductsIdRouteImport } from './routes/api/products.$id'
 import { Route as ApiOrdersIdRouteImport } from './routes/api/orders.$id'
-import { Route as ApiNotificationsCountRouteImport } from './routes/api/notifications.count'
 import { Route as ApiNotificationsIdRouteImport } from './routes/api/notifications.$id'
 import { Route as ApiNotfiicationsReadAllRouteImport } from './routes/api/notfiications.read-all'
 import { Route as ApiAuthSignupRouteImport } from './routes/api/auth.signup'
 import { Route as ApiAuthSignoutRouteImport } from './routes/api/auth.signout'
 import { Route as ApiAuthSigninRouteImport } from './routes/api/auth.signin'
 import { Route as ApiProductsPendingIdRouteImport } from './routes/api/products.pending.$id'
+import { Route as ApiNotificationsUnreadCountRouteImport } from './routes/api/notifications.unread.count'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
@@ -155,11 +155,6 @@ const ApiOrdersIdRoute = ApiOrdersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiOrdersRoute,
 } as any)
-const ApiNotificationsCountRoute = ApiNotificationsCountRouteImport.update({
-  id: '/count',
-  path: '/count',
-  getParentRoute: () => ApiNotificationsRoute,
-} as any)
 const ApiNotificationsIdRoute = ApiNotificationsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -190,6 +185,12 @@ const ApiProductsPendingIdRoute = ApiProductsPendingIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiProductsPendingRoute,
 } as any)
+const ApiNotificationsUnreadCountRoute =
+  ApiNotificationsUnreadCountRouteImport.update({
+    id: '/unread/count',
+    path: '/unread/count',
+    getParentRoute: () => ApiNotificationsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -214,13 +215,13 @@ export interface FileRoutesByFullPath {
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/notfiications/read-all': typeof ApiNotfiicationsReadAllRoute
   '/api/notifications/$id': typeof ApiNotificationsIdRoute
-  '/api/notifications/count': typeof ApiNotificationsCountRoute
   '/api/orders/$id': typeof ApiOrdersIdRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/api/user/profilepicture': typeof ApiUserProfilepictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
+  '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
 }
 export interface FileRoutesByTo {
@@ -245,13 +246,13 @@ export interface FileRoutesByTo {
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/notfiications/read-all': typeof ApiNotfiicationsReadAllRoute
   '/api/notifications/$id': typeof ApiNotificationsIdRoute
-  '/api/notifications/count': typeof ApiNotificationsCountRoute
   '/api/orders/$id': typeof ApiOrdersIdRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/api/user/profilepicture': typeof ApiUserProfilepictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
+  '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
 }
 export interface FileRoutesById {
@@ -278,13 +279,13 @@ export interface FileRoutesById {
   '/api/auth/signup': typeof ApiAuthSignupRoute
   '/api/notfiications/read-all': typeof ApiNotfiicationsReadAllRoute
   '/api/notifications/$id': typeof ApiNotificationsIdRoute
-  '/api/notifications/count': typeof ApiNotificationsCountRoute
   '/api/orders/$id': typeof ApiOrdersIdRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/api/user/profilepicture': typeof ApiUserProfilepictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
+  '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
 }
 export interface FileRouteTypes {
@@ -312,13 +313,13 @@ export interface FileRouteTypes {
     | '/api/auth/signup'
     | '/api/notfiications/read-all'
     | '/api/notifications/$id'
-    | '/api/notifications/count'
     | '/api/orders/$id'
     | '/api/products/$id'
     | '/api/products/pending'
     | '/api/products/seller'
     | '/api/user/profilepicture'
     | '/product/edit/$id'
+    | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -343,13 +344,13 @@ export interface FileRouteTypes {
     | '/api/auth/signup'
     | '/api/notfiications/read-all'
     | '/api/notifications/$id'
-    | '/api/notifications/count'
     | '/api/orders/$id'
     | '/api/products/$id'
     | '/api/products/pending'
     | '/api/products/seller'
     | '/api/user/profilepicture'
     | '/product/edit/$id'
+    | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
   id:
     | '__root__'
@@ -375,13 +376,13 @@ export interface FileRouteTypes {
     | '/api/auth/signup'
     | '/api/notfiications/read-all'
     | '/api/notifications/$id'
-    | '/api/notifications/count'
     | '/api/orders/$id'
     | '/api/products/$id'
     | '/api/products/pending'
     | '/api/products/seller'
     | '/api/user/profilepicture'
     | '/product/edit/$id'
+    | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
   fileRoutesById: FileRoutesById
 }
@@ -572,13 +573,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOrdersIdRouteImport
       parentRoute: typeof ApiOrdersRoute
     }
-    '/api/notifications/count': {
-      id: '/api/notifications/count'
-      path: '/count'
-      fullPath: '/api/notifications/count'
-      preLoaderRoute: typeof ApiNotificationsCountRouteImport
-      parentRoute: typeof ApiNotificationsRoute
-    }
     '/api/notifications/$id': {
       id: '/api/notifications/$id'
       path: '/$id'
@@ -621,6 +615,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProductsPendingIdRouteImport
       parentRoute: typeof ApiProductsPendingRoute
     }
+    '/api/notifications/unread/count': {
+      id: '/api/notifications/unread/count'
+      path: '/unread/count'
+      fullPath: '/api/notifications/unread/count'
+      preLoaderRoute: typeof ApiNotificationsUnreadCountRouteImport
+      parentRoute: typeof ApiNotificationsRoute
+    }
   }
 }
 
@@ -638,12 +639,12 @@ const ShopRouteRouteWithChildren = ShopRouteRoute._addFileChildren(
 
 interface ApiNotificationsRouteChildren {
   ApiNotificationsIdRoute: typeof ApiNotificationsIdRoute
-  ApiNotificationsCountRoute: typeof ApiNotificationsCountRoute
+  ApiNotificationsUnreadCountRoute: typeof ApiNotificationsUnreadCountRoute
 }
 
 const ApiNotificationsRouteChildren: ApiNotificationsRouteChildren = {
   ApiNotificationsIdRoute: ApiNotificationsIdRoute,
-  ApiNotificationsCountRoute: ApiNotificationsCountRoute,
+  ApiNotificationsUnreadCountRoute: ApiNotificationsUnreadCountRoute,
 }
 
 const ApiNotificationsRouteWithChildren =
