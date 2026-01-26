@@ -1,3 +1,4 @@
+import type { OrderStatus } from "generated/prisma/enums";
 import { prisma } from "@/data/connectDb";
 import { createNotification } from "@/data/notification";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
@@ -91,6 +92,24 @@ export const getOrderById = async (orderId: string) => {
 		});
 	} catch (err) {
 		console.error("Error at getOrderById:", err);
+		throw err;
+	}
+};
+
+// Update OrderStatus
+export const updateOrderStatus = async (
+	orderId: string,
+	status: OrderStatus,
+) => {
+	try {
+		return await prisma.order.update({
+			where: { id: orderId },
+			data: {
+				status,
+			},
+		});
+	} catch (err) {
+		console.error("Error at updateOrderStatus", err);
 		throw err;
 	}
 };
