@@ -2,7 +2,62 @@ import { prisma } from "@/data/connectDb";
 import { createNotification } from "@/data/notification";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
 
-export const createOrder = async (orderData: CreateOrderRepoData) => {
+// Order Base Query
+const orderBaseQuery = {
+	items: {
+		include: {
+			product: {
+				select: {
+					id: true,
+					name: true,
+					images: true,
+					price: true,
+					seller: {
+						select: {
+							id: true,
+							firstName: true,
+							lastName: true,
+							email: true,
+						},
+					},
+				},
+			},
+		},
+	},
+	user: {
+		select: {
+			id: true,
+			email: true,
+			firstName: true,
+			lastName: true,
+		},
+	},
+} as const;
+
+type InferOrderResult = Awaited<ReturnType<typeof getOrderSample>>;
+
+async function getOrderSample() {
+	return await prisma.order.findFirst({
+		include: orderBaseQuery,
+	});
+}
+
+type PrismaOrderWithRelations = NonNullable<InferOrderResult>;
+
+const transformOrderResponse = (
+	order: PrismaOrderWithRelations,
+): OrderResponse => {
+	const { user, ...rest } = order;
+	return {
+		...rest,
+		customer: user,
+	};
+};
+
+// Create Order
+export const createOrder = async (
+	orderData: CreateOrderRepoData,
+): Promise<OrderResponse> => {
 	try {
 		const { items, ...order } = orderData;
 
@@ -24,28 +79,7 @@ export const createOrder = async (orderData: CreateOrderRepoData) => {
 						})),
 					},
 				},
-				include: {
-					items: {
-						include: {
-							product: {
-								select: {
-									id: true,
-									name: true,
-									images: true,
-									price: true,
-								},
-							},
-						},
-					},
-					user: {
-						select: {
-							id: true,
-							email: true,
-							firstName: true,
-							lastName: true,
-						},
-					},
-				},
+				include: orderBaseQuery,
 			});
 
 			for (const item of items) {
@@ -72,7 +106,7 @@ export const createOrder = async (orderData: CreateOrderRepoData) => {
 			return createdOrder;
 		});
 
-		return result;
+		return transformOrderResponse(result);
 	} catch (err) {
 		console.error("Error at createOrder:", err);
 		throw err;
@@ -85,34 +119,13 @@ export const getUserOrders = async (
 	try {
 		const orders = await prisma.order.findMany({
 			where: { userId },
-			include: {
-				items: {
-					include: {
-						product: {
-							select: {
-								id: true,
-								name: true,
-								images: true,
-								price: true,
-							},
-						},
-					},
-				},
-				user: {
-					select: {
-						id: true,
-						email: true,
-						firstName: true,
-						lastName: true,
-					},
-				},
-			},
+			include: orderBaseQuery,
 			orderBy: {
 				orderDate: "desc",
 			},
 		});
 
-		return orders;
+		return orders.map(transformOrderResponse);
 	} catch (err) {
 		console.error("Error at getUserOrders:", err);
 		throw err;
