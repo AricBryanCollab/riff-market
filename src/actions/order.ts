@@ -1,4 +1,4 @@
-import { createOrder, getUserOrders } from "@/data/order.repo";
+import { createOrder, getOrderById, getUserOrders } from "@/data/order.repo";
 import { getProductsByIds } from "@/data/product.repo";
 import {
 	type PlaceOrderInput,
@@ -120,7 +120,28 @@ export async function getOrdersByUserService(userId: string, role: string) {
 	return orders;
 }
 
-export async function getOrderItem() {}
+export async function getOrderByIdService(role: string, orderId: string) {
+	if (!orderId) {
+		return { error: "Order ID not found" };
+	}
+
+	if (role !== "CUSTOMER") {
+		return {
+			error:
+				"Unauthorized, only user with customer role are allowed to place order",
+		};
+	}
+
+	const order = await getOrderById(orderId);
+
+	if (!order) {
+		return {
+			error: "Order not found with the provided order ID",
+		};
+	}
+
+	return order;
+}
 
 export async function updateOrderStatus() {}
 
