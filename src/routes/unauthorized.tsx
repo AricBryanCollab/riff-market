@@ -14,14 +14,14 @@ function RouteComponent() {
 					Access Denied
 				</h1>
 
-				<p className="text-lg font-medium text-secondary">
+				<p className="text-lg font-medium text-foreground">
 					Unauthorized Access
 				</p>
 				<div className="mt-4 flex flex-col gap-2 w-[80%] md:w-full mx-auto">
-					<p className="text-secondary leading-relaxed">
+					<p className="text-foreground leading-relaxed">
 						The page you're trying to access is restricted to certain user roles
 					</p>
-					<p className="text-secondary leading-relaxed">
+					<p className="text-foreground leading-relaxed">
 						You don't have the necessary permissions to view this content
 					</p>
 				</div>
