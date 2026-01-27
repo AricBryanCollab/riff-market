@@ -52,7 +52,6 @@ const ProductFilterBadges = ({
 			{/* Category Filters */}
 			{!showPending &&
 				productCategoryOptions.map((category) => {
-					const CategoryIcon = category.icon;
 					const isSelected = selectedCategory === category.value;
 
 					return (
@@ -60,13 +59,12 @@ const ProductFilterBadges = ({
 							key={category.value}
 							type="button"
 							onClick={() => onCategorySelect(category.value)}
-							className={`px-5 py-2 rounded-full border-2 font-medium transition-all flex items-center gap-2 ${
+							className={`px-5 py-2 rounded-full border-2 font-medium transition-all ${
 								isSelected
 									? "bg-primary text-white border-secondary shadow-lg scale-105"
 									: "bg-white text-black border-gray-300 hover:border-primary hover:bg-accent hover:text-accent-foreground shadow-sm"
 							}`}
 						>
-							<CategoryIcon size={16} />
 							{category.label}
 						</button>
 					);

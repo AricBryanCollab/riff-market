@@ -1,6 +1,7 @@
-import { KeyRound, Lock, Mail, User, UserRoundPlus } from "lucide-react";
-import Input from "@/components/input";
-import Select from "@/components/select";
+import { KeyRound, Lock, Mail, User } from "lucide-react";
+import { FormField } from "@/components/form-field";
+import { FormSelect } from "@/components/form-select";
+import { PasswordField } from "@/components/password-field";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { roleOptions } from "@/constants/selectOptions";
 import useAuthDialog from "@/hooks/useAuthDialog";
@@ -16,16 +17,16 @@ const SignUpForm = () => {
 	return (
 		<form onSubmit={handleSubmit}>
 			<div className="grid grid-cols-2 gap-2 my-2">
-				<Input
-					inputId="firstName"
+				<FormField
+					id="firstName"
 					label="First Name"
 					value={signUpData.firstName}
 					onChange={onChange}
 					icon={User}
 				/>
 
-				<Input
-					inputId="lastName"
+				<FormField
+					id="lastName"
 					label="Last Name"
 					value={signUpData.lastName}
 					onChange={onChange}
@@ -33,44 +34,42 @@ const SignUpForm = () => {
 				/>
 			</div>
 
-			<Input
-				inputId="email"
+			<FormField
+				id="email"
 				label="Email"
+				type="email"
 				value={signUpData.email}
 				onChange={onChange}
 				icon={Mail}
 			/>
 
-			<Input
-				inputId="password"
+			<PasswordField
+				id="password"
 				label="Password"
 				value={signUpData.password}
 				onChange={onChange}
 				icon={Lock}
-				isPassword
+				autoComplete="new-password"
 			/>
 
-			<Input
-				inputId="confirmPassword"
+			<PasswordField
+				id="confirmPassword"
 				label="Confirm Password"
 				value={signUpData.confirmPassword}
 				onChange={onChange}
 				icon={KeyRound}
-				isPassword
+				autoComplete="new-password"
 			/>
 
 			<div className="mt-8 my-4">
-				<Select
+				<FormSelect
 					options={roleOptions.map((r) => ({
 						label: r.label,
 						value: r.value,
-						icon: r.icon,
 					}))}
 					value={signUpData.role as string}
-					icon={UserRoundPlus}
-					onChangeValue={(value: string) => onChangeRole(value as UserRole)}
+					onValueChange={(value: string) => onChangeRole(value as UserRole)}
 					label="I want to..."
-					withSearchBar={false}
 				/>
 			</div>
 			<div className="h-5 my-2">

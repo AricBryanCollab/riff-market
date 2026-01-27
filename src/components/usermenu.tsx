@@ -1,8 +1,8 @@
 import { Bell, Package, PackageSearch, ShoppingCart } from "lucide-react";
+import { AppDropdown } from "@/components/app-dropdown";
 import Avatar from "@/components/avatar";
 import CartList from "@/components/cartlist";
 import ClientOnly from "@/components/clientonly";
-import Dropdown from "@/components/dropdown";
 import NavbarIconButtons from "@/components/navbariconbuttons";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -24,7 +24,7 @@ const UserMenu = () => {
 		switch (role) {
 			case "CUSTOMER":
 				return (
-					<Dropdown
+					<AppDropdown
 						trigger={
 							<NavbarIconButtons
 								icon={ShoppingCart}
@@ -32,14 +32,14 @@ const UserMenu = () => {
 								ariaLabel="Shopping cart"
 							/>
 						}
-						align="right"
+						align="end"
 					>
 						<CartList />
-					</Dropdown>
+					</AppDropdown>
 				);
 			case "SELLER":
 				return (
-					<Dropdown
+					<AppDropdown
 						trigger={
 							<NavbarIconButtons
 								icon={Package}
@@ -47,14 +47,14 @@ const UserMenu = () => {
 								ariaLabel="Orders"
 							/>
 						}
-						align="right"
+						align="end"
 					>
 						<DropdownContentPlaceholder title="Products Ordered" />
-					</Dropdown>
+					</AppDropdown>
 				);
 			case "ADMIN":
 				return (
-					<Dropdown
+					<AppDropdown
 						trigger={
 							<NavbarIconButtons
 								icon={PackageSearch}
@@ -62,10 +62,10 @@ const UserMenu = () => {
 								ariaLabel="Pending Products"
 							/>
 						}
-						align="right"
+						align="end"
 					>
 						<DropdownContentPlaceholder title="Pending Products" />
-					</Dropdown>
+					</AppDropdown>
 				);
 			default:
 				return null;
@@ -84,7 +84,7 @@ const UserMenu = () => {
 
 					{handleActionButtonsByRole(role)}
 
-					<Dropdown
+					<AppDropdown
 						trigger={
 							<NavbarIconButtons
 								icon={Bell}
@@ -92,10 +92,10 @@ const UserMenu = () => {
 								ariaLabel="Notifications"
 							/>
 						}
-						align="right"
+						align="end"
 					>
 						<CartList />
-					</Dropdown>
+					</AppDropdown>
 
 					<LoadingButton
 						loading={signOutLoading}
