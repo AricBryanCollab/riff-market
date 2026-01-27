@@ -1,8 +1,8 @@
 import { Bell, Package, PackageSearch, ShoppingCart } from "lucide-react";
+import { AppDropdown } from "@/components/app-dropdown";
 import Avatar from "@/components/avatar";
 import CartList from "@/components/cartlist";
 import ClientOnly from "@/components/clientonly";
-import Dropdown from "@/components/dropdown";
 import NavbarIconButtons from "@/components/navbariconbuttons";
 import NotificationList from "@/components/notificationlist";
 import { BodySmall } from "@/components/typography";
@@ -32,7 +32,7 @@ const UserMenu = () => {
 		switch (role) {
 			case "CUSTOMER":
 				return (
-					<Dropdown
+					<AppDropdown
 						trigger={
 							<NavbarIconButtons
 								icon={ShoppingCart}
@@ -40,34 +40,14 @@ const UserMenu = () => {
 								ariaLabel="Shopping cart"
 							/>
 						}
-						align="right"
+						align="end"
 					>
-						{isCartEmpty ? (
-							<div className="flex flex-col items-center justify-center py-12 text-center">
-								<div className="rounded-full bg-muted p-4 mb-3">
-									<ShoppingCart className="size-8 text-muted-foreground" />
-								</div>
-								<BodySmall className="text-muted-foreground">
-									Your cart is empty
-								</BodySmall>
-								<BodySmall className="text-muted-foreground/70 text-xs mt-1">
-									Add items to get started
-								</BodySmall>
-							</div>
-						) : (
-							<CartList
-								isLoading={isCartLoading}
-								isCartEmpty={isCartEmpty}
-								totalPrice={totalPrice}
-								cartCount={cartCount}
-								cartWithDetails={cartWithDetails}
-							/>
-						)}
-					</Dropdown>
+						<CartList />
+					</AppDropdown>
 				);
 			case "SELLER":
 				return (
-					<Dropdown
+					<AppDropdown
 						trigger={
 							<NavbarIconButtons
 								icon={Package}
@@ -75,14 +55,14 @@ const UserMenu = () => {
 								ariaLabel="Orders"
 							/>
 						}
-						align="right"
+						align="end"
 					>
 						<DropdownContentPlaceholder title="Products Ordered" />
-					</Dropdown>
+					</AppDropdown>
 				);
 			case "ADMIN":
 				return (
-					<Dropdown
+					<AppDropdown
 						trigger={
 							<NavbarIconButtons
 								icon={PackageSearch}
@@ -90,10 +70,10 @@ const UserMenu = () => {
 								ariaLabel="Pending Products"
 							/>
 						}
-						align="right"
+						align="end"
 					>
 						<DropdownContentPlaceholder title="Pending Products" />
-					</Dropdown>
+					</AppDropdown>
 				);
 			default:
 				return null;
@@ -111,7 +91,7 @@ const UserMenu = () => {
 
 					{handleActionButtonsByRole(role)}
 
-					<Dropdown
+					<AppDropdown
 						trigger={
 							<NavbarIconButtons
 								icon={Bell}
@@ -119,10 +99,10 @@ const UserMenu = () => {
 								ariaLabel="Notifications"
 							/>
 						}
-						align="right"
+						align="end"
 					>
-						<NotificationList />
-					</Dropdown>
+						<CartList />
+					</AppDropdown>
 
 					<LoadingButton
 						loading={signOutLoading}

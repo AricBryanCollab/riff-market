@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/notifications/read-all")({
 									notification.error || "Failed to read all notifications",
 							}),
 							{ status: 400 },
-						)
+						);
 					}
 
 					return new Response(JSON.stringify(notification), { status: 200 });
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/api/notifications/read-all")({
 							details: error instanceof Error ? error.message : "Unknown error",
 						}),
 						{ status: 500 },
-					)
+					);
 				}
 			},
 		},

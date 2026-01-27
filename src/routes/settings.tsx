@@ -2,9 +2,9 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { Palette } from "lucide-react";
 import { useEffect } from "react";
 import Avatar from "@/components/avatar";
+import { FormSelect } from "@/components/form-select";
 import { ProfileInfoField } from "@/components/profilefield";
 import SectionContainer from "@/components/sectioncontainer";
-import Select from "@/components/select";
 import { BodyLarge, BodySmall, H2, H4 } from "@/components/typography";
 import { Button } from "@/components/ui/button";
 import { themeOptions } from "@/constants/selectOptions";
@@ -84,15 +84,14 @@ function SettingsComponent() {
 								<BodyLarge>Theme</BodyLarge>
 							</div>
 							<div className="flex flex-col md:flex-row items-center gap-3">
-								<Select
+								<FormSelect
 									options={themeOptions.map((t) => ({
 										label: t.label,
 										value: t.value,
-										icon: t.icon,
 									}))}
-									onChangeValue={handleThemeSelectChange}
+									onValueChange={handleThemeSelectChange}
 									value={themeValue}
-									width="w-[200px]"
+									className="w-[200px]"
 								/>
 								<div className="min-w-45">
 									{previewTheme && (

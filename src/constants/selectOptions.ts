@@ -1,77 +1,42 @@
-import {
-	Banknote,
-	Bot,
-	CheckCircle,
-	Clock,
-	CreditCard,
-	DollarSign,
-	Music,
-	Package,
-	PackageCheck,
-	PackageOpen,
-	Piano,
-	Settings,
-	ShoppingCart,
-	Sparkles,
-	Star,
-	Store,
-	Truck,
-	User,
-	XCircle,
-	Zap,
-} from "lucide-react";
-
-// Role options
 export const roleOptions = [
-	{ value: "SELLER", label: "Seller", icon: Store },
-	{ value: "CUSTOMER", label: "Customer", icon: ShoppingCart },
+	{ value: "SELLER", label: "Seller" },
+	{ value: "CUSTOMER", label: "Customer" },
 ] as const;
 
-// Product Category options
 export const productCategoryOptions = [
-	{ value: "ELECTRIC", label: "Electric Guitar", icon: Zap },
-	{ value: "ACOUSTIC", label: "Acoustic Guitar", icon: Music },
-	{ value: "KEYBOARD", label: "Keyboard/Piano", icon: Piano },
-	{ value: "PEDALS", label: "Pedals & Effects", icon: Settings },
-	{ value: "ACCESSORY", label: "Accessories", icon: Package },
+	{ value: "ELECTRIC", label: "Electric Guitar" },
+	{ value: "ACOUSTIC", label: "Acoustic Guitar" },
+	{ value: "KEYBOARD", label: "Keyboard/Piano" },
+	{ value: "PEDALS", label: "Pedals & Effects" },
+	{ value: "ACCESSORY", label: "Accessories" },
 ] as const;
 
-// Product Condition options
 export const productConditionOptions = [
-	{ value: "NEW", label: "Brand New", icon: Sparkles },
-	{ value: "MINT", label: "Mint Condition", icon: Star },
-	{ value: "USED", label: "Used", icon: PackageOpen },
+	{ value: "NEW", label: "Brand New" },
+	{ value: "MINT", label: "Mint Condition" },
+	{ value: "USED", label: "Used" },
 ] as const;
 
-// Payment Method options
 export const paymentMethodOptions = [
-	{ value: "CASH", label: "Cash", icon: Banknote },
-	{ value: "PAYPAL", label: "PayPal", icon: DollarSign },
-	{ value: "VISA", label: "Visa/Credit Card", icon: CreditCard },
+	{ value: "CASH", label: "Cash" },
+	{ value: "PAYPAL", label: "PayPal" },
+	{ value: "VISA", label: "Visa/Credit Card" },
 ] as const;
 
-// Order Status options
 export const orderStatusOptions = [
-	{ value: "PENDING", label: "Pending", icon: Clock },
-	{ value: "PROCESSING", label: "Processing", icon: PackageCheck },
-	{ value: "SHIPPED", label: "Shipped", icon: Truck },
-	{ value: "DELIVERED", label: "Delivered", icon: CheckCircle },
-	{ value: "CANCELED", label: "Canceled", icon: XCircle },
+	{ value: "PENDING", label: "Pending" },
+	{ value: "PROCESSING", label: "Processing" },
+	{ value: "SHIPPED", label: "Shipped" },
+	{ value: "DELIVERED", label: "Delivered" },
+	{ value: "CANCELED", label: "Canceled" },
 ] as const;
 
-// Chat Role options
 export const chatRoleOptions = [
-	{ value: "USER", label: "User", icon: User },
-	{ value: "ASSISTANT", label: "Assistant", icon: Bot },
+	{ value: "USER", label: "User" },
+	{ value: "ASSISTANT", label: "Assistant" },
 ] as const;
 
-// Theme Options:
 export const themeOptions = [
-	{ value: "light", label: "Light", icon: "☀️" },
-	{ value: "dark", label: "Dark", icon: "🌙" },
-	{ value: "coffee", label: "Coffee", icon: "☕" },
-	{ value: "forest", label: "Forest", icon: "🌲" },
-	{ value: "ocean", label: "Ocean", icon: "🌊" },
-	{ value: "sunset", label: "Sunset", icon: "🌅" },
-	{ value: "crimson", label: "Crimson", icon: "🌹" },
+	{ value: "light", label: "Light" },
+	{ value: "dark", label: "Dark" },
 ] as const;

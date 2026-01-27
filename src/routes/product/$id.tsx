@@ -6,8 +6,8 @@ import {
 } from "@tanstack/react-router";
 import { ArrowLeft, Package } from "lucide-react";
 import { useMemo, useState } from "react";
+import { AppDialog } from "@/components/app-dialog";
 import DeleteProductConfirm from "@/components/deleteproductconfirm";
-import Dialog from "@/components/dialog";
 import { ProductDetailsLoadingState } from "@/components/loadingstates";
 import { ProductDetailsActions } from "@/components/productactions";
 import Rating from "@/components/rating";
@@ -140,10 +140,8 @@ function RouteComponent() {
 						<div className="flex items-center gap-3">
 							{(() => {
 								const categoryDisplay = getCategoryDisplay(product.category);
-								const CategoryIcon = categoryDisplay.icon;
 								return (
-									<span className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium flex items-center gap-2">
-										<CategoryIcon size={16} />
+									<span className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
 										{categoryDisplay.label}
 									</span>
 								);
@@ -198,13 +196,13 @@ function RouteComponent() {
 						</div>
 					</div>
 
-					<Dialog type="deleteProduct" title="Delete Product Confirmation">
+					<AppDialog type="deleteProduct" title="Delete Product Confirmation">
 						<DeleteProductConfirm
 							id={id}
 							name={product.name}
 							model={product.model}
 						/>
-					</Dialog>
+					</AppDialog>
 				</div>
 
 				<ReviewSection />

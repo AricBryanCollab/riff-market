@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Camera } from "lucide-react";
 import Counter from "@/components/counter";
+import { FormField } from "@/components/form-field";
+import { FormTextArea } from "@/components/form-textarea";
 import ImageUploader from "@/components/imageuploader";
-import Input from "@/components/input";
-import NumberInput from "@/components/numberinput";
+import { NumberField } from "@/components/number-field";
+import { SearchableSelect } from "@/components/searchable-select";
 import SectionContainer from "@/components/sectioncontainer";
-import Select from "@/components/select";
-import TextArea from "@/components/textarea";
 import { Body, H4 } from "@/components/typography";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -47,63 +47,60 @@ function RouteComponent() {
 			</div>
 			<form onSubmit={handleSubmit}>
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-					<Input
-						inputId="name"
+					<FormField
+						id="name"
 						label="Product Name"
 						onChange={onChange}
 						value={product.name}
 					/>
 
-					<Input
-						inputId="brand"
+					<FormField
+						id="brand"
 						label="Product Brand"
 						placeholder="eg. Fender, Gibson, Yamaha, Taylor"
 						onChange={onChange}
 						value={product.brand}
 					/>
 
-					<Input
-						inputId="model"
+					<FormField
+						id="model"
 						label="Model Specification"
 						placeholder="eg. American Standard, Jimi Hendrix Special Edition"
 						onChange={onChange}
 						value={product.model}
 					/>
 
-					<TextArea
-						inputId="description"
+					<FormTextArea
+						id="description"
 						label="Product Description"
 						value={product.description}
 						onChange={onChange}
 						placeholder="Please provide a description for the product you want to sell. This gives the customer insights about the instrument/gear/accessory you want to sell."
 						maxLength={200}
-						resize="none"
 						showCounter
 						rows={5}
 					/>
 
 					<div className="lg:col-span-1">
-						<Select
+						<SearchableSelect
 							options={productCategoryOptions.map((p) => ({
 								label: p.label,
 								value: p.value,
-								icon: p.icon,
 							}))}
 							value={product.category}
-							onChangeValue={(value: string) =>
+							onValueChange={(value: string) =>
 								onSelectChange("category", value as ProductCategory)
 							}
 							label="Product Classification"
 						/>
 
-						<Select
+						<SearchableSelect
 							options={productConditionOptions.map((p) => ({
 								label: p.label,
 								value: p.value,
-								icon: p.icon,
 							}))}
 							value={product.condition}
-							onChangeValue={(value: string) =>
+							onValueChange={(value: string) =>
 								onSelectChange("condition", value as ProductCondition)
 							}
 							label="Product Condition"
@@ -121,11 +118,10 @@ function RouteComponent() {
 							showInput={true}
 						/>
 
-						<NumberInput
-							inputId="price"
+						<NumberField
+							id="price"
 							label="Product Price Per Unit"
 							value={product.price}
-							decimalPlaces={2}
 							onChange={onChange}
 						/>
 					</div>
