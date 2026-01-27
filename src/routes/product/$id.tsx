@@ -140,10 +140,8 @@ function RouteComponent() {
 						<div className="flex items-center gap-3">
 							{(() => {
 								const categoryDisplay = getCategoryDisplay(product.category);
-								const CategoryIcon = categoryDisplay.icon;
 								return (
-									<span className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium flex items-center gap-2">
-										<CategoryIcon size={16} />
+									<span className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
 										{categoryDisplay.label}
 									</span>
 								);
