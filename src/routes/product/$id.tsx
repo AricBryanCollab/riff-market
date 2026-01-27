@@ -6,8 +6,8 @@ import {
 } from "@tanstack/react-router";
 import { ArrowLeft, Package } from "lucide-react";
 import { useMemo, useState } from "react";
+import { AppDialog } from "@/components/app-dialog";
 import DeleteProductConfirm from "@/components/deleteproductconfirm";
-import Dialog from "@/components/dialog";
 import { ProductDetailsLoadingState } from "@/components/loadingstates";
 import { ProductDetailsActions } from "@/components/productactions";
 import Rating from "@/components/rating";
@@ -198,13 +198,13 @@ function RouteComponent() {
 						</div>
 					</div>
 
-					<Dialog type="deleteProduct" title="Delete Product Confirmation">
+					<AppDialog type="deleteProduct" title="Delete Product Confirmation">
 						<DeleteProductConfirm
 							id={id}
 							name={product.name}
 							model={product.model}
 						/>
-					</Dialog>
+					</AppDialog>
 				</div>
 
 				<ReviewSection />

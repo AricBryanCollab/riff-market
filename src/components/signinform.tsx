@@ -1,5 +1,6 @@
 import { Lock, Mail } from "lucide-react";
-import Input from "@/components/input";
+import { FormField } from "@/components/form-field";
+import { PasswordField } from "@/components/password-field";
 import { LoadingButton } from "@/components/ui/loading-button";
 import useAuthDialog from "@/hooks/useAuthDialog";
 import useSignIn from "@/hooks/useSignIn";
@@ -12,21 +13,21 @@ const SignInForm = () => {
 	return (
 		<form onSubmit={handleSubmit}>
 			<div className="flex flex-col w-full gap-4">
-				<Input
-					inputId="email"
+				<FormField
+					id="email"
 					label="Email"
+					type="email"
 					value={signInData.email}
 					onChange={onChange}
 					icon={Mail}
 				/>
 
-				<Input
-					inputId="password"
+				<PasswordField
+					id="password"
 					label="Password"
 					value={signInData.password}
 					onChange={onChange}
 					icon={Lock}
-					isPassword
 				/>
 			</div>
 			<div className="h-5 my-2">
