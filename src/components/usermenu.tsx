@@ -4,6 +4,8 @@ import CartList from "@/components/cartlist";
 import ClientOnly from "@/components/clientonly";
 import Dropdown from "@/components/dropdown";
 import NavbarIconButtons from "@/components/navbariconbuttons";
+import NotificationList from "@/components/notificationlist";
+import { BodySmall } from "@/components/typography";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import useCartDetails from "@/hooks/useCartDetails";
@@ -15,7 +17,13 @@ import type { UserRole } from "@/types/enum";
 const UserMenu = () => {
 	const { setOpenDialog } = useDialogStore();
 	const { user } = useUserStore();
-	const { cartCount } = useCartDetails();
+	const {
+		isCartEmpty,
+		isLoading: isCartLoading,
+		totalPrice,
+		cartCount,
+		cartWithDetails,
+	} = useCartDetails();
 	const role = user?.role || "CUSTOMER";
 
 	const { loading: signOutLoading, signOut } = useSignOut();
@@ -34,7 +42,27 @@ const UserMenu = () => {
 						}
 						align="right"
 					>
-						<CartList />
+						{isCartEmpty ? (
+							<div className="flex flex-col items-center justify-center py-12 text-center">
+								<div className="rounded-full bg-muted p-4 mb-3">
+									<ShoppingCart className="size-8 text-muted-foreground" />
+								</div>
+								<BodySmall className="text-muted-foreground">
+									Your cart is empty
+								</BodySmall>
+								<BodySmall className="text-muted-foreground/70 text-xs mt-1">
+									Add items to get started
+								</BodySmall>
+							</div>
+						) : (
+							<CartList
+								isLoading={isCartLoading}
+								isCartEmpty={isCartEmpty}
+								totalPrice={totalPrice}
+								cartCount={cartCount}
+								cartWithDetails={cartWithDetails}
+							/>
+						)}
 					</Dropdown>
 				);
 			case "SELLER":
@@ -72,7 +100,6 @@ const UserMenu = () => {
 		}
 	};
 
-	const notificationCount = 2;
 	const orderCount = 2;
 	const pendingApprovalCount = 4;
 
@@ -88,13 +115,13 @@ const UserMenu = () => {
 						trigger={
 							<NavbarIconButtons
 								icon={Bell}
-								count={notificationCount}
+								count={2}
 								ariaLabel="Notifications"
 							/>
 						}
 						align="right"
 					>
-						<CartList />
+						<NotificationList />
 					</Dropdown>
 
 					<LoadingButton
