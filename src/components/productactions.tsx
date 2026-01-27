@@ -230,6 +230,7 @@ export function ProductDetailsActions({
 							icon={Pencil}
 							disabled={isPending || !canEditOrDelete}
 							onClick={() => navigate({ from: "/product/edit/$id" })}
+							backgroundColor="bg-primary hover:bg-accent hover:text-primary"
 						/>
 						<IconButton
 							icon={Trash2}
