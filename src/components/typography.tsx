@@ -80,9 +80,7 @@ export const Body = ({ children, className = "" }: TypographyProps) => (
 );
 
 export const Paragraph = ({ children, className = "" }: TypographyProps) => (
-	<p className={cn("leading-7 [&:not(:first-child)]:mt-6", className)}>
-		{children}
-	</p>
+	<p className={cn("leading-7 not-first:mt-6", className)}>{children}</p>
 );
 
 export const BodyLarge = ({ children, className = "" }: TypographyProps) => (

@@ -61,6 +61,6 @@ export const RoleActionConfigs = {
 export const ButtonStyles = {
 	primary: "bg-primary hover:bg-accent",
 	destructive: "bg-destructive hover:bg-rose-400",
-	success: "bg-success hover:bg-emerald-300",
+	success: "bg-chart-2 hover:bg-emerald-300",
 	secondary: "bg-slate-200 hover:bg-slate-300",
 } as const;

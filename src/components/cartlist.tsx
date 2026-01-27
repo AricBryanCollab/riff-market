@@ -1,13 +1,40 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ShoppingCart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
 import { BodySmall, H5 } from "@/components/typography";
 import { Button } from "@/components/ui/button";
-import useCartDetails from "@/hooks/useCartDetails";
+import type { CartItem } from "@/types/cart";
 
-const CartList = () => {
-	const { isCartEmpty, isLoading, totalPrice, cartCount, cartWithDetails } =
-		useCartDetails();
+interface CartListProps {
+	isLoading: boolean;
+	isCartEmpty: boolean;
+	totalPrice: number;
+	cartCount: number;
+	cartWithDetails: CartItem[];
+}
+
+const CartList = ({
+	isLoading,
+	isCartEmpty,
+	totalPrice,
+	cartCount,
+	cartWithDetails,
+}: CartListProps) => {
+	if (isLoading) {
+		return (
+			<div className="w-80 max-w-sm bg-background">
+				<div className="max-h-96 overflow-y-auto px-4 py-3">
+					<H5 className="font-semibold text-foreground">Shopping Cart</H5>
+					<AnimatedLoader
+						svgSize={80}
+						pingSize="size-24"
+						textSize="text-base"
+						containerSizeClass="w-fit min-h-fit mx-auto py-8"
+					/>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="w-80 max-w-sm bg-background">
@@ -21,29 +48,6 @@ const CartList = () => {
 			</div>
 
 			<div className="max-h-96 overflow-y-auto px-4 py-3">
-				{isCartEmpty && (
-					<div className="flex flex-col items-center justify-center py-12 text-center">
-						<div className="rounded-full bg-muted p-4 mb-3">
-							<ShoppingCart className="size-8 text-muted-foreground" />
-						</div>
-						<BodySmall className="text-muted-foreground">
-							Your cart is empty
-						</BodySmall>
-						<BodySmall className="text-muted-foreground/70 text-xs mt-1">
-							Add items to get started
-						</BodySmall>
-					</div>
-				)}
-
-				{isLoading && (
-					<AnimatedLoader
-						svgSize={80}
-						pingSize="size-24"
-						textSize="text-base"
-						containerSizeClass="w-fit min-h-fit mx-auto py-8"
-					/>
-				)}
-
 				{!isLoading && !isCartEmpty && (
 					<ul className="space-y-3">
 						{cartWithDetails.slice(0, 3).map((cart) => (
@@ -54,7 +58,7 @@ const CartList = () => {
 								{cart.product?.images?.[0] && (
 									<div className="relative size-20 shrink-0 rounded-md overflow-hidden bg-muted border border-border">
 										<img
-											src={cart.product.images[0]}
+											src={cart.product?.images?.[0]}
 											alt={cart.product.name}
 											className="w-full h-full object-cover"
 										/>

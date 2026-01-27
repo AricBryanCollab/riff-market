@@ -4,6 +4,8 @@ import Avatar from "@/components/avatar";
 import CartList from "@/components/cartlist";
 import ClientOnly from "@/components/clientonly";
 import NavbarIconButtons from "@/components/navbariconbuttons";
+import NotificationList from "@/components/notificationlist";
+import { BodySmall } from "@/components/typography";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import useCartDetails from "@/hooks/useCartDetails";
@@ -15,7 +17,13 @@ import type { UserRole } from "@/types/enum";
 const UserMenu = () => {
 	const { setOpenDialog } = useDialogStore();
 	const { user } = useUserStore();
-	const { cartCount } = useCartDetails();
+	const {
+		isCartEmpty,
+		isLoading: isCartLoading,
+		totalPrice,
+		cartCount,
+		cartWithDetails,
+	} = useCartDetails();
 	const role = user?.role || "CUSTOMER";
 
 	const { loading: signOutLoading, signOut } = useSignOut();
@@ -72,7 +80,6 @@ const UserMenu = () => {
 		}
 	};
 
-	const notificationCount = 2;
 	const orderCount = 2;
 	const pendingApprovalCount = 4;
 
@@ -88,7 +95,7 @@ const UserMenu = () => {
 						trigger={
 							<NavbarIconButtons
 								icon={Bell}
-								count={notificationCount}
+								count={2}
 								ariaLabel="Notifications"
 							/>
 						}

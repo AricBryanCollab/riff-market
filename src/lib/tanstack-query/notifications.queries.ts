@@ -3,7 +3,7 @@ import { apiFetch } from "@/lib/tanstack-query/fetch";
 import type { NotificationData } from "@/types/notification";
 
 export function getUserNotifications() {
-	return apiFetch<NotificationData>("/api/notifications", {
+	return apiFetch<NotificationData[]>("/api/notifications", {
 		method: "GET",
 	});
 }
