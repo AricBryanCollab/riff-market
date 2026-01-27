@@ -4,4 +4,5 @@ export interface NotificationData {
 	orderId?: string;
 	message: string;
 	isRead: boolean;
+	createdAt?: string;
 }
