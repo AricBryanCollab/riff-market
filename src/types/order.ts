@@ -1,4 +1,4 @@
-import type { PaymentMethod } from "@/types/enum";
+import type { OrderStatus, PaymentMethod } from "@/types/enum";
 
 interface OrderItem {
 	productId: string;
@@ -50,6 +50,8 @@ export interface OrderResponse extends BaseOrderData {
 	orderDate: Date;
 	totalAmount: number;
 	trackingNumber: string;
+	paymentMethod: PaymentMethod;
+	status: OrderStatus;
 	items?: OrderItemResponse[];
 	customer?: {
 		email: string;

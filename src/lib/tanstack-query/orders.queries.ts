@@ -21,7 +21,7 @@ export function getOrderByCustomer() {
 }
 
 export function getOrderBySeller() {
-	return apiFetch<OrderErrorResponse[] | GetUserOrdersErrorResponse>(
+	return apiFetch<OrderResponse[] | GetUserOrdersErrorResponse>(
 		"/api/orders/seller",
 		{
 			method: "GET",
