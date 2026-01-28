@@ -5,10 +5,10 @@ import CartList from "@/components/cartlist";
 import ClientOnly from "@/components/clientonly";
 import NavbarIconButtons from "@/components/navbariconbuttons";
 import NotificationList from "@/components/notificationlist";
-import { BodySmall } from "@/components/typography";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import useCartDetails from "@/hooks/useCartDetails";
+import useNotifications from "@/hooks/useNotifications";
 import { useSignOut } from "@/hooks/useSignOut";
 import { useDialogStore } from "@/store/dialog";
 import { useUserStore } from "@/store/user";
@@ -26,6 +26,14 @@ const UserMenu = () => {
 	} = useCartDetails();
 	const role = user?.role || "CUSTOMER";
 
+	const {
+		notifications,
+		isLoading: isLoadingNotification,
+		unreadCount,
+		isEmptyNotifications,
+		markAsRead,
+	} = useNotifications();
+
 	const { loading: signOutLoading, signOut } = useSignOut();
 
 	const handleActionButtonsByRole = (role: UserRole) => {
@@ -42,7 +50,13 @@ const UserMenu = () => {
 						}
 						align="end"
 					>
-						<CartList />
+						<CartList
+							isLoading={isCartLoading}
+							isCartEmpty={isCartEmpty}
+							totalPrice={totalPrice}
+							cartCount={cartCount}
+							cartWithDetails={cartWithDetails}
+						/>
 					</AppDropdown>
 				);
 			case "SELLER":
@@ -95,13 +109,19 @@ const UserMenu = () => {
 						trigger={
 							<NavbarIconButtons
 								icon={Bell}
-								count={2}
+								count={unreadCount}
 								ariaLabel="Notifications"
 							/>
 						}
 						align="end"
 					>
-						<CartList />
+						<NotificationList
+							notifications={notifications}
+							unreadCount={unreadCount}
+							isLoading={isLoadingNotification}
+							isEmptyNotifications={isEmptyNotifications}
+							markAsRead={markAsRead}
+						/>
 					</AppDropdown>
 
 					<LoadingButton
