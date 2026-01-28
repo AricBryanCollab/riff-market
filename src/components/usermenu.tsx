@@ -42,6 +42,7 @@ const UserMenu = () => {
 	// Use Order List
 	const {
 		orders,
+		orderCount,
 		isLoading: isLoadingOrders,
 		isEmptyOrders,
 	} = useGetOrders(role);
@@ -110,7 +111,6 @@ const UserMenu = () => {
 		}
 	};
 
-	const orderCount = 2;
 	const pendingApprovalCount = 4;
 
 	return (

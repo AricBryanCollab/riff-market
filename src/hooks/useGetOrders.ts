@@ -12,6 +12,7 @@ const useGetOrders = (userRole: UserRole) => {
 	const queryClient = useQueryClient();
 	const {
 		orders,
+		orderCount,
 		setOrders,
 		updateOrder: updateOrderInStore,
 	} = useOrderStore();
@@ -63,6 +64,7 @@ const useGetOrders = (userRole: UserRole) => {
 
 	return {
 		orders,
+		orderCount,
 		isLoading,
 		isEmptyOrders,
 		updateStatus: updateStatusMutation.mutate,
