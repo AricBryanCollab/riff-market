@@ -39,12 +39,6 @@ const useGetProducts = () => {
 	} = useQuery(productsQueryOpt);
 
 	const {
-		data: pendingProductList,
-		isPending: loadingPendingProduct,
-		isError: isErrorPendingProduct,
-	} = useQuery({ ...pendingProductsQueryOpt, enabled: showPending });
-
-	const {
 		data: product,
 		isPending: loadingProduct,
 		isError: isErrorProduct,
@@ -59,9 +53,6 @@ const useGetProducts = () => {
 		loadingProductList,
 		isErrorProductList,
 		showPending,
-		pendingProductList,
-		loadingPendingProduct,
-		isErrorPendingProduct,
 		product,
 		loadingProduct,
 		isErrorProduct,
