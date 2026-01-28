@@ -31,6 +31,7 @@ import { Route as ApiUserProfilepictureRouteImport } from './routes/api/user.pro
 import { Route as ApiProductsSellerRouteImport } from './routes/api/products.seller'
 import { Route as ApiProductsPendingRouteImport } from './routes/api/products.pending'
 import { Route as ApiProductsIdRouteImport } from './routes/api/products.$id'
+import { Route as ApiOrdersSellerRouteImport } from './routes/api/orders.seller'
 import { Route as ApiOrdersIdRouteImport } from './routes/api/orders.$id'
 import { Route as ApiNotificationsReadAllRouteImport } from './routes/api/notifications.read-all'
 import { Route as ApiNotificationsIdRouteImport } from './routes/api/notifications.$id'
@@ -150,6 +151,11 @@ const ApiProductsIdRoute = ApiProductsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiProductsRoute,
 } as any)
+const ApiOrdersSellerRoute = ApiOrdersSellerRouteImport.update({
+  id: '/seller',
+  path: '/seller',
+  getParentRoute: () => ApiOrdersRoute,
+} as any)
 const ApiOrdersIdRoute = ApiOrdersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/api/notifications/$id': typeof ApiNotificationsIdRoute
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/orders/$id': typeof ApiOrdersIdRoute
+  '/api/orders/seller': typeof ApiOrdersSellerRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/api/notifications/$id': typeof ApiNotificationsIdRoute
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/orders/$id': typeof ApiOrdersIdRoute
+  '/api/orders/seller': typeof ApiOrdersSellerRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
@@ -280,6 +288,7 @@ export interface FileRoutesById {
   '/api/notifications/$id': typeof ApiNotificationsIdRoute
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/orders/$id': typeof ApiOrdersIdRoute
+  '/api/orders/seller': typeof ApiOrdersSellerRoute
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
@@ -314,6 +323,7 @@ export interface FileRouteTypes {
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/orders/$id'
+    | '/api/orders/seller'
     | '/api/products/$id'
     | '/api/products/pending'
     | '/api/products/seller'
@@ -345,6 +355,7 @@ export interface FileRouteTypes {
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/orders/$id'
+    | '/api/orders/seller'
     | '/api/products/$id'
     | '/api/products/pending'
     | '/api/products/seller'
@@ -377,6 +388,7 @@ export interface FileRouteTypes {
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/orders/$id'
+    | '/api/orders/seller'
     | '/api/products/$id'
     | '/api/products/pending'
     | '/api/products/seller'
@@ -565,6 +577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProductsIdRouteImport
       parentRoute: typeof ApiProductsRoute
     }
+    '/api/orders/seller': {
+      id: '/api/orders/seller'
+      path: '/seller'
+      fullPath: '/api/orders/seller'
+      preLoaderRoute: typeof ApiOrdersSellerRouteImport
+      parentRoute: typeof ApiOrdersRoute
+    }
     '/api/orders/$id': {
       id: '/api/orders/$id'
       path: '/$id'
@@ -653,10 +672,12 @@ const ApiNotificationsRouteWithChildren =
 
 interface ApiOrdersRouteChildren {
   ApiOrdersIdRoute: typeof ApiOrdersIdRoute
+  ApiOrdersSellerRoute: typeof ApiOrdersSellerRoute
 }
 
 const ApiOrdersRouteChildren: ApiOrdersRouteChildren = {
   ApiOrdersIdRoute: ApiOrdersIdRoute,
+  ApiOrdersSellerRoute: ApiOrdersSellerRoute,
 }
 
 const ApiOrdersRouteWithChildren = ApiOrdersRoute._addFileChildren(
