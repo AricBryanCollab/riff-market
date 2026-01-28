@@ -111,7 +111,7 @@ export async function createOrderService(
 	}
 }
 
-export async function getOrdersByUserService(userId: string, role: string) {
+export async function getOrdersByCustomerService(userId: string, role: string) {
 	if (!userId) {
 		return { error: "User ID not found" };
 	}
@@ -148,7 +148,12 @@ export async function getOrderByIdService(role: string, orderId: string) {
 		};
 	}
 
-	return order;
+	const { user, ...rest } = order;
+
+	return {
+		...rest,
+		customer: user,
+	};
 }
 
 export async function updateOrderStatusService(
