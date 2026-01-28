@@ -13,7 +13,7 @@ export const Route = createFileRoute("/shop")({
 
 function ShopLayoutComponent() {
 	return (
-		<div className="flex min-h-screen w-full bg-slate-100">
+		<div className="flex min-h-screen w-full ">
 			{/* SIDEBAR */}
 			<ShopSidebar />
 			{/* MAIN CONTENT */}

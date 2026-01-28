@@ -11,13 +11,10 @@ const NavbarIconButtons = ({
 	icon: Icon,
 	count = 0,
 	onClick,
-	ariaLabel,
 }: NavbarIconButtonsProps) => {
 	return (
-		<button
-			type="button"
+		<div
 			onClick={onClick}
-			aria-label={ariaLabel}
 			className="relative cursor-pointer hover:bg-accent/20 rounded-full p-1"
 		>
 			<Icon size={24} className="text-primary" />
@@ -28,7 +25,7 @@ const NavbarIconButtons = ({
 					</span>
 				</div>
 			)}
-		</button>
+		</div>
 	);
 };
 

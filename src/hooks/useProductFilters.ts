@@ -1,5 +1,6 @@
 import { useState } from "react";
 import useGetProducts from "@/hooks/useGetProducts";
+import useGetPendingProducts from "./useGetPendingProducts";
 
 const useProductFilters = () => {
 	const [searchTerm, setSearchTerm] = useState<string>("");
@@ -10,14 +11,17 @@ const useProductFilters = () => {
 		loadingProductList,
 		isErrorProductList,
 		showPending,
-		pendingProductList,
-		loadingPendingProduct,
-		isErrorPendingProduct,
 		setShowPending,
 		refetchProductList,
 	} = useGetProducts();
 
-	const productsToDisplay = showPending ? pendingProductList : productList;
+	const {
+		pendingProducts,
+		isLoading: isLoadingPendingProduct,
+		isError: isErrorPendingProduct,
+	} = useGetPendingProducts(showPending);
+
+	const productsToDisplay = showPending ? pendingProducts : productList;
 
 	const filteredProducts =
 		productsToDisplay?.filter((product) => {
@@ -58,8 +62,8 @@ const useProductFilters = () => {
 		showPending,
 		filteredProducts,
 		productList,
-		pendingProductList,
-		isPending: loadingProductList || (loadingPendingProduct && showPending),
+		isLoadingPendingProduct,
+		isPending: loadingProductList || (isLoadingPendingProduct && showPending),
 		isError: isErrorProductList || isErrorPendingProduct,
 		handleSearchChange,
 		handleCategoryChange,

@@ -54,15 +54,13 @@ function RouteComponent() {
 				) : (
 					<div className="flex w-[50%] flex-col gap-4">
 						<div className="flex w-full items-center justify-between rounded-xl  px-4 py-3">
-							<BodySmall className="font-medium text-secondary">
-								Total Items
-							</BodySmall>
+							<BodySmall className="font-medium">Total Items</BodySmall>
 							<BodyLarge className="font-bold text-primary">
 								{cartCount}
 							</BodyLarge>
 						</div>
 
-						<div className="flex w-full items-center justify-between rounded-xl bg-linear-to-br from-primary to-secondary px-4 py-4 text-white">
+						<div className="flex w-full items-center justify-between rounded-xl border border-foreground px-2 py-3">
 							<BodySmall className="font-semibold tracking-wide">
 								Total Price
 							</BodySmall>

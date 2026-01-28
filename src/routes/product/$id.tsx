@@ -14,10 +14,8 @@ import Rating from "@/components/rating";
 import ReviewSection from "@/components/reviewsection";
 import SectionContainer from "@/components/sectioncontainer";
 import { productCategoryOptions } from "@/constants/selectOptions";
-import {
-	pendingProductsQueryOpt,
-	productsQueryOpt,
-} from "@/hooks/useGetProducts";
+import { pendingProductsQueryOpt } from "@/hooks/useGetPendingProducts";
+import { productsQueryOpt } from "@/hooks/useGetProducts";
 import { useUserStore } from "@/store/user";
 
 export const Route = createFileRoute("/product/$id")({
