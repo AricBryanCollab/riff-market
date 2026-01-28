@@ -10,7 +10,7 @@ export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
 	retry: false,
 });
 
-const useGetPendingProducts = (enabled: boolean = true) => {
+const useGetPendingProducts = (enabled: boolean = false) => {
 	const queryClient = useQueryClient();
 	const { pendingProducts, pendingProductCount, setPendingProducts } =
 		usePendingProductStore();
