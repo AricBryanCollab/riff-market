@@ -1,19 +1,23 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { getPendingApprovalProducts } from "@/lib/tanstack-query/product.queries";
 import { usePendingProductStore } from "@/store/pendingproduct";
+import type { BaseProduct } from "@/types/product";
 
-const useGetPendingProducts = () => {
+export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
+	queryKey: ["pendingProducts"],
+	queryFn: getPendingApprovalProducts,
+	retry: false,
+});
+
+const useGetPendingProducts = (enabled: boolean = true) => {
 	const queryClient = useQueryClient();
 	const { pendingProducts, pendingProductCount, setPendingProducts } =
 		usePendingProductStore();
 
 	const { data, isLoading, isError } = useQuery({
-		queryKey: ["pendingProducts"],
-		queryFn: getPendingApprovalProducts,
-		staleTime: 30000,
-		refetchInterval: 60000,
-		retry: false,
+		...pendingProductsQueryOpt,
+		enabled,
 	});
 
 	useEffect(() => {

@@ -19,7 +19,7 @@ const useProductFilters = () => {
 		pendingProducts,
 		isLoading: isLoadingPendingProduct,
 		isError: isErrorPendingProduct,
-	} = useGetPendingProducts();
+	} = useGetPendingProducts(showPending);
 
 	const productsToDisplay = showPending ? pendingProducts : productList;
 

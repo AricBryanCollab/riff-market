@@ -2,7 +2,6 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
 	getApprovedProducts,
-	getPendingApprovalProducts,
 	getProductDetailsById,
 } from "@/lib/tanstack-query/product.queries";
 import type { BaseProduct } from "@/types/product";
@@ -10,12 +9,6 @@ import type { BaseProduct } from "@/types/product";
 export const productsQueryOpt = queryOptions<BaseProduct[]>({
 	queryKey: ["products"],
 	queryFn: getApprovedProducts,
-});
-
-export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
-	queryKey: ["pendingProducts"],
-	queryFn: getPendingApprovalProducts,
-	retry: false,
 });
 
 export const productbyIdQueryOpt = (id: string) =>
