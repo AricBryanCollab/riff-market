@@ -50,8 +50,8 @@ export interface OrderResponse extends BaseOrderData {
 	orderDate: Date;
 	totalAmount: number;
 	trackingNumber: string;
-	items: OrderItemResponse[];
-	customer: {
+	items?: OrderItemResponse[];
+	customer?: {
 		email: string;
 		firstName: string;
 		lastName: string;
