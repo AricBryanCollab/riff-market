@@ -1,4 +1,5 @@
 import type { OrderStatus } from "generated/prisma/enums";
+
 import { prisma } from "@/data/connectDb";
 import { createNotification } from "@/data/notification";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
@@ -14,6 +15,7 @@ export const createOrder = async (
 	try {
 		const { items, ...order } = orderData;
 
+		// Create Order Transaction
 		const result = await prisma.$transaction(async (tx) => {
 			const createdOrder = await tx.order.create({
 				data: {
@@ -35,6 +37,19 @@ export const createOrder = async (
 				include: orderBaseQuery,
 			});
 
+			// Obtain Seller IDs from the Product
+			const productIds = items.map((item) => item.productId);
+			const products = await tx.product.findMany({
+				where: { id: { in: productIds } },
+				select: { id: true, sellerId: true, name: true },
+			});
+
+			const productMap = new Map(products.map((p) => [p.id, p]));
+			const sellerNotifications = new Map<
+				string,
+				{ productNames: string[]; totalAmount: number }
+			>();
+
 			for (const item of items) {
 				await tx.product.update({
 					where: { id: item.productId },
@@ -44,8 +59,24 @@ export const createOrder = async (
 						},
 					},
 				});
+
+				// Aggregate Seller Data
+				const product = productMap.get(item.productId);
+				if (product) {
+					const existing = sellerNotifications.get(product.sellerId);
+					if (existing) {
+						existing.productNames.push(product.name);
+						existing.totalAmount += item.subTotal;
+					} else {
+						sellerNotifications.set(product.sellerId, {
+							productNames: [product.name],
+							totalAmount: item.subTotal,
+						});
+					}
+				}
 			}
 
+			// Notify CUSTOMER
 			await createNotification(
 				{
 					userId: order.userId,
@@ -55,6 +86,20 @@ export const createOrder = async (
 				},
 				tx,
 			);
+
+			// Notify each SELLER
+			for (const [sellerId, data] of sellerNotifications) {
+				const productList = data.productNames.join(", ");
+				await createNotification(
+					{
+						userId: sellerId,
+						orderId: createdOrder.id,
+						message: `New order received! Order #${order.trackingNumber} Products: ${productList}  Amount: $${data.totalAmount.toFixed(2)}`,
+						isRead: false,
+					},
+					tx,
+				);
+			}
 
 			return createdOrder;
 		});
