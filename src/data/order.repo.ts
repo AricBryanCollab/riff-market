@@ -111,8 +111,8 @@ export const createOrder = async (
 	}
 };
 
-// Get Order By User
-export const getUserOrders = async (userId: string) => {
+// Get Order By Customer
+export const getCustomerOrders = async (userId: string) => {
 	try {
 		const orders = await prisma.order.findMany({
 			where: { userId },
@@ -123,7 +123,43 @@ export const getUserOrders = async (userId: string) => {
 
 		return orders;
 	} catch (err) {
-		console.error("Error at getUserOrders:", err);
+		console.error("Error at getCustomerOrders:", err);
+		throw err;
+	}
+};
+
+// Get Order By Seller
+export const getSellerOrders = async (userId: string) => {
+	try {
+		const orders = await prisma.order.findMany({
+			where: {
+				items: {
+					some: {
+						product: {
+							sellerId: userId,
+						},
+					},
+				},
+			},
+			include: orderBaseQuery,
+			orderBy: {
+				orderDate: "desc",
+			},
+		});
+
+		return orders.map((order) => {
+			const sellerItemsTotal = order.items.reduce(
+				(sum, item) => sum + item.subTotal,
+				0,
+			);
+
+			return {
+				...transformOrderResponse(order),
+				totalAmount: sellerItemsTotal,
+			};
+		});
+	} catch (err) {
+		console.error("Error at getSellerOrders:", err);
 		throw err;
 	}
 };
