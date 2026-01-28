@@ -8,7 +8,7 @@ import {
 import { useOrderStore } from "@/store/order";
 import type { OrderStatus, UserRole } from "@/types/enum";
 
-const useGetOrders = ({ userRole }: { userRole: UserRole }) => {
+const useGetOrders = (userRole: UserRole) => {
 	const queryClient = useQueryClient();
 	const {
 		orders,

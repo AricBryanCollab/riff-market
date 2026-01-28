@@ -5,9 +5,11 @@ import CartList from "@/components/cartlist";
 import ClientOnly from "@/components/clientonly";
 import NavbarIconButtons from "@/components/navbariconbuttons";
 import NotificationList from "@/components/notificationlist";
+import OrderList from "@/components/orderlist";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import useCartDetails from "@/hooks/useCartDetails";
+import useGetOrders from "@/hooks/useGetOrders";
 import useNotifications from "@/hooks/useNotifications";
 import { useSignOut } from "@/hooks/useSignOut";
 import { useDialogStore } from "@/store/dialog";
@@ -17,6 +19,9 @@ import type { UserRole } from "@/types/enum";
 const UserMenu = () => {
 	const { setOpenDialog } = useDialogStore();
 	const { user } = useUserStore();
+	const role = user?.role || "CUSTOMER";
+
+	// Use CartList Hook
 	const {
 		isCartEmpty,
 		isLoading: isCartLoading,
@@ -24,8 +29,8 @@ const UserMenu = () => {
 		cartCount,
 		cartWithDetails,
 	} = useCartDetails();
-	const role = user?.role || "CUSTOMER";
 
+	// Use Notification List
 	const {
 		notifications,
 		isLoading: isLoadingNotification,
@@ -33,6 +38,13 @@ const UserMenu = () => {
 		isEmptyNotifications,
 		markAsRead,
 	} = useNotifications();
+
+	// Use Order List
+	const {
+		orders,
+		isLoading: isLoadingOrders,
+		isEmptyOrders,
+	} = useGetOrders(role);
 
 	const { loading: signOutLoading, signOut } = useSignOut();
 
@@ -71,7 +83,11 @@ const UserMenu = () => {
 						}
 						align="end"
 					>
-						<DropdownContentPlaceholder title="Products Ordered" />
+						<OrderList
+							orders={orders}
+							isLoading={isLoadingOrders}
+							isEmptyOrders={isEmptyOrders}
+						/>
 					</AppDropdown>
 				);
 			case "ADMIN":
