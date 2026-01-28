@@ -1,7 +1,8 @@
 import {
 	createOrder,
+	getCustomerOrders,
 	getOrderById,
-	getUserOrders,
+	getSellerOrders,
 	updateOrderStatus,
 } from "@/data/order.repo";
 import { getProductsByIds } from "@/data/product.repo";
@@ -123,7 +124,24 @@ export async function getOrdersByCustomerService(userId: string, role: string) {
 		};
 	}
 
-	const orders = await getUserOrders(userId);
+	const orders = await getCustomerOrders(userId);
+
+	return orders;
+}
+
+export async function getOrdersBySellerService(userId: string, role: string) {
+	if (!userId) {
+		return { error: "User ID not found" };
+	}
+
+	if (role !== "SELLER" && role !== "ADMIN") {
+		return {
+			error:
+				"Unauthorized, only users with seller/admin role are allowed to view seller orders",
+		};
+	}
+
+	const orders = await getSellerOrders(userId);
 
 	return orders;
 }
