@@ -5,10 +5,12 @@ import CartList from "@/components/cartlist";
 import ClientOnly from "@/components/clientonly";
 import NavbarIconButtons from "@/components/navbariconbuttons";
 import NotificationList from "@/components/notificationlist";
-import { BodySmall } from "@/components/typography";
+import OrderList from "@/components/orderlist";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import useCartDetails from "@/hooks/useCartDetails";
+import useGetOrders from "@/hooks/useGetOrders";
+import useNotifications from "@/hooks/useNotifications";
 import { useSignOut } from "@/hooks/useSignOut";
 import { useDialogStore } from "@/store/dialog";
 import { useUserStore } from "@/store/user";
@@ -17,6 +19,9 @@ import type { UserRole } from "@/types/enum";
 const UserMenu = () => {
 	const { setOpenDialog } = useDialogStore();
 	const { user } = useUserStore();
+	const role = user?.role || "CUSTOMER";
+
+	// Use CartList Hook
 	const {
 		isCartEmpty,
 		isLoading: isCartLoading,
@@ -24,7 +29,22 @@ const UserMenu = () => {
 		cartCount,
 		cartWithDetails,
 	} = useCartDetails();
-	const role = user?.role || "CUSTOMER";
+
+	// Use Notification List
+	const {
+		notifications,
+		isLoading: isLoadingNotification,
+		unreadCount,
+		isEmptyNotifications,
+		markAsRead,
+	} = useNotifications();
+
+	// Use Order List
+	const {
+		orders,
+		isLoading: isLoadingOrders,
+		isEmptyOrders,
+	} = useGetOrders(role);
 
 	const { loading: signOutLoading, signOut } = useSignOut();
 
@@ -42,7 +62,13 @@ const UserMenu = () => {
 						}
 						align="end"
 					>
-						<CartList />
+						<CartList
+							isLoading={isCartLoading}
+							isCartEmpty={isCartEmpty}
+							totalPrice={totalPrice}
+							cartCount={cartCount}
+							cartWithDetails={cartWithDetails}
+						/>
 					</AppDropdown>
 				);
 			case "SELLER":
@@ -57,7 +83,11 @@ const UserMenu = () => {
 						}
 						align="end"
 					>
-						<DropdownContentPlaceholder title="Products Ordered" />
+						<OrderList
+							orders={orders}
+							isLoading={isLoadingOrders}
+							isEmptyOrders={isEmptyOrders}
+						/>
 					</AppDropdown>
 				);
 			case "ADMIN":
@@ -95,13 +125,19 @@ const UserMenu = () => {
 						trigger={
 							<NavbarIconButtons
 								icon={Bell}
-								count={2}
+								count={unreadCount}
 								ariaLabel="Notifications"
 							/>
 						}
 						align="end"
 					>
-						<CartList />
+						<NotificationList
+							notifications={notifications}
+							unreadCount={unreadCount}
+							isLoading={isLoadingNotification}
+							isEmptyNotifications={isEmptyNotifications}
+							markAsRead={markAsRead}
+						/>
 					</AppDropdown>
 
 					<LoadingButton

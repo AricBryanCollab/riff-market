@@ -1,20 +1,26 @@
+import type { UseMutateFunction } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Bell, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
 import { BodySmall, H5 } from "@/components/typography";
 import { Button } from "@/components/ui/button";
-import useNotifications from "@/hooks/useNotifications";
 import type { NotificationData } from "@/types/notification";
 
-const NotificationList = () => {
-	const {
-		notifications,
-		isLoading,
-		unreadCount,
-		isEmptyNotifications,
-		markAsRead,
-	} = useNotifications();
+interface NotificationListProps {
+	notifications: NotificationData[];
+	unreadCount: number;
+	isLoading: boolean;
+	isEmptyNotifications: boolean;
+	markAsRead: UseMutateFunction<NotificationData, Error, string, void>;
+}
 
+const NotificationList = ({
+	notifications,
+	isLoading,
+	unreadCount,
+	isEmptyNotifications,
+	markAsRead,
+}: NotificationListProps) => {
 	const formatRelativeTime = (date: string) => {
 		return formatDistanceToNow(new Date(date), { addSuffix: true });
 	};

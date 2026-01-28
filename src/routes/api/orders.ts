@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createOrderService, getOrdersByUserService } from "@/actions/order";
+import {
+	createOrderService,
+	getOrdersByCustomerService,
+} from "@/actions/order";
 import { authMiddleware } from "@/middleware";
 import type { OrderRequest } from "@/types/order";
 
@@ -44,7 +47,7 @@ export const Route = createFileRoute("/api/orders")({
 					const userId = context.id;
 					const role = context.role;
 
-					const orders = await getOrdersByUserService(userId, role);
+					const orders = await getOrdersByCustomerService(userId, role);
 
 					if ("error" in orders) {
 						return new Response(JSON.stringify({ error: orders.error }), {
