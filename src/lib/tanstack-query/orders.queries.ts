@@ -20,6 +20,15 @@ export function getOrderByCustomer() {
 	});
 }
 
+export function getOrderBySeller() {
+	return apiFetch<OrderErrorResponse[] | GetUserOrdersErrorResponse>(
+		"/api/orders/seller",
+		{
+			method: "GET",
+		},
+	);
+}
+
 export function getOrderById(id: string) {
 	return apiFetch<OrderResponse | GetUserOrdersErrorResponse>(
 		`/api/orders/${id}`,
