@@ -100,7 +100,7 @@ const OrderList = ({ orders, isLoading, isEmptyOrders }: OrderListProps) => {
 											</span>
 										</div>
 										<div
-											className={`text-xs shrink-0 ${getStatusColor(order.status)}`}
+											className={`flex items-center text-xs px-1 py-0.5 rounded-md shrink-0 ${getStatusColor(order.status)}`}
 										>
 											{order.status}
 										</div>
