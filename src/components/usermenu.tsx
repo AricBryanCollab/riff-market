@@ -10,11 +10,13 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import useCartDetails from "@/hooks/useCartDetails";
 import useGetOrders from "@/hooks/useGetOrders";
+import useGetPendingProducts from "@/hooks/useGetPendingProducts";
 import useNotifications from "@/hooks/useNotifications";
 import { useSignOut } from "@/hooks/useSignOut";
 import { useDialogStore } from "@/store/dialog";
 import { useUserStore } from "@/store/user";
 import type { UserRole } from "@/types/enum";
+import PendingProductList from "./pendingproductlist";
 
 const UserMenu = () => {
 	const { setOpenDialog } = useDialogStore();
@@ -46,6 +48,14 @@ const UserMenu = () => {
 		isLoading: isLoadingOrders,
 		isEmptyOrders,
 	} = useGetOrders(role);
+
+	// Pending Products List
+	const {
+		pendingProducts,
+		pendingProductCount,
+		isLoading: isLoadingPendingProduct,
+		isEmptyPendingProducts,
+	} = useGetPendingProducts();
 
 	const { loading: signOutLoading, signOut } = useSignOut();
 
@@ -97,21 +107,24 @@ const UserMenu = () => {
 						trigger={
 							<NavbarIconButtons
 								icon={PackageSearch}
-								count={pendingApprovalCount}
+								count={pendingProductCount}
 								ariaLabel="Pending Products"
 							/>
 						}
 						align="end"
 					>
-						<DropdownContentPlaceholder title="Pending Products" />
+						<PendingProductList
+							pendingProducts={pendingProducts}
+							pendingProductCount={pendingProductCount}
+							isLoading={isLoadingPendingProduct}
+							isEmptyPendingProducts={isEmptyPendingProducts}
+						/>
 					</AppDropdown>
 				);
 			default:
 				return null;
 		}
 	};
-
-	const pendingApprovalCount = 4;
 
 	return (
 		<ClientOnly>
@@ -160,13 +173,13 @@ const UserMenu = () => {
 	);
 };
 
-const DropdownContentPlaceholder = ({ title }: { title: string }) => {
-	return (
-		<div className="p-4">
-			<h3 className="font-semibold mb-2">{title}</h3>
-			<p className="text-sm text-muted-foreground">Your items here</p>
-		</div>
-	);
-};
+// const DropdownContentPlaceholder = ({ title }: { title: string }) => {
+// 	return (
+// 		<div className="p-4">
+// 			<h3 className="font-semibold mb-2">{title}</h3>
+// 			<p className="text-sm text-muted-foreground">Your items here</p>
+// 		</div>
+// 	);
+// };
 
 export default UserMenu;
