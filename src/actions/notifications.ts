@@ -3,7 +3,7 @@ import {
 	getNotificationsCount,
 	readAllNotifications,
 	readNotificationById,
-} from "@/data/notification";
+} from "@/data/notification.repo.";
 
 export async function getNotificationsByUserService(userId: string) {
 	if (!userId) {
