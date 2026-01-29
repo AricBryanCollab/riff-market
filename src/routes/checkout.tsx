@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, CreditCard, MapPin, Package } from "lucide-react";
 import { FormTextArea } from "@/components/form-textarea";
+import OrderItemCard from "@/components/order/orderitemcard";
 import { SearchableSelect } from "@/components/searchable-select";
 import SectionContainer from "@/components/sectioncontainer";
 import { H2 } from "@/components/typography";
@@ -39,51 +40,10 @@ function RouteComponent() {
 				{/* Main Form Section */}
 				<div className="lg:col-span-2">
 					<form onSubmit={() => {}} className="space-y-6">
-						{/* Order Items Card */}
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2">
-									<Package className="w-5 h-5" />
-									Order Items
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								{isLoadingCart ? (
-									<div className="flex items-center justify-center py-8">
-										<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-									</div>
-								) : cartWithDetails.length === 0 ? (
-									<p className="text-center text-muted-foreground py-8">
-										Your cart is empty
-									</p>
-								) : (
-									<div className="space-y-4">
-										{cartWithDetails.map((item) => (
-											<div
-												key={item.product?.id}
-												className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"
-											>
-												<div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center">
-													<Package className="w-8 h-8 text-muted-foreground" />
-												</div>
-												<div className="flex-1">
-													<h4 className="font-medium">{item.product?.name}</h4>
-													<p className="text-sm text-muted-foreground">
-														Quantity: {item.quantity}
-													</p>
-												</div>
-												<div className="text-right">
-													<p className="font-semibold">{item.product?.price}</p>
-													<p className="text-sm text-muted-foreground">
-														{item?.quantity}
-													</p>
-												</div>
-											</div>
-										))}
-									</div>
-								)}
-							</CardContent>
-						</Card>
+						<OrderItemCard
+							isLoadingCart={isLoadingCart}
+							cartWithDetails={cartWithDetails}
+						/>
 
 						{/* Shipping Address Card */}
 						<Card>
