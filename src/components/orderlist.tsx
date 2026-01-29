@@ -2,6 +2,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ArrowRight, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
 import { BodySmall, H5 } from "@/components/typography";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/store/user";
 import type { OrderStatus } from "@/types/enum";
@@ -99,11 +100,11 @@ const OrderList = ({ orders, isLoading, isEmptyOrders }: OrderListProps) => {
 												#{order.trackingNumber}
 											</span>
 										</div>
-										<div
+										<Badge
 											className={`flex items-center text-xs px-1 py-0.5 rounded-md shrink-0 ${getStatusColor(order.status)}`}
 										>
 											{order.status}
-										</div>
+										</Badge>
 									</div>
 
 									{/* Customer Info (for sellers) */}

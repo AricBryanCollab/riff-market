@@ -3,6 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ArrowRight, Clock, Package } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
 import { BodySmall, H5 } from "@/components/typography";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { BaseProduct } from "@/types/product";
 
@@ -94,10 +95,10 @@ const PendingProductList = ({
 											<h6 className="text-sm font-medium text-foreground truncate">
 												{product.name}
 											</h6>
-											<div className="flex items-center px-1 py-0.5 rounded-md text-xs shrink-0 bg-yellow-500/10 text-yellow-700 border-yellow-500/20">
+											<Badge className="flex items-center px-1 py-0.5 rounded-md text-xs shrink-0 bg-yellow-500/10 text-yellow-700 border-yellow-500/20">
 												<Clock className="size-3 mr-1" />
 												Pending
-											</div>
+											</Badge>
 										</div>
 
 										<div className="space-y-0.5">
