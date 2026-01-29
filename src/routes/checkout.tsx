@@ -1,13 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import OrderItemCard from "@/components/order/orderitemcard";
+import OrderSummary from "@/components/order/ordersummary";
 import PaymentMethodSelect from "@/components/order/paymentmethodselect";
 import ShippingAddressField from "@/components/order/shippingaddressfield";
 import SectionContainer from "@/components/sectioncontainer";
 import { H2 } from "@/components/typography";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Separator } from "@/components/ui/separator";
 import useCartDetails from "@/hooks/useCartDetails";
 
 export const Route = createFileRoute("/checkout")({
@@ -18,6 +17,18 @@ function RouteComponent() {
 	const navigate = useNavigate();
 
 	const { isLoading: isLoadingCart, cartWithDetails } = useCartDetails();
+
+	const calculateSubtotal = () => {
+		if (!cartWithDetails || cartWithDetails.length === 0) return 0;
+		return cartWithDetails.reduce(
+			(total, item) => total + (item.product?.price || 0) * item.quantity,
+			0,
+		);
+	};
+
+	const calculateTax = () => {
+		return calculateSubtotal() * 0.08;
+	};
 
 	return (
 		<SectionContainer>
@@ -53,28 +64,15 @@ function RouteComponent() {
 
 						<PaymentMethodSelect value="" onValueChange={() => {}} />
 
-						{/* Mobile Order Summary - shown only on mobile */}
 						<div className="lg:hidden">
-							<Card>
-								<CardHeader>
-									<CardTitle>Order Summary</CardTitle>
-								</CardHeader>
-								<CardContent className="space-y-3">
-									<div className="flex justify-between text-sm">
-										<span className="text-muted-foreground">Subtotal</span>
-										<span>Total Price here</span>
-									</div>
-									<div className="flex justify-between text-sm">
-										<span className="text-muted-foreground">Shipping</span>
-										<span className="text-green-600">FREE</span>
-									</div>
-									<Separator />
-									<div className="flex justify-between font-semibold text-lg">
-										<span>Total</span>
-										<span>Total Price Here</span>
-									</div>
-								</CardContent>
-							</Card>
+							<OrderSummary
+								subtotal={calculateSubtotal()}
+								tax={calculateTax()}
+								shipping={0}
+								showBenefits={false}
+								isLoading={isLoadingCart}
+								isMobile={true}
+							/>
 						</div>
 
 						<div className="flex flex-col w-full">
@@ -90,49 +88,15 @@ function RouteComponent() {
 					</form>
 				</div>
 
-				{/* Order Summary Sidebar - Desktop Only */}
 				<div className="hidden lg:block">
-					<Card className="sticky top-6">
-						<CardHeader>
-							<CardTitle>Order Summary</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-4">
-							<div className="space-y-3">
-								<div className="flex justify-between text-sm">
-									<span className="text-muted-foreground">Subtotal</span>
-									<span>Total Price Here</span>
-								</div>
-								<div className="flex justify-between text-sm">
-									<span className="text-muted-foreground">Shipping</span>
-									<span className="text-green-600 font-medium">FREE</span>
-								</div>
-								<div className="flex justify-between text-sm">
-									<span className="text-muted-foreground">Tax</span>
-									<span>Calculated at checkout</span>
-								</div>
-								<Separator />
-								<div className="flex justify-between font-semibold text-lg pt-2">
-									<span>Total</span>
-									<span className="text-primary">Total Price Here</span>
-								</div>
-							</div>
-
-							<div className="pt-4 space-y-2">
-								<div className="flex items-start gap-2 text-xs text-muted-foreground">
-									<span className="text-green-600">✓</span>
-									<span>Free shipping on all orders</span>
-								</div>
-								<div className="flex items-start gap-2 text-xs text-muted-foreground">
-									<span className="text-green-600">✓</span>
-									<span>Secure payment processing</span>
-								</div>
-								<div className="flex items-start gap-2 text-xs text-muted-foreground">
-									<span className="text-green-600">✓</span>
-									<span>30-day return policy</span>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
+					<OrderSummary
+						subtotal={calculateSubtotal()}
+						tax={calculateTax()}
+						shipping={0}
+						showBenefits
+						isLoading={isLoadingCart}
+						className="sticky top-6"
+					/>
 				</div>
 			</div>
 		</SectionContainer>
