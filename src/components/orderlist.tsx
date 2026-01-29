@@ -1,11 +1,12 @@
-import { formatDistanceToNow } from "date-fns";
 import { ArrowRight, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
 import { BodySmall, H5 } from "@/components/typography";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/store/user";
 import type { OrderStatus } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
+import { formatRelativeTime } from "@/utils/formatDate";
 
 interface OrderListProps {
 	orders: OrderResponse[];
@@ -14,10 +15,6 @@ interface OrderListProps {
 }
 
 const OrderList = ({ orders, isLoading, isEmptyOrders }: OrderListProps) => {
-	const formatRelativeTime = (date: Date) => {
-		return formatDistanceToNow(new Date(date), { addSuffix: true });
-	};
-
 	const userRole = useUserStore((state) => state.user?.role);
 
 	const getStatusColor = (status: OrderStatus) => {
@@ -99,11 +96,11 @@ const OrderList = ({ orders, isLoading, isEmptyOrders }: OrderListProps) => {
 												#{order.trackingNumber}
 											</span>
 										</div>
-										<div
+										<Badge
 											className={`flex items-center text-xs px-1 py-0.5 rounded-md shrink-0 ${getStatusColor(order.status)}`}
 										>
 											{order.status}
-										</div>
+										</Badge>
 									</div>
 
 									{/* Customer Info (for sellers) */}

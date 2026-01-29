@@ -127,7 +127,7 @@ export const updateProductById = async (
 	try {
 		return await prisma.product.update({
 			where: { id },
-			data: { ...product, isApproved: false },
+			data: product,
 		});
 	} catch (err) {
 		console.error("Error at updateProductById", err);

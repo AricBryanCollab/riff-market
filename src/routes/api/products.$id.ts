@@ -38,6 +38,7 @@ export const Route = createFileRoute("/api/products/$id")({
 						try {
 							const { id } = params;
 							const sellerId = context.id;
+							const role = context.role;
 							const formData = await request.formData();
 
 							const extractedData = extractPartialFormData(formData, [
@@ -66,6 +67,7 @@ export const Route = createFileRoute("/api/products/$id")({
 							const updatedProduct = await updateProductService(
 								id,
 								sellerId,
+								role,
 								rawData,
 							);
 

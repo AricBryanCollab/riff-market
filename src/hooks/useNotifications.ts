@@ -5,6 +5,7 @@ import {
 	readNotificationById,
 } from "@/lib/tanstack-query/notifications.queries";
 import { useNotificationStore } from "@/store/notifications";
+import { useUserStore } from "@/store/user";
 
 const useNotifications = () => {
 	const queryClient = useQueryClient();
@@ -15,11 +16,14 @@ const useNotifications = () => {
 		markAsRead: markAsReadInStore,
 	} = useNotificationStore();
 
+	const { user } = useUserStore();
+
 	const { data, isLoading } = useQuery({
 		queryKey: ["notifications"],
 		queryFn: getUserNotifications,
 		staleTime: 30000,
 		refetchInterval: 60000,
+		enabled: user !== null,
 	});
 
 	useEffect(() => {

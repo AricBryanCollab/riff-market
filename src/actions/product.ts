@@ -132,6 +132,7 @@ export async function getPendingProductsService() {
 export async function updateProductService(
 	productId: string,
 	sellerId: string,
+	role: string,
 	rawData: UpdateProductInput,
 ) {
 	if (!sellerId) {
@@ -211,6 +212,7 @@ export async function updateProductService(
 		...(data.price && { price: Number(data.price) }),
 		...(data.stock !== undefined && { stock: Number(data.stock) }),
 		images: imageUrls,
+		isApproved: role === "ADMIN",
 	};
 
 	const updatedProduct = await updateProductById(productId, updateData);

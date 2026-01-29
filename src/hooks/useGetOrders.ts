@@ -6,6 +6,7 @@ import {
 	updateOrderStatus,
 } from "@/lib/tanstack-query/orders.queries";
 import { useOrderStore } from "@/store/order";
+import { useUserStore } from "@/store/user";
 import type { OrderStatus, UserRole } from "@/types/enum";
 
 const useGetOrders = (userRole: UserRole) => {
@@ -17,6 +18,8 @@ const useGetOrders = (userRole: UserRole) => {
 		updateOrder: updateOrderInStore,
 	} = useOrderStore();
 
+	const { user } = useUserStore();
+
 	const queryFn =
 		userRole === "CUSTOMER" ? getOrderByCustomer : getOrderBySeller;
 
@@ -25,6 +28,7 @@ const useGetOrders = (userRole: UserRole) => {
 		queryFn,
 		staleTime: 30000,
 		refetchInterval: 60000,
+		enabled: user !== null,
 	});
 
 	useEffect(() => {
