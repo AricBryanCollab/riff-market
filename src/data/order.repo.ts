@@ -10,6 +10,7 @@ import {
 
 // Create Order
 export const createOrder = async (
+	userId: string,
 	orderData: CreateOrderRepoData,
 ): Promise<OrderResponse> => {
 	try {
@@ -19,7 +20,7 @@ export const createOrder = async (
 		const result = await prisma.$transaction(async (tx) => {
 			const createdOrder = await tx.order.create({
 				data: {
-					userId: order.userId,
+					userId: userId,
 					orderDate: order.orderDate,
 					totalAmount: order.totalAmount,
 					shippingAddress: order.shippingAddress,
@@ -79,7 +80,7 @@ export const createOrder = async (
 			// Notify CUSTOMER
 			await createNotification(
 				{
-					userId: order.userId,
+					userId: userId,
 					orderId: createdOrder.id,
 					message: `Your order #${order.trackingNumber} has been placed successfully! Total: $${order.totalAmount.toFixed(2)}`,
 					isRead: false,

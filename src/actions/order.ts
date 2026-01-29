@@ -91,7 +91,6 @@ export async function createOrderService(
 	}
 
 	const orderData: CreateOrderRepoData = {
-		userId: userId,
 		orderDate: new Date(),
 		totalAmount,
 		shippingAddress: data.shippingAddress,
@@ -101,7 +100,7 @@ export async function createOrderService(
 	};
 
 	try {
-		const order = await createOrder(orderData);
+		const order = await createOrder(userId, orderData);
 
 		return order;
 	} catch (error) {
