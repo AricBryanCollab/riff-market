@@ -1,6 +1,6 @@
 import type { OrderStatus, PaymentMethod } from "@/types/enum";
 
-interface OrderItem {
+export interface OrderItem {
 	productId: string;
 	quantity: number;
 }
@@ -11,7 +11,6 @@ interface OrderItemWithPricing extends OrderItem {
 }
 
 interface BaseOrderData {
-	userId: string;
 	shippingAddress: string;
 	paymentMethod: PaymentMethod;
 }
