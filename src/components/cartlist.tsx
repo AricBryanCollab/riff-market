@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
 import { BodySmall, H5 } from "@/components/typography";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,22 @@ const CartList = ({
 					<BodySmall className="text-muted-foreground mt-0.5">
 						{cartCount} {cartCount === 1 ? "item" : "items"}
 					</BodySmall>
+				)}
+			</div>
+
+			<div className="max-h-96 overflow-y-auto px-4 py-3">
+				{isCartEmpty && (
+					<div className="flex flex-col items-center justify-center py-12 text-center">
+						<div className="rounded-full bg-muted p-4 mb-3">
+							<ShoppingBag className="size-8 text-muted-foreground" />
+						</div>
+						<BodySmall className="text-muted-foreground">
+							Cart is Empty
+						</BodySmall>
+						<BodySmall className="text-muted-foreground/70 text-xs mt-1">
+							View the shop to add some
+						</BodySmall>
+					</div>
 				)}
 			</div>
 

@@ -33,13 +33,12 @@ function RouteComponent() {
 		<SectionContainer>
 			<div className="my-6 relative flex items-center justify-center">
 				<div className="absolute left-0 flex items-center gap-3">
-					<button
-						type="button"
+					<Button
+						className="rounded-full size-10 cursor-pointer"
 						onClick={() => navigate({ to: "/shop" })}
-						className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-muted-foreground transition-colors hover:bg-foreground hover:text-white"
 					>
-						<ArrowLeft size={28} />
-					</button>
+						<ArrowLeft size={32} />
+					</Button>
 					<p className="hidden md:block">Back to Shop</p>
 				</div>
 				<H2>Cart Summary</H2>
