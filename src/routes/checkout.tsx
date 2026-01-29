@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, CreditCard, MapPin, Package } from "lucide-react";
-import { FormTextArea } from "@/components/form-textarea";
+import { ArrowLeft, CreditCard } from "lucide-react";
 import OrderItemCard from "@/components/order/orderitemcard";
+import ShippingAddressField from "@/components/order/shippingaddressfield";
 import { SearchableSelect } from "@/components/searchable-select";
 import SectionContainer from "@/components/sectioncontainer";
 import { H2 } from "@/components/typography";
@@ -45,43 +45,12 @@ function RouteComponent() {
 							cartWithDetails={cartWithDetails}
 						/>
 
-						{/* Shipping Address Card */}
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2">
-									<MapPin className="w-5 h-5" />
-									Shipping Address
-								</CardTitle>
-							</CardHeader>
-							<CardContent className="space-y-4">
-								<FormTextArea
-									id="shippingAddress"
-									label="Delivery Address"
-									value=""
-									onChange={() => {}}
-									placeholder="Enter your complete delivery address including street, city, state, and postal code"
-									rows={4}
-								/>
-								<div className="flex items-center justify-end w-full gap-3">
-									<LoadingButton
-										loading={false}
-										variant="outline"
-										type="button"
-										onClick={() => {}}
-									>
-										Clear
-									</LoadingButton>
-									<LoadingButton
-										disabled={false}
-										variant="secondary"
-										type="button"
-										onClick={() => {}}
-									>
-										Set Default Address
-									</LoadingButton>
-								</div>
-							</CardContent>
-						</Card>
+						<ShippingAddressField
+							value=""
+							onChange={() => {}}
+							clearAddress={() => {}}
+							setDefaultAddress={() => {}}
+						/>
 
 						{/* Payment Method Card */}
 						<Card>
