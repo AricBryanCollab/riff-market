@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { formatDistanceToNow } from "date-fns";
 import { ArrowRight, Clock, Package } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
 import { BodySmall, H5 } from "@/components/typography";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { BaseProduct } from "@/types/product";
+import { formatRelativeTime } from "@/utils/formatDate";
 
 interface PendingProductListProps {
 	pendingProducts: BaseProduct[];
@@ -20,10 +20,6 @@ const PendingProductList = ({
 	isLoading,
 	isEmptyPendingProducts,
 }: PendingProductListProps) => {
-	const formatRelativeTime = (date: string) => {
-		return formatDistanceToNow(new Date(date), { addSuffix: true });
-	};
-
 	if (isLoading) {
 		return (
 			<div className="w-80 max-w-sm bg-background">

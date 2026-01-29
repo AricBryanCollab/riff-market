@@ -1,4 +1,3 @@
-import { formatDistanceToNow } from "date-fns";
 import { ArrowRight, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
 import { BodySmall, H5 } from "@/components/typography";
@@ -7,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/store/user";
 import type { OrderStatus } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
+import { formatRelativeTime } from "@/utils/formatDate";
 
 interface OrderListProps {
 	orders: OrderResponse[];
@@ -15,10 +15,6 @@ interface OrderListProps {
 }
 
 const OrderList = ({ orders, isLoading, isEmptyOrders }: OrderListProps) => {
-	const formatRelativeTime = (date: Date) => {
-		return formatDistanceToNow(new Date(date), { addSuffix: true });
-	};
-
 	const userRole = useUserStore((state) => state.user?.role);
 
 	const getStatusColor = (status: OrderStatus) => {
