@@ -47,7 +47,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 			</a>
 
 			{/* Brand */}
-			<div className="text-xs font-medium text-secondary uppercase tracking-wide mb-1">
+			<div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
 				{product.brand}
 			</div>
 
@@ -66,7 +66,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 			</a>
 
 			{/* Model */}
-			<div className="text-xs text-secondary mb-3">{product.model}</div>
+			<div className="text-xs text-muted-foreground mb-3">{product.model}</div>
 
 			{/* Seller Info */}
 			<div className="flex items-center gap-1.5 mb-3 text-xs text-muted-foreground">
