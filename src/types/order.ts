@@ -11,7 +11,6 @@ interface OrderItemWithPricing extends OrderItem {
 }
 
 interface BaseOrderData {
-	userId: string;
 	shippingAddress: string;
 	paymentMethod: PaymentMethod;
 }
