@@ -28,7 +28,7 @@ const usePlaceOrder = () => {
 	const { mutate, isPending, isError } = useMutation({
 		mutationFn: createOrder,
 		onSuccess: async () => {
-			queryClient.invalidateQueries({ queryKey: ["product"] });
+			queryClient.invalidateQueries({ queryKey: ["orders"] });
 			showToast(
 				"Order placed successfully! Please wait for seller confirmation",
 				"success",
