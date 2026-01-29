@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { paymentMethodOptions } from "@/constants/selectOptions";
 
 interface PaymentMethodSelectProps {
-	value: string;
+	value: string | null;
 	onValueChange: (value: string) => void;
 }
 
@@ -26,7 +26,7 @@ const PaymentMethodSelect = ({
 						label: p.label,
 						value: p.value,
 					}))}
-					value={value}
+					value={value || ""}
 					onValueChange={onValueChange}
 					label="Select Payment Method"
 				/>

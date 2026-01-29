@@ -5,7 +5,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 
 interface ShippingAddressFieldProps {
 	value: string;
-	onChange: () => void;
+	onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 	clearAddress: () => void;
 	setDefaultAddress: () => void;
 	disabled?: boolean;
