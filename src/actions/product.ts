@@ -4,6 +4,7 @@ import {
 	getApprovedProducts,
 	getPendingApprovalProducts,
 	getProductById,
+	getProductCountByCategory,
 	getProductsBySellerId,
 	updateProductById,
 	updateProductStatus,
@@ -131,6 +132,11 @@ export async function getApprovedProductsService({
 export async function getPendingProductsService() {
 	const products = await getPendingApprovalProducts();
 	return products;
+}
+
+// Get Product Count By Category
+export async function getProductCountByCategoryService() {
+	return await getProductCountByCategory();
 }
 
 //Update Product Service
