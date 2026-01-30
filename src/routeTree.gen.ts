@@ -30,6 +30,7 @@ import { Route as ProductEditIdRouteImport } from './routes/product/edit.$id'
 import { Route as ApiUserProfilepictureRouteImport } from './routes/api/user.profilepicture'
 import { Route as ApiProductsSellerRouteImport } from './routes/api/products.seller'
 import { Route as ApiProductsPendingRouteImport } from './routes/api/products.pending'
+import { Route as ApiProductsCountRouteImport } from './routes/api/products.count'
 import { Route as ApiProductsIdRouteImport } from './routes/api/products.$id'
 import { Route as ApiOrdersSellerRouteImport } from './routes/api/orders.seller'
 import { Route as ApiOrdersIdRouteImport } from './routes/api/orders.$id'
@@ -146,6 +147,11 @@ const ApiProductsPendingRoute = ApiProductsPendingRouteImport.update({
   path: '/pending',
   getParentRoute: () => ApiProductsRoute,
 } as any)
+const ApiProductsCountRoute = ApiProductsCountRouteImport.update({
+  id: '/count',
+  path: '/count',
+  getParentRoute: () => ApiProductsRoute,
+} as any)
 const ApiProductsIdRoute = ApiProductsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/api/orders/$id': typeof ApiOrdersIdRoute
   '/api/orders/seller': typeof ApiOrdersSellerRoute
   '/api/products/$id': typeof ApiProductsIdRoute
+  '/api/products/count': typeof ApiProductsCountRoute
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/api/user/profilepicture': typeof ApiUserProfilepictureRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByTo {
   '/api/orders/$id': typeof ApiOrdersIdRoute
   '/api/orders/seller': typeof ApiOrdersSellerRoute
   '/api/products/$id': typeof ApiProductsIdRoute
+  '/api/products/count': typeof ApiProductsCountRoute
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/api/user/profilepicture': typeof ApiUserProfilepictureRoute
@@ -290,6 +298,7 @@ export interface FileRoutesById {
   '/api/orders/$id': typeof ApiOrdersIdRoute
   '/api/orders/seller': typeof ApiOrdersSellerRoute
   '/api/products/$id': typeof ApiProductsIdRoute
+  '/api/products/count': typeof ApiProductsCountRoute
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/api/user/profilepicture': typeof ApiUserProfilepictureRoute
@@ -325,6 +334,7 @@ export interface FileRouteTypes {
     | '/api/orders/$id'
     | '/api/orders/seller'
     | '/api/products/$id'
+    | '/api/products/count'
     | '/api/products/pending'
     | '/api/products/seller'
     | '/api/user/profilepicture'
@@ -357,6 +367,7 @@ export interface FileRouteTypes {
     | '/api/orders/$id'
     | '/api/orders/seller'
     | '/api/products/$id'
+    | '/api/products/count'
     | '/api/products/pending'
     | '/api/products/seller'
     | '/api/user/profilepicture'
@@ -390,6 +401,7 @@ export interface FileRouteTypes {
     | '/api/orders/$id'
     | '/api/orders/seller'
     | '/api/products/$id'
+    | '/api/products/count'
     | '/api/products/pending'
     | '/api/products/seller'
     | '/api/user/profilepicture'
@@ -570,6 +582,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProductsPendingRouteImport
       parentRoute: typeof ApiProductsRoute
     }
+    '/api/products/count': {
+      id: '/api/products/count'
+      path: '/count'
+      fullPath: '/api/products/count'
+      preLoaderRoute: typeof ApiProductsCountRouteImport
+      parentRoute: typeof ApiProductsRoute
+    }
     '/api/products/$id': {
       id: '/api/products/$id'
       path: '/$id'
@@ -697,12 +716,14 @@ const ApiProductsPendingRouteWithChildren =
 
 interface ApiProductsRouteChildren {
   ApiProductsIdRoute: typeof ApiProductsIdRoute
+  ApiProductsCountRoute: typeof ApiProductsCountRoute
   ApiProductsPendingRoute: typeof ApiProductsPendingRouteWithChildren
   ApiProductsSellerRoute: typeof ApiProductsSellerRoute
 }
 
 const ApiProductsRouteChildren: ApiProductsRouteChildren = {
   ApiProductsIdRoute: ApiProductsIdRoute,
+  ApiProductsCountRoute: ApiProductsCountRoute,
   ApiProductsPendingRoute: ApiProductsPendingRouteWithChildren,
   ApiProductsSellerRoute: ApiProductsSellerRoute,
 }
