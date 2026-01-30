@@ -87,3 +87,9 @@ export interface CategoryMeta {
 	icon: string;
 	count: number;
 }
+
+export interface ApprovedProductQueryOptions {
+	limit?: number;
+	offset?: number;
+	random?: boolean;
+}
