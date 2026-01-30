@@ -69,7 +69,7 @@ export function getPendingApprovalProducts() {
 }
 
 export function getProductCountByCategory() {
-	return apiFetch<ProductCountByCategoryData>("/api/products/count");
+	return apiFetch<ProductCountByCategoryData[]>("/api/products/count");
 }
 
 export function getRecentProducts() {

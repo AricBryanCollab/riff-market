@@ -36,6 +36,18 @@ export function HeroFeaturedProductErrorState() {
 	);
 }
 
+export function CategoryGridError({ refetch }: ErrorStateProps) {
+	return (
+		<div className="flex flex-col items-center justify-center py-12 gap-4 text-center border rounded-lg shadow-md">
+			<MusicNote size={64} />
+			<p className="text-destructive text-lg">
+				Failed to load product categories
+			</p>
+			<Button onClick={refetch}>Try Again</Button>
+		</div>
+	);
+}
+
 export function ProductErrorState({ refetch }: ErrorStateProps) {
 	return (
 		<div className="flex flex-col justify-center items-center w-full min-h-screen gap-4">

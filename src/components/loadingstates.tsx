@@ -21,6 +21,20 @@ export function HeroFeaturedProductLoading() {
 	);
 }
 
+export function CategoryGridLoading() {
+	return (
+		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+			{Array.from({ length: 5 }).map((_, i) => (
+				<Skeleton
+					// biome-ignore lint/suspicious/noArrayIndexKey: placeholder
+					key={i}
+					className="h-20 rounded-xl"
+				/>
+			))}
+		</div>
+	);
+}
+
 export function ProductLoadingState() {
 	return (
 		<div className="flex flex-col items-center py-12">
