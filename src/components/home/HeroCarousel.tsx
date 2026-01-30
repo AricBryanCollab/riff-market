@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import ConditionBadge from "@/components/home/ConditionBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { BaseProduct } from "@/types/product";
-import ConditionBadge from "./ConditionBadge";
 
 interface HeroCarouselProps {
 	products: BaseProduct[];
@@ -34,28 +34,39 @@ const HeroCarousel = ({
 	return (
 		<section className="py-16">
 			<div className="grid md:grid-cols-2 gap-12 items-center">
+				{/* Image Section */}
 				<div className="relative">
 					<Link
-						to="/product/$id"
+						to={`/product/${product.id} ` as `/product/$id`}
 						params={{ id: product.id }}
 						className="block relative aspect-square bg-muted rounded-2xl overflow-hidden"
 					>
 						<div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
-							<svg
-								className="w-32 h-32"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-								role="img"
-								aria-label="Musical note placeholder"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={0.5}
-									d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+							{product.images && product.images.length > 0 ? (
+								<img
+									src={product.images[0]}
+									alt={product.name}
+									className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
 								/>
-							</svg>
+							) : (
+								<div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
+									<svg
+										className="w-32 h-32"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+										role="img"
+										aria-label="Musical note placeholder"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={0.5}
+											d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+										/>
+									</svg>
+								</div>
+							)}
 						</div>
 						<ConditionBadge condition={product.condition} />
 					</Link>
@@ -80,6 +91,7 @@ const HeroCarousel = ({
 						<ChevronRight className="w-5 h-5" />
 					</Button>
 
+					{/* Product Details: Right Side */}
 					<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
 						{products.map((_, index) => (
 							<button
@@ -116,7 +128,7 @@ const HeroCarousel = ({
 					</p>
 
 					<Link
-						to="/product/$id"
+						to={`/product/${product.id} ` as `/product/$id`}
 						params={{ id: product.id }}
 						className={buttonVariants({ size: "lg", className: "mt-8 w-fit" })}
 					>
