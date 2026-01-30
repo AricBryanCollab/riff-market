@@ -37,6 +37,17 @@ export function EmptyFeaturedProductState() {
 	);
 }
 
+export function CategoryGridEmpty() {
+	return (
+		<div className="flex flex-col items-center justify-center py-12 gap-4 text-center border rounded-lg shadow-md">
+			<MusicNote size={64} />
+			<p className="text-muted-foreground text-lg">
+				No product categories available yet
+			</p>
+		</div>
+	);
+}
+
 export function EmptyProductState({ showPending }: EmptyStateProps) {
 	return (
 		<div className="col-span-full text-center py-12">
