@@ -9,7 +9,9 @@ export const useAuthUser = () => {
 	const userQuery = useQuery({
 		queryKey: ["auth", "user"],
 		queryFn: getCurrentUser,
-		retry: false,
+		enabled: false,
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
 	});
 
 	useEffect(() => {

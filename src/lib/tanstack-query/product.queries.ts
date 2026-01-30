@@ -53,6 +53,16 @@ export function getApprovedProducts() {
 	return apiFetch<BaseProduct[]>("/api/products");
 }
 
+export function getFeaturedProducts() {
+	return apiFetch<BaseProduct[]>("/api/products?limit=5&random=true");
+}
+
+export function getShopProducts(limit: number = 50, offset: number = 0) {
+	return apiFetch<BaseProduct[]>(
+		`/api/products?limit=${limit}&offset=${offset}`,
+	);
+}
+
 export function getPendingApprovalProducts() {
 	return apiFetch<BaseProduct[]>("/api/products/pending");
 }
