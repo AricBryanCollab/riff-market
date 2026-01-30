@@ -39,19 +39,23 @@ src/
 
 1. **Install dependencies:**
    ```bash
-   npm install
+   bun install
    ```
 
 2. **Run the development server:**
    ```bash
-   npm run start
+   bun dev
    ```
 
 3. **Build for production:**
    ```bash
-   npm run build
+   bun build
    ```
 
+4. **Syntax Format for this app**
+   ```bash
+      biome format 
+   ```
 ---
 
 ## Testing
