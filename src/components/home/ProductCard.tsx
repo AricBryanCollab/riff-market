@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
+import MusicNote from "@/assets/musicnote";
+import ConditionBadge from "@/components/home/ConditionBadge";
 import type { BaseProduct } from "@/types/product";
-import ConditionBadge from "./ConditionBadge";
 
 interface ProductCardProps {
 	product: BaseProduct;
@@ -15,21 +16,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 		>
 			<div className="relative aspect-square bg-muted">
 				<div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
-					<svg
-						className="w-16 h-16"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-						role="img"
-						aria-label="Musical note placeholder"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={0.5}
-							d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-						/>
-					</svg>
+					<MusicNote size={16} />
 				</div>
 				<ConditionBadge condition={product.condition} />
 			</div>
