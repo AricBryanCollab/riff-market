@@ -32,6 +32,7 @@ const baseProductQuery = {
 	sellerId: true,
 	name: true,
 	category: true,
+	condition: true,
 	brand: true,
 	model: true,
 	images: true,
