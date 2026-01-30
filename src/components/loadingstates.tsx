@@ -1,4 +1,25 @@
 import AnimatedLoader from "@/components/animatedloader";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export function HeroFeaturedProductLoading() {
+	return (
+		<section className="py-16">
+			<div className="grid md:grid-cols-2 gap-12 items-center">
+				<div className="relative">
+					<Skeleton className="aspect-square rounded-2xl" />
+				</div>
+				<div className="flex flex-col justify-center space-y-4">
+					<Skeleton className="h-4 w-20" />
+					<Skeleton className="h-12 w-3/4" />
+					<Skeleton className="h-6 w-1/2" />
+					<Skeleton className="h-10 w-32" />
+					<Skeleton className="h-4 w-40" />
+					<Skeleton className="h-12 w-40 mt-4" />
+				</div>
+			</div>
+		</section>
+	);
+}
 
 export function ProductLoadingState() {
 	return (
