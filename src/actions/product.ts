@@ -6,6 +6,7 @@ import {
 	getProductById,
 	getProductCountByCategory,
 	getProductsBySellerId,
+	getRecentProducts,
 	updateProductById,
 	updateProductStatus,
 } from "@/data/product.repo";
@@ -137,6 +138,11 @@ export async function getPendingProductsService() {
 // Get Product Count By Category
 export async function getProductCountByCategoryService() {
 	return await getProductCountByCategory();
+}
+
+export async function getRecentProductsService(limit: number = 8) {
+	const products = await getRecentProducts(limit);
+	return products;
 }
 
 //Update Product Service
