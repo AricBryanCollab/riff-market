@@ -101,13 +101,19 @@ export const getApprovedProducts = async ({
 }: Partial<ApprovedProductQueryOptions>) => {
 	try {
 		if (random) {
-			return await prisma.$queryRaw`
-        SELECT * FROM "Product"
-        WHERE "isApproved" = true
-        ORDER BY RANDOM()
-        LIMIT ${limit}
-        OFFSET ${offset}
-      `;
+			const total = await prisma.product.count({
+				where: { isApproved: true },
+			});
+
+			const randomSkip =
+				total > limit ? Math.floor(Math.random() * (total - limit)) : 0;
+
+			return await prisma.product.findMany({
+				where: { isApproved: true },
+				select: baseProductQuery,
+				take: limit,
+				skip: randomSkip,
+			});
 		}
 
 		return await prisma.product.findMany({
