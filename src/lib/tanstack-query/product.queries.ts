@@ -4,11 +4,11 @@ import type {
 	CreateProductInput,
 	UpdateProductInput,
 } from "@/lib/zod/product.validation";
-import {
-	type BaseProduct,
+import type {
+	BaseProduct,
 	ProductCountByCategoryData,
-	type ProductResponse,
-	type UpdateProductStatusResult,
+	ProductResponse,
+	UpdateProductStatusResult,
 } from "@/types/product";
 
 function prepareProductFormData(
@@ -70,6 +70,10 @@ export function getPendingApprovalProducts() {
 
 export function getProductCountByCategory() {
 	return apiFetch<ProductCountByCategoryData>("/api/products/count");
+}
+
+export function getRecentProducts() {
+	return apiFetch<BaseProduct[]>("/api/products/recent");
 }
 
 export function updateProduct(id: string, data: UpdateProductInput) {
