@@ -16,6 +16,7 @@ import {
 	updateProductSchema,
 	updateProductStatusSchema,
 } from "@/lib/zod/product.validation";
+import type { ApprovedProductQueryOptions } from "@/types/product";
 import {
 	deleteImage,
 	getPublicId,
@@ -117,8 +118,12 @@ export async function getProductsBySellerService(id: string, role: string) {
 }
 
 // Get Approved Products
-export async function getApprovedProductsService() {
-	const products = await getApprovedProducts();
+export async function getApprovedProductsService({
+	limit = 12,
+	offset = 0,
+	random = false,
+}: Partial<ApprovedProductQueryOptions>) {
+	const products = await getApprovedProducts({ limit, offset, random });
 	return products;
 }
 

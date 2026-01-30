@@ -12,9 +12,19 @@ export const Route = createFileRoute("/api/products")({
 		handlers: ({ createHandlers }) =>
 			createHandlers({
 				GET: {
-					handler: async () => {
+					handler: async ({ request }) => {
 						try {
-							const products = await getApprovedProductsService();
+							const url = new URL(request.url);
+
+							const limit = parseInt(url.searchParams.get("limit") || "12", 12);
+							const offset = parseInt(url.searchParams.get("offset") || "0", 5);
+							const random = url.searchParams.get("random") === "true";
+
+							const products = await getApprovedProductsService({
+								limit,
+								offset,
+								random,
+							});
 
 							return new Response(JSON.stringify(products), { status: 200 });
 						} catch (error) {
