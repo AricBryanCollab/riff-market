@@ -1,5 +1,6 @@
 import type { Product } from "generated/prisma/client";
 import { prisma } from "@/data/connectDb";
+import type { ApprovedProductQueryOptions } from "@/types/product";
 
 type CreateProductRepoInput = Omit<
 	Product,
@@ -93,12 +94,28 @@ export const getProductsBySellerId = async (sellerId: string) => {
 	}
 };
 
-export const getApprovedProducts = async () => {
+export const getApprovedProducts = async ({
+	limit = 12,
+	offset = 0,
+	random = false,
+}: Partial<ApprovedProductQueryOptions>) => {
 	try {
+		if (random) {
+			return await prisma.$queryRaw`
+        SELECT * FROM "Product"
+        WHERE "isApproved" = true
+        ORDER BY RANDOM()
+        LIMIT ${limit}
+        OFFSET ${offset}
+      `;
+		}
+
 		return await prisma.product.findMany({
 			where: { isApproved: true },
 			orderBy: { createdAt: "desc" },
 			select: baseProductQuery,
+			take: limit,
+			skip: offset,
 		});
 	} catch (err) {
 		console.error("Error at getApprovedProducts", err);
