@@ -171,6 +171,21 @@ export const getProductCountByCategory = async () => {
 	}
 };
 
+// Get Recent Products (Up to 8 products)
+export const getRecentProducts = async (limit: number = 8) => {
+	try {
+		return await prisma.product.findMany({
+			where: { isApproved: true },
+			orderBy: { createdAt: "desc" },
+			select: baseProductQuery,
+			take: limit,
+		});
+	} catch (err) {
+		console.error("Error at getRecentProducts", err);
+		throw err;
+	}
+};
+
 // Update Product By ID
 export const updateProductById = async (
 	id: string,
