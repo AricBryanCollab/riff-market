@@ -26,7 +26,7 @@ export const createProduct = async (product: CreateProductRepoInput) => {
 	}
 };
 
-// Get Products
+// Get Products Base Query
 const baseProductQuery = {
 	id: true,
 	sellerId: true,
@@ -52,6 +52,7 @@ const baseProductQuery = {
 	},
 };
 
+// Get Product By ID
 export const getProductById = async (id: string) => {
 	try {
 		return await prisma.product.findFirst({
@@ -64,6 +65,7 @@ export const getProductById = async (id: string) => {
 	}
 };
 
+// Get Multiple Product By IDs
 export const getProductsByIds = async (productIds: string[]) => {
 	try {
 		const products = await prisma.product.findMany({
@@ -82,6 +84,7 @@ export const getProductsByIds = async (productIds: string[]) => {
 	}
 };
 
+// Get Product By Seller
 export const getProductsBySellerId = async (sellerId: string) => {
 	try {
 		return await prisma.product.findMany({
@@ -95,6 +98,7 @@ export const getProductsBySellerId = async (sellerId: string) => {
 	}
 };
 
+// Get Approved Products
 export const getApprovedProducts = async ({
 	limit = 12,
 	offset = 0,
@@ -130,6 +134,7 @@ export const getApprovedProducts = async ({
 	}
 };
 
+//  Get Pending Approval Products
 export const getPendingApprovalProducts = async () => {
 	try {
 		return await prisma.product.findMany({
@@ -139,6 +144,44 @@ export const getPendingApprovalProducts = async () => {
 		});
 	} catch (err) {
 		console.error("Error at getPendingApprovalProducts", err);
+		throw err;
+	}
+};
+
+// Get Product Count By Category
+export const getProductCountByCategory = async () => {
+	try {
+		const groupedProducts = await prisma.product.groupBy({
+			by: ["category"],
+			where: {
+				isApproved: true,
+			},
+			_count: {
+				category: true,
+			},
+		});
+
+		return groupedProducts.map((product) => ({
+			category: product.category,
+			count: product._count.category,
+		}));
+	} catch (err) {
+		console.error("Error at getProductCountByCategory", err);
+		throw err;
+	}
+};
+
+// Get Recent Products (Up to 8 products)
+export const getRecentProducts = async (limit: number = 8) => {
+	try {
+		return await prisma.product.findMany({
+			where: { isApproved: true },
+			orderBy: { createdAt: "desc" },
+			select: baseProductQuery,
+			take: limit,
+		});
+	} catch (err) {
+		console.error("Error at getRecentProducts", err);
 		throw err;
 	}
 };

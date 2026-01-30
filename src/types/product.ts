@@ -93,3 +93,8 @@ export interface ApprovedProductQueryOptions {
 	offset?: number;
 	random?: boolean;
 }
+
+export interface ProductCountByCategoryData {
+	category: ProductCategory;
+	count: number;
+}
