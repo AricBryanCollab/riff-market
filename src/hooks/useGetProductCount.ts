@@ -16,6 +16,7 @@ const useGetProductCount = () => {
 		data: rawCategoryCounts,
 		isPending: loadingCategoryCounts,
 		isError: isErrorCategoryCounts,
+		refetch: refetchCategoryCounts,
 	} = useQuery(prroductCountByCategory);
 
 	const categoryCounts = useMemo<CategoryMeta[] | undefined>(() => {
@@ -27,6 +28,7 @@ const useGetProductCount = () => {
 		categoryCounts,
 		loadingCategoryCounts,
 		isErrorCategoryCounts,
+		refetchCategoryCounts,
 	};
 };
 
