@@ -1,13 +1,14 @@
 import { Bell, Package, PackageSearch, ShoppingCart } from "lucide-react";
+import { ClientOnly } from "@tanstack/react-router";
 import { AppDropdown } from "@/components/app-dropdown";
 import Avatar from "@/components/avatar";
 import CartList from "@/components/cartlist";
-import ClientOnly from "@/components/clientonly";
 import NavbarIconButtons from "@/components/navbariconbuttons";
 import NotificationList from "@/components/notificationlist";
 import OrderList from "@/components/orderlist";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Skeleton } from "@/components/ui/skeleton";
 import useCartDetails from "@/hooks/useCartDetails";
 import useGetOrders from "@/hooks/useGetOrders";
 import useGetPendingProducts from "@/hooks/useGetPendingProducts";
@@ -17,6 +18,15 @@ import { useDialogStore } from "@/store/dialog";
 import { useUserStore } from "@/store/user";
 import type { UserRole } from "@/types/enum";
 import PendingProductList from "./pendingproductlist";
+
+const UserMenuFallback = () => (
+	<div className="flex items-center gap-4" aria-hidden>
+		<Skeleton className="h-9 w-9 rounded-full" />
+		<Skeleton className="h-9 w-9 rounded-full" />
+		<Skeleton className="h-9 w-9 rounded-full" />
+		<Skeleton className="h-9 w-20 rounded-md" />
+	</div>
+);
 
 const UserMenu = () => {
 	const { setOpenDialog } = useDialogStore();
@@ -127,7 +137,7 @@ const UserMenu = () => {
 	};
 
 	return (
-		<ClientOnly>
+		<ClientOnly fallback={<UserMenuFallback />}>
 			{user !== null ? (
 				<div className="flex items-center gap-4">
 					<Avatar showInfo clickable />
