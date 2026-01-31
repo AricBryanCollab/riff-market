@@ -18,7 +18,9 @@
 		"lint:fix": "biome lint --write",
 		"hooks:install": "git config core.hooksPath .githooks",
 		"check": "biome check",
-		"check:fix": "biome check --write"
+		"check:fix": "biome check --write",
+    "typecheck": "tsc --noEmit",
+    "validate": "bun typecheck && bun lint"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.1.0",
