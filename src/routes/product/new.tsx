@@ -7,8 +7,8 @@ import ImageUploader from "@/components/imageuploader";
 import { NumberField } from "@/components/number-field";
 import { SearchableSelect } from "@/components/searchable-select";
 import SectionContainer from "@/components/sectioncontainer";
-import { Body, H4 } from "@/components/ui/typography";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Body, H4 } from "@/components/ui/typography";
 import {
 	productCategoryOptions,
 	productConditionOptions,

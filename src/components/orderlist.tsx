@@ -1,8 +1,8 @@
 import { ArrowRight, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
-import { BodySmall, H5 } from "@/components/ui/typography";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { BodySmall, H5 } from "@/components/ui/typography";
 import { useUserStore } from "@/store/user";
 import type { OrderStatus } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
