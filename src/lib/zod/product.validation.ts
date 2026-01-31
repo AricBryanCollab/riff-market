@@ -29,6 +29,35 @@ export const createProductSchema = z.object({
 	stock: z.number().int().min(0, "Stock must be at least 0"),
 });
 
+export const getProductQuerySchema = z.object({
+	limit: z
+		.string()
+		.nullable()
+		.transform((val) => {
+			if (!val) return 12;
+			const parsed = parseInt(val, 10);
+			if (Number.isNaN(parsed) || parsed < 1 || parsed > 100) {
+				throw new Error("Limit must be between 1 and 100");
+			}
+			return parsed;
+		}),
+	offset: z
+		.string()
+		.nullable()
+		.transform((val) => {
+			if (!val) return 0;
+			const parsed = parseInt(val, 10);
+			if (Number.isNaN(parsed) || parsed < 0) {
+				throw new Error("Offset must be 0 or greater");
+			}
+			return parsed;
+		}),
+	random: z
+		.string()
+		.nullable()
+		.transform((val) => val === "true"),
+});
+
 export const updateProductSchema = createProductSchema.partial();
 
 export const updateProductStatusSchema = z.object({
@@ -36,6 +65,7 @@ export const updateProductStatusSchema = z.object({
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
+export type GetProductQuery = z.infer<typeof getProductQuerySchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type UpdateProductStatusInput = z.infer<
 	typeof updateProductStatusSchema
