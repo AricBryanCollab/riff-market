@@ -3,7 +3,7 @@ import { ArrowLeft, ShoppingCart } from "lucide-react";
 import CartCard from "@/components/cartcard";
 import { CartDetailsLoadingState } from "@/components/loadingstates";
 import SectionContainer from "@/components/sectioncontainer";
-import { BodyLarge, BodySmall, H2 } from "@/components/typography";
+import { BodyLarge, BodySmall, H2 } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import useCartDetails from "@/hooks/useCartDetails";
 import { requireRole } from "@/utils/requireRole";

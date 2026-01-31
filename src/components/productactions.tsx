@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { Pencil, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
 import Counter from "@/components/counter";
 import IconButton from "@/components/iconbutton";
-import { BodySmall } from "@/components/typography";
+import { BodySmall } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import { ButtonStyles, RoleActionConfigs } from "@/constants/roleactionconfigs";
 import useUpdateProductStatus from "@/hooks/useUpdateProductStatus";

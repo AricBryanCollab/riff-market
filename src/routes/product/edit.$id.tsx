@@ -14,7 +14,7 @@ import { ProductLoadingState } from "@/components/loadingstates";
 import { NumberField } from "@/components/number-field";
 import { SearchableSelect } from "@/components/searchable-select";
 import SectionContainer from "@/components/sectioncontainer";
-import { Body, H4 } from "@/components/typography";
+import { Body, H4 } from "@/components/ui/typography";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { productCategoryOptions } from "@/constants/selectOptions";
 import useUpdateProduct from "@/hooks/useUpdateProduct";

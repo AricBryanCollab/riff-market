@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Clock, Package } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
-import { BodySmall, H5 } from "@/components/typography";
+import { BodySmall, H5 } from "@/components/ui/typography";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { BaseProduct } from "@/types/product";

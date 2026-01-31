@@ -1,5 +1,5 @@
 import { ShopPageProductActions } from "@/components/productactions";
-import { Body, H3 } from "@/components/typography";
+import { Body, H3 } from "@/components/ui/typography";
 
 interface ProductHeaderProps {
 	searchTerm: string;

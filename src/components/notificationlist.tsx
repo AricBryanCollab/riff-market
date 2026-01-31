@@ -1,7 +1,7 @@
 import type { UseMutateFunction } from "@tanstack/react-query";
 import { Bell, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
-import { BodySmall, H5 } from "@/components/typography";
+import { BodySmall, H5 } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import type { NotificationData } from "@/types/notification";
 import { formatRelativeTime } from "@/utils/formatDate";

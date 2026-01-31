@@ -1,4 +1,4 @@
-import { BodyLarge, BodySmall, Caption } from "@/components/typography";
+import { BodyLarge, BodySmall, Caption } from "@/components/ui/typography";
 
 interface ProfileInfoFieldProps {
 	label: string;
