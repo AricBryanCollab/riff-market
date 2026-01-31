@@ -6,7 +6,7 @@ import HeroCarousel from "@/components/home/HeroCarousel";
 import RecentListings from "@/components/home/RecentListings";
 import { HeroFeaturedProductLoading } from "@/components/loadingstates";
 import SectionContainer from "@/components/sectioncontainer";
-import { H2 } from "@/components/typography";
+import { H2 } from "@/components/ui/typography";
 import useGetProducts from "@/hooks/useGetProducts";
 
 export const Route = createFileRoute("/")({ component: HomePage });

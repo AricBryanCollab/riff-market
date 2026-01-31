@@ -1,6 +1,6 @@
 import { Box, Settings } from "lucide-react";
-import { BodySmall } from "@/components/typography";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { BodySmall } from "@/components/ui/typography";
 import useDeleteProduct from "@/hooks/useDeleteProduct";
 import { useDialogStore } from "@/store/dialog";
 

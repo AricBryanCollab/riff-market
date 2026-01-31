@@ -5,9 +5,9 @@ import OrderSummary from "@/components/order/ordersummary";
 import PaymentMethodSelect from "@/components/order/paymentmethodselect";
 import ShippingAddressField from "@/components/order/shippingaddressfield";
 import SectionContainer from "@/components/sectioncontainer";
-import { H2 } from "@/components/typography";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { H2 } from "@/components/ui/typography";
 import useCartDetails from "@/hooks/useCartDetails";
 import usePlaceOrder from "@/hooks/usePlaceOrder";
 

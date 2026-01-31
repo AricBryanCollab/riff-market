@@ -1,5 +1,5 @@
 import SectionContainer from "@/components/sectioncontainer";
-import { H1, H4 } from "@/components/typography";
+import { H1, H4 } from "@/components/ui/typography";
 
 interface HeroProps {
 	image: string;
