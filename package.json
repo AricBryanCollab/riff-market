@@ -7,6 +7,7 @@
 		"build": "bun --bun vite build",
 		"preview": "bun --bun vite preview",
 		"deploy": "vite build",
+    "db:generate": "bun prisma generate",
 		"test": "vitest run",
 		"test:unit": "vitest run --config vitest.config.ts",
 		"test:browser": "vitest run --config vitest.browser.config.ts",
