@@ -14,11 +14,11 @@ import { env } from "@/env";
 import {
 	type CreateProductInput,
 	createProductSchema,
+	type GetProductQuery,
 	type UpdateProductInput,
 	updateProductSchema,
 	updateProductStatusSchema,
 } from "@/lib/zod/product.validation";
-import type { ApprovedProductQueryOptions } from "@/types/product";
 import {
 	deleteImage,
 	getPublicId,
@@ -124,7 +124,7 @@ export async function getApprovedProductsService({
 	limit = 12,
 	offset = 0,
 	random = false,
-}: Partial<ApprovedProductQueryOptions>) {
+}: GetProductQuery) {
 	const products = await getApprovedProducts({ limit, offset, random });
 	return products;
 }

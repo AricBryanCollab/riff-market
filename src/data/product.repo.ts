@@ -1,6 +1,6 @@
 import type { Product } from "generated/prisma/client";
 import { prisma } from "@/data/connectDb";
-import type { ApprovedProductQueryOptions } from "@/types/product";
+import type { GetProductQuery } from "@/lib/zod/product.validation";
 
 type CreateProductRepoInput = Omit<
 	Product,
@@ -103,7 +103,7 @@ export const getApprovedProducts = async ({
 	limit = 12,
 	offset = 0,
 	random = false,
-}: Partial<ApprovedProductQueryOptions>) => {
+}: GetProductQuery) => {
 	try {
 		if (random) {
 			const total = await prisma.product.count({
