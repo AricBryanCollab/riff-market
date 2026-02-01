@@ -7,6 +7,7 @@
 		"build": "bun --bun vite build",
 		"preview": "bun --bun vite preview",
 		"deploy": "vite build",
+    "db:generate": "bun prisma generate",
 		"test": "vitest run",
 		"test:unit": "vitest run --config vitest.config.ts",
 		"test:browser": "vitest run --config vitest.browser.config.ts",
@@ -17,7 +18,9 @@
 		"lint:fix": "biome lint --write",
 		"hooks:install": "git config core.hooksPath .githooks",
 		"check": "biome check",
-		"check:fix": "biome check --write"
+		"check:fix": "biome check --write",
+    "typecheck": "tsc --noEmit",
+    "validate": "bun typecheck && bun lint"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.1.0",
