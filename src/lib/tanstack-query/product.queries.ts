@@ -50,18 +50,24 @@ export function getProductDetailsById(id: string) {
 	return apiFetch<BaseProduct>(`/api/products/${id}`);
 }
 
-export function getApprovedProducts() {
+export function getApprovedProducts(limit?: number, offset?: number) {
+	const params = new URLSearchParams();
+
+	if (limit !== undefined) params.append("limit", limit.toString());
+	if (offset !== undefined) params.append("offset", offset.toString());
+
+	const queryString = params.toString();
+	const url = queryString ? `/api/products?${queryString}` : "/api/products";
+
+	return apiFetch<BaseProduct[]>(url);
+}
+
+export function getAllApprovedProducts() {
 	return apiFetch<BaseProduct[]>("/api/products");
 }
 
 export function getFeaturedProducts() {
 	return apiFetch<BaseProduct[]>("/api/products?limit=5&random=true");
-}
-
-export function getShopProducts(limit: number = 50, offset: number = 0) {
-	return apiFetch<BaseProduct[]>(
-		`/api/products?limit=${limit}&offset=${offset}`,
-	);
 }
 
 export function getPendingApprovalProducts() {
