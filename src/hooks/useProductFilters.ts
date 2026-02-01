@@ -1,19 +1,26 @@
 import { useState } from "react";
-import useGetProducts from "@/hooks/useGetProducts";
-import useGetPendingProducts from "./useGetPendingProducts";
+import useGetPendingProducts from "@/hooks/useGetPendingProducts";
+import useShopPagination from "@/hooks/useShopPagination";
 
 const useProductFilters = () => {
 	const [searchTerm, setSearchTerm] = useState<string>("");
+	const [showPending, setShowPending] = useState<boolean>(false);
 	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
 	const {
 		productList,
 		loadingProductList,
 		isErrorProductList,
-		showPending,
-		setShowPending,
+		page,
+		pageSize,
+		hasProducts,
+		isFirstPage,
+		isLastPage,
 		refetchProductList,
-	} = useGetProducts();
+		nextPage,
+		previousPage,
+		goToPage,
+	} = useShopPagination();
 
 	const {
 		pendingProducts,
@@ -41,30 +48,42 @@ const useProductFilters = () => {
 	const handleShowPending = () => {
 		setShowPending(true);
 		setSelectedCategory(null);
+		goToPage(0);
 	};
 
 	const handleShowAll = () => {
 		setShowPending(false);
 		setSelectedCategory(null);
+		goToPage(0);
 	};
 
 	const handleSearchChange = (value: string) => {
 		setSearchTerm(value);
+		goToPage(0);
 	};
 
 	const handleCategoryChange = (category: string) => {
 		setSelectedCategory(category);
+		goToPage(0);
 	};
 
 	return {
 		searchTerm,
 		selectedCategory,
-		showPending,
 		filteredProducts,
 		productList,
+		showPending,
 		isLoadingPendingProduct,
 		isPending: loadingProductList || (isLoadingPendingProduct && showPending),
 		isError: isErrorProductList || isErrorPendingProduct,
+		page,
+		pageSize,
+		hasProducts,
+		isFirstPage,
+		isLastPage,
+		nextPage,
+		previousPage,
+		goToPage,
 		handleSearchChange,
 		handleCategoryChange,
 		handleShowPending,

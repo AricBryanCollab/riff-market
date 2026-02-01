@@ -15,7 +15,7 @@ import ReviewSection from "@/components/reviewsection";
 import SectionContainer from "@/components/sectioncontainer";
 import { productCategoryOptions } from "@/constants/selectOptions";
 import { pendingProductsQueryOpt } from "@/hooks/useGetPendingProducts";
-import { productsQueryOpt } from "@/hooks/useGetProducts";
+import { allApprovedProductsQueryOpt } from "@/hooks/useGetProducts";
 import { useUserStore } from "@/store/user";
 
 export const Route = createFileRoute("/product/$id")({
@@ -24,8 +24,9 @@ export const Route = createFileRoute("/product/$id")({
 
 function RouteComponent() {
 	const { id } = useParams({ from: "/product/$id" });
-	const { data: approvedProducts, isPending: isLoadingApproved } =
-		useQuery(productsQueryOpt);
+	const { data: approvedProducts, isPending: isLoadingApproved } = useQuery(
+		allApprovedProductsQueryOpt,
+	);
 	const { user } = useUserStore();
 	const isAdmin = user?.role === "ADMIN";
 

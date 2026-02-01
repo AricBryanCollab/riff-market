@@ -88,12 +88,6 @@ export interface CategoryMeta {
 	count: number;
 }
 
-export interface ApprovedProductQueryOptions {
-	limit?: number;
-	offset?: number;
-	random?: boolean;
-}
-
 export interface ProductCountByCategoryData {
 	category: ProductCategory;
 	count: number;

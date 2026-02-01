@@ -6,6 +6,8 @@ import { ShopPageHeader } from "@/components/pageheaders";
 import ProductCard from "@/components/productcard";
 import ProductFilterBadges from "@/components/productfilterbadges";
 import SectionContainer from "@/components/sectioncontainer";
+import { Button } from "@/components/ui/button";
+import { H3 } from "@/components/ui/typography";
 import useProductFilters from "@/hooks/useProductFilters";
 
 export const Route = createFileRoute("/shop/")({
@@ -21,6 +23,11 @@ function RouteComponent() {
 		productList,
 		isPending,
 		isError,
+		page,
+		isFirstPage,
+		isLastPage,
+		nextPage,
+		previousPage,
 		handleSearchChange,
 		handleCategoryChange,
 		handleShowPending,
@@ -51,38 +58,39 @@ function RouteComponent() {
 				onCategorySelect={handleCategoryChange}
 			/>
 
-			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-h-200">
 				{filteredProducts.length > 0 ? (
 					filteredProducts.map((product) => (
 						<ProductCard key={product.id} product={product} />
 					))
 				) : (
-					<div className="col-span-full flex justify-center items-center gap-4 text-center py-8 text-muted-foreground">
+					<div className="col-span-full flex flex-col justify-center items-center gap-4 text-center py-8 text-muted-foreground">
 						<ListMusic size={28} />
-						<p>No products match your search here</p>
+						<H3>No products match your search here</H3>
 					</div>
 				)}
 			</div>
 
 			<div className="flex justify-center py-6">
 				<div className="flex items-center gap-2">
-					<button
-						type="button"
+					<Button
+						onClick={previousPage}
+						disabled={isFirstPage}
 						className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
-						disabled
 					>
 						Previous
-					</button>
+					</Button>
 					<span className="px-4 py-2 text-sm text-muted-foreground">
-						Page 1 of 1
+						Page {page + 1}
 					</span>
-					<button
-						type="button"
+					{/* Todo: create getProductCount API and create a helper to calculate total page size */}
+					<Button
+						onClick={nextPage}
+						disabled={isLastPage}
 						className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
-						disabled
 					>
 						Next
-					</button>
+					</Button>
 				</div>
 			</div>
 		</SectionContainer>

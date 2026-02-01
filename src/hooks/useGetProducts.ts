@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
+	getAllApprovedProducts,
 	getApprovedProducts,
 	getFeaturedProducts,
 	getProductDetailsById,
@@ -8,9 +9,16 @@ import {
 import type { BaseProduct } from "@/types/product";
 
 // Query Options of Products
-export const productsQueryOpt = queryOptions<BaseProduct[]>({
-	queryKey: ["products"],
-	queryFn: getApprovedProducts,
+export const approvedProductsWithQueryOpt = (limit = 12, offset = 0) =>
+	queryOptions<BaseProduct[]>({
+		queryKey: ["products", { limit, offset }],
+		queryFn: () => getApprovedProducts(limit, offset),
+	});
+
+export const allApprovedProductsQueryOpt = queryOptions<BaseProduct[]>({
+	queryKey: ["products", "all"],
+	queryFn: getAllApprovedProducts,
+	staleTime: 1000 * 60 * 5,
 });
 
 export const featuredProductsQueryOpt = queryOptions<BaseProduct[]>({
@@ -28,17 +36,9 @@ export const productbyIdQueryOpt = (id: string) =>
 
 //  UseGetProducts
 const useGetProducts = () => {
-	const [showPending, setShowPending] = useState<boolean>(false);
 	const [selectedProductId, setSelectedProductId] = useState<string | null>(
 		null,
 	);
-
-	const {
-		data: productList,
-		isPending: loadingProductList,
-		isError: isErrorProductList,
-		refetch: refetchProductList,
-	} = useQuery(productsQueryOpt);
 
 	const {
 		data: product,
@@ -58,10 +58,6 @@ const useGetProducts = () => {
 	} = useQuery(featuredProductsQueryOpt);
 
 	return {
-		productList,
-		loadingProductList,
-		isErrorProductList,
-		showPending,
 		product,
 		loadingProduct,
 		isErrorProduct,
@@ -69,9 +65,7 @@ const useGetProducts = () => {
 		featuredProducts,
 		loadingFeatured,
 		isErrorFeatured,
-		setShowPending,
 		setSelectedProductId,
-		refetchProductList,
 		refetchProductDetails,
 		refetchFeatured,
 	};

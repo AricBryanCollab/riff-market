@@ -1,4 +1,11 @@
+import { Link } from "@tanstack/react-router";
 import { User } from "lucide-react";
+import {
+	Card,
+	CardContent,
+	CardFooter,
+	CardHeader,
+} from "@/components/ui/card";
 import type { BaseProduct } from "@/types/product";
 
 interface ProductCardProps {
@@ -8,98 +15,104 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, onClick }: ProductCardProps) => {
 	const isOutOfStock = product.stock === 0;
-	const isLowStock = product.stock > 0 && product.stock <= 5;
+	const isLowStock = product.stock > 0 && product.stock <= 3;
 	const sellerName = `${product.seller.firstName} ${product.seller.lastName}`;
 
 	return (
-		<div className="flex flex-col rounded-xl bg-background/90 p-4 shadow-sm hover:shadow-md transition-shadow duration-200 group">
-			{/* Image Container - Clickable */}
-			<a
-				href={`/product/${product.id}`}
-				className="relative mb-4 h-40 rounded-lg bg-slate-200 overflow-hidden block"
-				onClick={(e) => {
-					if (onClick) {
-						e.preventDefault();
-						onClick();
-					}
-				}}
-			>
-				<img
-					src={
-						product.images[0] ||
-						"https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400"
-					}
-					alt={product.name}
-					className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-				/>
+		<Card className="flex flex-col max-h-125 hover:shadow-lg transition-shadow duration-200 group">
+			<CardHeader className="p-0">
+				<Link
+					to="/product/$id"
+					params={{ id: product.id }}
+					className="relative block h-48 rounded-t-lg bg-accent overflow-hidden"
+					onClick={(e) => {
+						if (onClick) {
+							e.preventDefault();
+							onClick();
+						}
+					}}
+				>
+					<img
+						src={
+							product.images[0] ||
+							"https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400"
+						}
+						alt={product.name}
+						className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+					/>
 
-				{/* Stock Badge */}
-				{isOutOfStock && (
-					<div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
-						Out of Stock
-					</div>
-				)}
-				{isLowStock && (
-					<div className="absolute top-2 right-2 bg-amber-500 text-white text-xs font-semibold px-2 py-1 rounded">
-						{product.stock} left
-					</div>
-				)}
-			</a>
+					{isOutOfStock && (
+						<div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
+							Out of Stock
+						</div>
+					)}
+					{isLowStock && (
+						<div className="absolute top-2 right-2 bg-amber-500 text-white text-xs font-semibold px-2 py-1 rounded">
+							{product.stock} left
+						</div>
+					)}
+				</Link>
+			</CardHeader>
 
-			{/* Brand */}
-			<div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-				{product.brand}
-			</div>
+			<CardContent className="flex-1 p-4 flex flex-col">
+				{/* Brand */}
+				<div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+					{product.brand}
+				</div>
 
-			{/* Product Name - Clickable */}
-			<a
-				href={`/product/${product.id}`}
-				className="text-sm font-semibold text-black line-clamp-2 mb-1 hover:text-primary transition-colors"
-				onClick={(e) => {
-					if (onClick) {
-						e.preventDefault();
-						onClick();
-					}
-				}}
-			>
-				{product.name}
-			</a>
+				{/* Product Name  */}
+				<Link
+					to="/product/$id"
+					params={{ id: product.id }}
+					className="text-sm font-semibold text-foreground line-clamp-2 mb-1 hover:text-primary transition-colors min-h-10"
+					onClick={(e) => {
+						if (onClick) {
+							e.preventDefault();
+							onClick();
+						}
+					}}
+				>
+					{product.name}
+				</Link>
 
-			{/* Model */}
-			<div className="text-xs text-muted-foreground mb-3">{product.model}</div>
+				{/* Model */}
+				<div className="text-xs text-muted-foreground mb-3 line-clamp-1">
+					{product.model}
+				</div>
 
-			{/* Seller Info */}
-			<div className="flex items-center gap-1.5 mb-3 text-xs text-muted-foreground">
-				<User className="size-4" />
-				<span>By {sellerName}</span>
-			</div>
+				{/* Seller Info */}
+				<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+					<User className="size-3.5 shrink-0" />
+					<span className="truncate">By {sellerName}</span>
+				</div>
+			</CardContent>
 
-			{/* Price and Buy Button */}
-			<div className="mt-auto">
-				<div className="flex items-center justify-between mb-3">
+			<CardFooter className="p-4 pt-0 flex flex-col gap-3">
+				{/* Price and Stock */}
+				<div className="flex items-center justify-between">
 					<span className="text-lg font-bold text-primary">
 						${product.price.toLocaleString()}
 					</span>
 					{!isOutOfStock && (
-						<span className="text-xs text-slate-500">
+						<span className="text-xs text-muted-foreground">
 							{product.stock} in stock
 						</span>
 					)}
 				</div>
 
-				{/* Buy Button */}
 				{isOutOfStock ? (
 					<button
 						type="button"
 						disabled
-						className="w-full py-2 px-4 rounded-lg bg-foreground/30 text-foreground text-sm font-medium cursor-not-allowed"
+						className="w-full py-2 px-4 rounded-lg bg-muted text-muted-foreground text-sm font-medium cursor-not-allowed"
 					>
 						Out of Stock
 					</button>
 				) : (
-					<a
-						href={`/product/${product.id}`}
-						className="block w-full py-2 px-4 rounded-lg bg-primary hover:bg-secondary text-white hover:text-foreground text-sm font-medium text-center transition-colors"
+					<Link
+						to="/product/$id"
+						params={{ id: product.id }}
+						className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium text-center transition-colors"
 						onClick={(e) => {
 							if (onClick) {
 								e.preventDefault();
@@ -108,10 +121,11 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 						}}
 					>
 						View Details
-					</a>
+					</Link>
 				)}
-			</div>
-		</div>
+			</CardFooter>
+		</Card>
 	);
 };
+
 export default ProductCard;

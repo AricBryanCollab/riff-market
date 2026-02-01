@@ -3,6 +3,7 @@ import {
 	createProductService,
 	getApprovedProductsService,
 } from "@/actions/product";
+import { getProductQuerySchema } from "@/lib/zod/product.validation";
 import { authMiddleware } from "@/middleware";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
 import { extractFormData } from "@/utils/extractFormData";
@@ -16,9 +17,28 @@ export const Route = createFileRoute("/api/products")({
 						try {
 							const url = new URL(request.url);
 
-							const limit = parseInt(url.searchParams.get("limit") || "12", 12);
-							const offset = parseInt(url.searchParams.get("offset") || "0", 5);
-							const random = url.searchParams.get("random") === "true";
+							const parsedQuery = getProductQuerySchema.safeParse({
+								limit: url.searchParams.get("limit"),
+								offset: url.searchParams.get("offset"),
+								random: url.searchParams.get("random"),
+							});
+
+							if (!parsedQuery.success) {
+								return new Response(
+									JSON.stringify({
+										message: "Invalid query parameters",
+										errors: parsedQuery.error.issues.map((issue) => ({
+											field: issue.path.join("."),
+											message: issue.message,
+										})),
+									}),
+									{
+										status: 400,
+									},
+								);
+							}
+
+							const { limit, offset, random } = parsedQuery.data;
 
 							const products = await getApprovedProductsService({
 								limit,
