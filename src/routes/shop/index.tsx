@@ -58,13 +58,13 @@ function RouteComponent() {
 				onCategorySelect={handleCategoryChange}
 			/>
 
-			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 border">
+			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-h-200">
 				{filteredProducts.length > 0 ? (
 					filteredProducts.map((product) => (
 						<ProductCard key={product.id} product={product} />
 					))
 				) : (
-					<div className="col-span-full flex justify-center place-items-center gap-4 text-center py-8 text-muted-foreground">
+					<div className="col-span-full flex flex-col justify-center items-center gap-4 text-center py-8 text-muted-foreground">
 						<ListMusic size={28} />
 						<H3>No products match your search here</H3>
 					</div>
