@@ -1,4 +1,4 @@
-import { createReview } from "@/data/review.repo.ts";
+import { createReview } from "@/data/review.repo";
 import {
   type CreateReviewInput,
   createReviewSchema
@@ -6,7 +6,7 @@ import {
 
 export async function createReviewService(
   userId: string,
-  authRole: string,
+  _authRole: string,
   rawData: CreateReviewInput,
 ) {
   const parsed = createReviewSchema.safeParse(rawData);
@@ -19,11 +19,9 @@ export async function createReviewService(
   }
 
   const data = parsed.data;
-  const isAdmin = authRole === "ADMIN";
-  const isUser = authRole === "USER";
 
-  if ((!isAdmin && !isUser) || !userId) {
-    return { error: "Unauthorized, user must be a user" };
+  if (!userId) {
+    return { error: "Unauthorized, user must be logged in" };
   }
 
   const reviewData = {
