@@ -23,6 +23,7 @@ function RouteComponent() {
 		productList,
 		isPending,
 		isError,
+		totalPages,
 		page,
 		isFirstPage,
 		isLastPage,
@@ -81,9 +82,9 @@ function RouteComponent() {
 						Previous
 					</Button>
 					<span className="px-4 py-2 text-sm text-muted-foreground">
-						Page {page + 1}
+						Page {page + 1} of {totalPages}
 					</span>
-					{/* Todo: create getProductCount API and create a helper to calculate total page size */}
+
 					<Button
 						onClick={nextPage}
 						disabled={isLastPage}

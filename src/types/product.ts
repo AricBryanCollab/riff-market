@@ -92,3 +92,13 @@ export interface ProductCountByCategoryData {
 	category: ProductCategory;
 	count: number;
 }
+
+export type ProductCountStatusQuery = "approved" | "pending";
+
+export interface ApprovedProductCount {
+	approvedProductCount: number;
+}
+
+export interface PendingProductCount {
+	pendingProductCount: number;
+}

@@ -1,15 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getProductCountByCategoryService } from "@/actions/product";
+import {
+	getProductCountByCategoryService,
+	getProductCountByStatusService,
+} from "@/actions/product";
 
 export const Route = createFileRoute("/api/products/count")({
 	server: {
 		handlers: ({ createHandlers }) =>
 			createHandlers({
 				GET: {
-					handler: async () => {
+					handler: async ({ request }) => {
 						try {
-							const productCounts = await getProductCountByCategoryService();
+							const url = new URL(request.url);
+							const status = url.searchParams.get("status");
 
+							// Count By Product Status as Approved/Pending
+							if (status) {
+								const isApproved = status === "approved";
+								const productCounts =
+									await getProductCountByStatusService(isApproved);
+								return new Response(JSON.stringify(productCounts), {
+									status: 200,
+								});
+							}
+
+							// Count By Product Category
+							const productCounts = await getProductCountByCategoryService();
 							return new Response(JSON.stringify(productCounts), {
 								status: 200,
 							});

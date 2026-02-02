@@ -9,8 +9,9 @@ const useProductFilters = () => {
 
 	const {
 		productList,
-		loadingProductList,
-		isErrorProductList,
+		isLoading: isLoadingProductList,
+		isError: isErrorProductList,
+		totalPages,
 		page,
 		pageSize,
 		hasProducts,
@@ -74,8 +75,9 @@ const useProductFilters = () => {
 		productList,
 		showPending,
 		isLoadingPendingProduct,
-		isPending: loadingProductList || (isLoadingPendingProduct && showPending),
+		isPending: isLoadingProductList || (isLoadingPendingProduct && showPending),
 		isError: isErrorProductList || isErrorPendingProduct,
+		totalPages,
 		page,
 		pageSize,
 		hasProducts,
