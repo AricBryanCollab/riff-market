@@ -1,5 +1,5 @@
-import { Bell, Package, PackageSearch, ShoppingCart } from "lucide-react";
 import { ClientOnly } from "@tanstack/react-router";
+import { Bell, Package, PackageSearch, ShoppingCart } from "lucide-react";
 import { AppDropdown } from "@/components/app-dropdown";
 import Avatar from "@/components/avatar";
 import CartList from "@/components/cartlist";
@@ -63,7 +63,7 @@ const UserMenu = () => {
 	const {
 		pendingProducts,
 		pendingProductCount,
-		isLoading: isLoadingPendingProduct,
+		isLoadingPendingProducts,
 		isEmptyPendingProducts,
 	} = useGetPendingProducts();
 
@@ -126,7 +126,7 @@ const UserMenu = () => {
 						<PendingProductList
 							pendingProducts={pendingProducts}
 							pendingProductCount={pendingProductCount}
-							isLoading={isLoadingPendingProduct}
+							isLoading={isLoadingPendingProducts}
 							isEmptyPendingProducts={isEmptyPendingProducts}
 						/>
 					</AppDropdown>
