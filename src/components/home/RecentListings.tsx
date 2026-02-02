@@ -1,23 +1,36 @@
-import { Link } from "@tanstack/react-router";
-import { recentProducts } from "./mocks";
-import ProductGrid from "./ProductGrid";
+import { EmptyRecentProducts } from "@/components/emptystates";
+import { RecentProductsError } from "@/components/errorstates";
+import { RecentProductsLoading } from "@/components/loadingstates";
+import ProductCard from "@/components/productcard";
+
+import useGetRecentProducts from "@/hooks/useGetRecentProducts";
 
 const RecentListings = () => {
+	const {
+		recentProducts,
+		isLoadingRecentProducts,
+		isErrorRecentProducts,
+		refetchRecentProducts,
+	} = useGetRecentProducts();
+
+	if (isLoadingRecentProducts) {
+		return <RecentProductsLoading />;
+	}
+
+	if (isErrorRecentProducts) {
+		return <RecentProductsError refetch={refetchRecentProducts} />;
+	}
+
+	if (!recentProducts || recentProducts.length === 0) {
+		return <EmptyRecentProducts />;
+	}
+
 	return (
-		<section className="py-12">
-			<div className="flex items-center justify-between mb-6">
-				<h2 className="text-xl font-semibold text-foreground">
-					Recent Listings
-				</h2>
-				<Link
-					to="/shop"
-					className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-				>
-					View all →
-				</Link>
-			</div>
-			<ProductGrid products={recentProducts} />
-		</section>
+		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+			{recentProducts.map((product) => (
+				<ProductCard key={product.id} product={product} />
+			))}
+		</div>
 	);
 };
 

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ListMusic } from "lucide-react";
 import MusicNote from "@/assets/musicnote";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -43,6 +44,17 @@ export function CategoryGridEmpty() {
 			<MusicNote size={64} />
 			<p className="text-muted-foreground text-lg">
 				No product categories available yet
+			</p>
+		</div>
+	);
+}
+
+export function EmptyRecentProducts() {
+	return (
+		<div className="flex flex-col items-center justify-center h-200 gap-4 text-center border rounded-lg shadow-md">
+			<ListMusic size={28} />
+			<p className="text-muted-foreground text-lg">
+				No recent products available
 			</p>
 		</div>
 	);
