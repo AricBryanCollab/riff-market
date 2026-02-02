@@ -5,6 +5,7 @@ import {
 	getPendingApprovalProducts,
 	getProductById,
 	getProductCountByCategory,
+	getProductCountByStatus,
 	getProductsBySellerId,
 	getRecentProducts,
 	updateProductById,
@@ -140,6 +141,16 @@ export async function getProductCountByCategoryService() {
 	return await getProductCountByCategory();
 }
 
+// Get Total Product Count
+export async function getProductCountByStatusService(isApproved: boolean) {
+	const count = await getProductCountByStatus(isApproved);
+
+	return isApproved
+		? { approvedProductCount: count }
+		: { pendingProductCount: count };
+}
+
+// Get Recent Product Listed
 export async function getRecentProductsService(limit: number = 8) {
 	const products = await getRecentProducts(limit);
 	return products;
