@@ -48,6 +48,18 @@ export function CategoryGridError({ refetch }: ErrorStateProps) {
 	);
 }
 
+export function RecentProductsError({ refetch }: ErrorStateProps) {
+	return (
+		<div className="flex flex-col items-center h-200 justify-center gap-4 text-center border rounded-lg shadow-md">
+			<MusicNote size={64} />
+			<p className="text-destructive text-lg">
+				Failed to load recent product listings
+			</p>
+			<Button onClick={refetch}>Try Again</Button>
+		</div>
+	);
+}
+
 export function ProductErrorState({ refetch }: ErrorStateProps) {
 	return (
 		<div className="flex flex-col justify-center items-center w-full min-h-screen gap-4">
