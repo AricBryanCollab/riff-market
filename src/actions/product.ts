@@ -275,6 +275,8 @@ export async function updateProductStatusService(
 
 	const updatedProductStatus = await updateProductStatus(
 		productId,
+		product.sellerId,
+		product.name,
 		parsed.data.isApproved,
 	);
 
