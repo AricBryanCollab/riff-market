@@ -89,7 +89,7 @@ const ProductCard = ({ product, onClick }: ProductCardProps) => {
 
 			<CardFooter className="p-4 pt-0 flex flex-col gap-3">
 				{/* Price and Stock */}
-				<div className="flex items-center justify-between">
+				<div className="flex items-center w-full justify-between">
 					<span className="text-lg font-bold text-primary">
 						${product.price.toLocaleString()}
 					</span>
