@@ -7,6 +7,8 @@ import type {
 import type {
 	BaseProduct,
 	ProductCountByCategoryData,
+	ProductCountByStatus,
+	ProductCountStatusQuery,
 	ProductResponse,
 	UpdateProductStatusResult,
 } from "@/types/product";
@@ -36,6 +38,7 @@ function prepareProductFormData(
 	return formData;
 }
 
+// Create Product
 export function createProduct(data: CreateProductInput) {
 	const formData = prepareProductFormData(data);
 
@@ -46,10 +49,12 @@ export function createProduct(data: CreateProductInput) {
 	});
 }
 
+// Get Product Details By ID
 export function getProductDetailsById(id: string) {
 	return apiFetch<BaseProduct>(`/api/products/${id}`);
 }
 
+//  Get Approved Product List with Query
 export function getApprovedProducts(limit?: number, offset?: number) {
 	const params = new URLSearchParams();
 
@@ -62,26 +67,37 @@ export function getApprovedProducts(limit?: number, offset?: number) {
 	return apiFetch<BaseProduct[]>(url);
 }
 
+//  Get Approved Product List without Query
 export function getAllApprovedProducts() {
 	return apiFetch<BaseProduct[]>("/api/products");
 }
 
+// Get Featured Products (fixed random)
 export function getFeaturedProducts() {
 	return apiFetch<BaseProduct[]>("/api/products?limit=5&random=true");
 }
 
+// Get Pending for Approval Products
 export function getPendingApprovalProducts() {
 	return apiFetch<BaseProduct[]>("/api/products/pending");
 }
 
+// Get Product Count By Category
 export function getProductCountByCategory() {
 	return apiFetch<ProductCountByCategoryData[]>("/api/products/count");
 }
 
+// Get Product Count By Status
+export function getProductCountByStatus(status: ProductCountStatusQuery) {
+	return apiFetch<ProductCountByStatus>(`/api/products/count?status=${status}`);
+}
+
+// Get Recently Added Products (fixed to limit of 8)
 export function getRecentProducts() {
 	return apiFetch<BaseProduct[]>("/api/products/recent");
 }
 
+// Update Product
 export function updateProduct(id: string, data: UpdateProductInput) {
 	const formData = prepareProductFormData(data);
 
@@ -92,6 +108,7 @@ export function updateProduct(id: string, data: UpdateProductInput) {
 	});
 }
 
+//  Update Product Status
 export function updateProductStatus(id: string, isApproved: boolean) {
 	return apiFetch<UpdateProductStatusResult>(`/api/products/pending/${id}`, {
 		method: "PUT",
@@ -99,6 +116,7 @@ export function updateProductStatus(id: string, isApproved: boolean) {
 	});
 }
 
+// Delete Product
 export function deleteProduct(id: string) {
 	return apiFetch<ProductResponse>(`/api/products/${id}`, {
 		method: "DELETE",
