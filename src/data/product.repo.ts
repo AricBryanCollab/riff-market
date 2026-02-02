@@ -1,6 +1,7 @@
-import type { Product } from "generated/prisma/client";
+import type { Prisma, Product } from "generated/prisma/client";
 import { prisma } from "@/data/connectDb";
 import type { GetProductQuery } from "@/lib/zod/product.validation";
+import type { ProductCategory, ProductCondition } from "@/types/enum";
 import { createNotification } from "./notification.repo.";
 
 type CreateProductRepoInput = Omit<
@@ -104,18 +105,37 @@ export const getApprovedProducts = async ({
 	limit = 12,
 	offset = 0,
 	random = false,
+	category,
+	condition,
+	brand,
+	search,
 }: GetProductQuery) => {
 	try {
+		const whereClause: Prisma.ProductWhereInput = {
+			isApproved: true,
+			...(category && { category: category as ProductCategory }),
+			...(condition && { condition: condition as ProductCondition }),
+			...(brand && { brand: { contains: brand, mode: "insensitive" } }),
+			...(search && {
+				OR: [
+					{ name: { contains: search, mode: "insensitive" } },
+					{ description: { contains: search, mode: "insensitive" } },
+					{ brand: { contains: search, mode: "insensitive" } },
+					{ model: { contains: search, mode: "insensitive" } },
+				],
+			}),
+		};
+
 		if (random) {
 			const total = await prisma.product.count({
-				where: { isApproved: true },
+				where: whereClause,
 			});
 
 			const randomSkip =
 				total > limit ? Math.floor(Math.random() * (total - limit)) : 0;
 
 			return await prisma.product.findMany({
-				where: { isApproved: true },
+				where: whereClause,
 				select: baseProductQuery,
 				take: limit,
 				skip: randomSkip,
@@ -123,14 +143,14 @@ export const getApprovedProducts = async ({
 		}
 
 		return await prisma.product.findMany({
-			where: { isApproved: true },
+			where: whereClause,
 			orderBy: { createdAt: "desc" },
 			select: baseProductQuery,
 			take: limit,
 			skip: offset,
 		});
 	} catch (err) {
-		console.error("Error at getApprovedProducts", err);
+		console.error("Error at getPendingApprovalProducts", err);
 		throw err;
 	}
 };
