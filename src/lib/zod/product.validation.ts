@@ -33,29 +33,24 @@ export const getProductQuerySchema = z.object({
 	limit: z
 		.string()
 		.nullable()
-		.transform((val) => {
-			if (!val) return 12;
-			const parsed = parseInt(val, 10);
-			if (Number.isNaN(parsed) || parsed < 1 || parsed > 100) {
-				throw new Error("Limit must be between 1 and 100");
-			}
-			return parsed;
-		}),
+		.transform((v) => (v ? Number(v) : 12))
+		.pipe(z.number().min(1).max(100)),
+
 	offset: z
 		.string()
 		.nullable()
-		.transform((val) => {
-			if (!val) return 0;
-			const parsed = parseInt(val, 10);
-			if (Number.isNaN(parsed) || parsed < 0) {
-				throw new Error("Offset must be 0 or greater");
-			}
-			return parsed;
-		}),
+		.transform((v) => (v ? Number(v) : 0))
+		.pipe(z.number().min(0)),
+
 	random: z
 		.string()
 		.nullable()
-		.transform((val) => val === "true"),
+		.transform((v) => v === "true"),
+
+	category: z.string().nullable().optional(),
+	condition: z.string().nullable().optional(),
+	brand: z.string().nullable().optional(),
+	search: z.string().nullable().optional(),
 });
 
 export const updateProductSchema = createProductSchema.partial();
