@@ -3,11 +3,11 @@ import MusicNote from "@/assets/musicnote";
 import ConditionBadge from "@/components/home/ConditionBadge";
 import type { BaseProduct } from "@/types/product";
 
-interface ProductCardProps {
+interface FeaturedProductCardProps {
 	product: BaseProduct;
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const FeaturedProductCard = ({ product }: FeaturedProductCardProps) => {
 	return (
 		<Link
 			to="/product/$id"
@@ -36,4 +36,4 @@ const ProductCard = ({ product }: ProductCardProps) => {
 	);
 };
 
-export default ProductCard;
+export default FeaturedProductCard;
