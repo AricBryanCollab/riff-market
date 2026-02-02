@@ -23,11 +23,8 @@ const useProductFilters = () => {
 		goToPage,
 	} = useShopPagination();
 
-	const {
-		pendingProducts,
-		isLoading: isLoadingPendingProduct,
-		isError: isErrorPendingProduct,
-	} = useGetPendingProducts(showPending);
+	const { pendingProducts, isLoadingPendingProducts, isErrorPendingProducts } =
+		useGetPendingProducts();
 
 	const productsToDisplay = showPending ? pendingProducts : productList;
 
@@ -74,9 +71,9 @@ const useProductFilters = () => {
 		filteredProducts,
 		productList,
 		showPending,
-		isLoadingPendingProduct,
-		isPending: isLoadingProductList || (isLoadingPendingProduct && showPending),
-		isError: isErrorProductList || isErrorPendingProduct,
+		isLoading:
+			isLoadingProductList || (isLoadingPendingProducts && showPending),
+		isError: isErrorProductList || isErrorPendingProducts,
 		totalPages,
 		page,
 		pageSize,

@@ -2,23 +2,26 @@ import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { getPendingApprovalProducts } from "@/lib/tanstack-query/product.queries";
 import { usePendingProductStore } from "@/store/pendingproduct";
+import { useUserStore } from "@/store/user";
 import type { BaseProduct } from "@/types/product";
 
-export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
+const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
 	queryKey: ["pendingProducts"],
 	queryFn: getPendingApprovalProducts,
 	retry: false,
 });
 
-const useGetPendingProducts = (enabled: boolean = false) => {
+const useGetPendingProducts = () => {
 	const queryClient = useQueryClient();
 	const { pendingProducts, pendingProductCount, setPendingProducts } =
 		usePendingProductStore();
+	const userRole = useUserStore().user?.role;
 
-	const { data, isLoading, isError } = useQuery({
-		...pendingProductsQueryOpt,
-		enabled,
-	});
+	const {
+		data,
+		isLoading: isLoadingPendingProducts,
+		isError: isErrorPendingProducts,
+	} = useQuery({ ...pendingProductsQueryOpt, enabled: userRole === "ADMIN" });
 
 	useEffect(() => {
 		if (data) {
@@ -35,8 +38,8 @@ const useGetPendingProducts = (enabled: boolean = false) => {
 	return {
 		pendingProducts,
 		pendingProductCount,
-		isLoading,
-		isError,
+		isLoadingPendingProducts,
+		isErrorPendingProducts,
 		isEmptyPendingProducts,
 		refetch,
 	};

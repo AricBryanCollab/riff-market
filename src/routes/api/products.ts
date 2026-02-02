@@ -3,7 +3,6 @@ import {
 	createProductService,
 	getApprovedProductsService,
 } from "@/actions/product";
-import { getProductQuerySchema } from "@/lib/zod/product.validation";
 import { authMiddleware } from "@/middleware";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
 import { extractFormData } from "@/utils/extractFormData";
@@ -17,34 +16,23 @@ export const Route = createFileRoute("/api/products")({
 						try {
 							const url = new URL(request.url);
 
-							const parsedQuery = getProductQuerySchema.safeParse({
+							const rawQuery = {
 								limit: url.searchParams.get("limit"),
 								offset: url.searchParams.get("offset"),
 								random: url.searchParams.get("random"),
-							});
+								category: url.searchParams.get("category"),
+								condition: url.searchParams.get("condition"),
+								brand: url.searchParams.get("brand"),
+								search: url.searchParams.get("search"),
+							};
 
-							if (!parsedQuery.success) {
-								return new Response(
-									JSON.stringify({
-										message: "Invalid query parameters",
-										errors: parsedQuery.error.issues.map((issue) => ({
-											field: issue.path.join("."),
-											message: issue.message,
-										})),
-									}),
-									{
-										status: 400,
-									},
-								);
+							const products = await getApprovedProductsService(rawQuery);
+
+							if ("error" in products) {
+								return new Response(JSON.stringify(products), {
+									status: 400,
+								});
 							}
-
-							const { limit, offset, random } = parsedQuery.data;
-
-							const products = await getApprovedProductsService({
-								limit,
-								offset,
-								random,
-							});
 
 							return new Response(JSON.stringify(products), { status: 200 });
 						} catch (error) {
