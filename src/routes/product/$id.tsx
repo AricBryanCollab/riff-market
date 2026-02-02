@@ -14,9 +14,8 @@ import Rating from "@/components/rating";
 import ReviewSection from "@/components/reviewsection";
 import SectionContainer from "@/components/sectioncontainer";
 import { productCategoryOptions } from "@/constants/selectOptions";
-import { pendingProductsQueryOpt } from "@/hooks/useGetPendingProducts";
+import useGetPendingProducts from "@/hooks/useGetPendingProducts";
 import { allApprovedProductsQueryOpt } from "@/hooks/useGetProducts";
-import { useUserStore } from "@/store/user";
 
 export const Route = createFileRoute("/product/$id")({
 	component: RouteComponent,
@@ -27,14 +26,10 @@ function RouteComponent() {
 	const { data: approvedProducts, isPending: isLoadingApproved } = useQuery(
 		allApprovedProductsQueryOpt,
 	);
-	const { user } = useUserStore();
-	const isAdmin = user?.role === "ADMIN";
 
-	const { data: pendingProducts, isPending: isLoadingPending } = useQuery({
-		...pendingProductsQueryOpt,
-		enabled: isAdmin,
-	});
-	const isPending = isLoadingApproved && isLoadingPending;
+	const { pendingProducts, isLoadingPendingProducts } = useGetPendingProducts();
+
+	const isPending = isLoadingApproved && isLoadingPendingProducts;
 
 	const navigate = useNavigate();
 

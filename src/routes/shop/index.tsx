@@ -21,7 +21,7 @@ function RouteComponent() {
 		showPending,
 		filteredProducts,
 		productList,
-		isPending,
+		isLoading,
 		isError,
 		totalPages,
 		page,
@@ -36,7 +36,7 @@ function RouteComponent() {
 		refetchProductList,
 	} = useProductFilters();
 
-	if (isPending) {
+	if (isLoading) {
 		return <ProductLoadingState />;
 	}
 
