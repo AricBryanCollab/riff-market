@@ -171,6 +171,22 @@ export const getProductCountByCategory = async () => {
 	}
 };
 
+// Get Product Count By Status
+export const getProductCountByStatus = async (isApproved: boolean) => {
+	try {
+		const productCount = await prisma.product.count({
+			where: {
+				isApproved,
+			},
+		});
+
+		return productCount;
+	} catch (err) {
+		console.error("Error at getProductCountByStatus", err);
+		throw err;
+	}
+};
+
 // Get Recent Products (Up to 8 products)
 export const getRecentProducts = async (limit: number = 8) => {
 	try {
