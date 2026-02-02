@@ -5,9 +5,10 @@ import type {
 	UpdateProductInput,
 } from "@/lib/zod/product.validation";
 import type {
+	ApprovedProductCount,
 	BaseProduct,
+	PendingProductCount,
 	ProductCountByCategoryData,
-	ProductCountByStatus,
 	ProductCountStatusQuery,
 	ProductResponse,
 	UpdateProductStatusResult,
@@ -89,7 +90,9 @@ export function getProductCountByCategory() {
 
 // Get Product Count By Status
 export function getProductCountByStatus(status: ProductCountStatusQuery) {
-	return apiFetch<ProductCountByStatus>(`/api/products/count?status=${status}`);
+	return apiFetch<ApprovedProductCount | PendingProductCount>(
+		`/api/products/count?status=${status}`,
+	);
 }
 
 // Get Recently Added Products (fixed to limit of 8)
