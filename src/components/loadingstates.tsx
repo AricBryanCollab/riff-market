@@ -35,6 +35,20 @@ export function CategoryGridLoading() {
 	);
 }
 
+export function RecentProductsLoading() {
+	return (
+		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+			{Array.from({ length: 8 }).map((_, i) => (
+				<Skeleton
+					// biome-ignore lint/suspicious/noArrayIndexKey: placeholder
+					key={i}
+					className="h-102 rounded-xl"
+				/>
+			))}
+		</div>
+	);
+}
+
 export function ProductLoadingState() {
 	return (
 		<div className="flex flex-col items-center py-12">
