@@ -15,7 +15,7 @@ import { env } from "@/env";
 import {
 	type CreateProductInput,
 	createProductSchema,
-	type GetProductQuery,
+	getProductQuerySchema,
 	type UpdateProductInput,
 	updateProductSchema,
 	updateProductStatusSchema,
@@ -121,12 +121,19 @@ export async function getProductsBySellerService(id: string, role: string) {
 }
 
 // Get Approved Products
-export async function getApprovedProductsService({
-	limit = 12,
-	offset = 0,
-	random = false,
-}: GetProductQuery) {
-	const products = await getApprovedProducts({ limit, offset, random });
+export async function getApprovedProductsService(rawQuery: unknown) {
+	const parsed = getProductQuerySchema.safeParse(rawQuery);
+
+	if (!parsed.success) {
+		return {
+			error: "Invalid product queries",
+			details: parsed.error,
+		};
+	}
+
+	const validQuery = parsed.data;
+
+	const products = await getApprovedProducts(validQuery);
 	return products;
 }
 
