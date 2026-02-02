@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { EmptyFeaturedProductState } from "@/components/emptystates";
 import { HeroFeaturedProductErrorState } from "@/components/errorstates";
 import CategoryGrid from "@/components/home/CategoryGrid";
+import Footer from "@/components/home/Footer";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import RecentListings from "@/components/home/RecentListings";
 import { HeroFeaturedProductLoading } from "@/components/loadingstates";
@@ -45,6 +46,9 @@ function HomePage() {
 					</div>
 				</div>
 				<RecentListings />
+			</section>
+			<section>
+				<Footer />
 			</section>
 		</SectionContainer>
 	);
