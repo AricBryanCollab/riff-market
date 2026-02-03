@@ -66,7 +66,7 @@ const ShopSidebar = () => {
 			}`}
 		>
 			<div
-				className={`flex items-center gap-3 px-4 py-6 border-b ${isExpanded ? "justify-between" : "justify-center"}`}
+				className={`flex items-center gap-3 px-4 py-2.5 border-b shrink-0 ${isExpanded ? "justify-between" : "justify-center"}`}
 			>
 				{isExpanded && (
 					<div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ const ShopSidebar = () => {
 
 			{isExpanded && (
 				<div className="flex flex-col h-[calc(100vh-89px)]">
-					<div className="px-4 py-4 border-b bg-muted/50">
+					<div className="px-4 py-2.5 border-b bg-muted/50 shrink-0">
 						<div className="flex items-center gap-2">
 							<Filter size={18} className="text-muted-foreground" />
 							<h2 className="font-semibold">Filters</h2>
@@ -97,8 +97,7 @@ const ShopSidebar = () => {
 						</div>
 					</div>
 
-					{/* Scrollable Filters */}
-					<ScrollArea className="flex-1">
+					<ScrollArea className="flex-1 h-0 min-h-0">
 						<div className="px-4 py-4 space-y-6">
 							<div className="space-y-3">
 								<div className="flex items-center justify-between">
@@ -144,6 +143,7 @@ const ShopSidebar = () => {
 							</div>
 
 							<Separator />
+
 							<div className="space-y-3">
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-2">
@@ -194,6 +194,7 @@ const ShopSidebar = () => {
 							</div>
 
 							<Separator />
+
 							<div className="space-y-3">
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-2">
@@ -288,21 +289,29 @@ const ShopSidebar = () => {
 								</div>
 							</div>
 						</div>
-						<div className="px-4 py-4 border-t bg-muted/50 space-y-2">
-							<Button
-								variant="outline"
-								className="w-full"
-								onClick={resetFilters}
-								disabled={activeFiltersCount === 0}
-							>
-								<X size={16} className="mr-2" />
-								Clear All Filters
-							</Button>
-						</div>
 					</ScrollArea>
+
+					<div className="px-4 py-4 border-t bg-muted/50 space-y-2 shrink-0">
+						<Button
+							variant="outline"
+							className="w-full"
+							onClick={resetFilters}
+							disabled={activeFiltersCount === 0}
+						>
+							<X size={16} className="mr-2" />
+							Clear All Filters
+						</Button>
+						{activeFiltersCount > 0 && (
+							<p className="text-xs text-center text-muted-foreground">
+								{activeFiltersCount} filter{activeFiltersCount > 1 ? "s" : ""}{" "}
+								active
+							</p>
+						)}
+					</div>
 				</div>
 			)}
 
+			{/* Collapsed State Icons */}
 			{!isExpanded && (
 				<div className="flex flex-col items-center gap-6 mt-6">
 					<Button
