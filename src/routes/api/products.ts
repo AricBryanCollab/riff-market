@@ -24,6 +24,8 @@ export const Route = createFileRoute("/api/products")({
 								condition: url.searchParams.get("condition"),
 								brand: url.searchParams.get("brand"),
 								search: url.searchParams.get("search"),
+								priceMin: url.searchParams.get("priceMin"),
+								priceMax: url.searchParams.get("priceMax"),
 							};
 
 							const products = await getApprovedProductsService(rawQuery);
