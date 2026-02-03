@@ -7,7 +7,7 @@ import type {
 import type {
 	ApprovedProductCount,
 	BaseProduct,
-	GetApprovedProcutsFilterQuery,
+	GetApprovedProductsFilterQuery,
 	PendingProductCount,
 	ProductCountByCategoryData,
 	ProductCountStatusQuery,
@@ -57,7 +57,7 @@ export function getProductDetailsById(id: string) {
 }
 
 //  Get Approved Product List with Query
-export function getApprovedProducts(filters: GetApprovedProcutsFilterQuery) {
+export function getApprovedProducts(filters: GetApprovedProductsFilterQuery) {
 	const params = new URLSearchParams();
 
 	if (filters?.limit !== undefined)

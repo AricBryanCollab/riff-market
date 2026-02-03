@@ -3,7 +3,10 @@ import { useProductStore } from "@/store/products";
 import type { ApprovedProductCount } from "@/types/product";
 
 const useShopPagination = () => {
-	const { page, pageSize, setPage, setPageSize } = useProductStore();
+	const page = useProductStore((state) => state.page);
+	const pageSize = useProductStore((state) => state.pageSize);
+	const setPage = useProductStore((state) => state.setPage);
+	const setPageSize = useProductStore((state) => state.setPageSize);
 
 	const {
 		productCount,
@@ -14,6 +17,12 @@ const useShopPagination = () => {
 		isErrorProducts,
 		refetchProducts,
 	} = useGetProducts();
+
+	const totalProducts =
+		(productCount as ApprovedProductCount | undefined)?.approvedProductCount ??
+		0;
+
+	const totalPages = Math.ceil(totalProducts / pageSize);
 
 	const nextPage = () => {
 		const nextPageNum = page + 1;
@@ -31,12 +40,6 @@ const useShopPagination = () => {
 		const clampedPage = Math.max(0, Math.min(pageNumber, totalPages - 1));
 		setPage(clampedPage);
 	};
-
-	const totalProducts =
-		(productCount as ApprovedProductCount | undefined)?.approvedProductCount ??
-		0;
-
-	const totalPages = Math.ceil(totalProducts / pageSize);
 
 	const hasProducts = (products?.length ?? 0) > 0;
 	const isFirstPage = page === 0;
