@@ -51,6 +51,19 @@ export const getProductQuerySchema = z.object({
 	condition: z.string().nullable().optional(),
 	brand: z.string().nullable().optional(),
 	search: z.string().nullable().optional(),
+	priceMin: z
+		.string()
+		.nullable()
+		.optional()
+		.transform((v) => (v ? Number(v) : undefined))
+		.pipe(z.number().min(0).optional()),
+
+	priceMax: z
+		.string()
+		.nullable()
+		.optional()
+		.transform((v) => (v ? Number(v) : undefined))
+		.pipe(z.number().min(0).optional()),
 });
 
 export const updateProductSchema = createProductSchema.partial();
