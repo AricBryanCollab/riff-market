@@ -1,15 +1,14 @@
 import { ShopPageProductActions } from "@/components/productactions";
 import { Body, H3 } from "@/components/ui/typography";
+import { useProductStore } from "@/store/products";
 
-interface ProductHeaderProps {
-	searchTerm: string;
-	onSearchChange: (value: string) => void;
-}
+export function ShopPageHeader() {
+	const { filters, setSearch } = useProductStore();
+	const searchTerm = filters.search || "";
 
-export function ShopPageHeader({
-	searchTerm,
-	onSearchChange,
-}: ProductHeaderProps) {
+	const handleSearchChange = (value: string) => {
+		setSearch(value || undefined);
+	};
 	return (
 		<div className="flex flex-col gap-6 rounded-xl bg-white p-4 md:flex-row md:items-center md:justify-between">
 			<div>
@@ -23,7 +22,7 @@ export function ShopPageHeader({
 			<div className="flex flex-col md:flex-row items-center gap-2">
 				<ShopPageProductActions
 					searchTerm={searchTerm}
-					handleSearchTerm={onSearchChange}
+					handleSearchTerm={handleSearchChange}
 				/>
 			</div>
 		</div>

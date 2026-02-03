@@ -1,49 +1,36 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { approvedProductsWithQueryOpt } from "@/hooks/useGetProducts";
-import { getProductCountByStatus } from "@/lib/tanstack-query/product.queries";
-import type {
-	ApprovedProductCount,
-	PendingProductCount,
-	ProductCountStatusQuery,
-} from "@/types/product";
-
-const productCountQueryOpt = (status: ProductCountStatusQuery) =>
-	queryOptions<ApprovedProductCount | PendingProductCount>({
-		queryKey: ["approvedProduct", "count"],
-		queryFn: () => getProductCountByStatus(status),
-	});
+import useGetProducts from "@/hooks/useGetProducts";
+import { useProductStore } from "@/store/products";
+import type { ApprovedProductCount } from "@/types/product";
 
 const useShopPagination = () => {
-	const [page, setPage] = useState<number>(0);
-	const [pageSize, setPageSize] = useState<number>(12);
+	const { page, pageSize, setPage, setPageSize } = useProductStore();
 
-	const offset = page * pageSize;
+	const {
+		productCount,
+		isErrorProductCount,
+		loadingProductCount,
+		products,
+		isLoadingProducts,
+		isErrorProducts,
+		refetchProducts,
+	} = useGetProducts();
 
 	const nextPage = () => {
-		setPage((prev) => prev + 1);
+		const nextPageNum = page + 1;
+		if (nextPageNum < totalPages) {
+			setPage(nextPageNum);
+		}
 	};
 
 	const previousPage = () => {
-		setPage((prev) => Math.max(0, prev - 1));
+		const prevPageNum = Math.max(0, page - 1);
+		setPage(prevPageNum);
 	};
 
 	const goToPage = (pageNumber: number) => {
-		setPage(Math.max(0, pageNumber));
+		const clampedPage = Math.max(0, Math.min(pageNumber, totalPages - 1));
+		setPage(clampedPage);
 	};
-
-	const {
-		data: productList,
-		isPending: loadingProductList,
-		isError: isErrorProductList,
-		refetch: refetchProductList,
-	} = useQuery(approvedProductsWithQueryOpt(pageSize, offset));
-
-	const {
-		data: productCount,
-		isError: isErrorProductCount,
-		isPending: loadingProductCount,
-	} = useQuery(productCountQueryOpt("approved"));
 
 	const totalProducts =
 		(productCount as ApprovedProductCount | undefined)?.approvedProductCount ??
@@ -51,15 +38,16 @@ const useShopPagination = () => {
 
 	const totalPages = Math.ceil(totalProducts / pageSize);
 
-	const hasProducts = (productList?.length ?? 0) > 0;
+	const hasProducts = (products?.length ?? 0) > 0;
 	const isFirstPage = page === 0;
-	const isLastPage = (productList?.length ?? 0) < pageSize;
 
-	const isError = isErrorProductList || isErrorProductCount;
-	const isLoading = loadingProductList || loadingProductCount;
+	const isLastPage = page >= totalPages - 1;
+
+	const isError = isErrorProducts || isErrorProductCount;
+	const isLoading = isLoadingProducts || loadingProductCount;
 
 	return {
-		productList,
+		products,
 		isLoading,
 		isError,
 		page,
@@ -68,7 +56,7 @@ const useShopPagination = () => {
 		hasProducts,
 		isFirstPage,
 		isLastPage,
-		refetchProductList,
+		refetchProducts,
 		nextPage,
 		previousPage,
 		goToPage,

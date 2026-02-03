@@ -44,7 +44,6 @@ const baseProductQuery = {
 	isApproved: true,
 	createdAt: true,
 	updatedAt: true,
-
 	seller: {
 		select: {
 			firstName: true,
@@ -109,6 +108,8 @@ export const getApprovedProducts = async ({
 	condition,
 	brand,
 	search,
+	priceMin,
+	priceMax,
 }: GetProductQuery) => {
 	try {
 		const whereClause: Prisma.ProductWhereInput = {
@@ -123,6 +124,12 @@ export const getApprovedProducts = async ({
 					{ brand: { contains: search, mode: "insensitive" } },
 					{ model: { contains: search, mode: "insensitive" } },
 				],
+			}),
+			...((priceMin !== undefined || priceMax !== undefined) && {
+				price: {
+					...(priceMin !== undefined && { gte: priceMin }),
+					...(priceMax !== undefined && { lte: priceMax }),
+				},
 			}),
 		};
 

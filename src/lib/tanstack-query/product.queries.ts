@@ -7,6 +7,7 @@ import type {
 import type {
 	ApprovedProductCount,
 	BaseProduct,
+	GetApprovedProcutsFilterQuery,
 	PendingProductCount,
 	ProductCountByCategoryData,
 	ProductCountStatusQuery,
@@ -56,11 +57,21 @@ export function getProductDetailsById(id: string) {
 }
 
 //  Get Approved Product List with Query
-export function getApprovedProducts(limit?: number, offset?: number) {
+export function getApprovedProducts(filters: GetApprovedProcutsFilterQuery) {
 	const params = new URLSearchParams();
 
-	if (limit !== undefined) params.append("limit", limit.toString());
-	if (offset !== undefined) params.append("offset", offset.toString());
+	if (filters?.limit !== undefined)
+		params.append("limit", filters.limit.toString());
+	if (filters?.offset !== undefined)
+		params.append("offset", filters.offset.toString());
+	if (filters?.category) params.append("category", filters.category);
+	if (filters?.brand) params.append("brand", filters.brand);
+	if (filters?.search) params.append("search", filters.search);
+	if (filters?.condition) params.append("condition", filters.condition);
+	if (filters?.priceMin !== undefined)
+		params.append("priceMin", filters.priceMin.toString());
+	if (filters?.priceMax !== undefined)
+		params.append("priceMax", filters.priceMax.toString());
 
 	const queryString = params.toString();
 	const url = queryString ? `/api/products?${queryString}` : "/api/products";
