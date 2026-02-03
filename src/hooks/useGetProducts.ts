@@ -1,27 +1,29 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
-	getAllApprovedProducts,
 	getApprovedProducts,
 	getFeaturedProducts,
+	getProductCountByStatus,
 	getProductDetailsById,
 } from "@/lib/tanstack-query/product.queries";
-import type { BaseProduct } from "@/types/product";
+import { useProductStore } from "@/store/products";
+import type {
+	ApprovedProductCount,
+	BaseProduct,
+	GetApprovedProcutsFilterQuery,
+	PendingProductCount,
+	ProductCountStatusQuery,
+} from "@/types/product";
 
 // Query Options of Products
-export const approvedProductsWithQueryOpt = (limit = 12, offset = 0) =>
+const approvedProductsWithQueryOpt = (filters: GetApprovedProcutsFilterQuery) =>
 	queryOptions<BaseProduct[]>({
-		queryKey: ["products", { limit, offset }],
-		queryFn: () => getApprovedProducts(limit, offset),
+		queryKey: ["products", "approved", filters],
+		queryFn: () => getApprovedProducts(filters),
+		staleTime: 1000 * 60 * 5,
 	});
 
-export const allApprovedProductsQueryOpt = queryOptions<BaseProduct[]>({
-	queryKey: ["products", "all"],
-	queryFn: getAllApprovedProducts,
-	staleTime: 1000 * 60 * 5,
-});
-
-export const featuredProductsQueryOpt = queryOptions<BaseProduct[]>({
+const featuredProductsQueryOpt = queryOptions<BaseProduct[]>({
 	queryKey: ["products", "featured"],
 	queryFn: getFeaturedProducts,
 	staleTime: 1000 * 60 * 5,
@@ -34,12 +36,35 @@ export const productbyIdQueryOpt = (id: string) =>
 		retry: false,
 	});
 
-//  UseGetProducts
+const productCountQueryOpt = (status: ProductCountStatusQuery) =>
+	queryOptions<ApprovedProductCount | PendingProductCount>({
+		queryKey: ["products", "count"],
+		queryFn: () => getProductCountByStatus(status),
+	});
+
+//  useGetProducts
 const useGetProducts = () => {
+	const filters = useProductStore((state) => state.filters);
 	const [selectedProductId, setSelectedProductId] = useState<string | null>(
 		null,
 	);
 
+	// Approved Products
+	const {
+		data: products,
+		isPending: isLoadingProducts,
+		isError: isErrorProducts,
+		refetch: refetchProducts,
+	} = useQuery(approvedProductsWithQueryOpt(filters));
+
+	// Approved Product Count
+	const {
+		data: productCount,
+		isError: isErrorProductCount,
+		isPending: loadingProductCount,
+	} = useQuery(productCountQueryOpt("approved"));
+
+	// Product By ID
 	const {
 		data: product,
 		isPending: loadingProduct,
@@ -50,6 +75,7 @@ const useGetProducts = () => {
 		enabled: !!selectedProductId,
 	});
 
+	// Featured Products
 	const {
 		data: featuredProducts,
 		isPending: loadingFeatured,
@@ -58,15 +84,30 @@ const useGetProducts = () => {
 	} = useQuery(featuredProductsQueryOpt);
 
 	return {
+		// Products
+		products,
+		isLoadingProducts,
+		isErrorProducts,
+		refetchProducts,
+		filters,
+
+		// Approved Product Count
+		productCount,
+		isErrorProductCount,
+		loadingProductCount,
+
+		// Single Product
 		product,
 		loadingProduct,
 		isErrorProduct,
 		selectedProductId,
+		setSelectedProductId,
+		refetchProductDetails,
+
+		// Featured Products
 		featuredProducts,
 		loadingFeatured,
 		isErrorFeatured,
-		setSelectedProductId,
-		refetchProductDetails,
 		refetchFeatured,
 	};
 };
