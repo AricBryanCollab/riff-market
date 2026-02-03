@@ -5,7 +5,7 @@ import {
 	useParams,
 } from "@tanstack/react-router";
 import { ArrowLeft, Package } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { AppDialog } from "@/components/app-dialog";
 import DeleteProductConfirm from "@/components/deleteproductconfirm";
 import { ProductDetailsLoadingState } from "@/components/loadingstates";
@@ -14,8 +14,7 @@ import Rating from "@/components/rating";
 import ReviewSection from "@/components/reviewsection";
 import SectionContainer from "@/components/sectioncontainer";
 import { productCategoryOptions } from "@/constants/selectOptions";
-import useGetPendingProducts from "@/hooks/useGetPendingProducts";
-import { allApprovedProductsQueryOpt } from "@/hooks/useGetProducts";
+import { productbyIdQueryOpt } from "@/hooks/useGetProducts";
 
 export const Route = createFileRoute("/product/$id")({
 	component: RouteComponent,
@@ -23,42 +22,37 @@ export const Route = createFileRoute("/product/$id")({
 
 function RouteComponent() {
 	const { id } = useParams({ from: "/product/$id" });
-	const { data: approvedProducts, isPending: isLoadingApproved } = useQuery(
-		allApprovedProductsQueryOpt,
-	);
-
-	const { pendingProducts, isLoadingPendingProducts } = useGetPendingProducts();
-
-	const isPending = isLoadingApproved && isLoadingPendingProducts;
-
 	const navigate = useNavigate();
 
-	const allProducts = useMemo(() => {
-		const approved = approvedProducts || [];
-		const pending = pendingProducts || [];
-		return [...approved, ...pending];
-	}, [approvedProducts, pendingProducts]);
+	const {
+		data: product,
+		isPending,
+		isError,
+	} = useQuery(productbyIdQueryOpt(id));
 
-	// Product category render
 	const getCategoryDisplay = (category: string) => {
 		const option = productCategoryOptions.find((opt) => opt.value === category);
 		return option || { value: category, label: category, icon: Package };
 	};
 
-	// Handling product page interaction
 	const [quantity, setQuantity] = useState(1);
 	const [selectedImage, setSelectedImage] = useState(0);
-
-	const product = allProducts?.find((p) => p.id === id);
 
 	if (isPending) {
 		return <ProductDetailsLoadingState />;
 	}
 
-	if (!allProducts || !product) {
+	if (isError || !product) {
 		return (
 			<div className="flex flex-col justify-center items-center min-h-screen">
 				<p className="text-lg text-gray-500">Product not found</p>
+				<button
+					type="button"
+					onClick={() => navigate({ to: "/shop" })}
+					className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+				>
+					Back to Shop
+				</button>
 			</div>
 		);
 	}
