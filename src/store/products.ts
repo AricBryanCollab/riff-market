@@ -1,11 +1,11 @@
 import { create } from "zustand";
-import type { GetApprovedProcutsFilterQuery } from "@/types/product";
+import type { GetApprovedProductsFilterQuery } from "@/types/product";
 
 interface ProductStore {
-	filters: GetApprovedProcutsFilterQuery;
+	filters: GetApprovedProductsFilterQuery;
 	page: number;
 	pageSize: number;
-	setFilters: (filters: Partial<GetApprovedProcutsFilterQuery>) => void;
+	setFilters: (filters: Partial<GetApprovedProductsFilterQuery>) => void;
 	setCategory: (category?: string) => void;
 	setBrand: (brand?: string) => void;
 	setCondition: (condition?: string) => void;
@@ -17,7 +17,7 @@ interface ProductStore {
 	getOffset: () => number;
 }
 
-const defaultFilters: GetApprovedProcutsFilterQuery = {
+const defaultFilters: GetApprovedProductsFilterQuery = {
 	limit: 8,
 	offset: 0,
 };

@@ -10,13 +10,15 @@ import { useProductStore } from "@/store/products";
 import type {
 	ApprovedProductCount,
 	BaseProduct,
-	GetApprovedProcutsFilterQuery,
+	GetApprovedProductsFilterQuery,
 	PendingProductCount,
 	ProductCountStatusQuery,
 } from "@/types/product";
 
 // Query Options of Products
-const approvedProductsWithQueryOpt = (filters: GetApprovedProcutsFilterQuery) =>
+const approvedProductsWithQueryOpt = (
+	filters: GetApprovedProductsFilterQuery,
+) =>
 	queryOptions<BaseProduct[]>({
 		queryKey: ["products", "approved", filters],
 		queryFn: () => getApprovedProducts(filters),

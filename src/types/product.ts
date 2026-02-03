@@ -65,7 +65,7 @@ export interface MutateProductResponse {
 	updatedAt?: string;
 }
 
-export interface GetApprovedProcutsFilterQuery {
+export interface GetApprovedProductsFilterQuery {
 	limit?: number;
 	offset?: number;
 	category?: string;
