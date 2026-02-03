@@ -8,7 +8,7 @@ import ProductFilterBadges from "@/components/productfilterbadges";
 import SectionContainer from "@/components/sectioncontainer";
 import { Button } from "@/components/ui/button";
 import { H3 } from "@/components/ui/typography";
-import useProductFilters from "@/hooks/useProductFilters";
+import useShopPagination from "@/hooks/useShopPagination";
 
 export const Route = createFileRoute("/shop/")({
 	component: RouteComponent,
@@ -16,52 +16,35 @@ export const Route = createFileRoute("/shop/")({
 
 function RouteComponent() {
 	const {
-		searchTerm,
-		selectedCategory,
-		showPending,
-		filteredProducts,
-		productList,
+		products,
 		isLoading,
 		isError,
-		totalPages,
+		refetchProducts,
 		page,
+		totalPages,
 		isFirstPage,
 		isLastPage,
-		nextPage,
 		previousPage,
-		handleSearchChange,
-		handleCategoryChange,
-		handleShowPending,
-		handleShowAll,
-		refetchProductList,
-	} = useProductFilters();
+		nextPage,
+	} = useShopPagination();
 
 	if (isLoading) {
 		return <ProductLoadingState />;
 	}
 
-	if (isError || !productList) {
-		return <ProductErrorState refetch={refetchProductList} />;
+	if (isError || !products) {
+		return <ProductErrorState refetch={refetchProducts} />;
 	}
 
 	return (
 		<SectionContainer>
-			<ShopPageHeader
-				searchTerm={searchTerm}
-				onSearchChange={handleSearchChange}
-			/>
+			<ShopPageHeader />
 
-			<ProductFilterBadges
-				showPending={showPending}
-				selectedCategory={selectedCategory}
-				onShowAll={handleShowAll}
-				onShowPending={handleShowPending}
-				onCategorySelect={handleCategoryChange}
-			/>
+			<ProductFilterBadges />
 
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-h-200">
-				{filteredProducts.length > 0 ? (
-					filteredProducts.map((product) => (
+				{products.length > 0 ? (
+					products.map((product) => (
 						<ProductCard key={product.id} product={product} />
 					))
 				) : (
