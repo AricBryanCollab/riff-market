@@ -35,8 +35,12 @@ export const useProductStore = create<ProductStore>((set, get) => ({
 
 	setCategory: (category) =>
 		set((state) => ({
-			filters: { ...state.filters, category, offset: 0 },
 			page: 0,
+			filters: {
+				...state.filters,
+				category,
+				offset: 0,
+			},
 		})),
 
 	setBrand: (brand) =>
@@ -71,7 +75,6 @@ export const useProductStore = create<ProductStore>((set, get) => ({
 				offset: page * state.pageSize,
 			},
 		})),
-
 	setPageSize: (pageSize) =>
 		set(() => ({
 			pageSize,
