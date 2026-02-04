@@ -48,7 +48,7 @@ const UserMenu = () => {
 		isLoading: isLoadingNotification,
 		unreadCount,
 		isEmptyNotifications,
-		markAsRead,
+		markAsReadMutate,
 	} = useNotifications();
 
 	// Use Order List
@@ -159,7 +159,7 @@ const UserMenu = () => {
 							unreadCount={unreadCount}
 							isLoading={isLoadingNotification}
 							isEmptyNotifications={isEmptyNotifications}
-							markAsRead={markAsRead}
+							markAsRead={markAsReadMutate}
 						/>
 					</AppDropdown>
 
