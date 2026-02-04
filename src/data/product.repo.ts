@@ -220,7 +220,7 @@ export const getRecentProducts = async (limit: number = 8) => {
 	try {
 		return await prisma.product.findMany({
 			where: { isApproved: true },
-			orderBy: { createdAt: "desc" },
+			orderBy: { updatedAt: "desc" },
 			select: baseProductQuery,
 			take: limit,
 		});
