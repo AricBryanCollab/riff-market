@@ -1,5 +1,7 @@
 import type { ProductCategory } from "generated/prisma/enums";
+import { Badge } from "@/components/ui/badge";
 import { productCategoryOptions } from "@/constants/selectOptions";
+import { usePendingProductStore } from "@/store/pendingproduct";
 import { useProductStore } from "@/store/products";
 import { useUserStore } from "@/store/user";
 
@@ -8,11 +10,14 @@ const ProductFilterBadges = () => {
 	const isAdmin = user?.role === "ADMIN";
 
 	const { filters, setCategory, resetFilters } = useProductStore();
-
+	const { showPending, setShowPending } = usePendingProductStore();
 	const selectedCategory = filters.category;
 
 	const handleShowAll = () => {
 		resetFilters();
+		if (showPending) {
+			setShowPending();
+		}
 	};
 
 	const handleCategorySelect = (category: ProductCategory) => {
@@ -21,38 +26,44 @@ const ProductFilterBadges = () => {
 		} else {
 			setCategory(category);
 		}
+		if (showPending) {
+			setShowPending();
+		}
 	};
 
-	const showPending = true;
+	const handlePendingProduct = () => {
+		setShowPending();
+		if (!showPending && selectedCategory) {
+			setCategory(undefined);
+		}
+	};
 
 	return (
 		<div className="flex flex-wrap gap-3 my-6">
 			{/* All Categories */}
-			<button
-				type="button"
+			<Badge
 				onClick={handleShowAll}
-				className={`px-5 py-2 rounded-full border-2 font-medium transition-all ${
-					!selectedCategory
+				className={`px-5 py-4 rounded-full border-2 font-medium transition-all ${
+					!selectedCategory && !showPending
 						? "bg-primary text-white border-secondary shadow-lg scale-105"
 						: "bg-white text-black border-gray-300 hover:border-primary hover:bg-accent hover:text-accent-foreground shadow-sm"
 				}`}
 			>
 				All
-			</button>
+			</Badge>
 
 			{/* Pending Products */}
 			{isAdmin && (
-				<button
-					type="button"
-					onClick={() => {}}
-					className={`px-5 py-2 rounded-full border-2 font-medium transition-all ${
+				<Badge
+					onClick={handlePendingProduct}
+					className={`px-5 py-4 rounded-full border-2 font-medium transition-all ${
 						showPending
 							? "bg-primary text-white border-secondary shadow-lg scale-105"
 							: "bg-white text-black border-gray-300 hover:border-primary hover:bg-accent hover:text-accent-foreground shadow-sm"
 					}`}
 				>
 					Pending
-				</button>
+				</Badge>
 			)}
 
 			{/* Category Filters */}
@@ -60,18 +71,17 @@ const ProductFilterBadges = () => {
 				const isSelected = selectedCategory === category.value;
 
 				return (
-					<button
+					<Badge
 						key={category.value}
-						type="button"
 						onClick={() => handleCategorySelect(category.value)}
-						className={`px-5 py-2 rounded-full border-2 font-medium transition-all ${
+						className={`px-5 py-4 rounded-full border-2 font-medium transition-all ${
 							isSelected
 								? "bg-primary text-white border-secondary shadow-lg scale-105"
 								: "bg-white text-black border-gray-300 hover:border-primary hover:bg-accent hover:text-accent-foreground shadow-sm"
 						}`}
 					>
 						{category.label}
-					</button>
+					</Badge>
 				);
 			})}
 		</div>
