@@ -76,6 +76,16 @@ export interface GetApprovedProductsFilterQuery {
 	priceMax?: number;
 }
 
+export type ShopSearch = {
+	category?: string;
+	brand?: string;
+	condition?: string;
+	search?: string;
+	priceMin?: number;
+	priceMax?: number;
+	page?: number;
+};
+
 export interface ProductResponse {
 	message: string;
 	product: MutateProductResponse;

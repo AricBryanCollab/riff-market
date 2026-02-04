@@ -91,7 +91,7 @@ function SettingsComponent() {
 									}))}
 									onValueChange={handleThemeSelectChange}
 									value={themeValue}
-									className="w-[200px]"
+									className="w-50"
 								/>
 								<div className="min-w-45">
 									{previewTheme && (

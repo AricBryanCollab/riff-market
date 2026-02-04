@@ -1,4 +1,5 @@
 import type { UseMutateFunction } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { Bell, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ const NotificationList = ({
 	isEmptyNotifications,
 	markAsRead,
 }: NotificationListProps) => {
+	const navigate = useNavigate();
 	const getNotificationIcon = (notification: NotificationData) => {
 		if (notification.orderId) {
 			return <Package className="size-5 text-primary" />;
@@ -138,8 +140,11 @@ const NotificationList = ({
 
 			{!isEmptyNotifications && (
 				<div className="px-4 py-3 border-t border-border bg-muted/30">
-					{/* To Do: Notification Page */}
-					<Button onClick={() => {}} variant="ghost" className="w-full text-sm">
+					<Button
+						onClick={() => navigate({ to: "/notifications" })}
+						variant="ghost"
+						className="w-full text-sm"
+					>
 						View All Notifications
 					</Button>
 				</div>

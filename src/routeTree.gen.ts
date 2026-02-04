@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
@@ -51,6 +52,11 @@ const UnauthorizedRoute = UnauthorizedRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunityRoute = CommunityRouteImport.update({
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/community': typeof CommunityRoute
+  '/notifications': typeof NotificationsRoute
   '/settings': typeof SettingsRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/api/notifications': typeof ApiNotificationsRouteWithChildren
@@ -251,6 +258,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/community': typeof CommunityRoute
+  '/notifications': typeof NotificationsRoute
   '/settings': typeof SettingsRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/api/notifications': typeof ApiNotificationsRouteWithChildren
@@ -287,6 +295,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/community': typeof CommunityRoute
+  '/notifications': typeof NotificationsRoute
   '/settings': typeof SettingsRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/api/notifications': typeof ApiNotificationsRouteWithChildren
@@ -324,6 +333,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/community'
+    | '/notifications'
     | '/settings'
     | '/unauthorized'
     | '/api/notifications'
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/community'
+    | '/notifications'
     | '/settings'
     | '/unauthorized'
     | '/api/notifications'
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/community'
+    | '/notifications'
     | '/settings'
     | '/unauthorized'
     | '/api/notifications'
@@ -429,6 +441,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   CommunityRoute: typeof CommunityRoute
+  NotificationsRoute: typeof NotificationsRoute
   SettingsRoute: typeof SettingsRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
   ApiNotificationsRoute: typeof ApiNotificationsRouteWithChildren
@@ -459,6 +472,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community': {
@@ -771,6 +791,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   CommunityRoute: CommunityRoute,
+  NotificationsRoute: NotificationsRoute,
   SettingsRoute: SettingsRoute,
   UnauthorizedRoute: UnauthorizedRoute,
   ApiNotificationsRoute: ApiNotificationsRouteWithChildren,

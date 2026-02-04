@@ -2,9 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import {
 	getUserNotifications,
+	readAllNotifications,
 	readNotificationById,
 } from "@/lib/tanstack-query/notifications.queries";
 import { useNotificationStore } from "@/store/notifications";
+import { useToastStore } from "@/store/toast";
 import { useUserStore } from "@/store/user";
 
 const useNotifications = () => {
@@ -13,10 +15,12 @@ const useNotifications = () => {
 		notifications,
 		unreadCount,
 		setNotifications,
+		markAllAsRead,
 		markAsRead: markAsReadInStore,
 	} = useNotificationStore();
 
 	const { user } = useUserStore();
+	const { showToast } = useToastStore();
 
 	const { data, isLoading } = useQuery({
 		queryKey: ["notifications"],
@@ -32,7 +36,7 @@ const useNotifications = () => {
 		}
 	}, [data, setNotifications]);
 
-	const markAsReadMutation = useMutation({
+	const { mutate: markAsReadMutate } = useMutation({
 		mutationFn: readNotificationById,
 		onMutate: (id) => {
 			markAsReadInStore(id);
@@ -44,6 +48,25 @@ const useNotifications = () => {
 		},
 	});
 
+	const { mutate: markAllAsReadMutate, isPending: isMarkingAllAsRead } =
+		useMutation({
+			mutationFn: readAllNotifications,
+			onMutate: () => {
+				markAllAsRead();
+			},
+			onSuccess: () => {
+				queryClient.invalidateQueries({ queryKey: ["notifications"] });
+			},
+			onError: () => {
+				showToast("Failed to mark all notifications as read", "error");
+				queryClient.invalidateQueries({ queryKey: ["notifications"] });
+			},
+		});
+
+	const handleMarkAllAsRead = () => {
+		markAllAsReadMutate();
+	};
+
 	const isEmptyNotifications = notifications.length === 0;
 
 	return {
@@ -51,7 +74,9 @@ const useNotifications = () => {
 		isLoading,
 		unreadCount,
 		isEmptyNotifications,
-		markAsRead: markAsReadMutation.mutate,
+		isMarkingAllAsRead,
+		markAsReadMutate,
+		handleMarkAllAsRead,
 	};
 };
 
