@@ -51,7 +51,7 @@ export function RecentProductsLoading() {
 
 export function ProductLoadingState() {
 	return (
-		<div className="flex flex-col items-center py-12">
+		<div className="col-span-full flex w-full justify-center items-center py-12">
 			<AnimatedLoader text="Gathering available instruments" />
 		</div>
 	);
