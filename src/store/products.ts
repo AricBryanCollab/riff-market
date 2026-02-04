@@ -75,6 +75,7 @@ export const useProductStore = create<ProductStore>((set, get) => ({
 				offset: page * state.pageSize,
 			},
 		})),
+
 	setPageSize: (pageSize) =>
 		set(() => ({
 			pageSize,
