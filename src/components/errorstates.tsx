@@ -62,7 +62,7 @@ export function RecentProductsError({ refetch }: ErrorStateProps) {
 
 export function ProductErrorState({ refetch }: ErrorStateProps) {
 	return (
-		<div className="flex flex-col justify-center items-center w-full min-h-screen gap-4">
+		<div className="col-span-full flex flex-col justify-center items-center w-full min-h-screen gap-4">
 			<p className="text-destructive text-lg my-4">
 				Error gathering the products
 			</p>
