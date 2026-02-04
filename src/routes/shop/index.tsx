@@ -8,13 +8,16 @@ import ProductFilterBadges from "@/components/productfilterbadges";
 import SectionContainer from "@/components/sectioncontainer";
 import { Button } from "@/components/ui/button";
 import { H3 } from "@/components/ui/typography";
+import useGetPendingProducts from "@/hooks/useGetPendingProducts";
 import useShopPagination from "@/hooks/useShopPagination";
+import { usePendingProductStore } from "@/store/pendingproduct";
 
 export const Route = createFileRoute("/shop/")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
+	const { showPending } = usePendingProductStore();
 	const {
 		products,
 		isLoading,
@@ -28,13 +31,17 @@ function RouteComponent() {
 		nextPage,
 	} = useShopPagination();
 
-	if (isLoading) {
-		return <ProductLoadingState />;
-	}
+	const {
+		pendingProducts,
+		isLoadingPendingProducts,
+		isErrorPendingProducts,
+		refetch: refetchPendingProducts,
+	} = useGetPendingProducts();
 
-	if (isError || !products) {
-		return <ProductErrorState refetch={refetchProducts} />;
-	}
+	const displayProducts = showPending ? pendingProducts : products;
+	const displayIsLoading = showPending ? isLoadingPendingProducts : isLoading;
+	const displayIsError = showPending ? isErrorPendingProducts : isError;
+	const displayRefetch = showPending ? refetchPendingProducts : refetchProducts;
 
 	return (
 		<SectionContainer>
@@ -43,14 +50,22 @@ function RouteComponent() {
 			<ProductFilterBadges />
 
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-h-200">
-				{products.length > 0 ? (
-					products.map((product) => (
+				{displayIsLoading ? (
+					<ProductLoadingState />
+				) : displayIsError || !displayProducts ? (
+					<ProductErrorState refetch={displayRefetch} />
+				) : displayProducts.length > 0 ? (
+					displayProducts.map((product) => (
 						<ProductCard key={product.id} product={product} />
 					))
 				) : (
 					<div className="col-span-full flex flex-col justify-center items-center gap-4 text-center py-8 text-muted-foreground">
-						<ListMusic size={28} />
-						<H3>No products match your search here</H3>
+						<ListMusic size={40} />
+						<H3>
+							{showPending
+								? "No pending products for approval"
+								: "No products match your search here"}
+						</H3>
 					</div>
 				)}
 			</div>
