@@ -1,28 +1,23 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { getProductCountByCategory } from "@/lib/tanstack-query/product.queries";
-import type { CategoryMeta, ProductCountByCategoryData } from "@/types/product";
+import type { ProductCountByCategoryData } from "@/types/product";
 import { transformProductCategoryCount } from "@/utils/transformProductCategoryCount";
 
-export const prroductCountByCategory = queryOptions<
-	ProductCountByCategoryData[]
->({
-	queryKey: ["products", "count"],
+export const productCountByCategoryOptions = queryOptions({
+	queryKey: ["products", "count", "by-category"],
 	queryFn: getProductCountByCategory,
+	select: (data: ProductCountByCategoryData[]) =>
+		transformProductCategoryCount(data),
+	staleTime: 5 * 60 * 1000,
 });
 
 const useGetProductCount = () => {
 	const {
-		data: rawCategoryCounts,
+		data: categoryCounts = [],
 		isPending: loadingCategoryCounts,
 		isError: isErrorCategoryCounts,
 		refetch: refetchCategoryCounts,
-	} = useQuery(prroductCountByCategory);
-
-	const categoryCounts = useMemo<CategoryMeta[] | undefined>(() => {
-		if (!rawCategoryCounts) return [];
-		return transformProductCategoryCount(rawCategoryCounts);
-	}, [rawCategoryCounts]);
+	} = useQuery(productCountByCategoryOptions);
 
 	return {
 		categoryCounts,
