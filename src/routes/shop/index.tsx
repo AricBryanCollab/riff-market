@@ -9,15 +9,22 @@ import SectionContainer from "@/components/sectioncontainer";
 import { Button } from "@/components/ui/button";
 import { H3 } from "@/components/ui/typography";
 import useGetPendingProducts from "@/hooks/useGetPendingProducts";
+import useProductFilters from "@/hooks/useProductFilters";
 import useShopPagination from "@/hooks/useShopPagination";
 import { usePendingProductStore } from "@/store/pendingproduct";
+import { validateProductSearch } from "@/utils/validateProductSearch";
 
 export const Route = createFileRoute("/shop/")({
 	component: RouteComponent,
+	validateSearch: validateProductSearch,
 });
 
 function RouteComponent() {
+	const searchParams = Route.useSearch();
 	const { showPending } = usePendingProductStore();
+
+	useProductFilters(searchParams);
+
 	const {
 		products,
 		isLoading,

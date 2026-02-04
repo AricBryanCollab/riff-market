@@ -17,7 +17,7 @@ const Navbar = () => {
 	const handleSearch = (e: React.FormEvent) => {
 		e.preventDefault();
 		if (query.trim()) {
-			navigate({ to: "/shop", search: { q: query.trim() } });
+			navigate({ to: "/shop" });
 		}
 	};
 
