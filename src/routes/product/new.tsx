@@ -141,7 +141,7 @@ function RouteComponent() {
 
 				<div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start md:justify-end">
 					<LoadingButton
-						loading={loading}
+						disabled={loading}
 						variant="outline"
 						type="button"
 						onClick={clearCreateProductForm}
