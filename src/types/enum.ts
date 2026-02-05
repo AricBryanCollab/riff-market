@@ -18,4 +18,4 @@ export type OrderStatus =
 	| "DELIVERED"
 	| "CANCELED";
 
-export type DialogType = "signin" | "signup" | "deleteProduct";
+export type DialogType = "signin" | "signup" | "deleteProduct" | "updateUser";
