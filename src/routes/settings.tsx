@@ -1,14 +1,17 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { Palette } from "lucide-react";
+import { Palette, Pencil } from "lucide-react";
 import { useEffect } from "react";
+import { AppDialog } from "@/components/app-dialog";
 import Avatar from "@/components/avatar";
 import { FormSelect } from "@/components/form-select";
-import { ProfileInfoField } from "@/components/profilefield";
+import IconButton from "@/components/iconbutton";
 import SectionContainer from "@/components/sectioncontainer";
 import { Button } from "@/components/ui/button";
 import { BodyLarge, BodySmall, H2, H4 } from "@/components/ui/typography";
+import { ProfileInfoField } from "@/components/usersettings/profilefield";
 import { themeOptions } from "@/constants/selectOptions";
 import useThemeChange from "@/hooks/useThemeChange";
+import { useDialogStore } from "@/store/dialog";
 import { useThemeStore } from "@/store/theme";
 import { useUserStore } from "@/store/user";
 import { getRoleInfo } from "@/utils/requireRole";
@@ -25,6 +28,7 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsComponent() {
 	const { user } = useUserStore();
+	const { setOpenDialog } = useDialogStore();
 	const navigate = useNavigate();
 	const { previewTheme } = useThemeStore();
 	const { themeValue, handleThemeSelectChange, handleClearTheme } =
@@ -57,19 +61,28 @@ function SettingsComponent() {
 				{/* PROFILE */}
 				<div className="flex flex-col gap-4">
 					<H4>Profile Information</H4>
-					<div className="flex flex-col gap-6 md:flex-row">
+					<div className="group flex flex-col gap-6 md:flex-row">
 						<Avatar size="xl" />
-						<div className="grid grid-cols-2 min-w-xl lg:min-w-2xl gap-4">
-							<ProfileInfoField label="First Name" value={user?.firstName} />
-							<ProfileInfoField label="Last Name" value={user?.lastName} />
-							<ProfileInfoField label="Email Address" value={user?.email} />
-							<ProfileInfoField label="Address" value={user?.address} />
-							<ProfileInfoField label="Phone Number" value={user?.phone} />
-							<ProfileInfoField
-								label="Community Role"
-								value={roleInfo.label}
-								description={roleInfo.description}
-							/>
+						<div className="relative border-2 border-dashed border-transparent group-hover:border-black ease-in-out duration-500 px-3 py-4 rounded-md">
+							<div className="grid grid-cols-2 min-w-xl lg:min-w-2xl gap-4">
+								<ProfileInfoField label="First Name" value={user?.firstName} />
+								<ProfileInfoField label="Last Name" value={user?.lastName} />
+								<ProfileInfoField label="Email Address" value={user?.email} />
+								<ProfileInfoField label="Address" value={user?.address} />
+								<ProfileInfoField label="Phone Number" value={user?.phone} />
+								<ProfileInfoField
+									label="Marketplace Role"
+									value={roleInfo.label}
+									description={roleInfo.description}
+								/>
+							</div>
+
+							<div className="absolute right-4 top-2 hidden group-hover:block">
+								<IconButton
+									icon={Pencil}
+									onClick={() => setOpenDialog("updateUser")}
+								/>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -170,6 +183,10 @@ function SettingsComponent() {
 						<div className="h-10 w-40 rounded bg-red-200" />
 					</div>
 				</div>
+
+				<AppDialog type="updateUser" title="Update your profile information">
+					<h1>Dialog Testing</h1>
+				</AppDialog>
 			</div>
 		</SectionContainer>
 	);
