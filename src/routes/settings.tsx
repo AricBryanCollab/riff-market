@@ -61,27 +61,45 @@ function SettingsComponent() {
 				{/* PROFILE */}
 				<div className="flex flex-col gap-4">
 					<H4>Profile Information</H4>
-					<div className="group flex flex-col gap-6 md:flex-row">
-						<Avatar size="xl" />
-						<div className="relative border-2 border-dashed border-transparent group-hover:border-black ease-in-out duration-500 px-3 py-4 rounded-md">
-							<div className="grid grid-cols-2 min-w-xl lg:min-w-2xl gap-4">
-								<ProfileInfoField label="First Name" value={user?.firstName} />
-								<ProfileInfoField label="Last Name" value={user?.lastName} />
-								<ProfileInfoField label="Email Address" value={user?.email} />
-								<ProfileInfoField label="Address" value={user?.address} />
-								<ProfileInfoField label="Phone Number" value={user?.phone} />
-								<ProfileInfoField
-									label="Marketplace Role"
-									value={roleInfo.label}
-									description={roleInfo.description}
-								/>
+					<div className="flex flex-col gap-6 md:flex-row">
+						{/* Avatar Group */}
+						<div className="group relative">
+							<div className="border-2 border-dashed border-transparent group-hover:border-black ease-in-out duration-300 p-3 rounded-full">
+								<Avatar size="xl" />
 							</div>
-
-							<div className="absolute right-4 top-2 hidden group-hover:block">
+							<div className="absolute top-30 right-2 hidden group-hover:block ease-in-out duration-300">
 								<IconButton
 									icon={Pencil}
-									onClick={() => setOpenDialog("updateUser")}
+									onClick={() => setOpenDialog("updateProfilePic")}
 								/>
+							</div>
+						</div>
+
+						{/* Profile Info Group */}
+						<div className="group relative">
+							<div className="border-2 border-dashed border-transparent group-hover:border-black ease-in-out duration-300 px-3 py-4 rounded-md">
+								<div className="grid grid-cols-2 min-w-xl lg:min-w-2xl gap-4">
+									<ProfileInfoField
+										label="First Name"
+										value={user?.firstName}
+									/>
+									<ProfileInfoField label="Last Name" value={user?.lastName} />
+									<ProfileInfoField label="Email Address" value={user?.email} />
+									<ProfileInfoField label="Address" value={user?.address} />
+									<ProfileInfoField label="Phone Number" value={user?.phone} />
+									<ProfileInfoField
+										label="Marketplace Role"
+										value={roleInfo.label}
+										description={roleInfo.description}
+									/>
+								</div>
+
+								<div className="absolute right-4 top-2 hidden group-hover:block ease-in-out duration-300">
+									<IconButton
+										icon={Pencil}
+										onClick={() => setOpenDialog("updateUser")}
+									/>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -186,6 +204,10 @@ function SettingsComponent() {
 
 				<AppDialog type="updateUser" title="Update your profile information">
 					<UpdateProfileForm />
+				</AppDialog>
+
+				<AppDialog type="updateProfilePic" title="Upload your profile picture">
+					<h1>Test for Upload Profile Picture Dialog</h1>
 				</AppDialog>
 			</div>
 		</SectionContainer>
