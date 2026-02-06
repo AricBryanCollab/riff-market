@@ -4,8 +4,13 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import useUpdateUser from "@/hooks/useUpdateUser";
 
 const UpdateProfileForm = () => {
-	const { userData, onChange, handleCloseDialog, handleSubmit } =
-		useUpdateUser();
+	const {
+		userData,
+		loadingUpdateUser,
+		onChange,
+		handleCloseDialog,
+		handleSubmit,
+	} = useUpdateUser();
 
 	return (
 		<form onSubmit={handleSubmit}>
@@ -43,10 +48,18 @@ const UpdateProfileForm = () => {
 				/>
 
 				<div className="mb-6 flex justify-end items-center gap-3">
-					<LoadingButton onClick={handleCloseDialog} variant="outline">
+					<LoadingButton
+						disabled={loadingUpdateUser}
+						onClick={handleCloseDialog}
+						variant="outline"
+					>
 						Cancel
 					</LoadingButton>
-					<LoadingButton type="submit" variant="default">
+					<LoadingButton
+						loading={loadingUpdateUser}
+						type="submit"
+						variant="default"
+					>
 						Save
 					</LoadingButton>
 				</div>
