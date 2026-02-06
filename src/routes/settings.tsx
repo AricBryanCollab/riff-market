@@ -9,6 +9,7 @@ import SectionContainer from "@/components/sectioncontainer";
 import { Button } from "@/components/ui/button";
 import { BodyLarge, BodySmall, H2, H4 } from "@/components/ui/typography";
 import { ProfileInfoField } from "@/components/usersettings/profilefield";
+import UpdateProfileForm from "@/components/usersettings/updateprofileform";
 import { themeOptions } from "@/constants/selectOptions";
 import useThemeChange from "@/hooks/useThemeChange";
 import { useDialogStore } from "@/store/dialog";
@@ -46,7 +47,6 @@ function SettingsComponent() {
 	return (
 		<SectionContainer>
 			<div className="flex w-full flex-col gap-8">
-				{/* PAGE HEADER */}
 				<div className="flex items-center justify-between my-6">
 					<div className="py-2">
 						<H2 className="text-3xl font-bold tracking-wider">
@@ -185,7 +185,7 @@ function SettingsComponent() {
 				</div>
 
 				<AppDialog type="updateUser" title="Update your profile information">
-					<h1>Dialog Testing</h1>
+					<UpdateProfileForm />
 				</AppDialog>
 			</div>
 		</SectionContainer>
