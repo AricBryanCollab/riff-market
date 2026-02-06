@@ -11,7 +11,7 @@ const IconButton = ({
 	onClick,
 	icon: Icon,
 	disabled = false,
-	backgroundColor = "bg-primary hover:bg-accent",
+	backgroundColor = "bg-primary hover:bg-accent hover:text-primary",
 }: IconButtonProps) => {
 	const disabledStyle = "bg-gray-300 text-gray-500 cursor-not-allowed";
 

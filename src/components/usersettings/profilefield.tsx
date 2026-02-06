@@ -1,4 +1,5 @@
-import { BodyLarge, BodySmall, Caption } from "@/components/ui/typography";
+import { Badge } from "@/components/ui/badge";
+import { BodyLarge, BodySmall } from "@/components/ui/typography";
 
 interface ProfileInfoFieldProps {
 	label: string;
@@ -18,7 +19,9 @@ export function ProfileInfoField({
 				{value || <span className="text-slate-500">Not Provided</span>}
 			</BodyLarge>
 			{description && (
-				<Caption className="text-secondary">{description}</Caption>
+				<Badge variant="secondary" className="w-fit">
+					{description}
+				</Badge>
 			)}
 		</div>
 	);
