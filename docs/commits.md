@@ -1,4 +1,5 @@
 # Commit Message System
+<!-- concept:def commit_conventions -->
 
 | Type | Usage Description | Example Commit |
 | ----------- | ------------------- | ---------------- |
