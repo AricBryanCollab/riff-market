@@ -3,7 +3,7 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import UserMenu from "@/components/usermenu";
-import { navbarItems } from "@/constants/navbarItems";
+import { navbarItems } from "@/constants/navbar-items";
 
 interface NavbarItemProps {
 	name: string;

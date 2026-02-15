@@ -9,13 +9,13 @@ import {
 	RoleActionConfigs,
 	type RoleActionVariant,
 } from "@/constants/roleactionconfigs";
-import useUpdateProductStatus from "@/hooks/useUpdateProductStatus";
+import useUpdateProductStatus from "@/hooks/use-update-product-status";
 import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import { useUserStore } from "@/store/user";
 import type { UserRole } from "@/types/enum";
-import { canModifyProduct, isActionDisabled } from "@/utils/canModifyProduct";
+import { canModifyProduct, isActionDisabled } from "@/utils/can-modify-product";
 
 const productActionButtonVariants = cva(
 	"rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors",

@@ -1,4 +1,4 @@
-import useGetProducts from "@/hooks/useGetProducts";
+import useGetProducts from "@/hooks/use-get-products";
 import { useProductStore } from "@/store/products";
 import type { ApprovedProductCount } from "@/types/product";
 

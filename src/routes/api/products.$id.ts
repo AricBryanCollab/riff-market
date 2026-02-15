@@ -6,7 +6,7 @@ import {
 } from "@/actions/product";
 import type { UpdateProductInput } from "@/lib/zod/product.validation";
 import { authMiddleware } from "@/middleware";
-import { extractPartialFormData } from "@/utils/extractFormData";
+import { extractPartialFormData } from "@/utils/extract-form-data";
 
 export const Route = createFileRoute("/api/products/$id")({
 	server: {

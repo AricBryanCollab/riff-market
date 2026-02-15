@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button";
 import { BodyLarge, BodySmall, H2, H4 } from "@/components/ui/typography";
 import { ProfileInfoField } from "@/components/usersettings/profilefield";
 import UpdateProfileForm from "@/components/usersettings/updateprofileform";
-import { themeOptions } from "@/constants/selectOptions";
-import useThemeChange from "@/hooks/useThemeChange";
+import { themeOptions } from "@/constants/select-options";
+import useThemeChange from "@/hooks/use-theme-change";
 import { useDialogStore } from "@/store/dialog";
 import { useThemeStore } from "@/store/theme";
 import { useUserStore } from "@/store/user";
-import { getRoleInfo } from "@/utils/requireRole";
+import { getRoleInfo } from "@/utils/require-role";
 
 export const Route = createFileRoute("/settings")({
 	beforeLoad: () => {

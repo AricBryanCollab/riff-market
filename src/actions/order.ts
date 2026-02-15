@@ -19,7 +19,7 @@ import type {
 	OrderResponse,
 } from "@/types/order";
 
-import { generateTrackingNumber } from "@/utils/generateTrackingNumber";
+import { generateTrackingNumber } from "@/utils/generate-tracking-number";
 
 export async function createOrderService(
 	userId: string,

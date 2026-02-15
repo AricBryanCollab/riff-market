@@ -8,11 +8,11 @@ import ProductFilterBadges from "@/components/productfilterbadges";
 import SectionContainer from "@/components/sectioncontainer";
 import { Button } from "@/components/ui/button";
 import { H3 } from "@/components/ui/typography";
-import useGetPendingProducts from "@/hooks/useGetPendingProducts";
-import useProductFilters from "@/hooks/useProductFilters";
-import useShopPagination from "@/hooks/useShopPagination";
+import useGetPendingProducts from "@/hooks/use-get-pending-products";
+import useProductFilters from "@/hooks/use-product-filters";
+import useShopPagination from "@/hooks/use-shop-pagination";
 import { usePendingProductStore } from "@/store/pendingproduct";
-import { validateProductSearch } from "@/utils/validateProductSearch";
+import { validateProductSearch } from "@/utils/validate-product-search";
 
 export const Route = createFileRoute("/shop/")({
 	component: RouteComponent,

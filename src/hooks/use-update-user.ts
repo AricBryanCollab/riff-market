@@ -5,7 +5,7 @@ import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import { useUserStore } from "@/store/user";
 import type { UpdateUserRequest } from "@/types/user";
-import { validatePhoneNumber } from "@/utils/validatePhoneNumber";
+import { validatePhoneNumber } from "@/utils/validate-phone-number";
 
 const useUpdateUser = () => {
 	const queryClient = useQueryClient();

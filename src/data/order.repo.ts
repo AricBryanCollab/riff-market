@@ -1,12 +1,12 @@
 import type { OrderStatus } from "generated/prisma/enums";
 
-import { prisma } from "@/data/connectDb";
+import { prisma } from "@/data/connect-db";
 import { createNotification } from "@/data/notification.repo.";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
 import {
 	orderBaseQuery,
 	transformOrderResponse,
-} from "@/utils/transformOrderQueryResponse";
+} from "@/utils/transform-order-query-response";
 
 // Create Order
 export const createOrder = async (

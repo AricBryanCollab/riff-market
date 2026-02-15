@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canModifyProduct, isActionDisabled } from "./canModifyProduct";
+import { canModifyProduct, isActionDisabled } from "./can-modify-product";
 
 describe("canModifyProduct", () => {
 	it("returns true when user is ADMIN", () => {

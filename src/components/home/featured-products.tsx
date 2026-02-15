@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { featuredProducts } from "./mocks";
-import ProductGrid from "./ProductGrid";
+import ProductGrid from "./product-grid";
 
 const FeaturedProducts = () => {
 	return (

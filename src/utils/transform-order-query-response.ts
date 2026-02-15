@@ -1,4 +1,4 @@
-import { prisma } from "@/data/connectDb";
+import { prisma } from "@/data/connect-db";
 import type { OrderResponse } from "@/types/order";
 
 type InferOrderResult = Awaited<ReturnType<typeof getOrderSample>>;

@@ -4,7 +4,7 @@ import type {
 	User,
 	UserSettings,
 } from "generated/prisma/client";
-import { prisma } from "@/data/connectDb";
+import { prisma } from "@/data/connect-db";
 import type { UpdateUserInput } from "@/lib/zod/user.validation";
 import type { UserProfile } from "@/types/user";
 

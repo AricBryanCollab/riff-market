@@ -1,7 +1,7 @@
 import { CreditCard } from "lucide-react";
 import { SearchableSelect } from "@/components/searchable-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { paymentMethodOptions } from "@/constants/selectOptions";
+import { paymentMethodOptions } from "@/constants/select-options";
 
 interface PaymentMethodSelectProps {
 	value: string | null;

@@ -1,4 +1,4 @@
-import FeaturedProductCard from "@/components/home/FeaturedProductCard";
+import FeaturedProductCard from "@/components/home/featured-product-card";
 import type { BaseProduct } from "@/types/product";
 
 interface ProductGridProps {

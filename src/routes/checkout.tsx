@@ -8,8 +8,8 @@ import SectionContainer from "@/components/sectioncontainer";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { H2 } from "@/components/ui/typography";
-import useCartDetails from "@/hooks/useCartDetails";
-import usePlaceOrder from "@/hooks/usePlaceOrder";
+import useCartDetails from "@/hooks/use-cart-details";
+import usePlaceOrder from "@/hooks/use-place-order";
 
 export const Route = createFileRoute("/checkout")({
 	component: RouteComponent,

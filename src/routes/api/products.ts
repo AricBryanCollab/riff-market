@@ -5,7 +5,7 @@ import {
 } from "@/actions/product";
 import { authMiddleware } from "@/middleware";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
-import { extractFormData } from "@/utils/extractFormData";
+import { extractFormData } from "@/utils/extract-form-data";
 
 export const Route = createFileRoute("/api/products")({
 	server: {

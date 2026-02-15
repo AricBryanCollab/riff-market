@@ -2,7 +2,7 @@ import { Tag, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { popularBrands } from "@/constants/popularBrands";
+import { popularBrands } from "@/constants/popular-brands";
 import { useProductStore } from "@/store/products";
 import type { GetApprovedProductsFilterQuery } from "@/types/product";
 

@@ -12,10 +12,10 @@ import { Body, H4 } from "@/components/ui/typography";
 import {
 	productCategoryOptions,
 	productConditionOptions,
-} from "@/constants/selectOptions";
-import useCreateProduct from "@/hooks/useCreateProduct";
+} from "@/constants/select-options";
+import useCreateProduct from "@/hooks/use-create-product";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
-import { requireRole } from "@/utils/requireRole";
+import { requireRole } from "@/utils/require-role";
 
 export const Route = createFileRoute("/product/new")({
 	beforeLoad: () => requireRole(["SELLER", "ADMIN"]),

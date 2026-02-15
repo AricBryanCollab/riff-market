@@ -1,7 +1,7 @@
 import { FormField } from "@/components/form-field";
 import { LoadingButton } from "@/components/ui/loading-button";
 
-import useUpdateUser from "@/hooks/useUpdateUser";
+import useUpdateUser from "@/hooks/use-update-user";
 
 const UpdateProfileForm = () => {
 	const {

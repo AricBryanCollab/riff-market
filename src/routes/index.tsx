@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { EmptyFeaturedProductState } from "@/components/emptystates";
 import { HeroFeaturedProductErrorState } from "@/components/errorstates";
-import CategoryGrid from "@/components/home/CategoryGrid";
-import Footer from "@/components/home/Footer";
-import HeroCarousel from "@/components/home/HeroCarousel";
-import RecentListings from "@/components/home/RecentListings";
+import CategoryGrid from "@/components/home/category-grid";
+import Footer from "@/components/home/footer";
+import HeroCarousel from "@/components/home/hero-carousel";
+import RecentListings from "@/components/home/recent-listings";
 import { HeroFeaturedProductLoading } from "@/components/loadingstates";
 import SectionContainer from "@/components/sectioncontainer";
 import { H2 } from "@/components/ui/typography";
-import useGetProducts from "@/hooks/useGetProducts";
+import useGetProducts from "@/hooks/use-get-products";
 export const Route = createFileRoute("/")({ component: HomePage });
 
 function HomePage() {

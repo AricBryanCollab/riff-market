@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import MusicNote from "@/assets/musicnote";
-import ConditionBadge from "@/components/home/ConditionBadge";
+import ConditionBadge from "@/components/home/condition-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { BaseProduct } from "@/types/product";
 

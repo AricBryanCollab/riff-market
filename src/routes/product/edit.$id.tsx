@@ -16,9 +16,9 @@ import { SearchableSelect } from "@/components/searchable-select";
 import SectionContainer from "@/components/sectioncontainer";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Body, H4 } from "@/components/ui/typography";
-import { productCategoryOptions } from "@/constants/selectOptions";
-import useUpdateProduct from "@/hooks/useUpdateProduct";
-import { requireRole } from "@/utils/requireRole";
+import { productCategoryOptions } from "@/constants/select-options";
+import useUpdateProduct from "@/hooks/use-update-product";
+import { requireRole } from "@/utils/require-role";
 
 export const Route = createFileRoute("/product/edit/$id")({
 	beforeLoad: () => requireRole(["ADMIN", "SELLER"]),

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
 import type { BaseProduct } from "@/types/product";
-import { formatRelativeTime } from "@/utils/formatDate";
+import { formatRelativeTime } from "@/utils/format-date";
 
 interface PendingProductListProps {
 	pendingProducts: BaseProduct[];

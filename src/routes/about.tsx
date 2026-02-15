@@ -11,7 +11,7 @@ import {
 	Users,
 } from "lucide-react";
 import { useId, useState } from "react";
-import AboutHero from "@/assets/about hero.jpg";
+import AboutHero from "@/assets/about-hero.jpg";
 import SectionContainer from "@/components/sectioncontainer";
 import { cn } from "@/lib/utils";
 

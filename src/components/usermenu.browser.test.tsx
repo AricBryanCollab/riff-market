@@ -2,13 +2,13 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import UserMenu from "./usermenu";
 
-vi.mock("@/hooks/useCartDetails", () => ({
+vi.mock("@/hooks/use-cart-details", () => ({
 	default: () => ({
 		cartCount: 3,
 	}),
 }));
 
-vi.mock("@/hooks/useSignOut", () => ({
+vi.mock("@/hooks/use-sign-out", () => ({
 	useSignOut: () => ({
 		loading: false,
 		signOut: vi.fn(),

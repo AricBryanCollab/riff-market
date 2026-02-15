@@ -1,6 +1,6 @@
 import { cva } from "class-variance-authority";
 import { type LucideIcon, Upload, X } from "lucide-react";
-import useUploadImage, { type ImageFile } from "@/hooks/useUploadImage";
+import useUploadImage, { type ImageFile } from "@/hooks/use-upload-image";
 
 interface ImageUploaderProps {
 	inputId: string;
