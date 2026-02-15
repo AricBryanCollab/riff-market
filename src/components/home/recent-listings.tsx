@@ -3,7 +3,7 @@ import { RecentProductsError } from "@/components/errorstates";
 import { RecentProductsLoading } from "@/components/loadingstates";
 import ProductCard from "@/components/productcard";
 
-import useGetRecentProducts from "@/hooks/useGetRecentProducts";
+import useGetRecentProducts from "@/hooks/use-get-recent-products";
 
 const RecentListings = () => {
 	const {

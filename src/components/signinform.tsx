@@ -2,8 +2,8 @@ import { Lock, Mail } from "lucide-react";
 import { FormField } from "@/components/form-field";
 import { PasswordField } from "@/components/password-field";
 import { LoadingButton } from "@/components/ui/loading-button";
-import useAuthDialog from "@/hooks/useAuthDialog";
-import useSignIn from "@/hooks/useSignIn";
+import useAuthDialog from "@/hooks/use-auth-dialog";
+import useSignIn from "@/hooks/use-sign-in";
 
 const SignInForm = () => {
 	const { signInData, loading, isError, onChange, handleSubmit } = useSignIn();

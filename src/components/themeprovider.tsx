@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { themeClasses } from "@/constants/themeClasses";
+import { themeClasses } from "@/constants/theme-classes";
 import { useThemeStore } from "@/store/theme";
 
 interface ThemeProviderProps {

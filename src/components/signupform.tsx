@@ -3,9 +3,9 @@ import { FormField } from "@/components/form-field";
 import { FormSelect } from "@/components/form-select";
 import { PasswordField } from "@/components/password-field";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { roleOptions } from "@/constants/selectOptions";
-import useAuthDialog from "@/hooks/useAuthDialog";
-import useSignUp from "@/hooks/useSignUp";
+import { roleOptions } from "@/constants/select-options";
+import useAuthDialog from "@/hooks/use-auth-dialog";
+import useSignUp from "@/hooks/use-sign-up";
 import type { UserRole } from "@/types/enum";
 
 const SignUpForm = () => {

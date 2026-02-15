@@ -1,5 +1,5 @@
 import { useQueries } from "@tanstack/react-query";
-import { productbyIdQueryOpt } from "@/hooks/useGetProducts";
+import { productbyIdQueryOpt } from "@/hooks/use-get-products";
 import { useCartStore } from "@/store/cart";
 
 const useCartDetails = () => {

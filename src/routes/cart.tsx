@@ -5,8 +5,8 @@ import { CartDetailsLoadingState } from "@/components/loadingstates";
 import SectionContainer from "@/components/sectioncontainer";
 import { Button } from "@/components/ui/button";
 import { BodyLarge, BodySmall, H2 } from "@/components/ui/typography";
-import useCartDetails from "@/hooks/useCartDetails";
-import { requireRole } from "@/utils/requireRole";
+import useCartDetails from "@/hooks/use-cart-details";
+import { requireRole } from "@/utils/require-role";
 
 export const Route = createFileRoute("/cart")({
 	beforeLoad: () => requireRole(["CUSTOMER"]),

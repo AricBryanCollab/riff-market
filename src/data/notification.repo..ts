@@ -1,5 +1,5 @@
 import type { Prisma } from "generated/prisma/client";
-import { prisma } from "@/data/connectDb";
+import { prisma } from "@/data/connect-db";
 import type { NotificationData } from "@/types/notification";
 
 export const createNotification = async (

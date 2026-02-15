@@ -1,5 +1,5 @@
 import type { User, UserSettings } from "generated/prisma/client";
-import { prisma } from "@/data/connectDb";
+import { prisma } from "@/data/connect-db";
 
 type ReqUser = Omit<User, "id" | "createdAt" | "updatedAt">;
 type CreateUserResult = {

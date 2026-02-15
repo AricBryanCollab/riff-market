@@ -14,7 +14,7 @@ import SignInForm from "@/components/signinform";
 import SignUpForm from "@/components/signupform";
 import { ThemeProvider } from "@/components/themeprovider";
 import Toast from "@/components/toast";
-import { useAuthUser } from "@/hooks/useAuthUser";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import TanStackQueryDevtools from "@/lib/tanstack-query/devtools";
 import appCss from "../styles.css?url";
 

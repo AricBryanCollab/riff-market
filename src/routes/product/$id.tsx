@@ -13,8 +13,8 @@ import { ProductDetailsActions } from "@/components/productactions";
 import Rating from "@/components/rating";
 import ReviewSection from "@/components/reviewsection";
 import SectionContainer from "@/components/sectioncontainer";
-import { productCategoryOptions } from "@/constants/selectOptions";
-import { productbyIdQueryOpt } from "@/hooks/useGetProducts";
+import { productCategoryOptions } from "@/constants/select-options";
+import { productbyIdQueryOpt } from "@/hooks/use-get-products";
 
 export const Route = createFileRoute("/product/$id")({
 	component: RouteComponent,

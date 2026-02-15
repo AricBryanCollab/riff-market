@@ -1,4 +1,4 @@
-import type { themeClasses } from "@/constants/themeClasses";
+import type { themeClasses } from "@/constants/theme-classes";
 import type { UserRole } from "@/types/enum";
 
 export interface UserProfile {

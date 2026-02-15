@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import MusicNote from "@/assets/musicnote";
-import ConditionBadge from "@/components/home/ConditionBadge";
+import ConditionBadge from "@/components/home/condition-badge";
 import type { BaseProduct } from "@/types/product";
 
 interface FeaturedProductCardProps {

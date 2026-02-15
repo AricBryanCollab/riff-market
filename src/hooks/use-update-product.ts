@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import useGetProducts from "@/hooks/useGetProducts";
-import type { ImageFile } from "@/hooks/useUploadImage";
+import useGetProducts from "@/hooks/use-get-products";
+import type { ImageFile } from "@/hooks/use-upload-image";
 import { updateProduct } from "@/lib/tanstack-query/product.queries";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";

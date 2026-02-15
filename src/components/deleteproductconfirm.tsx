@@ -1,7 +1,7 @@
 import { Box, Settings } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { BodySmall } from "@/components/ui/typography";
-import useDeleteProduct from "@/hooks/useDeleteProduct";
+import useDeleteProduct from "@/hooks/use-delete-product";
 import { useDialogStore } from "@/store/dialog";
 
 interface DeleteProductConfirmProps {

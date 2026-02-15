@@ -1,4 +1,4 @@
-import { productCategoryMetadata } from "@/constants/productCategoryMetdata";
+import { productCategoryMetadata } from "@/constants/product-category-metdata";
 import type { ProductCountByCategoryData } from "@/types/product";
 
 export function transformProductCategoryCount(

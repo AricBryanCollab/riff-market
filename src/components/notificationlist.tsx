@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import type { NotificationData } from "@/types/notification";
-import { formatRelativeTime } from "@/utils/formatDate";
+import { formatRelativeTime } from "@/utils/format-date";
 
 const notificationListItemVariants = cva(
 	"p-3 rounded-lg transition-colors cursor-pointer hover:bg-accent/50",

@@ -1,5 +1,5 @@
 import z from "zod";
-import { themeClasses } from "@/constants/themeClasses";
+import { themeClasses } from "@/constants/theme-classes";
 
 const profilePictureFile = z
 	.instanceof(File)

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
 import { useUserStore } from "@/store/user";
 import type { OrderResponse } from "@/types/order";
-import { formatRelativeTime } from "@/utils/formatDate";
+import { formatRelativeTime } from "@/utils/format-date";
 
 const orderListBadgeVariants = cva(
 	"flex items-center text-xs px-1 py-0.5 rounded-md shrink-0",
