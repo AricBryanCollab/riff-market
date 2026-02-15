@@ -21,7 +21,8 @@
     "check:fix": "biome check --write",
     "typecheck": "tsc --noEmit",
     "validate": "bun typecheck && bun lint",
-    "docs:check": "node scripts/docs-contradictions.cjs"
+    "docs:check": "node scripts/docs-contradictions.cjs",
+    "docs:check:strict": "bun run docs:check"
   },
 	"dependencies": {
 		"@base-ui/react": "^1.1.0",

@@ -10,3 +10,4 @@ Instruction rules:
 - For docs work, start with `docs/README.md`, then task pack, then optional docs.
 - Keep command behavior and conventions in docs files as the source of truth.
 - For docs changes, run `bun run docs:check`.
+- Install local hooks with `bun run hooks:install` and commit doc-related changes with pre-commit docs checks enforced by `.githooks/pre-commit`.
