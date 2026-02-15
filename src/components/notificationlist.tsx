@@ -1,11 +1,40 @@
 import type { UseMutateFunction } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { cva } from "class-variance-authority";
 import { Bell, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
 import type { NotificationData } from "@/types/notification";
 import { formatRelativeTime } from "@/utils/formatDate";
+
+const notificationListItemVariants = cva(
+	"p-3 rounded-lg transition-colors cursor-pointer hover:bg-accent/50",
+	{
+		variants: {
+			isRead: {
+				true: "",
+				false: "bg-primary/5 border border-primary/20",
+			},
+		},
+		defaultVariants: {
+			isRead: true,
+		},
+	},
+);
+
+const notificationMessageVariants = cva("text-sm", {
+	variants: {
+		isRead: {
+			true: "",
+			false: "font-medium",
+		},
+	},
+	defaultVariants: {
+		isRead: true,
+	},
+});
 
 interface NotificationListProps {
 	notifications: NotificationData[];
@@ -87,11 +116,11 @@ const NotificationList = ({
 							<li
 								key={notification.id}
 								onClick={() => handleNotificationClick(notification)}
-								className={`
-									p-3 rounded-lg transition-colors cursor-pointer
-									hover:bg-accent/50
-									${!notification.isRead ? "bg-primary/5 border border-primary/20" : ""}
-								`}
+								className={cn(
+									notificationListItemVariants({
+										isRead: notification.isRead,
+									}),
+								)}
 							>
 								<div className="flex gap-3">
 									{!notification.isRead && (
@@ -104,7 +133,11 @@ const NotificationList = ({
 
 									<div className="flex-1 min-w-0">
 										<p
-											className={`text-sm ${!notification.isRead ? "font-medium" : ""}`}
+											className={cn(
+												notificationMessageVariants({
+													isRead: notification.isRead,
+												}),
+											)}
 										>
 											{notification.message}
 										</p>

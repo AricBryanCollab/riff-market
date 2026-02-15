@@ -1,8 +1,24 @@
+import { cva } from "class-variance-authority";
 import { Star } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+const ratingStarVariants = cva("size-6", {
+	variants: {
+		state: {
+			filled: "fill-yellow-400 text-yellow-400",
+			empty: "fill-gray-200 text-gray-200",
+		},
+	},
+	defaultVariants: {
+		state: "empty",
+	},
+});
 
 const ReviewSection = () => {
 	const avgRating = 4.2;
 	const reviewCount = 156;
+	const roundedAvgRating = Math.round(avgRating);
 
 	return (
 		<div>
@@ -22,12 +38,11 @@ const ReviewSection = () => {
 							{[1, 2, 3, 4, 5].map((star) => (
 								<Star
 									key={star}
-									size={24}
-									className={
-										star <= Math.round(avgRating)
-											? "fill-yellow-400 text-yellow-400"
-											: "fill-gray-200 text-gray-200"
-									}
+									className={cn(
+										ratingStarVariants({
+											state: star <= roundedAvgRating ? "filled" : "empty",
+										}),
+									)}
 								/>
 							))}
 						</div>
