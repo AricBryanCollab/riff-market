@@ -1,4 +1,5 @@
 # Theming in RiffMarket
+<!-- concept:def theming -->
 
 This project uses shadcn/ui theming conventions with Tailwind CSS v4.
 

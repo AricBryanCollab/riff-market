@@ -1,0 +1,7 @@
+# concept_id|canonical_path|note
+two_stage_load|docs/agent-context-packs.md|Starter retrieval chain for task-specific loading
+docs_contradiction_checks|docs/docs-contradiction-checks.md|Registry and marker validation for doc concepts
+docs_process|docs/agent-documentation-pattern.md|Core documentation process and rules
+theming|docs/theming.md|Theme and style conventions
+commit_conventions|docs/commits.md|Commit format and maintenance rules
+docs_health_checks|docs/runbooks/docs-health-checks.md|Standard docs verification and pass criteria

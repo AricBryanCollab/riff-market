@@ -15,13 +15,15 @@
 		"format": "biome format",
 		"format:fix": "biome format --write",
 		"lint": "biome lint",
-		"lint:fix": "biome lint --write",
-		"hooks:install": "git config core.hooksPath .githooks",
-		"check": "biome check",
-		"check:fix": "biome check --write",
+    "lint:fix": "biome lint --write",
+    "hooks:install": "git config core.hooksPath .githooks",
+    "check": "biome check",
+    "check:fix": "biome check --write",
     "typecheck": "tsc --noEmit",
-    "validate": "bun typecheck && bun lint"
-	},
+    "validate": "bun typecheck && bun lint",
+    "docs:check": "node scripts/docs-contradictions.cjs",
+    "docs:check:strict": "bun run docs:check"
+  },
 	"dependencies": {
 		"@base-ui/react": "^1.1.0",
 		"@faker-js/faker": "^10.0.0",

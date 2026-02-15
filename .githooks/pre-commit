@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+set -euo pipefail
+
+if ! command -v bun >/dev/null 2>&1; then
+  echo "bun is required for docs checks but was not found in PATH." >&2
+  exit 1
+fi
+
+if git diff --cached --name-only | grep -Eq '^AGENTS\.md$|^docs/'; then
+  echo "Docs files changed. Running bun run docs:check..."
+  bun run docs:check
+fi
