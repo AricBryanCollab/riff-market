@@ -34,6 +34,9 @@
 - `fix`  
   Syntax, bug, or format fix.  
   Example: `fix: allow disabled on accept product button`
+- `ref`  
+  Refactors and technical debt cleanup.  
+  Example: `ref: consolidate reusable cva variants across product UI`
 
 ---
 
