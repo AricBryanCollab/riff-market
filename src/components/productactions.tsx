@@ -1,10 +1,14 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Pencil, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
+import { cva } from "class-variance-authority";
 import Counter from "@/components/counter";
 import IconButton from "@/components/iconbutton";
 import { Button } from "@/components/ui/button";
 import { BodySmall } from "@/components/ui/typography";
-import { ButtonStyles, RoleActionConfigs } from "@/constants/roleactionconfigs";
+import {
+	RoleActionConfigs,
+	type RoleActionVariant,
+} from "@/constants/roleactionconfigs";
 import useUpdateProductStatus from "@/hooks/useUpdateProductStatus";
 import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";
@@ -12,6 +16,35 @@ import { useToastStore } from "@/store/toast";
 import { useUserStore } from "@/store/user";
 import type { UserRole } from "@/types/enum";
 import { canModifyProduct, isActionDisabled } from "@/utils/canModifyProduct";
+
+const productActionButtonVariants = cva(
+	"rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors",
+	{
+		variants: {
+			variant: {
+				primary: "bg-primary hover:bg-accent text-white",
+				secondary:
+					"bg-slate-200 hover:bg-slate-300 text-slate-900 hover:text-slate-900",
+				destructive:
+					"bg-destructive hover:bg-rose-400 dark:hover:bg-rose-400 text-white",
+				success: "bg-green-600 hover:bg-green-500 text-white",
+			},
+			width: {
+				primary: "flex-1 h-12 text-white",
+				secondary: "h-12 px-6",
+			},
+			disabled: {
+				true: "bg-gray-300 cursor-not-allowed text-gray-500",
+				false: "cursor-pointer",
+			},
+		},
+		defaultVariants: {
+			variant: "primary",
+			width: "primary",
+			disabled: false,
+		},
+	},
+);
 
 //  Shop Page Actions at the right side of the header
 interface ShopPageProductActionsProps {
@@ -193,7 +226,7 @@ export function ProductDetailsActions({
 					const isButtonDisabled = isOutOfStock || permissionDisabled;
 					return (
 						<button
-							key={action.label}
+							key={action.onClickKey}
 							type="button"
 							onClick={() => handleAction(action.onClickKey)}
 							disabled={isButtonDisabled}
@@ -202,22 +235,16 @@ export function ProductDetailsActions({
 								(action.onClickKey === "edit" || action.onClickKey === "delete")
 									? "You can only modify your own products"
 									: isApproved &&
-											(action.onClickKey === "approve" ||
+									(action.onClickKey === "approve" ||
 												action.onClickKey === "decline")
 										? "Product is already approved"
 										: undefined
 							}
-							className={`
-								${isSecondary ? "h-12 px-6" : "flex-1 h-12"}
-								rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors
-								${
-									isButtonDisabled
-										? "bg-gray-300 cursor-not-allowed text-gray-500"
-										: `${ButtonStyles[action.variant]} cursor-pointer ${
-												isSecondary ? "" : "text-white"
-											}`
-								}
-							`}
+							className={productActionButtonVariants({
+								variant: action.variant as RoleActionVariant,
+								width: isSecondary ? "secondary" : "primary",
+								disabled: isButtonDisabled,
+							})}
 						>
 							<Icon size={20} />
 							{action.label}

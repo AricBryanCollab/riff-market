@@ -1,4 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
+import { cva } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/user";
 
 interface AvatarProps {
@@ -7,6 +9,32 @@ interface AvatarProps {
 	className?: string;
 	clickable?: boolean;
 }
+
+const avatarSizeVariants = cva("", {
+	variants: {
+		size: {
+			sm: "size-8 text-sm",
+			md: "size-10 text-lg",
+			lg: "size-16 text-2xl",
+			xl: "size-28 text-3xl",
+		},
+	},
+	defaultVariants: {
+		size: "md",
+	},
+});
+
+const avatarWrapperVariants = cva("relative", {
+	variants: {
+		clickable: {
+			true: "cursor-pointer hover:scale-90 duration-300 ease-in-out",
+			false: "",
+		},
+	},
+	defaultVariants: {
+		clickable: false,
+	},
+});
 
 const Avatar = ({
 	size = "md",
@@ -26,22 +54,21 @@ const Avatar = ({
 	const { firstName, lastName, profilePic } = user;
 	const displayName = `${firstName} ${getInitial(lastName)}.`;
 
-	const sizeClasses = {
-		sm: "size-8 text-sm",
-		md: "size-10 text-lg",
-		lg: "size-16 text-2xl",
-		xl: "size-28 text-3xl",
-	};
-
 	const avatarContent = profilePic ? (
 		<img
 			src={profilePic}
 			alt={`${firstName}'s profile`}
-			className={`${sizeClasses[size]} rounded-full object-cover border-2 border-primary`}
+			className={cn(
+				avatarSizeVariants({ size }),
+				"rounded-full object-cover border-2 border-primary",
+			)}
 		/>
 	) : (
 		<div
-			className={`flex ${sizeClasses[size]} items-center justify-center rounded-full bg-primary text-white font-semibold`}
+			className={cn(
+				avatarSizeVariants({ size }),
+				"flex items-center justify-center rounded-full bg-primary text-white font-semibold",
+			)}
 		>
 			{getInitial(firstName)}
 		</div>
@@ -51,12 +78,14 @@ const Avatar = ({
 		<button
 			type="button"
 			onClick={() => navigate({ to: "/settings" })}
-			className={`relative cursor-pointer hover:scale-90 duration-300 ease-in-out ${className}`}
+			className={cn(avatarWrapperVariants({ clickable }), className)}
 		>
 			{avatarContent}
 		</button>
 	) : (
-		<div className={`relative ${className}`}>{avatarContent}</div>
+		<div className={cn(avatarWrapperVariants({ clickable }), className)}>
+			{avatarContent}
+		</div>
 	);
 
 	if (!showInfo) {

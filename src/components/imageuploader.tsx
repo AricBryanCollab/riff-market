@@ -1,3 +1,4 @@
+import { cva } from "class-variance-authority";
 import { type LucideIcon, Upload, X } from "lucide-react";
 import useUploadImage, { type ImageFile } from "@/hooks/useUploadImage";
 
@@ -10,6 +11,21 @@ interface ImageUploaderProps {
 	icon?: LucideIcon;
 	maxSizeMB?: number;
 }
+
+const imageUploaderDropZoneVariants = cva(
+	"relative w-full h-full min-h-62.5 rounded-lg border-2 border-dashed transition-all cursor-pointer",
+	{
+		variants: {
+			dragActive: {
+				true: "border-primary bg-accent",
+				false: "border-primary bg-muted hover:bg-accent",
+			},
+		},
+		defaultVariants: {
+			dragActive: false,
+		},
+	},
+);
 
 const ImageUploader = ({
 	inputId,
@@ -52,11 +68,7 @@ const ImageUploader = ({
 							onDragLeave={handleDragLeave}
 							onDragOver={handleDragOver}
 							onDrop={handleDrop}
-							className={`relative w-full h-full min-h-62.5 rounded-lg border-2 border-dashed transition-all cursor-pointer ${
-								dragActive
-									? "border-primary bg-accent"
-									: "border-primary bg-muted hover:bg-accent"
-							}`}
+							className={imageUploaderDropZoneVariants({ dragActive })}
 						>
 							<input
 								ref={fileInputRef}

@@ -1,3 +1,4 @@
+import { cva } from "class-variance-authority";
 import { Filter } from "lucide-react";
 
 import BrandFilters from "@/components/sidebar/brandfilters";
@@ -15,6 +16,21 @@ import { Separator } from "@/components/ui/separator";
 import { useProductStore } from "@/store/products";
 import { useSidebarStore } from "@/store/sidebar";
 
+const shopSidebarVariants = cva(
+	"shrink-0 border-r bg-background fixed z-50 h-screen overflow-hidden transition-all duration-300 ease-in-out",
+	{
+		variants: {
+			isExpanded: {
+				true: "w-80",
+				false: "w-16",
+			},
+		},
+		defaultVariants: {
+			isExpanded: false,
+		},
+	},
+);
+
 const ShopSidebar = () => {
 	const { isExpanded, toggleSidebar } = useSidebarStore();
 
@@ -28,9 +44,9 @@ const ShopSidebar = () => {
 
 	return (
 		<aside
-			className={`shrink-0 border-r bg-background fixed z-50 h-screen overflow-hidden transition-all duration-300 ease-in-out ${
-				isExpanded ? "w-80" : "w-16"
-			}`}
+			className={shopSidebarVariants({
+				isExpanded,
+			})}
 		>
 			<SidebarHeader isExpanded={isExpanded} toggleSidebar={toggleSidebar} />
 
