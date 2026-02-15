@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { Pencil, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
 import { cva } from "class-variance-authority";
+import { Pencil, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
 import Counter from "@/components/counter";
 import IconButton from "@/components/icon-button";
 import { Button } from "@/components/ui/button";
@@ -235,7 +235,7 @@ export function ProductDetailsActions({
 								(action.onClickKey === "edit" || action.onClickKey === "delete")
 									? "You can only modify your own products"
 									: isApproved &&
-									(action.onClickKey === "approve" ||
+											(action.onClickKey === "approve" ||
 												action.onClickKey === "decline")
 										? "Product is already approved"
 										: undefined
