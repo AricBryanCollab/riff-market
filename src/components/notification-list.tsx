@@ -2,7 +2,7 @@ import type { UseMutateFunction } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
 import { Bell, Package, ShoppingBag } from "lucide-react";
-import AnimatedLoader from "@/components/animatedloader";
+import AnimatedLoader from "@/components/animated-loader";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";

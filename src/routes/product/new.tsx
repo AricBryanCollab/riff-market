@@ -2,11 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Camera } from "lucide-react";
 import Counter from "@/components/counter";
 import { FormField } from "@/components/form-field";
-import { FormTextArea } from "@/components/form-textarea";
-import ImageUploader from "@/components/imageuploader";
+import { FormTextArea } from "@/components/form-text-area";
+import ImageUploader from "@/components/image-uploader";
 import { NumberField } from "@/components/number-field";
 import { SearchableSelect } from "@/components/searchable-select";
-import SectionContainer from "@/components/sectioncontainer";
+import SectionContainer from "@/components/section-container";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Body, H4 } from "@/components/ui/typography";
 import {

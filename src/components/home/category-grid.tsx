@@ -1,7 +1,7 @@
-import { CategoryGridEmpty } from "@/components/emptystates";
-import { CategoryGridError } from "@/components/errorstates";
+import { CategoryGridEmpty } from "@/components/empty-states";
+import { CategoryGridError } from "@/components/error-states";
 import CategoryCard from "@/components/home/category-card";
-import { CategoryGridLoading } from "@/components/loadingstates";
+import { CategoryGridLoading } from "@/components/loading-states";
 import useGetProductCount from "@/hooks/use-get-product-count";
 
 const CategoryGrid = () => {

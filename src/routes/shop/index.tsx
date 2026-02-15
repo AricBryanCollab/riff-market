@@ -1,17 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ListMusic } from "lucide-react";
-import { ProductErrorState } from "@/components/errorstates";
-import { ProductLoadingState } from "@/components/loadingstates";
-import { ShopPageHeader } from "@/components/pageheaders";
-import ProductCard from "@/components/productcard";
-import ProductFilterBadges from "@/components/productfilterbadges";
-import SectionContainer from "@/components/sectioncontainer";
+import { ProductErrorState } from "@/components/error-states";
+import { ProductLoadingState } from "@/components/loading-states";
+import { ShopPageHeader } from "@/components/page-headers";
+import ProductCard from "@/components/product-card";
+import ProductFilterBadges from "@/components/product-filter-badges";
+import SectionContainer from "@/components/section-container";
 import { Button } from "@/components/ui/button";
 import { H3 } from "@/components/ui/typography";
 import useGetPendingProducts from "@/hooks/use-get-pending-products";
 import useProductFilters from "@/hooks/use-product-filters";
 import useShopPagination from "@/hooks/use-shop-pagination";
-import { usePendingProductStore } from "@/store/pendingproduct";
+import { usePendingProductStore } from "@/store/pending-product";
 import { validateProductSearch } from "@/utils/validate-product-search";
 
 export const Route = createFileRoute("/shop/")({

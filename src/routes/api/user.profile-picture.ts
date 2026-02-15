@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { updateUserProfilePicService } from "@/actions/user";
 import { authMiddleware } from "@/middleware";
 
-export const Route = createFileRoute("/api/user/profilepicture")({
+export const Route = createFileRoute("/api/user/profile-picture")({
 	server: {
 		middleware: [authMiddleware],
 		handlers: {

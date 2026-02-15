@@ -17,7 +17,7 @@ import {
 	getPublicId,
 	unsignedUploadImage,
 } from "@/utils/cloudinary";
-import { compressImage } from "@/utils/compressimage";
+import { compressImage } from "@/utils/compress-image";
 
 export async function getUserByIdService(userId: string) {
 	const user = await getUserById(userId);

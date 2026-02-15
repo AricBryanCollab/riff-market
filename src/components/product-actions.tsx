@@ -2,13 +2,13 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { Pencil, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
 import { cva } from "class-variance-authority";
 import Counter from "@/components/counter";
-import IconButton from "@/components/iconbutton";
+import IconButton from "@/components/icon-button";
 import { Button } from "@/components/ui/button";
 import { BodySmall } from "@/components/ui/typography";
 import {
 	RoleActionConfigs,
 	type RoleActionVariant,
-} from "@/constants/roleactionconfigs";
+} from "@/constants/role-action-configs";
 import useUpdateProductStatus from "@/hooks/use-update-product-status";
 import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";

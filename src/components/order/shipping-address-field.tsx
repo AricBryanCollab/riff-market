@@ -1,5 +1,5 @@
 import { MapPin } from "lucide-react";
-import { FormTextArea } from "@/components/form-textarea";
+import { FormTextArea } from "@/components/form-text-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 

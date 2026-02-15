@@ -1,7 +1,7 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { getPendingApprovalProducts } from "@/lib/tanstack-query/product.queries";
-import { usePendingProductStore } from "@/store/pendingproduct";
+import { usePendingProductStore } from "@/store/pending-product";
 import { useUserStore } from "@/store/user";
 import type { BaseProduct } from "@/types/product";
 

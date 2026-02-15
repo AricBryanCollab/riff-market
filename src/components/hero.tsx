@@ -1,4 +1,4 @@
-import SectionContainer from "@/components/sectioncontainer";
+import SectionContainer from "@/components/section-container";
 import { H1, H4 } from "@/components/ui/typography";
 
 interface HeroProps {

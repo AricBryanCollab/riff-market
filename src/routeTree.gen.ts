@@ -28,7 +28,7 @@ import { Route as ApiProductsRouteImport } from './routes/api/products'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
 import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
 import { Route as ProductEditIdRouteImport } from './routes/product/edit.$id'
-import { Route as ApiUserProfilepictureRouteImport } from './routes/api/user.profilepicture'
+import { Route as ApiUserProfilePictureRouteImport } from './routes/api/user.profile-picture'
 import { Route as ApiProductsSellerRouteImport } from './routes/api/products.seller'
 import { Route as ApiProductsRecentRouteImport } from './routes/api/products.recent'
 import { Route as ApiProductsPendingRouteImport } from './routes/api/products.pending'
@@ -139,9 +139,9 @@ const ProductEditIdRoute = ProductEditIdRouteImport.update({
   path: '/product/edit/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUserProfilepictureRoute = ApiUserProfilepictureRouteImport.update({
-  id: '/profilepicture',
-  path: '/profilepicture',
+const ApiUserProfilePictureRoute = ApiUserProfilePictureRouteImport.update({
+  id: '/profile-picture',
+  path: '/profile-picture',
   getParentRoute: () => ApiUserRoute,
 } as any)
 const ApiProductsSellerRoute = ApiProductsSellerRouteImport.update({
@@ -247,7 +247,7 @@ export interface FileRoutesByFullPath {
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
-  '/api/user/profilepicture': typeof ApiUserProfilepictureRoute
+  '/api/user/profile-picture': typeof ApiUserProfilePictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
@@ -282,7 +282,7 @@ export interface FileRoutesByTo {
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
-  '/api/user/profilepicture': typeof ApiUserProfilepictureRoute
+  '/api/user/profile-picture': typeof ApiUserProfilePictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
@@ -319,7 +319,7 @@ export interface FileRoutesById {
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
-  '/api/user/profilepicture': typeof ApiUserProfilepictureRoute
+  '/api/user/profile-picture': typeof ApiUserProfilePictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
@@ -357,7 +357,7 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/recent'
     | '/api/products/seller'
-    | '/api/user/profilepicture'
+    | '/api/user/profile-picture'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
@@ -392,7 +392,7 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/recent'
     | '/api/products/seller'
-    | '/api/user/profilepicture'
+    | '/api/user/profile-picture'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
@@ -428,7 +428,7 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/recent'
     | '/api/products/seller'
-    | '/api/user/profilepicture'
+    | '/api/user/profile-picture'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
@@ -593,11 +593,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductEditIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/user/profilepicture': {
-      id: '/api/user/profilepicture'
-      path: '/profilepicture'
-      fullPath: '/api/user/profilepicture'
-      preLoaderRoute: typeof ApiUserProfilepictureRouteImport
+    '/api/user/profile-picture': {
+      id: '/api/user/profile-picture'
+      path: '/profile-picture'
+      fullPath: '/api/user/profile-picture'
+      preLoaderRoute: typeof ApiUserProfilePictureRouteImport
       parentRoute: typeof ApiUserRoute
     }
     '/api/products/seller': {
@@ -774,11 +774,11 @@ const ApiProductsRouteWithChildren = ApiProductsRoute._addFileChildren(
 )
 
 interface ApiUserRouteChildren {
-  ApiUserProfilepictureRoute: typeof ApiUserProfilepictureRoute
+  ApiUserProfilePictureRoute: typeof ApiUserProfilePictureRoute
 }
 
 const ApiUserRouteChildren: ApiUserRouteChildren = {
-  ApiUserProfilepictureRoute: ApiUserProfilepictureRoute,
+  ApiUserProfilePictureRoute: ApiUserProfilePictureRoute,
 }
 
 const ApiUserRouteWithChildren =

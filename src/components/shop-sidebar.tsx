@@ -1,13 +1,13 @@
 import { cva } from "class-variance-authority";
 import { Filter } from "lucide-react";
 
-import BrandFilters from "@/components/sidebar/brandfilters";
-import CategoryFilters from "@/components/sidebar/categoryfilters";
-import ClearFilterButton from "@/components/sidebar/clearfilterbutton";
-import ConditionFilters from "@/components/sidebar/conditionfilters";
-import PriceRangeFilters from "@/components/sidebar/pricerangefilters";
-import SidebarFilterCount from "@/components/sidebar/sidebarfiltercount";
-import SidebarHeader from "@/components/sidebar/sidebarheader";
+import BrandFilters from "@/components/sidebar/brand-filters";
+import CategoryFilters from "@/components/sidebar/category-filters";
+import ClearFilterButton from "@/components/sidebar/clear-filter-button";
+import ConditionFilters from "@/components/sidebar/condition-filters";
+import PriceRangeFilters from "@/components/sidebar/price-range-filters";
+import SidebarFilterCount from "@/components/sidebar/sidebar-filter-count";
+import SidebarHeader from "@/components/sidebar/sidebar-header";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

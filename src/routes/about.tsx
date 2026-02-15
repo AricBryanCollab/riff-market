@@ -11,8 +11,8 @@ import {
 	Users,
 } from "lucide-react";
 import { useId, useState } from "react";
-import AboutHero from "@/assets/about-hero.jpg";
-import SectionContainer from "@/components/sectioncontainer";
+import AboutHero from "@/assets/about hero.jpg";
+import SectionContainer from "@/components/section-container";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/about")({

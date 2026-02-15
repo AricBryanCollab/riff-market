@@ -1,5 +1,5 @@
 import { Package } from "lucide-react";
-import AnimatedLoader from "@/components/animatedloader";
+import AnimatedLoader from "@/components/animated-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CartItem } from "@/types/cart";
 

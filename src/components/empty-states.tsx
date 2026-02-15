@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ListMusic } from "lucide-react";
-import MusicNote from "@/assets/musicnote";
+import MusicNote from "@/assets/music-note";
 import { buttonVariants } from "@/components/ui/button";
 
 interface EmptyStateProps {

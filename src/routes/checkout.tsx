@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import OrderItemCard from "@/components/order/orderitemcard";
-import OrderSummary from "@/components/order/ordersummary";
-import PaymentMethodSelect from "@/components/order/paymentmethodselect";
-import ShippingAddressField from "@/components/order/shippingaddressfield";
-import SectionContainer from "@/components/sectioncontainer";
+import OrderItemCard from "@/components/order/order-item-card";
+import OrderSummary from "@/components/order/order-summary";
+import PaymentMethodSelect from "@/components/order/payment-method-select";
+import ShippingAddressField from "@/components/order/shipping-address-field";
+import SectionContainer from "@/components/section-container";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { H2 } from "@/components/ui/typography";

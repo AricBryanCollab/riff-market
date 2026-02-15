@@ -1,6 +1,6 @@
 import { cva } from "class-variance-authority";
 import { ArrowRight, Package, ShoppingBag } from "lucide-react";
-import AnimatedLoader from "@/components/animatedloader";
+import AnimatedLoader from "@/components/animated-loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";

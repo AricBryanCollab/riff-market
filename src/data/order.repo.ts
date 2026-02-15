@@ -1,7 +1,7 @@
 import type { OrderStatus } from "generated/prisma/enums";
 
 import { prisma } from "@/data/connect-db";
-import { createNotification } from "@/data/notification.repo.";
+import { createNotification } from "@/data/notification.repo";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
 import {
 	orderBaseQuery,

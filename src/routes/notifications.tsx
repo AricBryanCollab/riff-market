@@ -1,6 +1,6 @@
 import { ClientOnly, createFileRoute, redirect } from "@tanstack/react-router";
 import { Bell, Package, ShoppingBag } from "lucide-react";
-import AnimatedLoader from "@/components/animatedloader";
+import AnimatedLoader from "@/components/animated-loader";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H3, H5 } from "@/components/ui/typography";
 import useNotifications from "@/hooks/use-notifications";

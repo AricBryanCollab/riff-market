@@ -1,7 +1,7 @@
-import { EmptyRecentProducts } from "@/components/emptystates";
-import { RecentProductsError } from "@/components/errorstates";
-import { RecentProductsLoading } from "@/components/loadingstates";
-import ProductCard from "@/components/productcard";
+import { EmptyRecentProducts } from "@/components/empty-states";
+import { RecentProductsError } from "@/components/error-states";
+import { RecentProductsLoading } from "@/components/loading-states";
+import ProductCard from "@/components/product-card";
 
 import useGetRecentProducts from "@/hooks/use-get-recent-products";
 

@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import UserMenu from "@/components/usermenu";
+import UserMenu from "@/components/user-menu";
 import { navbarItems } from "@/constants/navbar-items";
 
 interface NavbarItemProps {

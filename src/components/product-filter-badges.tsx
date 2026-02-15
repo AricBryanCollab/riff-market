@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority";
 import type { ProductCategory } from "generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";
 import { productCategoryOptions } from "@/constants/select-options";
-import { usePendingProductStore } from "@/store/pendingproduct";
+import { usePendingProductStore } from "@/store/pending-product";
 import { useProductStore } from "@/store/products";
 import { useUserStore } from "@/store/user";
 

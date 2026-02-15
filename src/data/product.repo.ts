@@ -2,7 +2,7 @@ import type { Prisma, Product } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
 import type { GetProductQuery } from "@/lib/zod/product.validation";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
-import { createNotification } from "./notification.repo.";
+import { createNotification } from "./notification.repo";
 
 type CreateProductRepoInput = Omit<
 	Product,

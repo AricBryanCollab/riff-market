@@ -25,7 +25,7 @@ import {
 	getPublicId,
 	unsignedUploadImage,
 } from "@/utils/cloudinary";
-import { compressImage } from "@/utils/compressimage";
+import { compressImage } from "@/utils/compress-image";
 
 // Create Product Service
 export async function createProductService(

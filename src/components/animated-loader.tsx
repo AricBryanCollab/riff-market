@@ -1,4 +1,4 @@
-import GuitarPick from "@/assets/guitarpick";
+import GuitarPick from "@/assets/guitar-pick";
 
 interface AnimatedLoaderProps {
 	text?: string;

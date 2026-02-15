@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { unsignedUploadImage } from "@/utils/cloudinary";
-import { compressImage } from "@/utils/compressimage";
+import { compressImage } from "@/utils/compress-image";
 
 export const Route = createFileRoute("/api/uploadimage")({
 	server: {

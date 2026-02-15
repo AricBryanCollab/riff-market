@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
-import CartCard from "@/components/cartcard";
-import { CartDetailsLoadingState } from "@/components/loadingstates";
-import SectionContainer from "@/components/sectioncontainer";
+import CartCard from "@/components/cart-card";
+import { CartDetailsLoadingState } from "@/components/loading-states";
+import SectionContainer from "@/components/section-container";
 import { Button } from "@/components/ui/button";
 import { BodyLarge, BodySmall, H2 } from "@/components/ui/typography";
 import useCartDetails from "@/hooks/use-cart-details";

@@ -7,12 +7,12 @@ import {
 import { ArrowLeft, Package } from "lucide-react";
 import { useState } from "react";
 import { AppDialog } from "@/components/app-dialog";
-import DeleteProductConfirm from "@/components/deleteproductconfirm";
-import { ProductDetailsLoadingState } from "@/components/loadingstates";
-import { ProductDetailsActions } from "@/components/productactions";
+import DeleteProductConfirm from "@/components/delete-product-confirm";
+import { ProductDetailsLoadingState } from "@/components/loading-states";
+import { ProductDetailsActions } from "@/components/product-actions";
 import Rating from "@/components/rating";
-import ReviewSection from "@/components/reviewsection";
-import SectionContainer from "@/components/sectioncontainer";
+import ReviewSection from "@/components/review-section";
+import SectionContainer from "@/components/section-container";
 import { productCategoryOptions } from "@/constants/select-options";
 import { productbyIdQueryOpt } from "@/hooks/use-get-products";
 

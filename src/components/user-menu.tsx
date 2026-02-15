@@ -2,10 +2,10 @@ import { ClientOnly } from "@tanstack/react-router";
 import { Bell, Package, PackageSearch, ShoppingCart } from "lucide-react";
 import { AppDropdown } from "@/components/app-dropdown";
 import Avatar from "@/components/avatar";
-import CartList from "@/components/cartlist";
-import NavbarIconButtons from "@/components/navbariconbuttons";
-import NotificationList from "@/components/notificationlist";
-import OrderList from "@/components/orderlist";
+import CartList from "@/components/cart-list";
+import NavbarIconButtons from "@/components/navbar-icon-buttons";
+import NotificationList from "@/components/notification-list";
+import OrderList from "@/components/order-list";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +17,7 @@ import { useSignOut } from "@/hooks/use-sign-out";
 import { useDialogStore } from "@/store/dialog";
 import { useUserStore } from "@/store/user";
 import type { UserRole } from "@/types/enum";
-import PendingProductList from "./pendingproductlist";
+import PendingProductList from "./pending-product-list";
 
 const UserMenuFallback = () => (
 	<div className="flex items-center gap-4" aria-hidden>

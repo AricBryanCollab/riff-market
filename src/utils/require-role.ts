@@ -1,5 +1,5 @@
 import { redirect } from "@tanstack/react-router";
-import { RoleDescription } from "@/constants/roledescription";
+import { RoleDescription } from "@/constants/role-description";
 import { useUserStore } from "@/store/user";
 import type { UserRole } from "@/types/enum";
 

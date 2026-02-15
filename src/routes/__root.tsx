@@ -8,11 +8,11 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { AppDialog } from "@/components/app-dialog";
 import Navbar from "@/components/navbar";
-import PageNotFound from "@/components/pagenotfound";
+import PageNotFound from "@/components/page-not-found";
 
-import SignInForm from "@/components/signinform";
-import SignUpForm from "@/components/signupform";
-import { ThemeProvider } from "@/components/themeprovider";
+import SignInForm from "@/components/sign-in-form";
+import SignUpForm from "@/components/sign-up-form";
+import { ThemeProvider } from "@/components/theme-provider";
 import Toast from "@/components/toast";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import TanStackQueryDevtools from "@/lib/tanstack-query/devtools";

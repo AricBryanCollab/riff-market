@@ -1,4 +1,4 @@
-import { ShopPageProductActions } from "@/components/productactions";
+import { ShopPageProductActions } from "@/components/product-actions";
 import { Body, H3 } from "@/components/ui/typography";
 import { useProductStore } from "@/store/products";
 

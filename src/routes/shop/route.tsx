@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import AnimatedLoader from "@/components/animatedloader";
-import ShopSidebar from "@/components/shopsidebar";
+import AnimatedLoader from "@/components/animated-loader";
+import ShopSidebar from "@/components/shop-sidebar";
 
 export const Route = createFileRoute("/shop")({
 	pendingComponent: () => (

@@ -1,4 +1,4 @@
-import AnimatedLoader from "@/components/animatedloader";
+import AnimatedLoader from "@/components/animated-loader";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function HeroFeaturedProductLoading() {

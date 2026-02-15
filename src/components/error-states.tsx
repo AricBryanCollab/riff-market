@@ -1,4 +1,4 @@
-import MusicNote from "@/assets/musicnote";
+import MusicNote from "@/assets/music-note";
 import { Button } from "@/components/ui/button";
 
 interface ErrorStateProps {
