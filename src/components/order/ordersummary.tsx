@@ -1,6 +1,43 @@
+import { cva } from "class-variance-authority";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const orderSummaryContentVariants = cva("", {
+	variants: {
+		isMobile: {
+			true: "space-y-3",
+			false: "space-y-4",
+		},
+	},
+	defaultVariants: {
+		isMobile: false,
+	},
+});
+
+const orderSummarySeparatorVariants = cva("", {
+	variants: {
+		isMobile: {
+			true: "my-2",
+			false: "my-3",
+		},
+	},
+	defaultVariants: {
+		isMobile: false,
+	},
+});
+
+const orderSummaryTotalRowVariants = cva("flex justify-between font-semibold", {
+	variants: {
+		isMobile: {
+			true: "text-lg",
+			false: "text-lg pt-2",
+		},
+	},
+	defaultVariants: {
+		isMobile: false,
+	},
+});
 
 interface OrderSummaryProps {
 	subtotal: number;
@@ -55,7 +92,7 @@ export const OrderSummary = ({
 			<CardHeader>
 				<CardTitle>Order Summary</CardTitle>
 			</CardHeader>
-			<CardContent className={isMobile ? "space-y-3" : "space-y-4"}>
+			<CardContent className={orderSummaryContentVariants({ isMobile })}>
 				<div className="space-y-3">
 					{/* Subtotal */}
 					<div className="flex justify-between text-sm">
@@ -85,12 +122,10 @@ export const OrderSummary = ({
 						)}
 					</div>
 
-					<Separator className={isMobile ? "my-2" : "my-3"} />
+					<Separator className={orderSummarySeparatorVariants({ isMobile })} />
 
 					{/* Total */}
-					<div
-						className={`flex justify-between font-semibold ${isMobile ? "text-lg" : "text-lg pt-2"}`}
-					>
+					<div className={orderSummaryTotalRowVariants({ isMobile })}>
 						<span>Total</span>
 						<span className="text-primary">
 							{formatCurrency(calculateTotal())}

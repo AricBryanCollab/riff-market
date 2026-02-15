@@ -1,16 +1,10 @@
-# docs index (compact)
+# Docs index
 
-load-order: `AGENTS.md` -> `docs/README.md` -> `docs/agent-context-packs.md`
+Load order: `AGENTS.md` -> `docs/README.md` -> `docs/agent-context-packs.md`
 
-packs: `docs/agent-context-packs.md`
+- Packs: `docs/agent-context-packs.md`
+- Process: `docs/agent-documentation-pattern.md`
+- Integrity: `docs/docs-contradiction-checks.md`, `docs/concepts.map`, `bun run docs:check`
+- Runbook: `docs/runbooks/docs-health-checks.md`
 
-process: `docs/agent-documentation-pattern.md`
-
-integrity: `docs/docs-contradiction-checks.md` | `docs/concepts.map` | `bun run docs:check`
-
-runbook: `docs/runbooks/docs-health-checks.md`
-
-governance:
-- Keep this index small and update it when new doc categories appear.
-- One-concept-per-file by default.
-- Use `concepts.map` to avoid duplicate/ambiguous definitions.
+- Keep this index minimal; add categories in `concepts.map` as they appear.

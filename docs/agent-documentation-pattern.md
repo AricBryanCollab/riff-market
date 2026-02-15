@@ -1,34 +1,18 @@
-# Agent Documentation Pattern (AGENTS-first standard)
+# Agent Documentation Pattern
 <!-- concept:def docs_process -->
 
-## Purpose
-- Keep agent handoff stable, compact, and discoverable.
-- Separate discovery (index), policy (pattern), and details (ADRs/runbooks/gotchas).
-
-## What to include
-- setup (behavior + paths)
-- adr (decisions + tradeoffs)
-- runbook (commands + pass criteria)
-- gotchas (known caveats + recovery)
-
-## Where to put docs
-- `docs/README.md`: compact load index and process entry.
-- `docs/adr/`: one file per important design decision.
-- `docs/runbooks/`: verification and smoke instructions.
-- `docs/gotchas/`: caveats and mitigation.
-
-## Writing rules
-- One concept per file.
-- 5-10 bullets, concise language.
-- Always include file paths and expected command behavior when relevant.
-- Add concept marker: `<!-- concept:def <id> -->`
-
-## Update flow
-1. Update concept index in `docs/concepts.map` when adding a new concept.
-2. Add/refresh canonical doc for the concept.
-3. Run `bun run docs:check`.
-
-## Why this pattern
-- Faster context loading in future runs.
-- Less drift and fewer conflicting definitions.
-- Easy to validate via script checks.
+- Keep handoff docs compact, discoverable, and low-friction.
+- Structure docs as:
+  - index (`docs/README.md`)
+  - process (`docs/agent-documentation-pattern.md`)
+  - ADRs (`docs/adr/*`)
+  - runbooks (`docs/runbooks/*`)
+  - gotchas (`docs/gotchas/*`)
+- Writing rules:
+  - one concept per file
+  - include file paths and command behavior where relevant
+  - include `<!-- concept:def <id> -->` in canonical files
+- Update flow:
+  - add/update `docs/concepts.map`
+  - add/refine canonical file
+  - run `bun run docs:check`

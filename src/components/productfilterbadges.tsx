@@ -1,9 +1,26 @@
+import { cva } from "class-variance-authority";
 import type { ProductCategory } from "generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";
 import { productCategoryOptions } from "@/constants/selectOptions";
 import { usePendingProductStore } from "@/store/pendingproduct";
 import { useProductStore } from "@/store/products";
 import { useUserStore } from "@/store/user";
+
+const productFilterBadgeVariants = cva(
+	"px-5 py-4 rounded-full border-2 font-medium transition-all",
+	{
+		variants: {
+			active: {
+				true: "bg-primary text-white border-secondary shadow-lg scale-105",
+				false:
+					"bg-white text-black border-gray-300 hover:border-primary hover:bg-accent hover:text-accent-foreground shadow-sm",
+			},
+		},
+		defaultVariants: {
+			active: false,
+		},
+	},
+);
 
 const ProductFilterBadges = () => {
 	const { user } = useUserStore();
@@ -43,11 +60,9 @@ const ProductFilterBadges = () => {
 			{/* All Categories */}
 			<Badge
 				onClick={handleShowAll}
-				className={`px-5 py-4 rounded-full border-2 font-medium transition-all ${
-					!selectedCategory && !showPending
-						? "bg-primary text-white border-secondary shadow-lg scale-105"
-						: "bg-white text-black border-gray-300 hover:border-primary hover:bg-accent hover:text-accent-foreground shadow-sm"
-				}`}
+				className={productFilterBadgeVariants({
+					active: !selectedCategory && !showPending,
+				})}
 			>
 				All
 			</Badge>
@@ -56,11 +71,9 @@ const ProductFilterBadges = () => {
 			{isAdmin && (
 				<Badge
 					onClick={handlePendingProduct}
-					className={`px-5 py-4 rounded-full border-2 font-medium transition-all ${
-						showPending
-							? "bg-primary text-white border-secondary shadow-lg scale-105"
-							: "bg-white text-black border-gray-300 hover:border-primary hover:bg-accent hover:text-accent-foreground shadow-sm"
-					}`}
+					className={productFilterBadgeVariants({
+						active: showPending,
+					})}
 				>
 					Pending
 				</Badge>
@@ -74,11 +87,9 @@ const ProductFilterBadges = () => {
 					<Badge
 						key={category.value}
 						onClick={() => handleCategorySelect(category.value)}
-						className={`px-5 py-4 rounded-full border-2 font-medium transition-all ${
-							isSelected
-								? "bg-primary text-white border-secondary shadow-lg scale-105"
-								: "bg-white text-black border-gray-300 hover:border-primary hover:bg-accent hover:text-accent-foreground shadow-sm"
-						}`}
+						className={productFilterBadgeVariants({
+							active: isSelected,
+						})}
 					>
 						{category.label}
 					</Badge>

@@ -1,12 +1,30 @@
+import { cva } from "class-variance-authority";
 import { ArrowRight, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animatedloader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
 import { useUserStore } from "@/store/user";
-import type { OrderStatus } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 import { formatRelativeTime } from "@/utils/formatDate";
+
+const orderListBadgeVariants = cva(
+	"flex items-center text-xs px-1 py-0.5 rounded-md shrink-0",
+	{
+		variants: {
+			status: {
+				PENDING: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
+				PROCESSING: "bg-blue-500/10 text-blue-700 border-blue-500/20",
+				SHIPPED: "bg-purple-500/10 text-purple-700 border-purple-500/20",
+				DELIVERED: "bg-green-500/10 text-green-700 border-green-500/20",
+				CANCELED: "bg-red-500/10 text-red-700 border-red-500/20",
+			},
+		},
+		defaultVariants: {
+			status: "PENDING",
+		},
+	},
+);
 
 interface OrderListProps {
 	orders: OrderResponse[];
@@ -16,17 +34,6 @@ interface OrderListProps {
 
 const OrderList = ({ orders, isLoading, isEmptyOrders }: OrderListProps) => {
 	const userRole = useUserStore((state) => state.user?.role);
-
-	const getStatusColor = (status: OrderStatus) => {
-		const colors = {
-			PENDING: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
-			PROCESSING: "bg-blue-500/10 text-blue-700 border-blue-500/20",
-			SHIPPED: "bg-purple-500/10 text-purple-700 border-purple-500/20",
-			DELIVERED: "bg-green-500/10 text-green-700 border-green-500/20",
-			CANCELED: "bg-red-500/10 text-red-700 border-red-500/20",
-		};
-		return colors[status] || colors.PENDING;
-	};
 
 	if (isLoading) {
 		return (
@@ -97,7 +104,9 @@ const OrderList = ({ orders, isLoading, isEmptyOrders }: OrderListProps) => {
 											</span>
 										</div>
 										<Badge
-											className={`flex items-center text-xs px-1 py-0.5 rounded-md shrink-0 ${getStatusColor(order.status)}`}
+											className={orderListBadgeVariants({
+												status: order.status,
+											})}
 										>
 											{order.status}
 										</Badge>

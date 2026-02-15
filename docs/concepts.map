@@ -4,4 +4,5 @@ docs_contradiction_checks|docs/docs-contradiction-checks.md|Registry and marker 
 docs_process|docs/agent-documentation-pattern.md|Core documentation process and rules
 theming|docs/theming.md|Theme and style conventions
 commit_conventions|docs/commits.md|Commit format and maintenance rules
+classnames_cva|docs/cva-classname-pattern.md|Classname composition with CVA and cn
 docs_health_checks|docs/runbooks/docs-health-checks.md|Standard docs verification and pass criteria

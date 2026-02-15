@@ -116,15 +116,20 @@ const colorClass = CATEGORY_STYLES[category];
 
 ## Available Theme Variants
 
-| Class | Description |
-|-------|-------------|
-| (none) | Default light theme |
-| `.dark` | Dark mode |
-| `.coffee` | Warm brown tones |
-| `.forest` | Green nature tones |
-| `.ocean` | Blue water tones |
-| `.sunset` | Orange warm tones |
-| `.crimson` | Red tones |
+- `(none)`  
+  Default light theme.
+- `.dark`  
+  Dark mode.
+- `.coffee`  
+  Warm brown tones.
+- `.forest`  
+  Green nature tones.
+- `.ocean`  
+  Blue water tones.
+- `.sunset`  
+  Orange warm tones.
+- `.crimson`  
+  Red tones.
 
 Apply to a parent element:
 
@@ -136,7 +141,8 @@ Apply to a parent element:
 
 ## File Locations
 
-| File | Purpose |
-|------|---------|
-| `src/styles.css` | All CSS variables and theme definitions |
-| `src/types/product.ts` | TypeScript color/style mappings (class names only) |
+- `src/styles.css`  
+  All CSS variables and theme definitions.
+
+- `src/types/product.ts`  
+  TypeScript color/style mappings (class names only).
