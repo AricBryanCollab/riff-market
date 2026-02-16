@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useState } from "react";
-import { signUp } from "@/lib/tanstack-query/auth.queries";
-import { getCurrentUser } from "@/lib/tanstack-query/user.queries";
+import { signUp } from "@/lib/tanstack-query/auth-queries";
+import { getCurrentUser } from "@/lib/tanstack-query/user-queries";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { SignUpRequest } from "@/types/auth";

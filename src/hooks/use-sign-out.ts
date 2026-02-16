@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { signOut } from "@/lib/tanstack-query/auth.queries";
+import { signOut } from "@/lib/tanstack-query/auth-queries";
 import { useToastStore } from "@/store/toast";
 
 export const useSignOut = () => {

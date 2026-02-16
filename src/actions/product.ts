@@ -19,7 +19,7 @@ import {
 	type UpdateProductInput,
 	updateProductSchema,
 	updateProductStatusSchema,
-} from "@/lib/zod/product.validation";
+} from "@/lib/zod/product-validation";
 import {
 	deleteImage,
 	getPublicId,

@@ -5,7 +5,7 @@ import {
 	getOrderByCustomer,
 	getOrderBySeller,
 	updateOrderStatus,
-} from "@/lib/tanstack-query/orders.queries";
+} from "@/lib/tanstack-query/orders-queries";
 import { useOrderStore } from "@/store/order";
 import type { OrderStatus, UserRole } from "@/types/enum";
 

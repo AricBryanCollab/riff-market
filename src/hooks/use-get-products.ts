@@ -5,7 +5,7 @@ import {
 	getFeaturedProducts,
 	getProductCountByStatus,
 	getProductDetailsById,
-} from "@/lib/tanstack-query/product.queries";
+} from "@/lib/tanstack-query/product-queries";
 import { useProductStore } from "@/store/products";
 import type {
 	ApprovedProductCount,

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { deleteProduct } from "@/lib/tanstack-query/product.queries";
+import { deleteProduct } from "@/lib/tanstack-query/product-queries";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 

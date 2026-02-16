@@ -5,7 +5,7 @@ import type {
 	UserSettings,
 } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
-import type { UpdateUserInput } from "@/lib/zod/user.validation";
+import type { UpdateUserInput } from "@/lib/zod/user-validation";
 import type { UserProfile } from "@/types/user";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
