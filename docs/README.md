@@ -1,4 +1,5 @@
 # Docs index
+<!-- concept:def docs_index -->
 
 Load order: `AGENTS.md` -> `docs/README.md` -> `docs/agent-context-packs.md`
 

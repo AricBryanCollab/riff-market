@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { cn } from "@/lib/utils";
-import { useUserStore } from "@/store/user";
 
 interface AvatarProps {
 	size?: "sm" | "md" | "lg" | "xl";
@@ -42,7 +42,7 @@ const Avatar = ({
 	className = "",
 	clickable = false,
 }: AvatarProps) => {
-	const { user } = useUserStore();
+	const { data: user } = useAuthUser();
 	const navigate = useNavigate();
 
 	if (!user) return null;

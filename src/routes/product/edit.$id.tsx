@@ -21,7 +21,8 @@ import useUpdateProduct from "@/hooks/use-update-product";
 import { requireRole } from "@/utils/require-role";
 
 export const Route = createFileRoute("/product/edit/$id")({
-	beforeLoad: () => requireRole(["ADMIN", "SELLER"]),
+	beforeLoad: async ({ context }) =>
+		requireRole(context.queryClient, ["ADMIN", "SELLER"]),
 	component: RouteComponent,
 });
 

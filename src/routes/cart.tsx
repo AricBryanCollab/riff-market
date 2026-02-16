@@ -9,7 +9,8 @@ import useCartDetails from "@/hooks/use-cart-details";
 import { requireRole } from "@/utils/require-role";
 
 export const Route = createFileRoute("/cart")({
-	beforeLoad: () => requireRole(["CUSTOMER"]),
+	beforeLoad: async ({ context }) =>
+		requireRole(context.queryClient, ["CUSTOMER"]),
 	component: RouteComponent,
 });
 

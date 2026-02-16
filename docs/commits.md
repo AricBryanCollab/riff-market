@@ -45,3 +45,4 @@
 - Always use lowercase titles
 - Always use `:` after the type
 - Keep messages concise and action-based  
+- Use plain ASCII characters only in commit titles (no emoji/unicode)

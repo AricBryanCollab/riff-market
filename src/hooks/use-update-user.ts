@@ -1,15 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { updateUserProfile } from "@/lib/tanstack-query/user.queries";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
-import { useUserStore } from "@/store/user";
 import type { UpdateUserRequest } from "@/types/user";
 import { validatePhoneNumber } from "@/utils/validate-phone-number";
 
 const useUpdateUser = () => {
 	const queryClient = useQueryClient();
-	const { user, setUser } = useUserStore();
+	const { data: user } = useAuthUser();
 	const { setCloseDialog } = useDialogStore();
 	const { showToast } = useToastStore();
 
@@ -66,8 +66,6 @@ const useUpdateUser = () => {
 
 			if (updatedUser) {
 				queryClient.setQueryData(["auth", "user"], updatedUser);
-
-				setUser(updatedUser);
 			}
 
 			showToast("Your profile has been successfully updated", "success");

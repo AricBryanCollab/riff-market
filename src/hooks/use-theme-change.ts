@@ -1,9 +1,9 @@
 import { useEffect } from "react";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { useThemeStore } from "@/store/theme";
-import { useUserStore } from "@/store/user";
 
 const useThemeChange = () => {
-	const user = useUserStore((state) => state.user);
+	const { data: user } = useAuthUser();
 	const previewTheme = useThemeStore((state) => state.previewTheme);
 	const { cancelPreview, setTheme } = useThemeStore();
 

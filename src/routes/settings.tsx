@@ -1,6 +1,5 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Palette, Pencil } from "lucide-react";
-import { useEffect } from "react";
 import { AppDialog } from "@/components/app-dialog";
 import Avatar from "@/components/avatar";
 import { FormSelect } from "@/components/form-select";
@@ -11,35 +10,28 @@ import { BodyLarge, BodySmall, H2, H4 } from "@/components/ui/typography";
 import { ProfileInfoField } from "@/components/user-settings/profile-field";
 import UpdateProfileForm from "@/components/user-settings/update-profile-form";
 import { themeOptions } from "@/constants/select-options";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import useThemeChange from "@/hooks/use-theme-change";
 import { useDialogStore } from "@/store/dialog";
 import { useThemeStore } from "@/store/theme";
-import { useUserStore } from "@/store/user";
-import { getRoleInfo } from "@/utils/require-role";
+import { getRoleInfo, requireAuthUser } from "@/utils/require-role";
 
 export const Route = createFileRoute("/settings")({
-	beforeLoad: () => {
-		const user = useUserStore.getState().user;
-		if (!user) {
-			throw redirect({ to: "/" });
-		}
-	},
+	beforeLoad: async ({ context }) =>
+		requireAuthUser(context.queryClient, "/unauthorized"),
 	component: SettingsComponent,
 });
 
 function SettingsComponent() {
-	const { user } = useUserStore();
+	const { data: user, isPending } = useAuthUser();
 	const { setOpenDialog } = useDialogStore();
-	const navigate = useNavigate();
 	const { previewTheme } = useThemeStore();
 	const { themeValue, handleThemeSelectChange, handleClearTheme } =
 		useThemeChange();
 
-	useEffect(() => {
-		if (!user) {
-			navigate({ to: "/unauthorized" });
-		}
-	}, [user, navigate]);
+	if (isPending) {
+		return null;
+	}
 
 	if (!user) return null;
 	const roleInfo = getRoleInfo(user?.role);

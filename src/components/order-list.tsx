@@ -4,7 +4,7 @@ import AnimatedLoader from "@/components/animated-loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
-import { useUserStore } from "@/store/user";
+import type { UserRole } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 import { formatRelativeTime } from "@/utils/format-date";
 
@@ -30,11 +30,15 @@ interface OrderListProps {
 	orders: OrderResponse[];
 	isLoading: boolean;
 	isEmptyOrders: boolean;
+	userRole: UserRole;
 }
 
-const OrderList = ({ orders, isLoading, isEmptyOrders }: OrderListProps) => {
-	const userRole = useUserStore((state) => state.user?.role);
-
+const OrderList = ({
+	orders,
+	isLoading,
+	isEmptyOrders,
+	userRole,
+}: OrderListProps) => {
 	if (isLoading) {
 		return (
 			<div className="w-80 max-w-sm bg-background">

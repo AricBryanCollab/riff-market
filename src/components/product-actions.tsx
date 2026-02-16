@@ -9,11 +9,11 @@ import {
 	RoleActionConfigs,
 	type RoleActionVariant,
 } from "@/constants/role-action-configs";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import useUpdateProductStatus from "@/hooks/use-update-product-status";
 import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
-import { useUserStore } from "@/store/user";
 import type { UserRole } from "@/types/enum";
 import { canModifyProduct, isActionDisabled } from "@/utils/can-modify-product";
 
@@ -56,7 +56,7 @@ export function ShopPageProductActions({
 	searchTerm,
 	handleSearchTerm,
 }: ShopPageProductActionsProps) {
-	const { user } = useUserStore();
+	const { data: user } = useAuthUser();
 	const navigate = useNavigate();
 	const { setOpenDialog } = useDialogStore();
 	const role = user?.role;
@@ -124,7 +124,7 @@ export function ProductDetailsActions({
 	handleQuantityChange,
 	isApproved,
 }: ProductDetailsActionsProps) {
-	const { user } = useUserStore();
+	const { data: user } = useAuthUser();
 	const { showToast } = useToastStore();
 	const { addItem } = useCartStore();
 	const { setOpenDialog } = useDialogStore();

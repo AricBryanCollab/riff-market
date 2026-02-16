@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -euo pipefail
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "node is required for commit message checks but was not found in PATH." >&2
+  exit 1
+fi
+
+node scripts/check-commit-msg.cjs "$1"

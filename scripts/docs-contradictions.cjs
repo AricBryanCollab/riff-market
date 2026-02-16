@@ -7,6 +7,11 @@ const ROOT = process.cwd();
 const REGISTRY_PATH = path.join(ROOT, 'docs', 'concepts.map');
 const CONCEPT_ID_REGEX = /^[a-z0-9_]+$/;
 const CONCEPT_DEF_REGEX = /<!--\s*concept:def\s+([a-z0-9_]+)\s*-->/g;
+const FORBIDDEN_DOC_FILENAME_PATTERNS = [
+  /-next-session\.md$/i,
+  /-handoff\.md$/i,
+  /-temp\.md$/i,
+];
 
 const readRegistry = () => {
   let raw;
@@ -122,6 +127,25 @@ const main = () => {
   const trackedDocs = listDocsFiles();
   const defs = scanFiles(trackedDocs);
   const errors = [];
+
+  const forbiddenFiles = trackedDocs.filter(file => {
+    const normalized = file.replace(/\\/g, '/');
+    return FORBIDDEN_DOC_FILENAME_PATTERNS.some(pattern => pattern.test(normalized));
+  });
+
+  if (forbiddenFiles.length > 0) {
+    errors.push(
+      `[docs] forbidden docs filename pattern detected: ${forbiddenFiles.join(', ')} (move session notes to tmp/agent-notes/)`
+    );
+  }
+
+  const canonicalPaths = new Set(Array.from(concepts.values()).map(meta => meta.canonicalPath));
+  const untrackedDocs = trackedDocs.filter(file => !canonicalPaths.has(file));
+  if (untrackedDocs.length > 0) {
+    errors.push(
+      `[docs] untracked markdown files found (every docs/*.md must be registered in docs/concepts.map): ${untrackedDocs.join(', ')}`
+    );
+  }
 
   for (const [id, locations] of defs.entries()) {
     if (!concepts.has(id)) {
