@@ -54,7 +54,7 @@ src/
 
 4. **Syntax Format for this app**
    ```bash
-      biome format 
+   biome format 
    ```
 ---
 
