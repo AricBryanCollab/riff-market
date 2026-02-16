@@ -1,4 +1,5 @@
 # ADR-001: AGENTS-first documentation framework
+<!-- concept:def docs_framework_adr -->
 
 ## Decision
 Use `AGENTS.md` as the root instruction map and enforce docs consistency with a registry + marker validator.

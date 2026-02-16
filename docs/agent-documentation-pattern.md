@@ -12,6 +12,7 @@
   - one concept per file
   - include file paths and command behavior where relevant
   - include `<!-- concept:def <id> -->` in canonical files
+  - temporary/session handoff notes must live in `tmp/agent-notes/` and never in `docs/` (for example, avoid `*-next-session.md` under `docs/`)
 - Update flow:
   - add/update `docs/concepts.map`
   - add/refine canonical file

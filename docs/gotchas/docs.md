@@ -1,4 +1,5 @@
 # Docs Gotchas
+<!-- concept:def docs_gotchas -->
 
 - Concept marker must be exactly one and in canonical file.
 - `docs/concepts.map` parser assumes `id|path|note` format.
