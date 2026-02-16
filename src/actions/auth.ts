@@ -1,4 +1,4 @@
-import { createUser, findUserByEmail } from "@/data/auth.repo";
+import { createUser, findUserByEmail } from "@/data/auth-repo";
 import {
 	type SignInInput,
 	type SignUpInput,
