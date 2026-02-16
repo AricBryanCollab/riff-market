@@ -29,7 +29,109 @@ import {
 } from "@/utils/cloudinary";
 import { compressImage } from "@/utils/compress-image";
 
-// Create Product Service
+const MAX_PRODUCT_IMAGE_UPLOADS = 3;
+const productImageOptions = {
+	maxSize: 2400,
+	quality: 85,
+	format: "jpeg",
+} as const;
+
+type ProductImageUploadResult = {
+	secure_url?: string;
+	error?: string;
+};
+
+async function mapWithConcurrency<T, R>(
+	items: T[],
+	concurrency: number,
+	mapFn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+	// This uses bounded async worker loops (via Promise workers), not Browser Worker API.
+	// Each worker grabs the next pending item and processes it until none remain.
+	if (items.length === 0) {
+		return [];
+	}
+
+	const normalizedConcurrency = Math.max(
+		1,
+		Math.min(concurrency, items.length),
+	);
+	const results = new Array<R>(items.length);
+	let nextIndex = 0;
+
+	const worker = async () => {
+		while (nextIndex < items.length) {
+			const index = nextIndex++;
+			results[index] = await mapFn(items[index], index);
+		}
+	};
+
+	await Promise.all(
+		Array.from({ length: normalizedConcurrency }, () => worker()),
+	);
+
+	return results;
+}
+
+async function uploadProductImage(imageFile: File) {
+	const compressedImage = await compressImage({
+		file: imageFile,
+		options: productImageOptions,
+	});
+
+	const uploadResult = (await unsignedUploadImage({
+		buffer: compressedImage.buffer,
+		filename: imageFile.name,
+		uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
+		folder: "products",
+	})) as ProductImageUploadResult;
+
+	if (!uploadResult || !uploadResult.secure_url) {
+		const message =
+			uploadResult && "error" in uploadResult
+				? uploadResult.error || "Cloudinary upload failed"
+				: "Cloudinary upload failed";
+
+		throw new Error(message);
+	}
+
+	return uploadResult.secure_url;
+}
+
+async function cleanupUploadedImages(imageUrls: string[]) {
+	if (imageUrls.length === 0) {
+		return;
+	}
+
+	await Promise.allSettled(
+		imageUrls.map(async (url) => {
+			const publicId = getPublicId(url);
+			await deleteImage(publicId);
+		}),
+	);
+}
+
+async function uploadProductImages(imageFiles: File[]) {
+	const uploadedImageUrls: string[] = [];
+
+	try {
+		const urls = await mapWithConcurrency(
+			imageFiles,
+			MAX_PRODUCT_IMAGE_UPLOADS,
+			async (imageFile) => {
+				const url = await uploadProductImage(imageFile);
+				uploadedImageUrls.push(url);
+				return url;
+			},
+		);
+
+		return urls;
+	} catch (error) {
+		await cleanupUploadedImages(uploadedImageUrls);
+		throw error;
+	}
+}
+
 export async function createProductService(
 	sellerId: string,
 	authRole: string,
@@ -53,27 +155,13 @@ export async function createProductService(
 	}
 
 	const imageUrls: string[] = [];
+	const imageFiles = data.images;
 
 	try {
-		for (const imageFile of data.images) {
-			const compressedImage = await compressImage({
-				file: imageFile,
-				options: {
-					maxSize: 2400,
-					quality: 85,
-					format: "jpeg",
-				},
-			});
+		// Upload image pipelines with bounded parallelism (max 3 at once).
+		const uploadedUrls = await uploadProductImages(imageFiles);
 
-			const uploadResult = await unsignedUploadImage({
-				buffer: compressedImage.buffer,
-				filename: imageFile.name,
-				uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
-				folder: "products",
-			});
-
-			imageUrls.push(uploadResult.secure_url);
-		}
+		imageUrls.push(...uploadedUrls);
 	} catch (error) {
 		return {
 			error: "Failed to upload images",
@@ -99,7 +187,6 @@ export async function createProductService(
 	return newProduct;
 }
 
-// Get Product By ID Service
 export async function getProductByIdService(productId: string) {
 	const product = await getProductById(productId);
 
@@ -110,7 +197,6 @@ export async function getProductByIdService(productId: string) {
 	return product;
 }
 
-// Get Multiple Products By IDs Service
 export async function getProductsByIdsService(role: string, rawQuery: unknown) {
 	if (role !== "CUSTOMER") {
 		return { error: "Unauthorized, user must be a customer" };
@@ -131,7 +217,6 @@ export async function getProductsByIdsService(role: string, rawQuery: unknown) {
 	return products;
 }
 
-// Get Product By Seller Service
 export async function getProductsBySellerService(id: string, role: string) {
 	const userId = id;
 	if (role !== "SELLER" || !userId) {
@@ -143,7 +228,6 @@ export async function getProductsBySellerService(id: string, role: string) {
 	return products;
 }
 
-// Get Approved Products
 export async function getApprovedProductsService(rawQuery: unknown) {
 	const parsed = getProductQuerySchema.safeParse(rawQuery);
 
@@ -160,18 +244,15 @@ export async function getApprovedProductsService(rawQuery: unknown) {
 	return products;
 }
 
-// Get Pending Products
 export async function getPendingProductsService() {
 	const products = await getPendingApprovalProducts();
 	return products;
 }
 
-// Get Product Count By Category
 export async function getProductCountByCategoryService() {
 	return await getProductCountByCategory();
 }
 
-// Get Total Product Count
 export async function getProductCountByStatusService(isApproved: boolean) {
 	const count = await getProductCountByStatus(isApproved);
 
@@ -180,13 +261,11 @@ export async function getProductCountByStatusService(isApproved: boolean) {
 		: { pendingProductCount: count };
 }
 
-// Get Recent Product Listed
 export async function getRecentProductsService(limit: number = 8) {
 	const products = await getRecentProducts(limit);
 	return products;
 }
 
-//Update Product Service
 export async function updateProductService(
 	productId: string,
 	sellerId: string,
@@ -219,25 +298,10 @@ export async function updateProductService(
 		const newImageUrls: string[] = [];
 
 		try {
-			for (const imageFile of data.images) {
-				const compressedImage = await compressImage({
-					file: imageFile,
-					options: {
-						maxSize: 2400,
-						quality: 85,
-						format: "jpeg",
-					},
-				});
+			// Upload image pipelines with bounded parallelism (max 3 at once).
+			const uploadedUrls = await uploadProductImages(data.images);
 
-				const uploadResult = await unsignedUploadImage({
-					buffer: compressedImage.buffer,
-					filename: imageFile.name,
-					uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
-					folder: "products",
-				});
-
-				newImageUrls.push(uploadResult.secure_url);
-			}
+			newImageUrls.push(...uploadedUrls);
 
 			imageUrls = newImageUrls;
 
@@ -284,7 +348,6 @@ export async function updateProductService(
 	return updatedProduct;
 }
 
-// Update Product Status Service
 export async function updateProductStatusService(
 	productId: string,
 	rawData: { status: boolean },
@@ -317,7 +380,6 @@ export async function updateProductStatusService(
 	return updatedProductStatus;
 }
 
-// Delete Product Service
 export async function deleteProductService(
 	productId: string,
 	sellerId: string,
