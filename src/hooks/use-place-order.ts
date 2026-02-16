@@ -1,30 +1,25 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { createOrder } from "@/lib/tanstack-query/orders-queries";
 import { useCartStore } from "@/store/cart";
 import { useToastStore } from "@/store/toast";
 import type { PaymentMethod } from "@/types/enum";
-import type { OrderItem } from "@/types/order";
 
 const usePlaceOrder = () => {
-	const { items: cartItems, clearCart } = useCartStore();
+	const cartItems = useCartStore((state) => state.items);
+	const clearCart = useCartStore((state) => state.clearCart);
 	const { data: user } = useAuthUser();
 	const address = user?.address ?? null;
-	const { showToast } = useToastStore();
+	const showToast = useToastStore((state) => state.showToast);
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 
-	const [orderItem, setOrderItem] = useState<OrderItem[]>([]);
 	const [shippingAddress, setShippingAddress] = useState<string>("");
 	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
 		null,
 	);
-
-	useEffect(() => {
-		setOrderItem(cartItems);
-	}, [cartItems]);
 
 	const { mutate, isPending, isError } = useMutation({
 		mutationFn: createOrder,
@@ -60,7 +55,6 @@ const usePlaceOrder = () => {
 		if (address) {
 			setShippingAddress(address);
 		}
-		return;
 	};
 
 	const handlePaymentMethodChange = (value: string) => {
@@ -80,12 +74,13 @@ const usePlaceOrder = () => {
 			return;
 		}
 
-		if (orderItem.length === 0) {
+		if (cartItems.length === 0) {
 			showToast("Your cart is empty", "error");
 			return;
 		}
+
 		const orderPayload = {
-			items: [...orderItem],
+			items: cartItems,
 			shippingAddress,
 			paymentMethod,
 		};
