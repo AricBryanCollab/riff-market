@@ -202,6 +202,18 @@ describe("product actions", () => {
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("img-1");
 	});
 
+	it("rejects create when role is not authorized", async () => {
+		const payload = createValidPayload([makeImage("img-1.jpg")]);
+
+		const result = await createProductService("seller-1", "CUSTOMER", payload);
+
+		expect(result).toMatchObject({
+			error: "Unauthorized, user must be a seller",
+		});
+		expect(productRepoMock.createProduct).not.toHaveBeenCalled();
+		expect(cloudinaryMock.unsignedUploadImage).not.toHaveBeenCalled();
+	});
+
 	it("rejects invalid create payload before uploading", async () => {
 		const payload = createValidPayload([]);
 
