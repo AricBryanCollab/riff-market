@@ -5,7 +5,7 @@ import {
 	getUserById,
 	updateProfilePicture,
 	updateUser,
-} from "@/data/user.repo";
+} from "@/data/user-repo";
 import { env } from "@/env";
 import {
 	type UpdateUserInput,
