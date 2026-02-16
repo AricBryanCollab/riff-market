@@ -1,21 +1,17 @@
 import type { Review } from "generated/prisma/client";
-import { prisma } from "@/data/connectDb";
+import { prisma } from "@/data/connect-db";
 
-type CreateReviewRepoInput = Omit<
-  Review,
-  "id" | "createdAt" | "updatedAt"
->;
-
+type CreateReviewRepoInput = Omit<Review, "id" | "createdAt" | "updatedAt">;
 
 export const createReview = async (review: CreateReviewRepoInput) => {
-  try {
-    return await prisma.review.create({
-      data: {
-        ...review,
-      },
-    });
-  } catch (err) {
-    console.error("Error at createReview", err);
-    throw err;
-  }
-}
+	try {
+		return await prisma.review.create({
+			data: {
+				...review,
+			},
+		});
+	} catch (err) {
+		console.error("Error at createReview", err);
+		throw err;
+	}
+};
