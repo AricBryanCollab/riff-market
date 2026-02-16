@@ -5,13 +5,13 @@ import {
 	getSellerOrders,
 	updateOrderStatus,
 } from "@/data/order.repo";
-import { getProductsByIds } from "@/data/product.repo";
+import { getProductsByIds } from "@/data/product-repo";
 import {
 	orderStatusSchema,
 	type PlaceOrderInput,
 	placeOrderSchema,
 	validOrderTransitions,
-} from "@/lib/zod/order.validation";
+} from "@/lib/zod/order-validation";
 import type { OrderStatus } from "@/types/enum";
 import type {
 	CreateOrderRepoData,

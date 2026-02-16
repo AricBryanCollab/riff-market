@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPendingApprovalProducts } from "@/data/product.repo";
+import { getPendingApprovalProducts } from "@/data/product-repo";
 import { roleMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/products/pending")({

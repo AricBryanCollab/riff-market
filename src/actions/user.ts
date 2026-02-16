@@ -11,7 +11,7 @@ import {
 	type UpdateUserInput,
 	udpateUserSchema,
 	updateProfilePictureSchema,
-} from "@/lib/zod/user.validation";
+} from "@/lib/zod/user-validation";
 import {
 	deleteImage,
 	getPublicId,

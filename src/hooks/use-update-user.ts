@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import { updateUserProfile } from "@/lib/tanstack-query/user.queries";
+import { updateUserProfile } from "@/lib/tanstack-query/user-queries";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { UpdateUserRequest } from "@/types/user";

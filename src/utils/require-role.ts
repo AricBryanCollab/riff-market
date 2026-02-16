@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
 import { RoleDescription } from "@/constants/role-description";
-import { getCurrentUser } from "@/lib/tanstack-query/user.queries";
+import { getCurrentUser } from "@/lib/tanstack-query/user-queries";
 import type { UserRole } from "@/types/enum";
 import type { UserProfile } from "@/types/user";
 

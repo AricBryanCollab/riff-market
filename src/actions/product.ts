@@ -10,7 +10,7 @@ import {
 	getRecentProducts,
 	updateProductById,
 	updateProductStatus,
-} from "@/data/product.repo";
+} from "@/data/product-repo";
 import { env } from "@/env";
 import {
 	type CreateProductInput,
@@ -19,7 +19,7 @@ import {
 	type UpdateProductInput,
 	updateProductSchema,
 	updateProductStatusSchema,
-} from "@/lib/zod/product.validation";
+} from "@/lib/zod/product-validation";
 import {
 	deleteImage,
 	getPublicId,

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getRecentProducts } from "@/lib/tanstack-query/product.queries";
+import { getRecentProducts } from "@/lib/tanstack-query/product-queries";
 
 const useGetRecentProducts = () => {
 	const {

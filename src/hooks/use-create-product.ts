@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import type { ImageFile } from "@/hooks/use-upload-image";
-import { createProduct } from "@/lib/tanstack-query/product.queries";
+import { createProduct } from "@/lib/tanstack-query/product-queries";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
 import type { CreateProductRequest } from "@/types/product";

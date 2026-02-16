@@ -1,10 +1,10 @@
-import { createUser, findUserByEmail } from "@/data/auth.repo";
+import { createUser, findUserByEmail } from "@/data/auth-repo";
 import {
 	type SignInInput,
 	type SignUpInput,
 	signInSchema,
 	signUpSchema,
-} from "@/lib/zod/auth.validation";
+} from "@/lib/zod/auth-validation";
 import type { SignInRequest, SignUpRequest } from "@/types/auth";
 import { toHashPassword, validatePassword } from "@/utils/bcrypt";
 import { useAppSession } from "@/utils/session";

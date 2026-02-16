@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { updateProductStatus } from "@/lib/tanstack-query/product.queries";
+import { updateProductStatus } from "@/lib/tanstack-query/product-queries";
 import { useToastStore } from "@/store/toast";
 import type { UpdateProductStatusRequest } from "@/types/product";
 

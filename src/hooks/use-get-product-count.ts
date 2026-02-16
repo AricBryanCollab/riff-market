@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { getProductCountByCategory } from "@/lib/tanstack-query/product.queries";
+import { getProductCountByCategory } from "@/lib/tanstack-query/product-queries";
 import type { ProductCountByCategoryData } from "@/types/product";
 import { transformProductCategoryCount } from "@/utils/transform-product-category-count";
 

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import { createOrder } from "@/lib/tanstack-query/orders.queries";
+import { createOrder } from "@/lib/tanstack-query/orders-queries";
 import { useCartStore } from "@/store/cart";
 import { useToastStore } from "@/store/toast";
 import type { PaymentMethod } from "@/types/enum";
