@@ -1,6 +1,6 @@
 import { apiFetch } from "@/lib/tanstack-query/fetch";
 
-import type { SignInInput, SignUpInput } from "@/lib/zod/auth.validation";
+import type { SignInInput, SignUpInput } from "@/lib/zod/auth-validation";
 import type { AuthResponse, SignOutResponse } from "@/types/auth";
 
 export function signIn(data: SignInInput) {

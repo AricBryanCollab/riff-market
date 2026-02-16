@@ -3,7 +3,7 @@ import { apiFetch } from "@/lib/tanstack-query/fetch";
 import type {
 	CreateProductInput,
 	UpdateProductInput,
-} from "@/lib/zod/product.validation";
+} from "@/lib/zod/product-validation";
 import type {
 	ApprovedProductCount,
 	BaseProduct,
