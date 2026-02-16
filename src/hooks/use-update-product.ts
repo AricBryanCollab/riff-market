@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import useGetProducts from "@/hooks/use-get-products";
+import { useProductById } from "@/hooks/use-get-products";
 import type { ImageFile } from "@/hooks/use-upload-image";
 import { updateProduct } from "@/lib/tanstack-query/product-queries";
 import { useToastStore } from "@/store/toast";
@@ -19,13 +19,8 @@ const useUpdateProduct = (id: string) => {
 		product: productData,
 		loadingProduct,
 		isErrorProduct,
-		setSelectedProductId,
 		refetchProductDetails,
-	} = useGetProducts();
-
-	useEffect(() => {
-		setSelectedProductId(id);
-	}, [id, setSelectedProductId]);
+	} = useProductById(id);
 
 	useEffect(() => {
 		if (!productData) return;

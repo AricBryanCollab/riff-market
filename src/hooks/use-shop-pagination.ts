@@ -1,4 +1,7 @@
-import useGetProducts from "@/hooks/use-get-products";
+import {
+	useApprovedProductCount,
+	useApprovedProducts,
+} from "@/hooks/use-get-products";
 import { useProductStore } from "@/store/products";
 import type { ApprovedProductCount } from "@/types/product";
 
@@ -8,15 +11,11 @@ const useShopPagination = () => {
 	const setPage = useProductStore((state) => state.setPage);
 	const setPageSize = useProductStore((state) => state.setPageSize);
 
-	const {
-		productCount,
-		isErrorProductCount,
-		loadingProductCount,
-		products,
-		isLoadingProducts,
-		isErrorProducts,
-		refetchProducts,
-	} = useGetProducts();
+	const { productCount, isErrorProductCount, loadingProductCount } =
+		useApprovedProductCount();
+
+	const { products, isLoadingProducts, isErrorProducts, refetchProducts } =
+		useApprovedProducts();
 
 	const totalProducts =
 		(productCount as ApprovedProductCount | undefined)?.approvedProductCount ??

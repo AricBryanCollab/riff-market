@@ -8,12 +8,12 @@ import RecentListings from "@/components/home/recent-listings";
 import { HeroFeaturedProductLoading } from "@/components/loading-states";
 import SectionContainer from "@/components/section-container";
 import { H2 } from "@/components/ui/typography";
-import useGetProducts from "@/hooks/use-get-products";
+import { useFeaturedProducts } from "@/hooks/use-get-products";
 export const Route = createFileRoute("/")({ component: HomePage });
 
 function HomePage() {
 	const { featuredProducts, loadingFeatured, isErrorFeatured } =
-		useGetProducts();
+		useFeaturedProducts();
 
 	return (
 		<SectionContainer>

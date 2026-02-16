@@ -1,11 +1,9 @@
-import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
 	Scripts,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { AppDialog } from "@/components/app-dialog";
 import Navbar from "@/components/navbar";
 import PageNotFound from "@/components/page-not-found";
@@ -15,7 +13,7 @@ import SignUpForm from "@/components/sign-up-form";
 import { ThemeProvider } from "@/components/theme-provider";
 import Toast from "@/components/toast";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import TanStackQueryDevtools from "@/lib/tanstack-query/devtools";
+import TanStackAppDevtools from "@/lib/tanstack-query/devtools";
 import appCss from "../styles.css?url";
 
 interface MyRouterContext {
@@ -66,18 +64,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					<ThemeProvider>
 						<Navbar />
 						{children}
-						<TanStackDevtools
-							config={{
-								position: "bottom-right",
-							}}
-							plugins={[
-								{
-									name: "Tanstack Router",
-									render: <TanStackRouterDevtoolsPanel />,
-								},
-								TanStackQueryDevtools,
-							]}
-						/>
+						<TanStackAppDevtools />
 						<AppDialog type="signin" title="RiffMarket LogIn">
 							<SignInForm />
 						</AppDialog>
