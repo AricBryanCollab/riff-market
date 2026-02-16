@@ -1,8 +1,8 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { getPendingApprovalProducts } from "@/lib/tanstack-query/product.queries";
 import { usePendingProductStore } from "@/store/pending-product";
-import { useUserStore } from "@/store/user";
 import type { BaseProduct } from "@/types/product";
 
 const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
@@ -15,7 +15,8 @@ const useGetPendingProducts = () => {
 	const queryClient = useQueryClient();
 	const { pendingProducts, pendingProductCount, setPendingProducts } =
 		usePendingProductStore();
-	const userRole = useUserStore().user?.role;
+	const { data: user } = useAuthUser();
+	const userRole = user?.role;
 
 	const {
 		data,

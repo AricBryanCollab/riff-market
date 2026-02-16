@@ -1,16 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { createOrder } from "@/lib/tanstack-query/orders.queries";
 import { useCartStore } from "@/store/cart";
 import { useToastStore } from "@/store/toast";
-import { useUserStore } from "@/store/user";
 import type { PaymentMethod } from "@/types/enum";
 import type { OrderItem } from "@/types/order";
 
 const usePlaceOrder = () => {
 	const { items: cartItems, clearCart } = useCartStore();
-	const address = useUserStore((state) => state.user?.address);
+	const { data: user } = useAuthUser();
+	const address = user?.address ?? null;
 	const { showToast } = useToastStore();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();

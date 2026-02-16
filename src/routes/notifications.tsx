@@ -1,20 +1,16 @@
-import { ClientOnly, createFileRoute, redirect } from "@tanstack/react-router";
+import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 import { Bell, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animated-loader";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H3, H5 } from "@/components/ui/typography";
 import useNotifications from "@/hooks/use-notifications";
-import { useUserStore } from "@/store/user";
 import type { NotificationData } from "@/types/notification";
 import { formatRelativeTime } from "@/utils/format-date";
+import { requireAuthUser } from "@/utils/require-role";
 
 export const Route = createFileRoute("/notifications")({
-	beforeLoad: () => {
-		const user = useUserStore.getState().user;
-		if (!user) {
-			throw redirect({ to: "/" });
-		}
-	},
+	beforeLoad: async ({ context }) =>
+		requireAuthUser(context.queryClient, "/unauthorized"),
 	component: NotificationsPage,
 });
 

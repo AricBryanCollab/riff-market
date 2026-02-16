@@ -9,13 +9,13 @@ import OrderList from "@/components/order-list";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import useCartDetails from "@/hooks/use-cart-details";
 import useGetOrders from "@/hooks/use-get-orders";
 import useGetPendingProducts from "@/hooks/use-get-pending-products";
 import useNotifications from "@/hooks/use-notifications";
 import { useSignOut } from "@/hooks/use-sign-out";
 import { useDialogStore } from "@/store/dialog";
-import { useUserStore } from "@/store/user";
 import type { UserRole } from "@/types/enum";
 import PendingProductList from "./pending-product-list";
 
@@ -30,7 +30,7 @@ const UserMenuFallback = () => (
 
 const UserMenu = () => {
 	const { setOpenDialog } = useDialogStore();
-	const { user } = useUserStore();
+	const { data: user } = useAuthUser();
 	const role = user?.role || "CUSTOMER";
 
 	// Use CartList Hook
@@ -108,6 +108,7 @@ const UserMenu = () => {
 							orders={orders}
 							isLoading={isLoadingOrders}
 							isEmptyOrders={isEmptyOrders}
+							userRole={role}
 						/>
 					</AppDropdown>
 				);

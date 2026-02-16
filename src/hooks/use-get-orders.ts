@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import {
 	getOrderByCustomer,
 	getOrderBySeller,
 	updateOrderStatus,
 } from "@/lib/tanstack-query/orders.queries";
 import { useOrderStore } from "@/store/order";
-import { useUserStore } from "@/store/user";
 import type { OrderStatus, UserRole } from "@/types/enum";
 
 const useGetOrders = (userRole: UserRole) => {
@@ -18,7 +18,7 @@ const useGetOrders = (userRole: UserRole) => {
 		updateOrder: updateOrderInStore,
 	} = useOrderStore();
 
-	const { user } = useUserStore();
+	const { data: user } = useAuthUser();
 
 	const queryFn =
 		userRole === "CUSTOMER" ? getOrderByCustomer : getOrderBySeller;

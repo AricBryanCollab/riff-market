@@ -1,34 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { getCurrentUser } from "@/lib/tanstack-query/user.queries";
-import { useUserStore } from "@/store/user";
+import type { UserProfile } from "@/types/user";
 
 export const useAuthUser = () => {
-	const { setUser, clearUser } = useUserStore();
-
-	const userQuery = useQuery({
+	const userQuery = useQuery<UserProfile>({
 		queryKey: ["auth", "user"],
 		queryFn: getCurrentUser,
-		enabled: false,
+		retry: false,
 		refetchOnMount: false,
 		refetchOnWindowFocus: false,
+		staleTime: 1000 * 60 * 5,
 	});
 
-	useEffect(() => {
-		if (userQuery.isSuccess && userQuery.data) {
-			setUser(userQuery.data);
-		}
-
-		if (userQuery.isError) {
-			clearUser();
-		}
-	}, [
-		userQuery.isSuccess,
-		userQuery.isError,
-		userQuery.data,
-		setUser,
-		clearUser,
-	]);
-
-	return userQuery;
+	return {
+		...userQuery,
+		data: userQuery.data ?? null,
+	};
 };

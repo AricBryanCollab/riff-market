@@ -24,15 +24,15 @@ vi.mock("@/store/dialog", () => ({
 	useDialogStore: () => mockUseDialogStore(),
 }));
 
-const mockUseUserStore = vi.fn();
+const mockUseAuthUser = vi.fn();
 
-vi.mock("@/store/user", () => ({
-	useUserStore: () => mockUseUserStore(),
+vi.mock("@/hooks/use-auth-user", () => ({
+	useAuthUser: () => mockUseAuthUser(),
 }));
 
 describe("UserMenu", () => {
 	it("shows login actions when no user is present", async () => {
-		mockUseUserStore.mockReturnValue({ user: null });
+		mockUseAuthUser.mockReturnValue({ data: null });
 
 		render(<UserMenu />);
 
@@ -48,8 +48,8 @@ describe("UserMenu", () => {
 	});
 
 	it("shows cart and logout when a customer is logged in", async () => {
-		mockUseUserStore.mockReturnValue({
-			user: {
+		mockUseAuthUser.mockReturnValue({
+			data: {
 				firstName: "Aric",
 				lastName: "Dev",
 				role: "CUSTOMER",

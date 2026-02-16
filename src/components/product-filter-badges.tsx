@@ -2,9 +2,9 @@ import { cva } from "class-variance-authority";
 import type { ProductCategory } from "generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";
 import { productCategoryOptions } from "@/constants/select-options";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { usePendingProductStore } from "@/store/pending-product";
 import { useProductStore } from "@/store/products";
-import { useUserStore } from "@/store/user";
 
 const productFilterBadgeVariants = cva(
 	"px-5 py-4 rounded-full border-2 font-medium transition-all",
@@ -23,7 +23,7 @@ const productFilterBadgeVariants = cva(
 );
 
 const ProductFilterBadges = () => {
-	const { user } = useUserStore();
+	const { data: user } = useAuthUser();
 	const isAdmin = user?.role === "ADMIN";
 
 	const { filters, setCategory, resetFilters } = useProductStore();

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import {
 	getUserNotifications,
 	readAllNotifications,
@@ -7,7 +8,6 @@ import {
 } from "@/lib/tanstack-query/notifications.queries";
 import { useNotificationStore } from "@/store/notifications";
 import { useToastStore } from "@/store/toast";
-import { useUserStore } from "@/store/user";
 
 const useNotifications = () => {
 	const queryClient = useQueryClient();
@@ -19,7 +19,7 @@ const useNotifications = () => {
 		markAsRead: markAsReadInStore,
 	} = useNotificationStore();
 
-	const { user } = useUserStore();
+	const { data: user } = useAuthUser();
 	const { showToast } = useToastStore();
 
 	const { data, isLoading } = useQuery({
