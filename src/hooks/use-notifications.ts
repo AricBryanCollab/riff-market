@@ -5,7 +5,7 @@ import {
 	getUserNotifications,
 	readAllNotifications,
 	readNotificationById,
-} from "@/lib/tanstack-query/notifications.queries";
+} from "@/lib/tanstack-query/notifications-queries";
 import { useNotificationStore } from "@/store/notifications";
 import { useToastStore } from "@/store/toast";
 

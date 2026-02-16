@@ -1,8 +1,8 @@
-import { createReview } from "@/data/review.repo";
+import { createReview } from "@/data/review-repo";
 import {
   type CreateReviewInput,
   createReviewSchema
-} from "@/lib/zod/review.validation";
+} from "@/lib/zod/review-validation";
 
 export async function createReviewService(
   userId: string,
