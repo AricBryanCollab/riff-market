@@ -10,8 +10,11 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { H2 } from "@/components/ui/typography";
 import useCartDetails from "@/hooks/use-cart-details";
 import usePlaceOrder from "@/hooks/use-place-order";
+import { requireRole } from "@/utils/require-role";
 
 export const Route = createFileRoute("/checkout")({
+	beforeLoad: async ({ context }) =>
+		requireRole(context.queryClient, ["CUSTOMER"]),
 	component: RouteComponent,
 });
 

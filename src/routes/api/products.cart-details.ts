@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/products/cart-details")({
 				} catch (error) {
 					return new Response(
 						JSON.stringify({
-							error: "Failed to get cart product details",
+							message: "Failed to get cart product details",
 							details: error instanceof Error ? error.message : "Unknown error",
 						}),
 						{ status: 500 },
