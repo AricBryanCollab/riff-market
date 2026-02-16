@@ -56,6 +56,19 @@ export function getProductDetailsById(id: string) {
 	return apiFetch<BaseProduct>(`/api/products/${id}`);
 }
 
+// Get Product Details By IDs (batch)
+export function getProductsByIds(ids: string[]) {
+	const params = new URLSearchParams();
+
+	for (const id of ids) {
+		params.append("ids", id);
+	}
+
+	return apiFetch<BaseProduct[]>(
+		`/api/products/cart-details?${params.toString()}`,
+	);
+}
+
 //  Get Approved Product List with Query
 export function getApprovedProducts(filters: GetApprovedProductsFilterQuery) {
 	const params = new URLSearchParams();

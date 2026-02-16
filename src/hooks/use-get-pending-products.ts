@@ -13,8 +13,15 @@ const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
 
 const useGetPendingProducts = () => {
 	const queryClient = useQueryClient();
-	const { pendingProducts, pendingProductCount, setPendingProducts } =
-		usePendingProductStore();
+	const pendingProducts = usePendingProductStore(
+		(state) => state.pendingProducts,
+	);
+	const pendingProductCount = usePendingProductStore(
+		(state) => state.pendingProductCount,
+	);
+	const setPendingProducts = usePendingProductStore(
+		(state) => state.setPendingProducts,
+	);
 	const { data: user } = useAuthUser();
 	const userRole = user?.role;
 

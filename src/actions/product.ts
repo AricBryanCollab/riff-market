@@ -6,6 +6,7 @@ import {
 	getProductById,
 	getProductCountByCategory,
 	getProductCountByStatus,
+	getProductsByIds,
 	getProductsBySellerId,
 	getRecentProducts,
 	updateProductById,
@@ -16,6 +17,7 @@ import {
 	type CreateProductInput,
 	createProductSchema,
 	getProductQuerySchema,
+	getProductsByIdsQuerySchema,
 	type UpdateProductInput,
 	updateProductSchema,
 	updateProductStatusSchema,
@@ -106,6 +108,27 @@ export async function getProductByIdService(productId: string) {
 	}
 
 	return product;
+}
+
+// Get Multiple Products By IDs Service
+export async function getProductsByIdsService(role: string, rawQuery: unknown) {
+	if (role !== "CUSTOMER") {
+		return { error: "Unauthorized, user must be a customer" };
+	}
+
+	const parsed = getProductsByIdsQuerySchema.safeParse(rawQuery);
+
+	if (!parsed.success) {
+		return {
+			error: "Invalid product IDs query",
+			details: parsed.error,
+		};
+	}
+
+	const uniqueIds = Array.from(new Set(parsed.data.ids));
+	const products = await getProductsByIds(uniqueIds);
+
+	return products;
 }
 
 // Get Product By Seller Service

@@ -66,6 +66,13 @@ export const getProductQuerySchema = z.object({
 		.pipe(z.number().min(0).optional()),
 });
 
+export const getProductsByIdsQuerySchema = z.object({
+	ids: z
+		.array(z.string().trim().min(1, "Product ID is required"))
+		.min(1, "At least one product ID is required")
+		.max(100, "Maximum 100 product IDs are allowed"),
+});
+
 export const updateProductSchema = createProductSchema.partial();
 
 export const updateProductStatusSchema = z.object({
@@ -74,6 +81,7 @@ export const updateProductStatusSchema = z.object({
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type GetProductQuery = z.infer<typeof getProductQuerySchema>;
+export type GetProductsByIdsQuery = z.infer<typeof getProductsByIdsQuerySchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type UpdateProductStatusInput = z.infer<
 	typeof updateProductStatusSchema

@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	queryOptions,
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import {
@@ -9,23 +14,27 @@ import {
 import { useNotificationStore } from "@/store/notifications";
 import { useToastStore } from "@/store/toast";
 
+export const notificationsQueryOpt = queryOptions({
+	queryKey: ["notifications"],
+	queryFn: getUserNotifications,
+	staleTime: 30000,
+});
+
 const useNotifications = () => {
 	const queryClient = useQueryClient();
-	const {
-		notifications,
-		unreadCount,
-		setNotifications,
-		markAllAsRead,
-		markAsRead: markAsReadInStore,
-	} = useNotificationStore();
+	const notifications = useNotificationStore((state) => state.notifications);
+	const unreadCount = useNotificationStore((state) => state.unreadCount);
+	const setNotifications = useNotificationStore(
+		(state) => state.setNotifications,
+	);
+	const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
+	const markAsReadInStore = useNotificationStore((state) => state.markAsRead);
 
 	const { data: user } = useAuthUser();
 	const { showToast } = useToastStore();
 
 	const { data, isLoading } = useQuery({
-		queryKey: ["notifications"],
-		queryFn: getUserNotifications,
-		staleTime: 30000,
+		...notificationsQueryOpt,
 		refetchInterval: 60000,
 		enabled: user !== null,
 	});

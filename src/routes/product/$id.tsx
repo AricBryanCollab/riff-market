@@ -17,6 +17,11 @@ import { productCategoryOptions } from "@/constants/select-options";
 import { productbyIdQueryOpt } from "@/hooks/use-get-products";
 
 export const Route = createFileRoute("/product/$id")({
+	beforeLoad: async ({ context, params }) => {
+		await context.queryClient
+			.ensureQueryData(productbyIdQueryOpt(params.id))
+			.catch(() => undefined);
+	},
 	component: RouteComponent,
 });
 

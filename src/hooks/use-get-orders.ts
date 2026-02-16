@@ -11,12 +11,10 @@ import type { OrderStatus, UserRole } from "@/types/enum";
 
 const useGetOrders = (userRole: UserRole) => {
 	const queryClient = useQueryClient();
-	const {
-		orders,
-		orderCount,
-		setOrders,
-		updateOrder: updateOrderInStore,
-	} = useOrderStore();
+	const orders = useOrderStore((state) => state.orders);
+	const orderCount = useOrderStore((state) => state.orderCount);
+	const setOrders = useOrderStore((state) => state.setOrders);
+	const updateOrderInStore = useOrderStore((state) => state.updateOrder);
 
 	const { data: user } = useAuthUser();
 

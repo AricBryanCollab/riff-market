@@ -10,19 +10,28 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { H2 } from "@/components/ui/typography";
 import useCartDetails from "@/hooks/use-cart-details";
 import usePlaceOrder from "@/hooks/use-place-order";
+import { requireRole } from "@/utils/require-role";
 
 export const Route = createFileRoute("/checkout")({
+	beforeLoad: async ({ context }) =>
+		requireRole(context.queryClient, ["CUSTOMER"]),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const navigate = useNavigate();
 
-	const { isLoading: isLoadingCart, cartWithDetails } = useCartDetails();
+	const {
+		isLoading: isLoadingCart,
+		cartWithDetails,
+		totalPrice: subtotal,
+	} = useCartDetails();
+
 	const {
 		shippingAddress,
 		paymentMethod,
 		address: defaultAddress,
+		isPending: isPlacingOrder,
 		clearAddress,
 		handleDefaultAddress,
 		handleShippingAddressChange,
@@ -30,17 +39,8 @@ function RouteComponent() {
 		handleSubmit,
 	} = usePlaceOrder();
 
-	const calculateSubtotal = () => {
-		if (!cartWithDetails || cartWithDetails.length === 0) return 0;
-		return cartWithDetails.reduce(
-			(total, item) => total + (item.product?.price || 0) * item.quantity,
-			0,
-		);
-	};
-
-	const calculateTax = () => {
-		return calculateSubtotal() * 0.08;
-	};
+	const tax = subtotal * 0.08;
+	const isSubmittingOrder = isLoadingCart || isPlacingOrder;
 
 	return (
 		<SectionContainer>
@@ -80,8 +80,8 @@ function RouteComponent() {
 
 						<div className="lg:hidden">
 							<OrderSummary
-								subtotal={calculateSubtotal()}
-								tax={calculateTax()}
+								subtotal={subtotal}
+								tax={tax}
 								shipping={0}
 								showBenefits={false}
 								isLoading={isLoadingCart}
@@ -91,9 +91,8 @@ function RouteComponent() {
 
 						<div className="flex flex-col w-full">
 							<LoadingButton
-								loading={isLoadingCart}
+								loading={isSubmittingOrder}
 								type="submit"
-								disabled={false}
 								className="w-full sm:w-auto"
 							>
 								Place Order
@@ -104,8 +103,8 @@ function RouteComponent() {
 
 				<div className="hidden lg:block">
 					<OrderSummary
-						subtotal={calculateSubtotal()}
-						tax={calculateTax()}
+						subtotal={subtotal}
+						tax={tax}
 						shipping={0}
 						showBenefits
 						isLoading={isLoadingCart}
