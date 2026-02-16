@@ -3,14 +3,20 @@ import { Bell, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animated-loader";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H3, H5 } from "@/components/ui/typography";
-import useNotifications from "@/hooks/use-notifications";
+import useNotifications, {
+	notificationsQueryOpt,
+} from "@/hooks/use-notifications";
 import type { NotificationData } from "@/types/notification";
 import { formatRelativeTime } from "@/utils/format-date";
 import { requireAuthUser } from "@/utils/require-role";
 
 export const Route = createFileRoute("/notifications")({
-	beforeLoad: async ({ context }) =>
-		requireAuthUser(context.queryClient, "/unauthorized"),
+	beforeLoad: async ({ context }) => {
+		await requireAuthUser(context.queryClient, "/unauthorized");
+		await context.queryClient
+			.ensureQueryData(notificationsQueryOpt)
+			.catch(() => undefined);
+	},
 	component: NotificationsPage,
 });
 

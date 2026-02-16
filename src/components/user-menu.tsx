@@ -28,12 +28,7 @@ const UserMenuFallback = () => (
 	</div>
 );
 
-const UserMenu = () => {
-	const { setOpenDialog } = useDialogStore();
-	const { data: user } = useAuthUser();
-	const role = user?.role || "CUSTOMER";
-
-	// Use CartList Hook
+const CustomerActions = () => {
 	const {
 		isCartEmpty,
 		isLoading: isCartLoading,
@@ -42,7 +37,100 @@ const UserMenu = () => {
 		cartWithDetails,
 	} = useCartDetails();
 
-	// Use Notification List
+	return (
+		<AppDropdown
+			trigger={
+				<NavbarIconButtons
+					icon={ShoppingCart}
+					count={cartCount}
+					ariaLabel="Shopping cart"
+				/>
+			}
+			align="end"
+		>
+			<CartList
+				isLoading={isCartLoading}
+				isCartEmpty={isCartEmpty}
+				totalPrice={totalPrice}
+				cartCount={cartCount}
+				cartWithDetails={cartWithDetails}
+			/>
+		</AppDropdown>
+	);
+};
+
+const SellerActions = () => {
+	const {
+		orders,
+		orderCount,
+		isLoading: isLoadingOrders,
+		isEmptyOrders,
+	} = useGetOrders("SELLER");
+
+	return (
+		<AppDropdown
+			trigger={
+				<NavbarIconButtons
+					icon={Package}
+					count={orderCount}
+					ariaLabel="Orders"
+				/>
+			}
+			align="end"
+		>
+			<OrderList
+				orders={orders}
+				isLoading={isLoadingOrders}
+				isEmptyOrders={isEmptyOrders}
+				userRole="SELLER"
+			/>
+		</AppDropdown>
+	);
+};
+
+const AdminActions = () => {
+	const {
+		pendingProducts,
+		pendingProductCount,
+		isLoadingPendingProducts,
+		isEmptyPendingProducts,
+	} = useGetPendingProducts();
+
+	return (
+		<AppDropdown
+			trigger={
+				<NavbarIconButtons
+					icon={PackageSearch}
+					count={pendingProductCount}
+					ariaLabel="Pending Products"
+				/>
+			}
+			align="end"
+		>
+			<PendingProductList
+				pendingProducts={pendingProducts}
+				pendingProductCount={pendingProductCount}
+				isLoading={isLoadingPendingProducts}
+				isEmptyPendingProducts={isEmptyPendingProducts}
+			/>
+		</AppDropdown>
+	);
+};
+
+const RoleActions = ({ role }: { role: UserRole }) => {
+	switch (role) {
+		case "CUSTOMER":
+			return <CustomerActions />;
+		case "SELLER":
+			return <SellerActions />;
+		case "ADMIN":
+			return <AdminActions />;
+		default:
+			return null;
+	}
+};
+
+const NotificationsMenu = () => {
 	const {
 		notifications,
 		isLoading: isLoadingNotification,
@@ -51,146 +139,71 @@ const UserMenu = () => {
 		markAsReadMutate,
 	} = useNotifications();
 
-	// Use Order List
-	const {
-		orders,
-		orderCount,
-		isLoading: isLoadingOrders,
-		isEmptyOrders,
-	} = useGetOrders(role);
-
-	// Pending Products List
-	const {
-		pendingProducts,
-		pendingProductCount,
-		isLoadingPendingProducts,
-		isEmptyPendingProducts,
-	} = useGetPendingProducts();
-
-	const { loading: signOutLoading, signOut } = useSignOut();
-
-	const handleActionButtonsByRole = (role: UserRole) => {
-		switch (role) {
-			case "CUSTOMER":
-				return (
-					<AppDropdown
-						trigger={
-							<NavbarIconButtons
-								icon={ShoppingCart}
-								count={cartCount}
-								ariaLabel="Shopping cart"
-							/>
-						}
-						align="end"
-					>
-						<CartList
-							isLoading={isCartLoading}
-							isCartEmpty={isCartEmpty}
-							totalPrice={totalPrice}
-							cartCount={cartCount}
-							cartWithDetails={cartWithDetails}
-						/>
-					</AppDropdown>
-				);
-			case "SELLER":
-				return (
-					<AppDropdown
-						trigger={
-							<NavbarIconButtons
-								icon={Package}
-								count={orderCount}
-								ariaLabel="Orders"
-							/>
-						}
-						align="end"
-					>
-						<OrderList
-							orders={orders}
-							isLoading={isLoadingOrders}
-							isEmptyOrders={isEmptyOrders}
-							userRole={role}
-						/>
-					</AppDropdown>
-				);
-			case "ADMIN":
-				return (
-					<AppDropdown
-						trigger={
-							<NavbarIconButtons
-								icon={PackageSearch}
-								count={pendingProductCount}
-								ariaLabel="Pending Products"
-							/>
-						}
-						align="end"
-					>
-						<PendingProductList
-							pendingProducts={pendingProducts}
-							pendingProductCount={pendingProductCount}
-							isLoading={isLoadingPendingProducts}
-							isEmptyPendingProducts={isEmptyPendingProducts}
-						/>
-					</AppDropdown>
-				);
-			default:
-				return null;
-		}
-	};
-
 	return (
-		<ClientOnly fallback={<UserMenuFallback />}>
-			{user !== null ? (
-				<div className="flex items-center gap-4">
-					<Avatar showInfo clickable />
-
-					{handleActionButtonsByRole(role)}
-
-					<AppDropdown
-						trigger={
-							<NavbarIconButtons
-								icon={Bell}
-								count={unreadCount}
-								ariaLabel="Notifications"
-							/>
-						}
-						align="end"
-					>
-						<NotificationList
-							notifications={notifications}
-							unreadCount={unreadCount}
-							isLoading={isLoadingNotification}
-							isEmptyNotifications={isEmptyNotifications}
-							markAsRead={markAsReadMutate}
-						/>
-					</AppDropdown>
-
-					<LoadingButton
-						loading={signOutLoading}
-						variant="outline"
-						onClick={signOut}
-					>
-						Logout
-					</LoadingButton>
-				</div>
-			) : (
-				<div className="flex items-center gap-3">
-					<Button onClick={() => setOpenDialog("signin")} variant="outline">
-						Login
-					</Button>
-					<Button onClick={() => setOpenDialog("signup")}>Get Started</Button>
-				</div>
-			)}
-		</ClientOnly>
+		<AppDropdown
+			trigger={
+				<NavbarIconButtons
+					icon={Bell}
+					count={unreadCount}
+					ariaLabel="Notifications"
+				/>
+			}
+			align="end"
+		>
+			<NotificationList
+				notifications={notifications}
+				unreadCount={unreadCount}
+				isLoading={isLoadingNotification}
+				isEmptyNotifications={isEmptyNotifications}
+				markAsRead={markAsReadMutate}
+			/>
+		</AppDropdown>
 	);
 };
 
-// const DropdownContentPlaceholder = ({ title }: { title: string }) => {
-// 	return (
-// 		<div className="p-4">
-// 			<h3 className="font-semibold mb-2">{title}</h3>
-// 			<p className="text-sm text-muted-foreground">Your items here</p>
-// 		</div>
-// 	);
-// };
+const AuthenticatedUserMenu = ({ role }: { role: UserRole }) => {
+	const { loading: signOutLoading, signOut } = useSignOut();
+
+	return (
+		<div className="flex items-center gap-4">
+			<Avatar showInfo clickable />
+
+			<RoleActions role={role} />
+
+			<NotificationsMenu />
+
+			<LoadingButton
+				loading={signOutLoading}
+				variant="outline"
+				onClick={signOut}
+			>
+				Logout
+			</LoadingButton>
+		</div>
+	);
+};
+
+const GuestUserMenu = () => {
+	const { setOpenDialog } = useDialogStore();
+
+	return (
+		<div className="flex items-center gap-3">
+			<Button onClick={() => setOpenDialog("signin")} variant="outline">
+				Login
+			</Button>
+			<Button onClick={() => setOpenDialog("signup")}>Get Started</Button>
+		</div>
+	);
+};
+
+const UserMenu = () => {
+	const { data: user } = useAuthUser();
+
+	return (
+		<ClientOnly fallback={<UserMenuFallback />}>
+			{user ? <AuthenticatedUserMenu role={user.role} /> : <GuestUserMenu />}
+		</ClientOnly>
+	);
+};
 
 export default UserMenu;

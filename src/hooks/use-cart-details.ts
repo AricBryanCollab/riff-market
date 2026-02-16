@@ -3,7 +3,9 @@ import { productbyIdQueryOpt } from "@/hooks/use-get-products";
 import { useCartStore } from "@/store/cart";
 
 const useCartDetails = () => {
-	const { items: cartItems, updateQuantity, removeItem } = useCartStore();
+	const cartItems = useCartStore((state) => state.items);
+	const updateQuantity = useCartStore((state) => state.updateQuantity);
+	const removeItem = useCartStore((state) => state.removeItem);
 
 	const productQueries = useQueries({
 		queries: cartItems.map((item) => productbyIdQueryOpt(item.productId)),
@@ -26,9 +28,7 @@ const useCartDetails = () => {
 		return sum;
 	}, 0);
 
-	const cartCount = useCartStore((state) =>
-		state.items.reduce((total, item) => total + item.quantity, 0),
-	);
+	const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
 	const handleRemoveItem = (id: string) => {
 		removeItem(id);
