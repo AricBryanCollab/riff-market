@@ -2,6 +2,8 @@
 <!-- concept:def docs_process -->
 
 - Keep handoff docs compact, discoverable, and low-friction.
+- Context is scarce: load and inject only what the current task needs.
+- Prefer enforceable guidance over ad-hoc guidance (rules/checks/tests over memory).
 - Structure docs as:
   - index (`docs/README.md`)
   - process (`docs/agent-documentation-pattern.md`)
