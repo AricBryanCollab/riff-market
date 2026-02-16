@@ -24,6 +24,7 @@ import { Route as ProductNewRouteImport } from './routes/product/new'
 import { Route as ProductIdRouteImport } from './routes/product/$id'
 import { Route as ApiUserRouteImport } from './routes/api/user'
 import { Route as ApiUploadimageRouteImport } from './routes/api/uploadimage'
+import { Route as ApiReviewsRouteImport } from './routes/api/reviews'
 import { Route as ApiProductsRouteImport } from './routes/api/products'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
 import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
@@ -117,6 +118,11 @@ const ApiUserRoute = ApiUserRouteImport.update({
 const ApiUploadimageRoute = ApiUploadimageRouteImport.update({
   id: '/api/uploadimage',
   path: '/api/uploadimage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReviewsRoute = ApiReviewsRouteImport.update({
+  id: '/api/reviews',
+  path: '/api/reviews',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiProductsRoute = ApiProductsRouteImport.update({
@@ -229,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/api/notifications': typeof ApiNotificationsRouteWithChildren
   '/api/orders': typeof ApiOrdersRouteWithChildren
   '/api/products': typeof ApiProductsRouteWithChildren
+  '/api/reviews': typeof ApiReviewsRoute
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRouteWithChildren
   '/product/$id': typeof ProductIdRoute
@@ -264,6 +271,7 @@ export interface FileRoutesByTo {
   '/api/notifications': typeof ApiNotificationsRouteWithChildren
   '/api/orders': typeof ApiOrdersRouteWithChildren
   '/api/products': typeof ApiProductsRouteWithChildren
+  '/api/reviews': typeof ApiReviewsRoute
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRouteWithChildren
   '/product/$id': typeof ProductIdRoute
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/api/notifications': typeof ApiNotificationsRouteWithChildren
   '/api/orders': typeof ApiOrdersRouteWithChildren
   '/api/products': typeof ApiProductsRouteWithChildren
+  '/api/reviews': typeof ApiReviewsRoute
   '/api/uploadimage': typeof ApiUploadimageRoute
   '/api/user': typeof ApiUserRouteWithChildren
   '/product/$id': typeof ProductIdRoute
@@ -339,6 +348,7 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/orders'
     | '/api/products'
+    | '/api/reviews'
     | '/api/uploadimage'
     | '/api/user'
     | '/product/$id'
@@ -374,6 +384,7 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/orders'
     | '/api/products'
+    | '/api/reviews'
     | '/api/uploadimage'
     | '/api/user'
     | '/product/$id'
@@ -410,6 +421,7 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/orders'
     | '/api/products'
+    | '/api/reviews'
     | '/api/uploadimage'
     | '/api/user'
     | '/product/$id'
@@ -447,6 +459,7 @@ export interface RootRouteChildren {
   ApiNotificationsRoute: typeof ApiNotificationsRouteWithChildren
   ApiOrdersRoute: typeof ApiOrdersRouteWithChildren
   ApiProductsRoute: typeof ApiProductsRouteWithChildren
+  ApiReviewsRoute: typeof ApiReviewsRoute
   ApiUploadimageRoute: typeof ApiUploadimageRoute
   ApiUserRoute: typeof ApiUserRouteWithChildren
   ProductIdRoute: typeof ProductIdRoute
@@ -563,6 +576,13 @@ declare module '@tanstack/react-router' {
       path: '/api/uploadimage'
       fullPath: '/api/uploadimage'
       preLoaderRoute: typeof ApiUploadimageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reviews': {
+      id: '/api/reviews'
+      path: '/api/reviews'
+      fullPath: '/api/reviews'
+      preLoaderRoute: typeof ApiReviewsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/products': {
@@ -797,6 +817,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiNotificationsRoute: ApiNotificationsRouteWithChildren,
   ApiOrdersRoute: ApiOrdersRouteWithChildren,
   ApiProductsRoute: ApiProductsRouteWithChildren,
+  ApiReviewsRoute: ApiReviewsRoute,
   ApiUploadimageRoute: ApiUploadimageRoute,
   ApiUserRoute: ApiUserRouteWithChildren,
   ProductIdRoute: ProductIdRoute,
