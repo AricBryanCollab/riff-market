@@ -179,7 +179,7 @@ const AdminActions = () => {
 			: 0;
 
 	const { pendingProducts, isLoadingPendingProducts, isEmptyPendingProducts } =
-		useGetPendingProducts({ enabled: isOpen });
+		useGetPendingProducts({ enabled: isOpen, isAdmin: true });
 
 	const prefetchPendingProducts = useCallback(() => {
 		void loadPendingProductList();

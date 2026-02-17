@@ -3,15 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { popularBrands } from "@/constants/popular-brands";
-import { useProductStore } from "@/store/products";
-import type { GetApprovedProductsFilterQuery } from "@/types/product";
+import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 
-interface BrandFiltersProps {
-	filters: GetApprovedProductsFilterQuery;
-}
-
-const BrandFilters = ({ filters }: BrandFiltersProps) => {
-	const setBrand = useProductStore((state) => state.setBrand);
+const BrandFilters = () => {
+	const { searchParams, setBrand } = useShopSearchFilters();
+	const selectedBrand = searchParams.brand;
 
 	return (
 		<div className="space-y-3">
@@ -22,7 +18,7 @@ const BrandFilters = ({ filters }: BrandFiltersProps) => {
 						Brand
 					</h3>
 				</div>
-				{filters.brand && (
+				{selectedBrand && (
 					<Button
 						variant="ghost"
 						size="sm"
@@ -37,7 +33,7 @@ const BrandFilters = ({ filters }: BrandFiltersProps) => {
 				<Input
 					type="text"
 					placeholder="Search brands..."
-					value={filters.brand ?? ""}
+					value={selectedBrand ?? ""}
 					onChange={(e) => setBrand(e.target.value || undefined)}
 					className="w-full"
 				/>
@@ -46,10 +42,10 @@ const BrandFilters = ({ filters }: BrandFiltersProps) => {
 					{popularBrands.map((brand) => (
 						<Badge
 							key={brand}
-							variant={filters.brand === brand ? "default" : "outline"}
+							variant={selectedBrand === brand ? "default" : "outline"}
 							className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
 							onClick={() =>
-								setBrand(filters.brand === brand ? undefined : brand)
+								setBrand(selectedBrand === brand ? undefined : brand)
 							}
 						>
 							{brand}

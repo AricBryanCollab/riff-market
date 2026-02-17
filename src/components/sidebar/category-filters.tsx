@@ -3,16 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { productCategoryOptions } from "@/constants/select-options";
+import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 
-import { useProductStore } from "@/store/products";
-import type { GetApprovedProductsFilterQuery } from "@/types/product";
-
-interface CategoryFiltersProps {
-	filters: GetApprovedProductsFilterQuery;
-}
-
-const CategoryFilters = ({ filters }: CategoryFiltersProps) => {
-	const setCategory = useProductStore((state) => state.setCategory);
+const CategoryFilters = () => {
+	const { searchParams, setCategory } = useShopSearchFilters();
+	const selectedCategory = searchParams.category;
 	return (
 		<div className="space-y-3">
 			<div className="flex items-center justify-between">
@@ -22,7 +17,7 @@ const CategoryFilters = ({ filters }: CategoryFiltersProps) => {
 						Category
 					</h3>
 				</div>
-				{filters.category && (
+				{selectedCategory && (
 					<Button
 						variant="ghost"
 						size="sm"
@@ -38,7 +33,7 @@ const CategoryFilters = ({ filters }: CategoryFiltersProps) => {
 					<div key={category.value} className="flex items-center space-x-2">
 						<Checkbox
 							id={`category-${category.value}`}
-							checked={filters.category === category.value}
+							checked={selectedCategory === category.value}
 							onCheckedChange={(checked) => {
 								setCategory(checked ? category.value : undefined);
 							}}

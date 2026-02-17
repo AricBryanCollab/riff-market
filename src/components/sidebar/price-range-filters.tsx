@@ -1,25 +1,28 @@
 import { DollarSign, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 
-import { useProductStore } from "@/store/products";
-import type { GetApprovedProductsFilterQuery } from "@/types/product";
+const getPriceValue = (value: string): number | undefined => {
+	if (!value) {
+		return undefined;
+	}
 
-interface PriceRangeFiltersProps {
-	filters: GetApprovedProductsFilterQuery;
-}
+	const parsed = Number(value);
+	return Number.isFinite(parsed) ? parsed : undefined;
+};
 
-const PriceRangeFilters = ({ filters }: PriceRangeFiltersProps) => {
-	const setPriceRange = useProductStore((state) => state.setPriceRange);
+const PriceRangeFilters = () => {
+	const { searchParams, setPriceRange } = useShopSearchFilters();
 
 	const handlePriceMinChange = (value: string) => {
-		const min = value ? Number(value) : undefined;
-		setPriceRange(min, filters.priceMax);
+		const min = getPriceValue(value);
+		setPriceRange(min, searchParams.priceMax);
 	};
 
 	const handlePriceMaxChange = (value: string) => {
-		const max = value ? Number(value) : undefined;
-		setPriceRange(filters.priceMin, max);
+		const max = getPriceValue(value);
+		setPriceRange(searchParams.priceMin, max);
 	};
 
 	return (
@@ -31,7 +34,8 @@ const PriceRangeFilters = ({ filters }: PriceRangeFiltersProps) => {
 						Price Range
 					</h3>
 				</div>
-				{(filters.priceMin !== undefined || filters.priceMax !== undefined) && (
+				{(searchParams.priceMin !== undefined ||
+					searchParams.priceMax !== undefined) && (
 					<Button
 						variant="ghost"
 						size="sm"
@@ -46,7 +50,7 @@ const PriceRangeFilters = ({ filters }: PriceRangeFiltersProps) => {
 				<Input
 					type="number"
 					placeholder="Min"
-					value={filters.priceMin ?? ""}
+					value={searchParams.priceMin ?? ""}
 					onChange={(e) => handlePriceMinChange(e.target.value)}
 					className="flex-1"
 				/>
@@ -54,18 +58,19 @@ const PriceRangeFilters = ({ filters }: PriceRangeFiltersProps) => {
 				<Input
 					type="number"
 					placeholder="Max"
-					value={filters.priceMax ?? ""}
+					value={searchParams.priceMax ?? ""}
 					onChange={(e) => handlePriceMaxChange(e.target.value)}
 					className="flex-1"
 				/>
 			</div>
-			{(filters.priceMin !== undefined || filters.priceMax !== undefined) && (
+			{(searchParams.priceMin !== undefined ||
+				searchParams.priceMax !== undefined) && (
 				<p className="text-xs text-muted-foreground">
-					{filters.priceMin !== undefined && `$${filters.priceMin}`}
-					{filters.priceMin !== undefined &&
-						filters.priceMax !== undefined &&
+					{searchParams.priceMin !== undefined && `$${searchParams.priceMin}`}
+					{searchParams.priceMin !== undefined &&
+						searchParams.priceMax !== undefined &&
 						" - "}
-					{filters.priceMax !== undefined && `$${filters.priceMax}`}
+					{searchParams.priceMax !== undefined && `$${searchParams.priceMax}`}
 				</p>
 			)}
 		</div>

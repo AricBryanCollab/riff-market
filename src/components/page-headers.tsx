@@ -1,10 +1,10 @@
 import { ShopPageProductActions } from "@/components/product-actions";
 import { Body, H3 } from "@/components/ui/typography";
-import { useProductStore } from "@/store/products";
+import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 
 export function ShopPageHeader() {
-	const { filters, setSearch } = useProductStore();
-	const searchTerm = filters.search || "";
+	const { searchParams, setSearch } = useShopSearchFilters();
+	const searchTerm = searchParams.search || "";
 
 	const handleSearchChange = (value: string) => {
 		setSearch(value || undefined);

@@ -8,38 +8,16 @@ import ProductFilterBadges from "@/components/product-filter-badges";
 import SectionContainer from "@/components/section-container";
 import { Button } from "@/components/ui/button";
 import { H3 } from "@/components/ui/typography";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import useGetPendingProducts from "@/hooks/use-get-pending-products";
 import {
 	approvedProductsQueryOpt,
 	productCountByStatusQueryOpt,
 } from "@/hooks/use-get-products";
-import useProductFilters from "@/hooks/use-product-filters";
 import useShopPagination from "@/hooks/use-shop-pagination";
 import { usePendingProductStore } from "@/store/pending-product";
-import type {
-	GetApprovedProductsFilterQuery,
-	ShopSearch,
-} from "@/types/product";
+import { getApprovedFiltersFromSearch } from "@/utils/shop-search";
 import { validateProductSearch } from "@/utils/validate-product-search";
-
-const SHOP_PAGE_SIZE = 8;
-
-const getApprovedFiltersFromSearch = (
-	searchParams: ShopSearch,
-): GetApprovedProductsFilterQuery => {
-	const page = Math.max(0, searchParams.page ?? 0);
-
-	return {
-		limit: SHOP_PAGE_SIZE,
-		offset: page * SHOP_PAGE_SIZE,
-		category: searchParams.category,
-		brand: searchParams.brand,
-		condition: searchParams.condition,
-		search: searchParams.search,
-		priceMin: searchParams.priceMin,
-		priceMax: searchParams.priceMax,
-	};
-};
 
 export const Route = createFileRoute("/shop/")({
 	beforeLoad: async ({ context, search }) => {
@@ -59,10 +37,9 @@ export const Route = createFileRoute("/shop/")({
 });
 
 function RouteComponent() {
-	const searchParams = Route.useSearch();
 	const { showPending } = usePendingProductStore();
-
-	useProductFilters(searchParams);
+	const { data: user } = useAuthUser();
+	const isAdmin = user?.role === "ADMIN";
 
 	const {
 		products,
@@ -82,7 +59,7 @@ function RouteComponent() {
 		isLoadingPendingProducts,
 		isErrorPendingProducts,
 		refetch: refetchPendingProducts,
-	} = useGetPendingProducts();
+	} = useGetPendingProducts({ isAdmin });
 
 	const displayProducts = showPending ? pendingProducts : products;
 	const displayIsLoading = showPending ? isLoadingPendingProducts : isLoading;

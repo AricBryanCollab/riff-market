@@ -1,13 +1,13 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useProductStore } from "@/store/products";
+import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 
 const ClearFilterButton = ({
 	activeFiltersCount,
 }: {
 	activeFiltersCount: number;
 }) => {
-	const resetFilters = useProductStore((state) => state.resetFilters);
+	const { resetFilters } = useShopSearchFilters();
 
 	return (
 		<div className="px-4 py-4 border-t bg-muted/50 space-y-2 shrink-0">

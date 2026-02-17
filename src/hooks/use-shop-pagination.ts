@@ -2,20 +2,19 @@ import {
 	useApprovedProductCount,
 	useApprovedProducts,
 } from "@/hooks/use-get-products";
-import { useProductStore } from "@/store/products";
+import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 import type { ApprovedProductCount } from "@/types/product";
+import { SHOP_PAGE_SIZE } from "@/utils/shop-search";
 
 const useShopPagination = () => {
-	const page = useProductStore((state) => state.page);
-	const pageSize = useProductStore((state) => state.pageSize);
-	const setPage = useProductStore((state) => state.setPage);
-	const setPageSize = useProductStore((state) => state.setPageSize);
+	const { approvedFilters, page, setPage } = useShopSearchFilters();
+	const pageSize = approvedFilters.limit ?? SHOP_PAGE_SIZE;
 
 	const { productCount, isErrorProductCount, loadingProductCount } =
 		useApprovedProductCount();
 
 	const { products, isLoadingProducts, isErrorProducts, refetchProducts } =
-		useApprovedProducts();
+		useApprovedProducts(approvedFilters);
 
 	const totalProducts =
 		(productCount as ApprovedProductCount | undefined)?.approvedProductCount ??
@@ -62,7 +61,6 @@ const useShopPagination = () => {
 		nextPage,
 		previousPage,
 		goToPage,
-		setPageSize,
 	};
 };
 

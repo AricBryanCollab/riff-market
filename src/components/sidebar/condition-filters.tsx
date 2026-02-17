@@ -3,15 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { productConditionOptions } from "@/constants/select-options";
-import { useProductStore } from "@/store/products";
-import type { GetApprovedProductsFilterQuery } from "@/types/product";
+import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 
-interface ConditionFiltersProps {
-	filters: GetApprovedProductsFilterQuery;
-}
-
-const ConditionFilters = ({ filters }: ConditionFiltersProps) => {
-	const setCondition = useProductStore((state) => state.setCondition);
+const ConditionFilters = () => {
+	const { searchParams, setCondition } = useShopSearchFilters();
+	const selectedCondition = searchParams.condition;
 	return (
 		<div className="space-y-3">
 			<div className="flex items-center justify-between">
@@ -21,7 +17,7 @@ const ConditionFilters = ({ filters }: ConditionFiltersProps) => {
 						Condition
 					</h3>
 				</div>
-				{filters.condition && (
+				{selectedCondition && (
 					<Button
 						variant="ghost"
 						size="sm"
@@ -37,7 +33,7 @@ const ConditionFilters = ({ filters }: ConditionFiltersProps) => {
 					<div key={condition.value} className="flex items-center space-x-2">
 						<Checkbox
 							id={`condition-${condition.value}`}
-							checked={filters.condition === condition.value}
+							checked={selectedCondition === condition.value}
 							onCheckedChange={(checked) => {
 								setCondition(checked ? condition.value : undefined);
 							}}

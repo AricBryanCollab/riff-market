@@ -4,7 +4,6 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
-import { useAuthUser } from "@/hooks/use-auth-user";
 import {
 	getOrderByCustomer,
 	getOrderBySeller,
@@ -35,10 +34,9 @@ const useGetOrders = (
 ) => {
 	const queryClient = useQueryClient();
 
-	const { data: user } = useAuthUser();
 	const enabled = options.enabled ?? true;
 	const polling = options.polling ?? true;
-	const isQueryEnabled = enabled && user !== null;
+	const isQueryEnabled = enabled;
 	const queryKey = ["orders", userRole] as const;
 
 	const { data, isLoading } = useQuery({
