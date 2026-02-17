@@ -8,6 +8,7 @@ Goal:
 Mechanism:
 - `docs/concepts.map` lists canonical concept ownership.
 - Canonical docs include exactly one marker: `<!-- concept:def <id> -->`.
+- Exception: feature capsules under `docs/features/*.md` are allowed without concept-map registration, except canonical framework files (`docs/features/index.md`, `docs/features/TEMPLATE.md`).
 - `bun run docs:check` validates:
   - map entries exist and are tracked markdown files.
   - marker exists for each map concept.
