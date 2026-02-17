@@ -10,3 +10,8 @@ if git diff --cached --name-only | grep -Eq '^AGENTS\.md$|^docs/'; then
   echo "Docs files changed. Running bun run docs:check..."
   bun run docs:check
 fi
+
+if git diff --cached --name-only | grep -Eq '^src/|^prisma/|^generated/|^public/|^package\.json$|^prisma\.config\.ts$|^vite\.config\.ts$|^tsconfig\.json$'; then
+  echo "Behavior-level files changed. Running bun run docs:report (non-blocking)..."
+  bun run docs:report || true
+fi
