@@ -1,4 +1,3 @@
-import type { UseMutateFunction } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
 import { Bell, Package, ShoppingBag } from "lucide-react";
@@ -41,7 +40,7 @@ interface NotificationListProps {
 	unreadCount: number;
 	isLoading: boolean;
 	isEmptyNotifications: boolean;
-	markAsRead: UseMutateFunction<NotificationData, Error, string, void>;
+	markAsRead: (id: string) => void;
 }
 
 const NotificationList = ({

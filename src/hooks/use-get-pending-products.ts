@@ -1,41 +1,36 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { getPendingApprovalProducts } from "@/lib/tanstack-query/product-queries";
-import { usePendingProductStore } from "@/store/pending-product";
 import type { BaseProduct } from "@/types/product";
 
-const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
+export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
 	queryKey: ["pendingProducts"],
 	queryFn: getPendingApprovalProducts,
 	retry: false,
+	staleTime: 30000,
 });
 
-const useGetPendingProducts = () => {
+interface UseGetPendingProductsOptions {
+	enabled?: boolean;
+}
+
+const useGetPendingProducts = (options: UseGetPendingProductsOptions = {}) => {
 	const queryClient = useQueryClient();
-	const pendingProducts = usePendingProductStore(
-		(state) => state.pendingProducts,
-	);
-	const pendingProductCount = usePendingProductStore(
-		(state) => state.pendingProductCount,
-	);
-	const setPendingProducts = usePendingProductStore(
-		(state) => state.setPendingProducts,
-	);
 	const { data: user } = useAuthUser();
 	const userRole = user?.role;
+	const enabled = options.enabled ?? true;
 
 	const {
 		data,
 		isLoading: isLoadingPendingProducts,
 		isError: isErrorPendingProducts,
-	} = useQuery({ ...pendingProductsQueryOpt, enabled: userRole === "ADMIN" });
+	} = useQuery({
+		...pendingProductsQueryOpt,
+		enabled: enabled && userRole === "ADMIN",
+	});
 
-	useEffect(() => {
-		if (data) {
-			setPendingProducts(data);
-		}
-	}, [data, setPendingProducts]);
+	const pendingProducts = data ?? [];
+	const pendingProductCount = pendingProducts.length;
 
 	const isEmptyPendingProducts = pendingProducts.length === 0;
 
