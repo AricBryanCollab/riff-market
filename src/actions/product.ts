@@ -19,6 +19,7 @@ import {
 	getProductQuerySchema,
 	getProductsByIdsQuerySchema,
 	type UpdateProductInput,
+	type UpdateProductStatusInput,
 	updateProductSchema,
 	updateProductStatusSchema,
 } from "@/lib/zod/product-validation";
@@ -350,7 +351,7 @@ export async function updateProductService(
 
 export async function updateProductStatusService(
 	productId: string,
-	rawData: { status: boolean },
+	rawData: UpdateProductStatusInput,
 ) {
 	const product = await getProductById(productId);
 	if (!product) {
