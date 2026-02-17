@@ -12,6 +12,7 @@
 		"test:unit": "vitest run --config vitest.config.ts",
 		"test:browser": "vitest run --config vitest.browser.config.ts",
 		"test:browser:headed": "vitest run --config vitest.browser.config.ts --browser.headless=false",
+		"test:docs:report": "node --test scripts/docs-coverage-report.test.cjs",
 		"format": "biome format",
 		"format:fix": "biome format --write",
 		"lint": "biome lint",
@@ -22,7 +23,9 @@
 		"typecheck": "tsc --noEmit",
 		"validate": "bun typecheck && bun lint",
 		"docs:check": "node scripts/docs-contradictions.cjs",
-		"docs:check:strict": "bun run docs:check"
+		"docs:check:strict": "bun run docs:check",
+		"docs:report": "node scripts/docs-coverage-report.cjs",
+		"docs:check:all": "bun run docs:check && bun run docs:report"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.1.0",

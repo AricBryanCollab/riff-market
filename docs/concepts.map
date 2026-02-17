@@ -10,3 +10,5 @@ classnames_cva|docs/cva-classname-pattern.md|Classname composition with CVA and 
 docs_health_checks|docs/runbooks/docs-health-checks.md|Standard docs verification and pass criteria
 docs_gotchas|docs/gotchas/docs.md|Common docs pitfalls and quick fixes
 tanstack_auth_redirection|docs/runbooks/tanstack-start-auth-redirection.md|Auth redirect and route protection pattern for TanStack Start
+feature_capsules_index|docs/features/index.md|Entry point for optional feature capsule documentation
+feature_capsules_template|docs/features/TEMPLATE.md|Canonical template for feature capsule structure

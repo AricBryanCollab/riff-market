@@ -7,11 +7,20 @@ const ROOT = process.cwd();
 const REGISTRY_PATH = path.join(ROOT, 'docs', 'concepts.map');
 const CONCEPT_ID_REGEX = /^[a-z0-9_]+$/;
 const CONCEPT_DEF_REGEX = /<!--\s*concept:def\s+([a-z0-9_]+)\s*-->/g;
+const FEATURE_CAPSULE_PREFIX = 'docs/features/';
+const FEATURE_CAPSULE_CANONICAL_DOCS = new Set([
+  'docs/features/index.md',
+  'docs/features/TEMPLATE.md',
+]);
 const FORBIDDEN_DOC_FILENAME_PATTERNS = [
   /-next-session\.md$/i,
   /-handoff\.md$/i,
   /-temp\.md$/i,
 ];
+
+const isDynamicFeatureCapsuleDoc = file =>
+  file.startsWith(FEATURE_CAPSULE_PREFIX) &&
+  !FEATURE_CAPSULE_CANONICAL_DOCS.has(file);
 
 const readRegistry = () => {
   let raw;
@@ -140,10 +149,12 @@ const main = () => {
   }
 
   const canonicalPaths = new Set(Array.from(concepts.values()).map(meta => meta.canonicalPath));
-  const untrackedDocs = trackedDocs.filter(file => !canonicalPaths.has(file));
+  const untrackedDocs = trackedDocs.filter(
+    file => !canonicalPaths.has(file) && !isDynamicFeatureCapsuleDoc(file)
+  );
   if (untrackedDocs.length > 0) {
     errors.push(
-      `[docs] untracked markdown files found (every docs/*.md must be registered in docs/concepts.map): ${untrackedDocs.join(', ')}`
+      `[docs] untracked markdown files found (every docs/*.md except docs/features/* capsules must be registered in docs/concepts.map): ${untrackedDocs.join(', ')}`
     );
   }
 
