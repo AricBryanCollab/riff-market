@@ -4,6 +4,8 @@
 - Required for docs changes:
   - `bun run hooks:install` (once per machine) so pre-commit checks run.
   - `bun run docs:check` for every docs edit.
+  - `bun run docs:report` for optional feature capsule coverage reporting on behavior-level changes (non-blocking).
+  - if changing coverage report logic, run `bun run test:docs:report`.
   - edited concepts must exist in `docs/concepts.map`.
   - canonical docs must include `<!-- concept:def <id> -->`.
   - temporary/session handoff notes belong in `tmp/agent-notes/`, not `docs/` (avoid `*-next-session.md` under `docs/`).

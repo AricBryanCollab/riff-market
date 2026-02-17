@@ -3,6 +3,7 @@
 
 ## Use first
 - `docs-process` → `docs/agent-documentation-pattern.md`, `docs/README.md`
+- `feature-capsules` → `docs/features/index.md`, `docs/features/features.map`
 - `theming` → `docs/theming.md`
 - `conventions` → `docs/commits.md`
 - `styling` → `docs/cva-classname-pattern.md`

@@ -14,6 +14,7 @@
   - one concept per file
   - include file paths and command behavior where relevant
   - include `<!-- concept:def <id> -->` in canonical files
+  - exception: runtime feature capsules in `docs/features/*.md` do not require `concept:def` markers (framework files like `docs/features/index.md` and `docs/features/TEMPLATE.md` still do)
   - temporary/session handoff notes must live in `tmp/agent-notes/` and never in `docs/` (for example, avoid `*-next-session.md` under `docs/`)
 - Update flow:
   - add/update `docs/concepts.map`
