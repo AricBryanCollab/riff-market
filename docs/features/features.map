@@ -5,5 +5,8 @@
 # Auth and RBAC guards
 auth_session_route_guards|docs/features/auth-session-route-guards.md|auth,session,rbac,routing,api|active|2026-02-17
 
+# Marketplace shop browse flow
+shop_catalog_browsing|docs/features/shop-catalog-browsing.md|shop,catalog,search,filters,pagination,admin|active|2026-02-17
+
 # Example:
 # checkout_flow|docs/features/checkout-flow.md|checkout,payments,cart|active|2026-02-17
