@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { useProductStore } from "@/store/products";
+import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 import { useSidebarStore } from "@/store/sidebar";
 
 const shopSidebarVariants = cva(
@@ -33,14 +33,15 @@ const shopSidebarVariants = cva(
 
 const ShopSidebar = () => {
 	const { isExpanded, toggleSidebar } = useSidebarStore();
-
-	const filters = useProductStore((state) => state.filters);
+	const { searchParams } = useShopSearchFilters();
 
 	const activeFiltersCount =
-		(filters.category ? 1 : 0) +
-		(filters.condition ? 1 : 0) +
-		(filters.brand ? 1 : 0) +
-		(filters.priceMin !== undefined || filters.priceMax !== undefined ? 1 : 0);
+		(searchParams.category ? 1 : 0) +
+		(searchParams.condition ? 1 : 0) +
+		(searchParams.brand ? 1 : 0) +
+		(searchParams.priceMin !== undefined || searchParams.priceMax !== undefined
+			? 1
+			: 0);
 
 	return (
 		<aside
@@ -55,19 +56,19 @@ const ShopSidebar = () => {
 					<SidebarFilterCount activeFiltersCount={activeFiltersCount} />
 					<ScrollArea className="flex-1 h-0 min-h-0">
 						<div className="px-4 py-4 space-y-6">
-							<CategoryFilters filters={filters} />
+							<CategoryFilters />
 
 							<Separator />
 
-							<PriceRangeFilters filters={filters} />
+							<PriceRangeFilters />
 
 							<Separator />
 
-							<ConditionFilters filters={filters} />
+							<ConditionFilters />
 
 							<Separator />
 
-							<BrandFilters filters={filters} />
+							<BrandFilters />
 						</div>
 					</ScrollArea>
 

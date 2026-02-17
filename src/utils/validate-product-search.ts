@@ -1,15 +1,47 @@
 import type { ShopSearch } from "@/types/product";
 
+const getOptionalString = (value: unknown): string | undefined => {
+	if (typeof value !== "string" || value.length === 0) {
+		return undefined;
+	}
+
+	return value;
+};
+
+const getOptionalNumber = (value: unknown): number | undefined => {
+	if (value === undefined || value === null || value === "") {
+		return undefined;
+	}
+
+	const parsed = Number(value);
+
+	if (!Number.isFinite(parsed)) {
+		return undefined;
+	}
+
+	return parsed;
+};
+
+const getOptionalPage = (value: unknown): number | undefined => {
+	const parsed = getOptionalNumber(value);
+
+	if (parsed === undefined) {
+		return undefined;
+	}
+
+	return Math.max(0, Math.floor(parsed));
+};
+
 export function validateProductSearch(
 	search: Record<string, unknown>,
 ): ShopSearch {
 	return {
-		category: search.category as string | undefined,
-		brand: search.brand as string | undefined,
-		condition: search.condition as string | undefined,
-		search: search.search as string | undefined,
-		priceMin: search.priceMin ? Number(search.priceMin) : undefined,
-		priceMax: search.priceMax ? Number(search.priceMax) : undefined,
-		page: search.page ? Number(search.page) : undefined,
+		category: getOptionalString(search.category),
+		brand: getOptionalString(search.brand),
+		condition: getOptionalString(search.condition),
+		search: getOptionalString(search.search),
+		priceMin: getOptionalNumber(search.priceMin),
+		priceMax: getOptionalNumber(search.priceMax),
+		page: getOptionalPage(search.page),
 	};
 }

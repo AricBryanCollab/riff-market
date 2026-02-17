@@ -5,7 +5,6 @@ import {
 	getProductCountByStatus,
 	getProductDetailsById,
 } from "@/lib/tanstack-query/product-queries";
-import { useProductStore } from "@/store/products";
 import type {
 	ApprovedProductCount,
 	BaseProduct,
@@ -42,8 +41,9 @@ export const productCountByStatusQueryOpt = (status: ProductCountStatusQuery) =>
 		queryFn: () => getProductCountByStatus(status),
 	});
 
-export const useApprovedProducts = () => {
-	const filters = useProductStore((state) => state.filters);
+export const useApprovedProducts = (
+	filters: GetApprovedProductsFilterQuery,
+) => {
 	const {
 		data: products,
 		isPending: isLoadingProducts,

@@ -3,8 +3,8 @@ import type { ProductCategory } from "generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";
 import { productCategoryOptions } from "@/constants/select-options";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 import { usePendingProductStore } from "@/store/pending-product";
-import { useProductStore } from "@/store/products";
 
 const productFilterBadgeVariants = cva(
 	"px-5 py-4 rounded-full border-2 font-medium transition-all",
@@ -26,9 +26,9 @@ const ProductFilterBadges = () => {
 	const { data: user } = useAuthUser();
 	const isAdmin = user?.role === "ADMIN";
 
-	const { filters, setCategory, resetFilters } = useProductStore();
+	const { searchParams, setCategory, resetFilters } = useShopSearchFilters();
 	const { showPending, setShowPending } = usePendingProductStore();
-	const selectedCategory = filters.category;
+	const selectedCategory = searchParams.category;
 
 	const handleShowAll = () => {
 		resetFilters();
