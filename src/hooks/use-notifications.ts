@@ -4,7 +4,6 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
-import { useAuthUser } from "@/hooks/use-auth-user";
 import {
 	getNotificationCount,
 	getUserNotifications,
@@ -34,11 +33,10 @@ interface UseNotificationsOptions {
 const useNotifications = (options: UseNotificationsOptions = {}) => {
 	const queryClient = useQueryClient();
 
-	const { data: user } = useAuthUser();
 	const { showToast } = useToastStore();
 	const enabled = options.enabled ?? true;
 	const polling = options.polling ?? true;
-	const isQueryEnabled = enabled && user !== null;
+	const isQueryEnabled = enabled;
 	const notificationsKey = ["notifications"] as const;
 	const notificationCountKey = ["notifications", "count"] as const;
 

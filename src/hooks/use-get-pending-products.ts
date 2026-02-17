@@ -1,5 +1,4 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthUser } from "@/hooks/use-auth-user";
 import { getPendingApprovalProducts } from "@/lib/tanstack-query/product-queries";
 import type { BaseProduct } from "@/types/product";
 
@@ -12,13 +11,13 @@ export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
 
 interface UseGetPendingProductsOptions {
 	enabled?: boolean;
+	isAdmin?: boolean;
 }
 
 const useGetPendingProducts = (options: UseGetPendingProductsOptions = {}) => {
 	const queryClient = useQueryClient();
-	const { data: user } = useAuthUser();
-	const userRole = user?.role;
 	const enabled = options.enabled ?? true;
+	const isAdmin = options.isAdmin ?? false;
 
 	const {
 		data,
@@ -26,7 +25,7 @@ const useGetPendingProducts = (options: UseGetPendingProductsOptions = {}) => {
 		isError: isErrorPendingProducts,
 	} = useQuery({
 		...pendingProductsQueryOpt,
-		enabled: enabled && userRole === "ADMIN",
+		enabled: enabled && isAdmin,
 	});
 
 	const pendingProducts = data ?? [];

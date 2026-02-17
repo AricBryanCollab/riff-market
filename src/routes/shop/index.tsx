@@ -8,6 +8,7 @@ import ProductFilterBadges from "@/components/product-filter-badges";
 import SectionContainer from "@/components/section-container";
 import { Button } from "@/components/ui/button";
 import { H3 } from "@/components/ui/typography";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import useGetPendingProducts from "@/hooks/use-get-pending-products";
 import {
 	approvedProductsQueryOpt,
@@ -61,6 +62,8 @@ export const Route = createFileRoute("/shop/")({
 function RouteComponent() {
 	const searchParams = Route.useSearch();
 	const { showPending } = usePendingProductStore();
+	const { data: user } = useAuthUser();
+	const isAdmin = user?.role === "ADMIN";
 
 	useProductFilters(searchParams);
 
@@ -82,7 +85,7 @@ function RouteComponent() {
 		isLoadingPendingProducts,
 		isErrorPendingProducts,
 		refetch: refetchPendingProducts,
-	} = useGetPendingProducts();
+	} = useGetPendingProducts({ isAdmin });
 
 	const displayProducts = showPending ? pendingProducts : products;
 	const displayIsLoading = showPending ? isLoadingPendingProducts : isLoading;
