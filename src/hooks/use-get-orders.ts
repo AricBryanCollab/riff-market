@@ -1,50 +1,73 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import {
+	queryOptions,
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import {
 	getOrderByCustomer,
 	getOrderBySeller,
 	updateOrderStatus,
 } from "@/lib/tanstack-query/orders-queries";
-import { useOrderStore } from "@/store/order";
 import type { OrderStatus, UserRole } from "@/types/enum";
+import type { OrderResponse } from "@/types/order";
 
-const useGetOrders = (userRole: UserRole) => {
-	const queryClient = useQueryClient();
-	const orders = useOrderStore((state) => state.orders);
-	const orderCount = useOrderStore((state) => state.orderCount);
-	const setOrders = useOrderStore((state) => state.setOrders);
-	const updateOrderInStore = useOrderStore((state) => state.updateOrder);
-
-	const { data: user } = useAuthUser();
-
+export const ordersByRoleQueryOpt = (userRole: UserRole) => {
 	const queryFn =
 		userRole === "CUSTOMER" ? getOrderByCustomer : getOrderBySeller;
 
-	const { data, isLoading } = useQuery({
+	return queryOptions({
 		queryKey: ["orders", userRole],
 		queryFn,
 		staleTime: 30000,
-		refetchInterval: 60000,
-		enabled: user !== null,
+	});
+};
+
+interface UseGetOrdersOptions {
+	enabled?: boolean;
+	polling?: boolean;
+}
+
+const useGetOrders = (
+	userRole: UserRole,
+	options: UseGetOrdersOptions = {},
+) => {
+	const queryClient = useQueryClient();
+
+	const { data: user } = useAuthUser();
+	const enabled = options.enabled ?? true;
+	const polling = options.polling ?? true;
+	const isQueryEnabled = enabled && user !== null;
+	const queryKey = ["orders", userRole] as const;
+
+	const { data, isLoading } = useQuery({
+		...ordersByRoleQueryOpt(userRole),
+		refetchInterval: isQueryEnabled && polling ? 60000 : false,
+		enabled: isQueryEnabled,
 	});
 
-	useEffect(() => {
-		if (data && !("error" in data)) {
-			setOrders(data);
-		}
-	}, [data, setOrders]);
+	const orders = Array.isArray(data) ? data : [];
+	const orderCount = orders.length;
 
 	const updateStatusMutation = useMutation({
 		mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
 			updateOrderStatus(id, status),
 		onMutate: async ({ id, status }) => {
-			const previousOrders = orders;
-			const orderToUpdate = orders.find((o) => o.id === id);
+			await queryClient.cancelQueries({ queryKey });
 
-			if (orderToUpdate) {
-				updateOrderInStore(id, { ...orderToUpdate, status });
-			}
+			const previousOrders =
+				queryClient.getQueryData<OrderResponse[]>(queryKey);
+
+			queryClient.setQueryData<OrderResponse[]>(queryKey, (currentOrders) => {
+				if (!currentOrders) {
+					return currentOrders;
+				}
+
+				return currentOrders.map((order) =>
+					order.id === id ? { ...order, status } : order,
+				);
+			});
 
 			return { previousOrders };
 		},
@@ -52,13 +75,13 @@ const useGetOrders = (userRole: UserRole) => {
 			console.error("Failed to update order status:", err);
 
 			if (context?.previousOrders) {
-				setOrders(context.previousOrders);
+				queryClient.setQueryData(queryKey, context.previousOrders);
 			}
 
-			queryClient.invalidateQueries({ queryKey: ["orders", userRole] });
+			queryClient.invalidateQueries({ queryKey });
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["orders", userRole] });
+			queryClient.invalidateQueries({ queryKey });
 		},
 	});
 

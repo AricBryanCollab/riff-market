@@ -10,6 +10,10 @@ interface AppDropdownProps {
 	children: React.ReactNode;
 	align?: "start" | "center" | "end";
 	className?: string;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
+	onTriggerPointerEnter?: () => void;
+	onTriggerFocus?: () => void;
 }
 
 export function AppDropdown({
@@ -17,10 +21,20 @@ export function AppDropdown({
 	children,
 	align = "end",
 	className,
+	open,
+	onOpenChange,
+	onTriggerPointerEnter,
+	onTriggerFocus,
 }: AppDropdownProps) {
 	return (
-		<Popover>
-			<PopoverTrigger className="cursor-pointer">{trigger}</PopoverTrigger>
+		<Popover open={open} onOpenChange={onOpenChange}>
+			<PopoverTrigger
+				className="cursor-pointer"
+				onPointerEnter={onTriggerPointerEnter}
+				onFocus={onTriggerFocus}
+			>
+				{trigger}
+			</PopoverTrigger>
 			<PopoverContent align={align} className={cn(className)}>
 				{children}
 			</PopoverContent>

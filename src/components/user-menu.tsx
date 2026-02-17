@@ -1,23 +1,45 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 import { Bell, Package, PackageSearch, ShoppingCart } from "lucide-react";
+import { lazy, Suspense, useCallback, useMemo, useState } from "react";
 import { AppDropdown } from "@/components/app-dropdown";
 import Avatar from "@/components/avatar";
-import CartList from "@/components/cart-list";
 import NavbarIconButtons from "@/components/navbar-icon-buttons";
-import NotificationList from "@/components/notification-list";
-import OrderList from "@/components/order-list";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import useCartDetails from "@/hooks/use-cart-details";
-import useGetOrders from "@/hooks/use-get-orders";
-import useGetPendingProducts from "@/hooks/use-get-pending-products";
-import useNotifications from "@/hooks/use-notifications";
+import {
+	cartDetailsQueryOpt,
+	default as useCartDetails,
+} from "@/hooks/use-cart-details";
+import {
+	ordersByRoleQueryOpt,
+	default as useGetOrders,
+} from "@/hooks/use-get-orders";
+import {
+	pendingProductsQueryOpt,
+	default as useGetPendingProducts,
+} from "@/hooks/use-get-pending-products";
+import { productCountByStatusQueryOpt } from "@/hooks/use-get-products";
+import useNotifications, {
+	notificationCountQueryOpt,
+	notificationsQueryOpt,
+} from "@/hooks/use-notifications";
 import { useSignOut } from "@/hooks/use-sign-out";
+import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";
 import type { UserRole } from "@/types/enum";
-import PendingProductList from "./pending-product-list";
+
+const loadCartList = () => import("@/components/cart-list");
+const loadOrderList = () => import("@/components/order-list");
+const loadNotificationList = () => import("@/components/notification-list");
+const loadPendingProductList = () => import("./pending-product-list");
+
+const CartList = lazy(loadCartList);
+const OrderList = lazy(loadOrderList);
+const NotificationList = lazy(loadNotificationList);
+const PendingProductList = lazy(loadPendingProductList);
 
 const UserMenuFallback = () => (
 	<div className="flex items-center gap-4" aria-hidden>
@@ -28,14 +50,46 @@ const UserMenuFallback = () => (
 	</div>
 );
 
+const DropdownContentFallback = () => (
+	<div className="w-80 p-4 space-y-3">
+		<Skeleton className="h-4 w-32" />
+		<Skeleton className="h-16 w-full" />
+		<Skeleton className="h-16 w-full" />
+		<Skeleton className="h-9 w-full" />
+	</div>
+);
+
 const CustomerActions = () => {
+	const queryClient = useQueryClient();
+	const [isOpen, setIsOpen] = useState(false);
+	const cartItems = useCartStore((state) => state.items);
+
+	const cartCount = useMemo(
+		() => cartItems.reduce((total, item) => total + item.quantity, 0),
+		[cartItems],
+	);
+
+	const uniqueProductIds = useMemo(
+		() => Array.from(new Set(cartItems.map((item) => item.productId))).sort(),
+		[cartItems],
+	);
+
 	const {
 		isCartEmpty,
 		isLoading: isCartLoading,
 		totalPrice,
-		cartCount,
 		cartWithDetails,
-	} = useCartDetails();
+	} = useCartDetails({ enabled: isOpen });
+
+	const prefetchCart = useCallback(() => {
+		void loadCartList();
+
+		if (uniqueProductIds.length === 0) {
+			return;
+		}
+
+		void queryClient.prefetchQuery(cartDetailsQueryOpt(uniqueProductIds));
+	}, [queryClient, uniqueProductIds]);
 
 	return (
 		<AppDropdown
@@ -46,26 +100,42 @@ const CustomerActions = () => {
 					ariaLabel="Shopping cart"
 				/>
 			}
+			open={isOpen}
+			onOpenChange={setIsOpen}
+			onTriggerPointerEnter={prefetchCart}
+			onTriggerFocus={prefetchCart}
 			align="end"
 		>
-			<CartList
-				isLoading={isCartLoading}
-				isCartEmpty={isCartEmpty}
-				totalPrice={totalPrice}
-				cartCount={cartCount}
-				cartWithDetails={cartWithDetails}
-			/>
+			{isOpen ? (
+				<Suspense fallback={<DropdownContentFallback />}>
+					<CartList
+						isLoading={isCartLoading}
+						isCartEmpty={isCartEmpty}
+						totalPrice={totalPrice}
+						cartCount={cartCount}
+						cartWithDetails={cartWithDetails}
+					/>
+				</Suspense>
+			) : null}
 		</AppDropdown>
 	);
 };
 
 const SellerActions = () => {
+	const queryClient = useQueryClient();
+	const [isOpen, setIsOpen] = useState(false);
+
 	const {
 		orders,
 		orderCount,
 		isLoading: isLoadingOrders,
 		isEmptyOrders,
-	} = useGetOrders("SELLER");
+	} = useGetOrders("SELLER", { enabled: true, polling: true });
+
+	const prefetchOrders = useCallback(() => {
+		void loadOrderList();
+		void queryClient.prefetchQuery(ordersByRoleQueryOpt("SELLER"));
+	}, [queryClient]);
 
 	return (
 		<AppDropdown
@@ -76,43 +146,72 @@ const SellerActions = () => {
 					ariaLabel="Orders"
 				/>
 			}
+			open={isOpen}
+			onOpenChange={setIsOpen}
+			onTriggerPointerEnter={prefetchOrders}
+			onTriggerFocus={prefetchOrders}
 			align="end"
 		>
-			<OrderList
-				orders={orders}
-				isLoading={isLoadingOrders}
-				isEmptyOrders={isEmptyOrders}
-				userRole="SELLER"
-			/>
+			{isOpen ? (
+				<Suspense fallback={<DropdownContentFallback />}>
+					<OrderList
+						orders={orders}
+						isLoading={isLoadingOrders}
+						isEmptyOrders={isEmptyOrders}
+						userRole="SELLER"
+					/>
+				</Suspense>
+			) : null}
 		</AppDropdown>
 	);
 };
 
 const AdminActions = () => {
-	const {
-		pendingProducts,
-		pendingProductCount,
-		isLoadingPendingProducts,
-		isEmptyPendingProducts,
-	} = useGetPendingProducts();
+	const queryClient = useQueryClient();
+	const [isOpen, setIsOpen] = useState(false);
+
+	const { data: pendingProductCountData } = useQuery(
+		productCountByStatusQueryOpt("pending"),
+	);
+	const pendingCount =
+		pendingProductCountData && "pendingProductCount" in pendingProductCountData
+			? pendingProductCountData.pendingProductCount
+			: 0;
+
+	const { pendingProducts, isLoadingPendingProducts, isEmptyPendingProducts } =
+		useGetPendingProducts({ enabled: isOpen });
+
+	const prefetchPendingProducts = useCallback(() => {
+		void loadPendingProductList();
+		void queryClient.prefetchQuery(productCountByStatusQueryOpt("pending"));
+		void queryClient.prefetchQuery(pendingProductsQueryOpt);
+	}, [queryClient]);
 
 	return (
 		<AppDropdown
 			trigger={
 				<NavbarIconButtons
 					icon={PackageSearch}
-					count={pendingProductCount}
+					count={pendingCount}
 					ariaLabel="Pending Products"
 				/>
 			}
+			open={isOpen}
+			onOpenChange={setIsOpen}
+			onTriggerPointerEnter={prefetchPendingProducts}
+			onTriggerFocus={prefetchPendingProducts}
 			align="end"
 		>
-			<PendingProductList
-				pendingProducts={pendingProducts}
-				pendingProductCount={pendingProductCount}
-				isLoading={isLoadingPendingProducts}
-				isEmptyPendingProducts={isEmptyPendingProducts}
-			/>
+			{isOpen ? (
+				<Suspense fallback={<DropdownContentFallback />}>
+					<PendingProductList
+						pendingProducts={pendingProducts}
+						pendingProductCount={pendingCount}
+						isLoading={isLoadingPendingProducts}
+						isEmptyPendingProducts={isEmptyPendingProducts}
+					/>
+				</Suspense>
+			) : null}
 		</AppDropdown>
 	);
 };
@@ -131,13 +230,27 @@ const RoleActions = ({ role }: { role: UserRole }) => {
 };
 
 const NotificationsMenu = () => {
+	const queryClient = useQueryClient();
+	const [isOpen, setIsOpen] = useState(false);
+
+	const { data: notificationCountData } = useQuery({
+		...notificationCountQueryOpt,
+		refetchInterval: 60000,
+	});
+	const unreadCount = notificationCountData?.count ?? 0;
+
 	const {
 		notifications,
 		isLoading: isLoadingNotification,
-		unreadCount,
 		isEmptyNotifications,
 		markAsReadMutate,
-	} = useNotifications();
+	} = useNotifications({ enabled: isOpen, polling: isOpen });
+
+	const prefetchNotifications = useCallback(() => {
+		void loadNotificationList();
+		void queryClient.prefetchQuery(notificationCountQueryOpt);
+		void queryClient.prefetchQuery(notificationsQueryOpt);
+	}, [queryClient]);
 
 	return (
 		<AppDropdown
@@ -148,15 +261,23 @@ const NotificationsMenu = () => {
 					ariaLabel="Notifications"
 				/>
 			}
+			open={isOpen}
+			onOpenChange={setIsOpen}
+			onTriggerPointerEnter={prefetchNotifications}
+			onTriggerFocus={prefetchNotifications}
 			align="end"
 		>
-			<NotificationList
-				notifications={notifications}
-				unreadCount={unreadCount}
-				isLoading={isLoadingNotification}
-				isEmptyNotifications={isEmptyNotifications}
-				markAsRead={markAsReadMutate}
-			/>
+			{isOpen ? (
+				<Suspense fallback={<DropdownContentFallback />}>
+					<NotificationList
+						notifications={notifications}
+						unreadCount={unreadCount}
+						isLoading={isLoadingNotification}
+						isEmptyNotifications={isEmptyNotifications}
+						markAsRead={markAsReadMutate}
+					/>
+				</Suspense>
+			) : null}
 		</AppDropdown>
 	);
 };

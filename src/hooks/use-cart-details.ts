@@ -10,14 +10,20 @@ export const cartDetailsQueryOpt = (productIds: string[]) =>
 		staleTime: 1000 * 60 * 2,
 	});
 
-const useCartDetails = () => {
+interface UseCartDetailsOptions {
+	enabled?: boolean;
+}
+
+const useCartDetails = (options: UseCartDetailsOptions = {}) => {
 	const cartItems = useCartStore((state) => state.items);
 	const updateQuantity = useCartStore((state) => state.updateQuantity);
 	const removeItem = useCartStore((state) => state.removeItem);
+	const enabled = options.enabled ?? true;
 
 	const uniqueProductIds = Array.from(
 		new Set(cartItems.map((item) => item.productId)),
 	).sort();
+	const shouldFetchCartDetails = enabled && uniqueProductIds.length > 0;
 
 	const {
 		data: products = [],
@@ -25,7 +31,7 @@ const useCartDetails = () => {
 		isError: isErrorProducts,
 	} = useQuery({
 		...cartDetailsQueryOpt(uniqueProductIds),
-		enabled: uniqueProductIds.length > 0,
+		enabled: shouldFetchCartDetails,
 	});
 
 	const productsById = new Map(
@@ -38,13 +44,16 @@ const useCartDetails = () => {
 		return {
 			...cartItem,
 			product,
-			isLoading: isLoadingProducts && !product,
-			isError: !isLoadingProducts && (isErrorProducts || !product),
+			isLoading: shouldFetchCartDetails && isLoadingProducts && !product,
+			isError:
+				shouldFetchCartDetails &&
+				!isLoadingProducts &&
+				(isErrorProducts || !product),
 		};
 	});
 
 	const isCartEmpty = cartItems.length === 0;
-	const isLoading = isLoadingProducts;
+	const isLoading = shouldFetchCartDetails && isLoadingProducts;
 
 	const totalPrice = cartWithDetails.reduce((sum, item) => {
 		if (item.product) {
