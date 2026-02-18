@@ -5,6 +5,7 @@ import type {
 	UserSettings,
 } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
+import { logger } from "@/lib/logger";
 import type { UpdateUserInput } from "@/lib/zod/user-validation";
 import type { UserProfile } from "@/types/user";
 
@@ -54,7 +55,7 @@ export const getUserById = async (id: string): Promise<UserProfile | null> => {
 		const users = await getUserProfiles(prisma, { id });
 		return users[0] ?? null;
 	} catch (err) {
-		console.error("Error at getUserById", err);
+		logger.error("Error at getUserById", err);
 		throw err;
 	}
 };
@@ -63,7 +64,7 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
 	try {
 		return await getUserProfiles(prisma);
 	} catch (err) {
-		console.error("Error at getAllUsers", err);
+		logger.error("Error at getAllUsers", err);
 		throw err;
 	}
 };
@@ -111,7 +112,7 @@ export const updateUser = async (
 
 		return result;
 	} catch (err) {
-		console.error("Error at updateUser", err);
+		logger.error("Error at updateUser", err);
 		throw err;
 	}
 };
@@ -131,7 +132,7 @@ export const updateProfilePicture = async (
 			},
 		});
 	} catch (err) {
-		console.error("Error at updateProfilePicture", err);
+		logger.error("Error at updateProfilePicture", err);
 		throw err;
 	}
 };
@@ -142,7 +143,7 @@ export const deleteUser = async (id: string): Promise<void> => {
 			where: { id },
 		});
 	} catch (err) {
-		console.error("Error at deleteUser", err);
+		logger.error("Error at deleteUser", err);
 		throw err;
 	}
 };

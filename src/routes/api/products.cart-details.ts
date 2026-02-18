@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getProductsByIdsService } from "@/actions/product";
-import { authMiddleware } from "@/middleware";
+import { logger } from "@/lib/logger";
+import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/products/cart-details")({
 	server: {
-		middleware: [authMiddleware],
+		middleware: [requestLoggerMiddleware, authMiddleware],
 		handlers: {
 			GET: async ({ request, context }) => {
 				try {
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/api/products/cart-details")({
 
 					return new Response(JSON.stringify(products), { status: 200 });
 				} catch (error) {
+					logger.error("Failed to get cart product details", error);
 					return new Response(
 						JSON.stringify({
 							message: "Failed to get cart product details",

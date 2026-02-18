@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getOrderByIdService, updateOrderStatusService } from "@/actions/order";
-import { authMiddleware } from "@/middleware";
+import { logger } from "@/lib/logger";
+import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/orders/$id")({
 	server: {
-		middleware: [authMiddleware],
+		middleware: [requestLoggerMiddleware, authMiddleware],
 		handlers: {
 			GET: async ({ params, context }) => {
 				try {
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/api/orders/$id")({
 
 					return new Response(JSON.stringify(order), { status: 200 });
 				} catch (error) {
+					logger.error("Failed to get order by ID", error);
 					return new Response(
 						JSON.stringify({
 							error: "Failed to get order by ID",
@@ -60,6 +62,7 @@ export const Route = createFileRoute("/api/orders/$id")({
 						{ status: 200 },
 					);
 				} catch (error) {
+					logger.error("Failed to update the order status", error);
 					return new Response(
 						JSON.stringify({
 							error: "Failed to update the order status",

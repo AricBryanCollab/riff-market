@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import type { ImageFile } from "@/hooks/use-upload-image";
+import { clientLogger } from "@/lib/client-logger";
 import { createProduct } from "@/lib/tanstack-query/product-queries";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
@@ -39,7 +40,7 @@ const useCreateProduct = () => {
 			navigate({ to: "/shop" });
 		},
 		onError: (error) => {
-			console.error(error);
+			clientLogger.error("Failed to add a product", error);
 			const message =
 				error instanceof Error ? error.message : "Failed to add a product";
 

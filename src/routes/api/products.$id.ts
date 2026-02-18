@@ -4,12 +4,14 @@ import {
 	getProductByIdService,
 	updateProductService,
 } from "@/actions/product";
+import { logger } from "@/lib/logger";
 import type { UpdateProductInput } from "@/lib/zod/product-validation";
-import { authMiddleware } from "@/middleware";
+import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
 import { extractPartialFormData } from "@/utils/extract-form-data";
 
 export const Route = createFileRoute("/api/products/$id")({
 	server: {
+		middleware: [requestLoggerMiddleware],
 		handlers: ({ createHandlers }) =>
 			createHandlers({
 				GET: {
@@ -22,7 +24,7 @@ export const Route = createFileRoute("/api/products/$id")({
 
 							return new Response(JSON.stringify(product), { status: 200 });
 						} catch (error) {
-							console.error(error);
+							logger.error("Failed to get product by ID", error);
 							return new Response(
 								JSON.stringify({
 									message: "Failed to get the product by ID",
@@ -90,7 +92,7 @@ export const Route = createFileRoute("/api/products/$id")({
 								},
 							);
 						} catch (error) {
-							console.error(error);
+							logger.error("Failed to update a product", error);
 							return new Response(
 								JSON.stringify({
 									message: "Failed to get to update a product",
@@ -105,9 +107,14 @@ export const Route = createFileRoute("/api/products/$id")({
 					handler: async ({ params, context }) => {
 						try {
 							const sellerId = context.id;
+							const role = context.role;
 							const { id } = params;
 
-							const deletedProduct = await deleteProductService(id, sellerId);
+							const deletedProduct = await deleteProductService(
+								id,
+								sellerId,
+								role,
+							);
 
 							if ("error" in deletedProduct) {
 								return new Response(
@@ -126,7 +133,7 @@ export const Route = createFileRoute("/api/products/$id")({
 								{ status: 200 },
 							);
 						} catch (error) {
-							console.error(error);
+							logger.error("Failed to delete the product", error);
 							return new Response(
 								JSON.stringify({
 									message: "Failed to delete the product",

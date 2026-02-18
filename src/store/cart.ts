@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { clientLogger } from "@/lib/client-logger";
 import type { UserRole } from "@/types/enum";
 
 interface CartItem {
@@ -32,7 +33,7 @@ export const useCartStore = create<CartState>()(
 			addItem: (productId, userId, userRole, quantity = 1) =>
 				set((state) => {
 					if (userRole !== "CUSTOMER") {
-						console.warn("Only CUSTOMER users can add items to cart");
+						clientLogger.warn("Only CUSTOMER users can add items to cart");
 						return state;
 					}
 

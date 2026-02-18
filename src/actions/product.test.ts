@@ -5,31 +5,41 @@ import type {
 	UpdateProductInput,
 } from "@/lib/zod/product-validation";
 
-const productRepoMock = {
-	createProduct: vi.fn(),
-	deleteProductById: vi.fn(),
-	getApprovedProducts: vi.fn(),
-	getPendingApprovalProducts: vi.fn(),
-	getProductById: vi.fn(),
-	getProductCountByCategory: vi.fn(),
-	getProductCountByStatus: vi.fn(),
-	getProductsByIds: vi.fn(),
-	getProductsBySellerId: vi.fn(),
-	getRecentProducts: vi.fn(),
-	updateProductById: vi.fn(),
-	updateProductStatus: vi.fn(),
-} as const;
+const { productRepoMock, cloudinaryMock, compressImageMock } = vi.hoisted(
+	() => {
+		const productRepoMock = {
+			createProduct: vi.fn(),
+			deleteProductById: vi.fn(),
+			getApprovedProducts: vi.fn(),
+			getPendingApprovalProducts: vi.fn(),
+			getProductById: vi.fn(),
+			getProductCountByCategory: vi.fn(),
+			getProductCountByStatus: vi.fn(),
+			getProductsByIds: vi.fn(),
+			getProductsBySellerId: vi.fn(),
+			getRecentProducts: vi.fn(),
+			updateProductById: vi.fn(),
+			updateProductStatus: vi.fn(),
+		} as const;
 
-const cloudinaryMock = {
-	deleteImage: vi.fn(),
-	getPublicId: vi.fn((url: string) => {
-		const filename = url.split("/").pop();
-		return filename ? filename.split(".")[0] : "";
-	}),
-	unsignedUploadImage: vi.fn(),
-} as const;
+		const cloudinaryMock = {
+			deleteImage: vi.fn(),
+			getPublicId: vi.fn((url: string) => {
+				const filename = url.split("/").pop();
+				return filename ? filename.split(".")[0] : "";
+			}),
+			unsignedUploadImage: vi.fn(),
+		} as const;
 
-const compressImageMock = vi.fn();
+		const compressImageMock = vi.fn();
+
+		return {
+			productRepoMock,
+			cloudinaryMock,
+			compressImageMock,
+		};
+	},
+);
 
 vi.mock("@/env", () => ({
 	env: {
@@ -742,6 +752,39 @@ describe("product actions", () => {
 		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
 	});
 
+	it("blocks update when actor role is not allowed", async () => {
+		const existingProduct = makeExistingProduct();
+		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
+
+		const result = await updateProductService(
+			"prod-1",
+			"customer-1",
+			"CUSTOMER",
+			{
+				name: "Blocked update",
+			} as UpdateProductInput,
+		);
+
+		expect(result).toMatchObject({
+			error: "Unauthorized, user cannot modify this product",
+		});
+		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
+	});
+
+	it("blocks update when seller does not own the product", async () => {
+		const existingProduct = makeExistingProduct();
+		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
+
+		const result = await updateProductService("prod-1", "seller-2", "SELLER", {
+			name: "Blocked update",
+		} as UpdateProductInput);
+
+		expect(result).toMatchObject({
+			error: "Unauthorized, user cannot modify this product",
+		});
+		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
+	});
+
 	it("keeps existing images when update payload does not include images", async () => {
 		const existingProduct = makeExistingProduct();
 		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
@@ -942,12 +985,42 @@ describe("product actions", () => {
 	});
 
 	it("returns unauthorized for delete when user is missing", async () => {
-		const result = await deleteProductService("prod-1", "");
+		const result = await deleteProductService("prod-1", "", "SELLER");
 
 		expect(result).toMatchObject({
 			error: "User is unauthorized",
 		});
 		expect(productRepoMock.getProductById).not.toHaveBeenCalled();
+		expect(productRepoMock.deleteProductById).not.toHaveBeenCalled();
+	});
+
+	it("blocks delete when actor role is not allowed", async () => {
+		const existingProduct = makeExistingProduct();
+		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
+
+		const result = await deleteProductService(
+			"prod-1",
+			"customer-1",
+			"CUSTOMER",
+		);
+
+		expect(result).toMatchObject({
+			error: "Unauthorized, user cannot modify this product",
+		});
+		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
+		expect(productRepoMock.deleteProductById).not.toHaveBeenCalled();
+	});
+
+	it("blocks delete when seller does not own the product", async () => {
+		const existingProduct = makeExistingProduct();
+		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
+
+		const result = await deleteProductService("prod-1", "seller-2", "SELLER");
+
+		expect(result).toMatchObject({
+			error: "Unauthorized, user cannot modify this product",
+		});
+		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
 		expect(productRepoMock.deleteProductById).not.toHaveBeenCalled();
 	});
 
@@ -957,7 +1030,11 @@ describe("product actions", () => {
 		const updateStatusResult = await updateProductStatusService("prod-1", {
 			isApproved: true,
 		});
-		const deleteResult = await deleteProductService("prod-1", "seller-1");
+		const deleteResult = await deleteProductService(
+			"prod-1",
+			"seller-1",
+			"SELLER",
+		);
 
 		expect(updateStatusResult).toMatchObject({
 			error: "Product not found",
@@ -976,7 +1053,7 @@ describe("product actions", () => {
 			id: "prod-1",
 		});
 
-		const result = await deleteProductService("prod-1", "seller-1");
+		const result = await deleteProductService("prod-1", "seller-1", "SELLER");
 
 		expect(result).toEqual({ message: "Product deleted successfully" });
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old");
@@ -996,7 +1073,7 @@ describe("product actions", () => {
 			id: "prod-1",
 		});
 
-		const result = await deleteProductService("prod-1", "seller-1");
+		const result = await deleteProductService("prod-1", "seller-1", "SELLER");
 
 		expect(result).toEqual({ message: "Product deleted successfully" });
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old1");
@@ -1021,7 +1098,7 @@ describe("product actions", () => {
 			return Promise.resolve(undefined);
 		});
 
-		const result = await deleteProductService("prod-1", "seller-1");
+		const result = await deleteProductService("prod-1", "seller-1", "SELLER");
 
 		expect(result).toMatchObject({
 			error: "Failed to delete product images",
@@ -1041,7 +1118,7 @@ describe("product actions", () => {
 		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
 		(productRepoMock.deleteProductById as Mock).mockResolvedValue(null);
 
-		const result = await deleteProductService("prod-1", "seller-1");
+		const result = await deleteProductService("prod-1", "seller-1", "SELLER");
 
 		expect(result).toMatchObject({
 			error: "Failed to delete the product",
@@ -1059,7 +1136,7 @@ describe("product actions", () => {
 			id: "prod-1",
 		});
 
-		const result = await deleteProductService("prod-1", "seller-1");
+		const result = await deleteProductService("prod-1", "seller-1", "SELLER");
 
 		expect(result).toEqual({ message: "Product deleted successfully" });
 		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
@@ -1102,9 +1179,9 @@ describe("product actions", () => {
 			new Error("delete failed"),
 		);
 
-		await expect(deleteProductService("prod-1", "seller-1")).rejects.toThrow(
-			"delete failed",
-		);
+		await expect(
+			deleteProductService("prod-1", "seller-1", "SELLER"),
+		).rejects.toThrow("delete failed");
 		expect(productRepoMock.deleteProductById).toHaveBeenCalledWith("prod-1");
 	});
 });

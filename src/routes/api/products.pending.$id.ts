@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { updateProductStatusService } from "@/actions/product";
-import { roleMiddleware } from "@/middleware";
+import { logger } from "@/lib/logger";
+import { requestLoggerMiddleware, roleMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/products/pending/$id")({
 	server: {
+		middleware: [requestLoggerMiddleware],
 		handlers: ({ createHandlers }) =>
 			createHandlers({
 				PUT: {
@@ -42,7 +44,7 @@ export const Route = createFileRoute("/api/products/pending/$id")({
 								{ status: 200 },
 							);
 						} catch (error) {
-							console.error(error);
+							logger.error("Failed to update the product status", error);
 							return new Response(
 								JSON.stringify({
 									message: "Failed to update the product status",

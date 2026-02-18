@@ -2,6 +2,7 @@ import type { OrderStatus } from "generated/prisma/enums";
 
 import { prisma } from "@/data/connect-db";
 import { createNotification } from "@/data/notification-repo";
+import { logger } from "@/lib/logger";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
 import {
 	orderBaseQuery,
@@ -107,7 +108,7 @@ export const createOrder = async (
 
 		return transformOrderResponse(result);
 	} catch (err) {
-		console.error("Error at createOrder:", err);
+		logger.error("Error at createOrder", err);
 		throw err;
 	}
 };
@@ -124,7 +125,7 @@ export const getCustomerOrders = async (userId: string) => {
 
 		return orders;
 	} catch (err) {
-		console.error("Error at getCustomerOrders:", err);
+		logger.error("Error at getCustomerOrders", err);
 		throw err;
 	}
 };
@@ -160,7 +161,7 @@ export const getSellerOrders = async (userId: string) => {
 			};
 		});
 	} catch (err) {
-		console.error("Error at getSellerOrders:", err);
+		logger.error("Error at getSellerOrders", err);
 		throw err;
 	}
 };
@@ -173,7 +174,7 @@ export const getOrderById = async (orderId: string) => {
 			include: orderBaseQuery,
 		});
 	} catch (err) {
-		console.error("Error at getOrderById:", err);
+		logger.error("Error at getOrderById", err);
 		throw err;
 	}
 };
@@ -191,7 +192,7 @@ export const updateOrderStatus = async (
 			},
 		});
 	} catch (err) {
-		console.error("Error at updateOrderStatus", err);
+		logger.error("Error at updateOrderStatus", err);
 		throw err;
 	}
 };

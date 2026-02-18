@@ -13,6 +13,7 @@ import {
 	updateProductStatus,
 } from "@/data/product-repo";
 import { env } from "@/env";
+import { logger } from "@/lib/logger";
 import {
 	type CreateProductInput,
 	createProductSchema,
@@ -41,6 +42,8 @@ type ProductImageUploadResult = {
 	secure_url?: string;
 	error?: string;
 };
+const UNAUTHORIZED_PRODUCT_MODIFICATION =
+	"Unauthorized, user cannot modify this product";
 
 async function mapWithConcurrency<T, R>(
 	items: T[],
@@ -282,6 +285,14 @@ export async function updateProductService(
 		return { error: "Product not found" };
 	}
 
+	const isAuthorizedModifier =
+		role === "ADMIN" ||
+		(role === "SELLER" && existingProduct.sellerId === sellerId);
+
+	if (!isAuthorizedModifier) {
+		return { error: UNAUTHORIZED_PRODUCT_MODIFICATION };
+	}
+
 	const parsed = updateProductSchema.safeParse(rawData);
 
 	if (!parsed.success) {
@@ -384,6 +395,7 @@ export async function updateProductStatusService(
 export async function deleteProductService(
 	productId: string,
 	sellerId: string,
+	role: string,
 ) {
 	if (!sellerId) {
 		return { error: "User is unauthorized" };
@@ -392,6 +404,13 @@ export async function deleteProductService(
 	const product = await getProductById(productId);
 	if (!product) {
 		return { error: "Product not found" };
+	}
+
+	const isAuthorizedModifier =
+		role === "ADMIN" || (role === "SELLER" && product.sellerId === sellerId);
+
+	if (!isAuthorizedModifier) {
+		return { error: UNAUTHORIZED_PRODUCT_MODIFICATION };
 	}
 
 	if (Array.isArray(product.images) && product.images.length > 0) {
@@ -403,7 +422,7 @@ export async function deleteProductService(
 				}),
 			);
 		} catch (error) {
-			console.error("Failed to delete images from Cloudinary:", error);
+			logger.error("Failed to delete images from Cloudinary", error);
 			return {
 				error: "Failed to delete product images",
 				details: error instanceof Error ? error.message : "Unknown error",

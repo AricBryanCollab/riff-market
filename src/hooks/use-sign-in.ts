@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useState } from "react";
+import { clientLogger } from "@/lib/client-logger";
 import { signIn } from "@/lib/tanstack-query/auth-queries";
 import { getCurrentUser } from "@/lib/tanstack-query/user-queries";
 import { useDialogStore } from "@/store/dialog";
@@ -32,7 +33,7 @@ const useSignIn = () => {
 			setCloseDialog();
 		},
 		onError: (error) => {
-			console.error(error);
+			clientLogger.error("Sign in failed", error);
 			const message =
 				error instanceof Error ? error.message : "Invalid sign in";
 			showToast(message, "error");

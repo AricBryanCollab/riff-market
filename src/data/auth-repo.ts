@@ -1,5 +1,6 @@
 import type { User, UserSettings } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
+import { logger } from "@/lib/logger";
 
 type ReqUser = Omit<User, "id" | "createdAt" | "updatedAt">;
 type CreateUserResult = {
@@ -15,7 +16,7 @@ export const findUserByEmail = async (email: string) => {
 		});
 		return user;
 	} catch (err) {
-		console.error("Error at findUserByEmail", err);
+		logger.error("Error at findUserByEmail", err);
 		throw err;
 	}
 };
@@ -30,7 +31,7 @@ export const findUserById = async (id: string) => {
 
 		return user;
 	} catch (err) {
-		console.error("Error at findUserById", err);
+		logger.error("Error at findUserById", err);
 		throw err;
 	}
 };
@@ -61,7 +62,7 @@ export const createUser = async (user: ReqUser): Promise<CreateUserResult> => {
 			return { user: newUser, settings };
 		});
 	} catch (err) {
-		console.error("Error at createUser", err);
+		logger.error("Error at createUser", err);
 		throw err;
 	}
 };

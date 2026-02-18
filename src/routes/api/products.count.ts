@@ -3,9 +3,12 @@ import {
 	getProductCountByCategoryService,
 	getProductCountByStatusService,
 } from "@/actions/product";
+import { logger } from "@/lib/logger";
+import { requestLoggerMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/products/count")({
 	server: {
+		middleware: [requestLoggerMiddleware],
 		handlers: ({ createHandlers }) =>
 			createHandlers({
 				GET: {
@@ -30,7 +33,7 @@ export const Route = createFileRoute("/api/products/count")({
 								status: 200,
 							});
 						} catch (error) {
-							console.error(error);
+							logger.error("Failed to get product counts by category", error);
 							return new Response(
 								JSON.stringify({
 									message: "Failed to get the product counts by category",

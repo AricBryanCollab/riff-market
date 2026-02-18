@@ -2,7 +2,62 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import UserMenu from "./user-menu";
 
+vi.mock("@tanstack/react-query", async () => {
+	const actual = await vi.importActual<typeof import("@tanstack/react-query")>(
+		"@tanstack/react-query",
+	);
+
+	return {
+		...actual,
+		useQuery: () => ({ data: { count: 0 } }),
+		useQueryClient: () => ({
+			prefetchQuery: vi.fn(),
+		}),
+	};
+});
+
+vi.mock("@tanstack/react-router", () => ({
+	ClientOnly: ({ children }: { children: unknown }) =>
+		typeof children === "function" ? children() : children,
+}));
+
+vi.mock("@/components/app-dropdown", () => ({
+	AppDropdown: ({ trigger }: { trigger: unknown }) => <>{trigger}</>,
+}));
+
+vi.mock("@/components/avatar", () => ({
+	default: () => <div data-testid="avatar" />,
+}));
+
+vi.mock("@/components/navbar-icon-buttons", () => ({
+	default: ({ ariaLabel, count }: { ariaLabel: string; count: number }) => (
+		<button type="button" aria-label={ariaLabel}>
+			{count}
+		</button>
+	),
+}));
+
+vi.mock("@/store/cart", () => ({
+	useCartStore: (
+		selector: (state: {
+			items: Array<{ quantity: number; productId: string }>;
+		}) => unknown,
+	) => selector({ items: [{ quantity: 3, productId: "prod-1" }] }),
+}));
+
+vi.mock("@/hooks/use-notifications", () => ({
+	default: () => ({
+		notifications: [],
+		isLoading: false,
+		isEmptyNotifications: true,
+		markAsReadMutate: vi.fn(),
+	}),
+	notificationCountQueryOpt: {},
+	notificationsQueryOpt: {},
+}));
+
 vi.mock("@/hooks/use-cart-details", () => ({
+	cartDetailsQueryOpt: vi.fn(),
 	default: () => ({
 		cartCount: 3,
 	}),

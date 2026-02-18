@@ -1,5 +1,6 @@
 import type { Prisma } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
+import { logger } from "@/lib/logger";
 import type { NotificationData } from "@/types/notification";
 
 export const createNotification = async (
@@ -14,7 +15,7 @@ export const createNotification = async (
 			},
 		});
 	} catch (err) {
-		console.error("Error at createNotification", err);
+		logger.error("Error at createNotification", err);
 		throw err;
 	}
 };
@@ -28,7 +29,7 @@ export const getNotificationsByUser = async (userId: string) => {
 			},
 		});
 	} catch (err) {
-		console.error("Error at getNotificationsByUser", err);
+		logger.error("Error at getNotificationsByUser", err);
 		throw err;
 	}
 };
@@ -42,7 +43,7 @@ export const getNotificationsCount = async (userId: string) => {
 			},
 		});
 	} catch (err) {
-		console.error("Error at getNotificationsCount", err);
+		logger.error("Error at getNotificationsCount", err);
 		throw err;
 	}
 };
@@ -56,7 +57,7 @@ export const readNotificationById = async (notificationId: string) => {
 			},
 		});
 	} catch (err) {
-		console.error("Error at readNotificationsById", err);
+		logger.error("Error at readNotificationsById", err);
 		throw err;
 	}
 };
@@ -81,7 +82,7 @@ export const readAllNotifications = async (userId: string) => {
 
 		return result;
 	} catch (err) {
-		console.error("Error at readAllNotifications", err);
+		logger.error("Error at readAllNotifications", err);
 		throw err;
 	}
 };

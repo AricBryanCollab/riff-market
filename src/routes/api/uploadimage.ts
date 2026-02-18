@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { logger } from "@/lib/logger";
+import { requestLoggerMiddleware } from "@/middleware";
 import { unsignedUploadImage } from "@/utils/cloudinary";
 import { compressImage } from "@/utils/compress-image";
 
 export const Route = createFileRoute("/api/uploadimage")({
 	server: {
+		middleware: [requestLoggerMiddleware],
 		handlers: {
 			POST: async ({ request }) => {
 				try {
@@ -32,7 +35,7 @@ export const Route = createFileRoute("/api/uploadimage")({
 						{ status: 200 },
 					);
 				} catch (err) {
-					console.error("Upload error:", err);
+					logger.error("Upload error", err);
 					return new Response(
 						JSON.stringify({
 							error: err instanceof Error ? err.message : "Failed to upload",

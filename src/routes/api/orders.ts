@@ -3,12 +3,13 @@ import {
 	createOrderService,
 	getOrdersByCustomerService,
 } from "@/actions/order";
-import { authMiddleware } from "@/middleware";
+import { logger } from "@/lib/logger";
+import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
 import type { OrderRequest } from "@/types/order";
 
 export const Route = createFileRoute("/api/orders")({
 	server: {
-		middleware: [authMiddleware],
+		middleware: [requestLoggerMiddleware, authMiddleware],
 		handlers: {
 			POST: async ({ request, context }) => {
 				try {
@@ -57,6 +58,7 @@ export const Route = createFileRoute("/api/orders")({
 
 					return new Response(JSON.stringify(orders), { status: 200 });
 				} catch (error) {
+					logger.error("Failed to query orders by user data", error);
 					return new Response(
 						JSON.stringify({
 							error: "Failed to query order by user data",

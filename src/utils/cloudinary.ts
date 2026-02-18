@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import { env } from "@/env";
+import { logger } from "@/lib/logger";
 
 cloudinary.config({
 	cloud_name: env.CLOUDINARY_CLOUD_NAME,
@@ -35,7 +36,7 @@ export async function unsignedUploadImage(params: ImageParams) {
 
 	if (!res.ok) {
 		const error = await res.json();
-		console.error("Cloudinary error:", error);
+		logger.error("Cloudinary upload failed", error);
 		return new Response(
 			JSON.stringify({
 				error: error.error?.message || "Cloudinary Upload failed",
