@@ -1,5 +1,6 @@
 import type { Review } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
+import { logger } from "@/lib/logger";
 
 type CreateReviewRepoInput = Omit<Review, "id" | "createdAt" | "updatedAt">;
 
@@ -11,7 +12,7 @@ export const createReview = async (review: CreateReviewRepoInput) => {
 			},
 		});
 	} catch (err) {
-		console.error("Error at createReview", err);
+		logger.error("Error at createReview", err);
 		throw err;
 	}
 };

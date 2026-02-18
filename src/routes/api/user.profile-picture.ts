@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { updateUserProfilePicService } from "@/actions/user";
-import { authMiddleware } from "@/middleware";
+import { logger } from "@/lib/logger";
+import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/user/profile-picture")({
 	server: {
-		middleware: [authMiddleware],
+		middleware: [requestLoggerMiddleware, authMiddleware],
 		handlers: {
 			PUT: async ({ request, context }) => {
 				try {
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/api/user/profile-picture")({
 						{ status: 200 },
 					);
 				} catch (error) {
+					logger.error("Failed to update profile picture", error);
 					return new Response(
 						JSON.stringify({
 							error: "Failed to update profile picture",

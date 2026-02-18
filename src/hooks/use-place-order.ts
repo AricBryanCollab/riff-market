@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { clientLogger } from "@/lib/client-logger";
 import { createOrder } from "@/lib/tanstack-query/orders-queries";
 import { useCartStore } from "@/store/cart";
 import { useToastStore } from "@/store/toast";
@@ -33,7 +34,7 @@ const usePlaceOrder = () => {
 			clearCart();
 		},
 		onError: (error) => {
-			console.error(error);
+			clientLogger.error("Failed to place order", error);
 			const message =
 				error instanceof Error ? error.message : "Failed to place order";
 

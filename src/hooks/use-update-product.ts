@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useProductById } from "@/hooks/use-get-products";
 import type { ImageFile } from "@/hooks/use-upload-image";
+import { clientLogger } from "@/lib/client-logger";
 import { updateProduct } from "@/lib/tanstack-query/product-queries";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
@@ -101,7 +102,7 @@ const useUpdateProduct = (id: string) => {
 			navigate({ to: "/shop" });
 		},
 		onError: (error) => {
-			console.error(error);
+			clientLogger.error("Failed to update the product", error);
 			const message =
 				error instanceof Error ? error.message : "Failed to update the product";
 

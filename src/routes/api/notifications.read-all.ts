@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { readAllNotificationsService } from "@/actions/notifications";
-import { authMiddleware } from "@/middleware";
+import { logger } from "@/lib/logger";
+import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/notifications/read-all")({
 	server: {
-		middleware: [authMiddleware],
+		middleware: [requestLoggerMiddleware, authMiddleware],
 		handlers: {
 			PUT: async ({ context }) => {
 				try {
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/api/notifications/read-all")({
 
 					return new Response(JSON.stringify(notification), { status: 200 });
 				} catch (error) {
-					console.error(error);
+					logger.error("Failed to read all notifications", error);
 					return new Response(
 						JSON.stringify({
 							error: "Failed to read all notifications",

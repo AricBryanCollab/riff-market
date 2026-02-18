@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { signUpService } from "@/actions/auth";
+import { requestLoggerMiddleware } from "@/middleware";
 import type { SignUpRequest } from "@/types/auth";
 
 export const Route = createFileRoute("/api/auth/signup")({
 	server: {
+		middleware: [requestLoggerMiddleware],
 		handlers: {
 			POST: async ({ request }) => {
 				try {

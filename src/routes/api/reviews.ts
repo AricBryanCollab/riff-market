@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createReviewService } from "@/actions/review";
-import { authMiddleware } from "@/middleware";
+import { logger } from "@/lib/logger";
+import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/reviews")({
 	server: {
+		middleware: [requestLoggerMiddleware],
 		handlers: ({ createHandlers }) =>
 			createHandlers({
 				POST: {
@@ -38,7 +40,7 @@ export const Route = createFileRoute("/api/reviews")({
 								{ status: 201 },
 							);
 						} catch (error) {
-							console.error(error);
+							logger.error("Failed to create review", error);
 							return new Response(
 								JSON.stringify({
 									message:
@@ -54,5 +56,3 @@ export const Route = createFileRoute("/api/reviews")({
 			}),
 	},
 });
-
-

@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { access, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { logger } from "@/lib/logger";
 
 export async function fileToTempPath(file: File): Promise<string> {
 	// Generate unique filename
@@ -26,7 +27,7 @@ export async function deleteTempFile(filePath: string): Promise<void> {
 	try {
 		await unlink(filePath);
 	} catch (error) {
-		console.error(`Failed to delete temp file: ${filePath}`, error);
+		logger.error(`Failed to delete temp file: ${filePath}`, error);
 	}
 }
 

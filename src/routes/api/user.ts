@@ -4,11 +4,12 @@ import {
 	getUserByIdService,
 	updateUserService,
 } from "@/actions/user";
-import { authMiddleware } from "@/middleware";
+import { logger } from "@/lib/logger";
+import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/user")({
 	server: {
-		middleware: [authMiddleware],
+		middleware: [requestLoggerMiddleware, authMiddleware],
 		handlers: ({ createHandlers }) =>
 			createHandlers({
 				GET: async ({ context }) => {
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/api/user")({
 
 						return new Response(JSON.stringify(user));
 					} catch (error) {
-						console.error(error);
+						logger.error("Failed to query user data", error);
 						return new Response(
 							JSON.stringify({ message: "Failed to query user data" }),
 							{ status: 500 },
@@ -46,7 +47,7 @@ export const Route = createFileRoute("/api/user")({
 
 							return new Response(JSON.stringify(updatedUser), { status: 200 });
 						} catch (error) {
-							console.error(error);
+							logger.error("Failed to update user data", error);
 							return new Response(
 								JSON.stringify({
 									message: "Failed to update the user data",
@@ -81,7 +82,7 @@ export const Route = createFileRoute("/api/user")({
 
 							return new Response(JSON.stringify(result), { status: 200 });
 						} catch (error) {
-							console.error(error);
+							logger.error("Failed to delete user", error);
 							return new Response(
 								JSON.stringify({
 									message: "Failed to delete user",

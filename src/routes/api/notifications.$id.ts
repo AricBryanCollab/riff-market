@@ -1,16 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { readNotificationsByIdService } from "@/actions/notifications";
-import { authMiddleware } from "@/middleware";
+import { logger } from "@/lib/logger";
+import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/notifications/$id")({
 	server: {
-		middleware: [authMiddleware],
+		middleware: [requestLoggerMiddleware, authMiddleware],
 		handlers: {
 			PUT: async ({ params }) => {
 				try {
 					const { id } = params;
 
-					const notification = readNotificationsByIdService(id);
+					const notification = await readNotificationsByIdService(id);
 
 					if ("error" in notification) {
 						return new Response(
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/api/notifications/$id")({
 
 					return new Response(JSON.stringify(notification), { status: 200 });
 				} catch (error) {
-					console.error(error);
+					logger.error("Failed to read the notification", error);
 					return new Response(
 						JSON.stringify({
 							error: "Failed to read the notification",

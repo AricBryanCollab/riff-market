@@ -3,12 +3,14 @@ import {
 	createProductService,
 	getApprovedProductsService,
 } from "@/actions/product";
-import { authMiddleware } from "@/middleware";
+import { logger } from "@/lib/logger";
+import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
 import { extractFormData } from "@/utils/extract-form-data";
 
 export const Route = createFileRoute("/api/products")({
 	server: {
+		middleware: [requestLoggerMiddleware],
 		handlers: ({ createHandlers }) =>
 			createHandlers({
 				GET: {
@@ -38,7 +40,7 @@ export const Route = createFileRoute("/api/products")({
 
 							return new Response(JSON.stringify(products), { status: 200 });
 						} catch (error) {
-							console.error(error);
+							logger.error("Failed to get all approved products", error);
 							return new Response(
 								JSON.stringify({
 									message: "Failed to get all approved products",
@@ -123,7 +125,7 @@ export const Route = createFileRoute("/api/products")({
 								{ status: 201 },
 							);
 						} catch (error) {
-							console.error(error);
+							logger.error("Failed to create product", error);
 							return new Response(
 								JSON.stringify({
 									message:

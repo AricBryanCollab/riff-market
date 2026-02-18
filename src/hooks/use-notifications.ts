@@ -4,6 +4,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
+import { clientLogger } from "@/lib/client-logger";
 import {
 	getNotificationCount,
 	getUserNotifications,
@@ -97,7 +98,7 @@ const useNotifications = (options: UseNotificationsOptions = {}) => {
 			queryClient.invalidateQueries({ queryKey: notificationCountKey });
 		},
 		onError: (err, _, context) => {
-			console.error("Failed to mark notification as read:", err);
+			clientLogger.error("Failed to mark notification as read", err);
 
 			if (context?.previousNotifications) {
 				queryClient.setQueryData(

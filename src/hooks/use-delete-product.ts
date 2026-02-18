@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { clientLogger } from "@/lib/client-logger";
 import { deleteProduct } from "@/lib/tanstack-query/product-queries";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
@@ -24,7 +25,7 @@ const useDeleteProduct = () => {
 			navigate({ to: "/shop" });
 		},
 		onError: (error) => {
-			console.error(error);
+			clientLogger.error("Failed to delete a product", error);
 			const message =
 				error instanceof Error ? error.message : "Failed to delete a product";
 			showToast(message, "error");

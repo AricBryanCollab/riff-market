@@ -4,6 +4,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
+import { clientLogger } from "@/lib/client-logger";
 import {
 	getOrderByCustomer,
 	getOrderBySeller,
@@ -70,7 +71,7 @@ const useGetOrders = (
 			return { previousOrders };
 		},
 		onError: (err, _, context) => {
-			console.error("Failed to update order status:", err);
+			clientLogger.error("Failed to update order status", err);
 
 			if (context?.previousOrders) {
 				queryClient.setQueryData(queryKey, context.previousOrders);

@@ -7,6 +7,7 @@ import {
 	updateUser,
 } from "@/data/user-repo";
 import { env } from "@/env";
+import { logger } from "@/lib/logger";
 import {
 	type UpdateUserInput,
 	udpateUserSchema,
@@ -123,7 +124,7 @@ export async function updateUserProfilePicService(
 			await deleteImage(publicId);
 		}
 	} catch (error) {
-		console.error("Error at updateProfilePictureService", error);
+		logger.error("Failed to update profile picture", error);
 		return {
 			error: "Failed to update the user profile picture",
 			details: error instanceof Error ? error.message : "Internal server error",

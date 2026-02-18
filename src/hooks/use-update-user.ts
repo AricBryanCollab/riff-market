@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { clientLogger } from "@/lib/client-logger";
 import { updateUserProfile } from "@/lib/tanstack-query/user-queries";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
@@ -72,7 +73,7 @@ const useUpdateUser = () => {
 			setCloseDialog();
 		},
 		onError: (error) => {
-			console.error(error);
+			clientLogger.error("Failed to update user profile", error);
 			const message =
 				error instanceof Error
 					? error.message

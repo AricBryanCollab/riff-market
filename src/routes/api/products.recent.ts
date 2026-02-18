@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getRecentProductsService } from "@/actions/product";
+import { logger } from "@/lib/logger";
+import { requestLoggerMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/products/recent")({
 	server: {
+		middleware: [requestLoggerMiddleware],
 		handlers: ({ createHandlers }) =>
 			createHandlers({
 				GET: {
@@ -13,7 +16,7 @@ export const Route = createFileRoute("/api/products/recent")({
 								status: 200,
 							});
 						} catch (error) {
-							console.error(error);
+							logger.error("Failed to get recent products", error);
 							return new Response(
 								JSON.stringify({
 									message: "Failed to get the recent products",

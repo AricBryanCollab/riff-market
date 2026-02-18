@@ -1,5 +1,6 @@
 import type { Prisma, Product } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
+import { logger } from "@/lib/logger";
 import type { GetProductQuery } from "@/lib/zod/product-validation";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
 import { createNotification } from "./notification-repo";
@@ -23,7 +24,7 @@ export const createProduct = async (product: CreateProductRepoInput) => {
 			},
 		});
 	} catch (err) {
-		console.error("Error at createProduct", err);
+		logger.error("Error at createProduct", err);
 		throw err;
 	}
 };
@@ -61,7 +62,7 @@ export const getProductById = async (id: string) => {
 			select: baseProductQuery,
 		});
 	} catch (err) {
-		console.error("Error at getProductById", err);
+		logger.error("Error at getProductById", err);
 		throw err;
 	}
 };
@@ -80,7 +81,7 @@ export const getProductsByIds = async (productIds: string[]) => {
 
 		return products;
 	} catch (err) {
-		console.error("Error at findProductsByIds:", err);
+		logger.error("Error at findProductsByIds:", err);
 		throw err;
 	}
 };
@@ -94,7 +95,7 @@ export const getProductsBySellerId = async (sellerId: string) => {
 			select: baseProductQuery,
 		});
 	} catch (err) {
-		console.error("Error at getProductsBySellerId", err);
+		logger.error("Error at getProductsBySellerId", err);
 		throw err;
 	}
 };
@@ -157,7 +158,7 @@ export const getApprovedProducts = async ({
 			skip: offset,
 		});
 	} catch (err) {
-		console.error("Error at getPendingApprovalProducts", err);
+		logger.error("Error at getApprovedProducts", err);
 		throw err;
 	}
 };
@@ -171,7 +172,7 @@ export const getPendingApprovalProducts = async () => {
 			select: baseProductQuery,
 		});
 	} catch (err) {
-		console.error("Error at getPendingApprovalProducts", err);
+		logger.error("Error at getPendingApprovalProducts", err);
 		throw err;
 	}
 };
@@ -194,7 +195,7 @@ export const getProductCountByCategory = async () => {
 			count: product._count.category,
 		}));
 	} catch (err) {
-		console.error("Error at getProductCountByCategory", err);
+		logger.error("Error at getProductCountByCategory", err);
 		throw err;
 	}
 };
@@ -210,7 +211,7 @@ export const getProductCountByStatus = async (isApproved: boolean) => {
 
 		return productCount;
 	} catch (err) {
-		console.error("Error at getProductCountByStatus", err);
+		logger.error("Error at getProductCountByStatus", err);
 		throw err;
 	}
 };
@@ -225,7 +226,7 @@ export const getRecentProducts = async (limit: number = 8) => {
 			take: limit,
 		});
 	} catch (err) {
-		console.error("Error at getRecentProducts", err);
+		logger.error("Error at getRecentProducts", err);
 		throw err;
 	}
 };
@@ -241,7 +242,7 @@ export const updateProductById = async (
 			data: product,
 		});
 	} catch (err) {
-		console.error("Error at updateProductById", err);
+		logger.error("Error at updateProductById", err);
 		throw err;
 	}
 };
@@ -292,7 +293,7 @@ export const updateProductStatus = async (
 
 		return approvedProduct;
 	} catch (err) {
-		console.error("Error at updateProductStatus", err);
+		logger.error("Error at updateProductStatus", err);
 		throw err;
 	}
 };
@@ -304,7 +305,7 @@ export const deleteProductById = async (id: string) => {
 			where: { id },
 		});
 	} catch (err) {
-		console.error("Error at deleteProductById", err);
+		logger.error("Error at deleteProductById", err);
 		throw err;
 	}
 };

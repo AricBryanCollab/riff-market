@@ -6,6 +6,7 @@ import {
 	updateOrderStatus,
 } from "@/data/order.repo";
 import { getProductsByIds } from "@/data/product-repo";
+import { logger } from "@/lib/logger";
 import {
 	orderStatusSchema,
 	type PlaceOrderInput,
@@ -18,7 +19,6 @@ import type {
 	OrderErrorResponse,
 	OrderResponse,
 } from "@/types/order";
-
 import { generateTrackingNumber } from "@/utils/generate-tracking-number";
 
 export async function createOrderService(
@@ -104,7 +104,7 @@ export async function createOrderService(
 
 		return order;
 	} catch (error) {
-		console.error("Error in createOrderService:", error);
+		logger.error("Failed to create order", error);
 		return {
 			error: "Failed to create order. Please try again.",
 		};
@@ -233,7 +233,7 @@ export async function updateOrderStatusService(
 		const updatedOrder = await updateOrderStatus(orderId, orderStatus);
 		return updatedOrder;
 	} catch (err) {
-		console.error("Error updating order status", err);
+		logger.error("Failed to update order status", err);
 		return { error: "Failed to update order status" };
 	}
 }
