@@ -8,6 +8,7 @@
 - `conventions` → `docs/commits.md`
 - `styling` → `docs/cva-classname-pattern.md`
 - `architecture` → `docs/agent-documentation-pattern.md`, `docs/adr/001-docs-framework.md`
+- `logging` → `docs/logger-patterns.md`
 - `runbooks` → `docs/runbooks/docs-health-checks.md`, `docs/docs-contradiction-checks.md`
 
 ## Rules
