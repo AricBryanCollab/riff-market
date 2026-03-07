@@ -7,3 +7,9 @@ export const createReviewSchema = z.object({
 });
 
 export type CreateReviewInput = z.infer<typeof createReviewSchema>;
+
+export const getReviewsQuerySchema = z.object({
+  productId: z.string().uuid("Invalid product ID").optional(),
+});
+
+export type GetReviewsQuery = z.infer<typeof getReviewsQuerySchema>;
