@@ -30,7 +30,7 @@ function AboutComponent() {
 					fetchPriority="high"
 					className="absolute inset-0 w-full h-full object-cover"
 				/>
-				<div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+				<div className="absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent" />
 				<SectionContainer>
 					<div className="relative z-10 pb-16 md:pb-24">
 						<p className="text-sm uppercase tracking-[0.3em] text-muted-foreground mb-4">
@@ -409,7 +409,7 @@ function FAQItem({ question, answer }: FAQItemProps) {
 				</span>
 				<ChevronDown
 					className={cn(
-						"w-5 h-5 flex-shrink-0 transition-transform duration-300",
+						"w-5 h-5 shrink-0 transition-transform duration-300",
 						isOpen && "rotate-180",
 					)}
 					aria-hidden="true"
