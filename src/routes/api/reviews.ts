@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createReviewService } from "@/actions/review";
+import { createReviewService, getReviewsByProductService } from "@/actions/review";
 import { logger } from "@/lib/logger";
 import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
 
@@ -8,6 +8,32 @@ export const Route = createFileRoute("/api/reviews")({
 		middleware: [requestLoggerMiddleware],
 		handlers: ({ createHandlers }) =>
 			createHandlers({
+				GET: {
+					handler: async ({ request }) => {
+						try {
+							const url = new URL(request.url);
+							const queryParams = Object.fromEntries(url.searchParams);
+
+							const reviews = await getReviewsByProductService(queryParams);
+
+							if ("error" in reviews) {
+								return new Response(JSON.stringify(reviews), {
+									status: 400,
+								});
+							}
+
+							return new Response(JSON.stringify(reviews), { status: 200 });
+						} catch (error) {
+							logger.error("Failed to get reviews", error);
+							return new Response(
+								JSON.stringify({
+									message: "Failed to get reviews",
+								}),
+								{ status: 500 },
+							);
+						}
+					},
+				},
 				POST: {
 					middleware: [authMiddleware],
 					handler: async ({ request, context }) => {
