@@ -10,6 +10,7 @@ import {
 	getOrderBySeller,
 	updateOrderStatus,
 } from "@/lib/tanstack-query/orders-queries";
+import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import type { OrderStatus, UserRole } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 
@@ -18,7 +19,7 @@ export const ordersByRoleQueryOpt = (userRole: UserRole) => {
 		userRole === "CUSTOMER" ? getOrderByCustomer : getOrderBySeller;
 
 	return queryOptions({
-		queryKey: ["orders", userRole],
+		queryKey: queryKeys.orders.byRole(userRole),
 		queryFn,
 		staleTime: 30000,
 	});
@@ -38,7 +39,7 @@ const useGetOrders = (
 	const enabled = options.enabled ?? true;
 	const polling = options.polling ?? true;
 	const isQueryEnabled = enabled;
-	const queryKey = ["orders", userRole] as const;
+	const queryKey = queryKeys.orders.byRole(userRole);
 
 	const { data, isLoading } = useQuery({
 		...ordersByRoleQueryOpt(userRole),

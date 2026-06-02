@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRecentProducts } from "@/lib/tanstack-query/product-queries";
+import { queryKeys } from "@/lib/tanstack-query/query-keys";
 
 const useGetRecentProducts = () => {
 	const {
@@ -8,7 +9,7 @@ const useGetRecentProducts = () => {
 		isError: isErrorRecentProducts,
 		refetch: refetchRecentProducts,
 	} = useQuery({
-		queryKey: ["products", "recent"],
+		queryKey: queryKeys.products.recent,
 		queryFn: getRecentProducts,
 		staleTime: 1000 * 60 * 5,
 	});

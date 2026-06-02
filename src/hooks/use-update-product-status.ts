@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { updateProductStatus } from "@/lib/tanstack-query/product-queries";
+import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { useToastStore } from "@/store/toast";
 import type { UpdateProductStatusRequest } from "@/types/product";
 
@@ -13,7 +14,7 @@ const useUpdateProductStatus = () => {
 		mutationFn: ({ id, isApproved }: UpdateProductStatusRequest) =>
 			updateProductStatus(id, isApproved),
 		onSuccess: async (_, variables) => {
-			queryClient.invalidateQueries({ queryKey: ["product"] });
+			queryClient.invalidateQueries({ queryKey: queryKeys.products.root });
 			const message = variables.isApproved
 				? "Product approved successfully"
 				: "Product declined successfully";

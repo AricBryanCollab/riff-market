@@ -11,17 +11,18 @@ import {
 	readAllNotifications,
 	readNotificationById,
 } from "@/lib/tanstack-query/notifications-queries";
+import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { useToastStore } from "@/store/toast";
 import type { NotificationData } from "@/types/notification";
 
 export const notificationsQueryOpt = queryOptions({
-	queryKey: ["notifications"],
+	queryKey: queryKeys.notifications.root,
 	queryFn: getUserNotifications,
 	staleTime: 30000,
 });
 
 export const notificationCountQueryOpt = queryOptions({
-	queryKey: ["notifications", "count"],
+	queryKey: queryKeys.notifications.count,
 	queryFn: getNotificationCount,
 	staleTime: 30000,
 });
@@ -38,8 +39,8 @@ const useNotifications = (options: UseNotificationsOptions = {}) => {
 	const enabled = options.enabled ?? true;
 	const polling = options.polling ?? true;
 	const isQueryEnabled = enabled;
-	const notificationsKey = ["notifications"] as const;
-	const notificationCountKey = ["notifications", "count"] as const;
+	const notificationsKey = queryKeys.notifications.root;
+	const notificationCountKey = queryKeys.notifications.count;
 
 	const { data, isLoading } = useQuery({
 		...notificationsQueryOpt,

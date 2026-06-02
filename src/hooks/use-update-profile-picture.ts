@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { clientLogger } from "@/lib/client-logger";
+import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { updateCurrentUserProfilePictureFn } from "@/server/user.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
@@ -25,7 +26,7 @@ const useUpdateProfilePicture = () => {
 		},
 		onSuccess: ({ profilePic }) => {
 			queryClient.setQueryData<UserProfile | null>(
-				["auth", "user"],
+				queryKeys.auth.user,
 				(currentUser) =>
 					currentUser ? { ...currentUser, profilePic } : currentUser,
 			);

@@ -5,6 +5,7 @@ import { useProductById } from "@/hooks/use-get-products";
 import type { ImageFile } from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
 import { updateProduct } from "@/lib/tanstack-query/product-queries";
+import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
 import type { UpdateProductForm, UpdateProductRequest } from "@/types/product";
@@ -94,7 +95,7 @@ const useUpdateProduct = (id: string) => {
 		mutationFn: ({ id, data }: { id: string; data: UpdateProductRequest }) =>
 			updateProduct(id, data),
 		onSuccess: async () => {
-			queryClient.invalidateQueries({ queryKey: ["product"] });
+			queryClient.invalidateQueries({ queryKey: queryKeys.products.root });
 			showToast(
 				"The product has been updated. Please wait again for admin approval",
 				"success",

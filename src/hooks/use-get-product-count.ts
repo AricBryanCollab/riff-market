@@ -1,10 +1,11 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getProductCountByCategory } from "@/lib/tanstack-query/product-queries";
+import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import type { ProductCountByCategoryData } from "@/types/product";
 import { transformProductCategoryCount } from "@/utils/transform-product-category-count";
 
 export const productCountByCategoryOptions = queryOptions({
-	queryKey: ["products", "count", "by-category"],
+	queryKey: queryKeys.products.countByCategory,
 	queryFn: getProductCountByCategory,
 	select: (data: ProductCountByCategoryData[]) =>
 		transformProductCategoryCount(data),
