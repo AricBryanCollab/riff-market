@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useState } from "react";
 import { clientLogger } from "@/lib/client-logger";
 import { signUp } from "@/lib/tanstack-query/auth-queries";
-import { getCurrentUser } from "@/lib/tanstack-query/user-queries";
+import { getCurrentUserFn } from "@/server/user.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { SignUpRequest } from "@/types/auth";
@@ -28,7 +28,7 @@ const useSignUp = () => {
 		onSuccess: async () => {
 			await queryClient.fetchQuery({
 				queryKey: ["auth", "user"],
-				queryFn: getCurrentUser,
+				queryFn: () => getCurrentUserFn(),
 			});
 			showToast("You have successfully signed up", "success");
 			setCloseDialog();

@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
 import { RoleDescription } from "@/constants/role-description";
-import { getCurrentUser } from "@/lib/tanstack-query/user-queries";
+import { getCurrentUserFn } from "@/server/user.functions";
 import type { UserRole } from "@/types/enum";
 import type { UserProfile } from "@/types/user";
 
@@ -21,7 +21,7 @@ async function getAuthUser(
 	try {
 		return await queryClient.fetchQuery({
 			queryKey: AUTH_USER_QUERY_KEY,
-			queryFn: getCurrentUser,
+			queryFn: () => getCurrentUserFn(),
 			retry: false,
 			staleTime: 1000 * 60 * 5,
 		});

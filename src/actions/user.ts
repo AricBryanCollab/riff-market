@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import z from "zod";
 import {
 	deleteUser,
 	getAllUsers,
@@ -47,10 +48,19 @@ export async function updateUserService(
 	if (!parsed.success) {
 		return {
 			error: "Invalid user data to update",
-			details: parsed.error,
+			details: z.flattenError(parsed.error),
 		};
 	}
 
+	const updatedUser = await updateValidatedUserService(userId, parsed.data);
+
+	return updatedUser;
+}
+
+export async function updateValidatedUserService(
+	userId: string,
+	data: UpdateUserInput,
+) {
 	const existingUser = await getUserById(userId);
 
 	if (!existingUser) {
@@ -59,14 +69,32 @@ export async function updateUserService(
 		};
 	}
 
-	const data = parsed.data;
-
 	const updatedUser = await updateUser(userId, data);
 
 	return updatedUser;
 }
 
 export async function updateUserProfilePicService(
+	userId: string,
+	profilePic: File | null,
+) {
+	if (profilePic !== null) {
+		const parsed = updateProfilePictureSchema.safeParse({
+			profilePic: profilePic,
+		});
+
+		if (!parsed.success) {
+			return {
+				error: "Invalid profile picture",
+				details: z.flattenError(parsed.error),
+			};
+		}
+	}
+
+	return updateValidatedUserProfilePicService(userId, profilePic);
+}
+
+export async function updateValidatedUserProfilePicService(
 	userId: string,
 	profilePic: File | null,
 ) {
@@ -86,17 +114,6 @@ export async function updateUserProfilePicService(
 		await updateProfilePicture(userId, null);
 
 		return profilePic;
-	}
-
-	const parsed = updateProfilePictureSchema.safeParse({
-		profilePic: profilePic,
-	});
-
-	if (!parsed.success) {
-		return {
-			error: "Invalid profile picture",
-			details: parsed.error,
-		};
 	}
 
 	let profPicUrl: string;
