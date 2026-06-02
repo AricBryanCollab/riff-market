@@ -26,8 +26,13 @@ function SettingsComponent() {
 	const { data: user, isPending } = useAuthUser();
 	const { setOpenDialog } = useDialogStore();
 	const { previewTheme } = useThemeStore();
-	const { themeValue, handleThemeSelectChange, handleClearTheme } =
-		useThemeChange();
+	const {
+		themeValue,
+		handleThemeSelectChange,
+		handleUpdateTheme,
+		handleClearTheme,
+		loadingUpdateTheme,
+	} = useThemeChange();
 
 	if (isPending) {
 		return null;
@@ -119,7 +124,12 @@ function SettingsComponent() {
 								<div className="min-w-45">
 									{previewTheme && (
 										<div className="flex items-center gap-3">
-											<Button onClick={() => {}}>Save</Button>
+											<Button
+												disabled={loadingUpdateTheme}
+												onClick={handleUpdateTheme}
+											>
+												Save
+											</Button>
 											<Button variant="outline" onClick={handleClearTheme}>
 												Cancel
 											</Button>

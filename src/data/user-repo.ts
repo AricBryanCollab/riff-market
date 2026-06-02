@@ -10,6 +10,17 @@ import type { UpdateUserInput } from "@/lib/zod/user-validation";
 import type { UserProfile } from "@/types/user";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
+type UserSettingsWriteData = Partial<
+	Pick<UserSettings, "address" | "phone" | "theme">
+>;
+
+const getProvidedUserSettingsData = (
+	data: UpdateUserInput,
+): UserSettingsWriteData => ({
+	...(data.phone !== undefined ? { phone: data.phone } : {}),
+	...(data.address !== undefined ? { address: data.address } : {}),
+	...(data.theme !== undefined ? { theme: data.theme } : {}),
+});
 
 const getUserProfiles = async (
 	db: DbClient,
@@ -88,20 +99,17 @@ export const updateUser = async (
 			if (
 				data.phone !== undefined ||
 				data.address !== undefined ||
-				data.theme
+				data.theme !== undefined
 			) {
+				const settingsData = getProvidedUserSettingsData(data);
+
 				await tx.userSettings.upsert({
 					where: { userId: id },
-					update: {
-						phone: data.phone ?? null,
-						address: data.address ?? null,
-						theme: data.theme,
-					},
+					update: settingsData,
 					create: {
 						userId: id,
-						phone: data.phone ?? null,
-						address: data.address ?? null,
-						theme: data.theme ?? "light",
+						theme: "light",
+						...settingsData,
 					},
 				});
 			}
