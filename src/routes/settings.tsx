@@ -1,10 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Palette, Pencil } from "lucide-react";
+import {
+	AtSign,
+	Camera,
+	MapPin,
+	Palette,
+	Pencil,
+	Phone,
+	ShieldCheck,
+	UserRound,
+} from "lucide-react";
 import { AppDialog } from "@/components/app-dialog";
 import Avatar from "@/components/avatar";
 import { FormSelect } from "@/components/form-select";
-import IconButton from "@/components/icon-button";
 import SectionContainer from "@/components/section-container";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BodyLarge, BodySmall, H2, H4 } from "@/components/ui/typography";
 import { ProfileInfoField } from "@/components/user-settings/profile-field";
@@ -56,48 +65,83 @@ function SettingsComponent() {
 				</div>
 
 				{/* PROFILE */}
-				<div className="flex flex-col gap-4">
-					<H4>Profile Information</H4>
-					<div className="flex flex-col gap-6 md:flex-row">
-						{/* Avatar Group */}
-						<div className="group relative">
-							<div className="border-2 border-dashed border-transparent group-hover:border-black ease-in-out duration-300 p-3 rounded-full">
-								<Avatar size="xl" />
+				<div className="flex flex-col gap-5">
+					<div className="flex flex-col gap-1">
+						<H4>Profile Information</H4>
+						<BodySmall className="text-muted-foreground">
+							Your public identity and account contact details.
+						</BodySmall>
+					</div>
+					<div className="flex flex-col gap-6 border-y border-border py-6">
+						<div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+							<div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+								<div className="relative w-fit">
+									<Avatar size="xl" />
+									<Button
+										size="icon-sm"
+										aria-label="Update profile picture"
+										className="absolute right-0 bottom-0 rounded-full"
+										onClick={() => setOpenDialog("updateProfilePic")}
+									>
+										<Camera />
+									</Button>
+								</div>
+								<div className="min-w-0">
+									<div className="flex flex-wrap items-center gap-2">
+										<H2 className="text-2xl">
+											{user.firstName} {user.lastName}
+										</H2>
+										<Badge variant="secondary">{roleInfo.label}</Badge>
+									</div>
+									<BodySmall className="mt-2 break-all text-muted-foreground">
+										{user.email}
+									</BodySmall>
+									<BodySmall className="mt-2 max-w-xl text-muted-foreground">
+										{roleInfo.description}
+									</BodySmall>
+								</div>
 							</div>
-							<div className="absolute top-30 right-2 hidden group-hover:block ease-in-out duration-300">
-								<IconButton
-									icon={Pencil}
-									onClick={() => setOpenDialog("updateProfilePic")}
-								/>
-							</div>
+							<Button
+								variant="outline"
+								className="w-full sm:w-fit"
+								onClick={() => setOpenDialog("updateUser")}
+							>
+								<Pencil />
+								Edit Profile
+							</Button>
 						</div>
 
-						{/* Profile Info Group */}
-						<div className="group relative">
-							<div className="border-2 border-dashed border-transparent group-hover:border-black ease-in-out duration-300 px-3 py-4 rounded-md">
-								<div className="grid grid-cols-2 min-w-xl lg:min-w-2xl gap-4">
-									<ProfileInfoField
-										label="First Name"
-										value={user?.firstName}
-									/>
-									<ProfileInfoField label="Last Name" value={user?.lastName} />
-									<ProfileInfoField label="Email Address" value={user?.email} />
-									<ProfileInfoField label="Address" value={user?.address} />
-									<ProfileInfoField label="Phone Number" value={user?.phone} />
-									<ProfileInfoField
-										label="Marketplace Role"
-										value={roleInfo.label}
-										description={roleInfo.description}
-									/>
-								</div>
-
-								<div className="absolute right-4 top-2 hidden group-hover:block ease-in-out duration-300">
-									<IconButton
-										icon={Pencil}
-										onClick={() => setOpenDialog("updateUser")}
-									/>
-								</div>
-							</div>
+						<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+							<ProfileInfoField
+								icon={UserRound}
+								label="First Name"
+								value={user.firstName}
+							/>
+							<ProfileInfoField
+								icon={UserRound}
+								label="Last Name"
+								value={user.lastName}
+							/>
+							<ProfileInfoField
+								icon={AtSign}
+								label="Email Address"
+								value={user.email}
+							/>
+							<ProfileInfoField
+								icon={MapPin}
+								label="Address"
+								value={user.address}
+							/>
+							<ProfileInfoField
+								icon={Phone}
+								label="Phone Number"
+								value={user.phone}
+							/>
+							<ProfileInfoField
+								icon={ShieldCheck}
+								label="Marketplace Role"
+								value={roleInfo.label}
+							/>
 						</div>
 					</div>
 				</div>

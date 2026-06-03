@@ -6,9 +6,10 @@ import {
 	updateValidatedUserProfilePicService,
 	updateValidatedUserService,
 } from "@/actions/user";
+import { zodInputValidator } from "@/lib/zod/input-validator";
 import {
-	udpateUserSchema,
 	updateProfilePictureSchema,
+	updateUserSchema,
 } from "@/lib/zod/user-validation";
 import { authenticatedServerFunctionMiddleware } from "@/server/function-middleware";
 
@@ -46,7 +47,7 @@ export const getCurrentUserFn = createServerFn({ method: "GET" })
 
 export const updateCurrentUserFn = createServerFn({ method: "POST" })
 	.middleware(authenticatedServerFunctionMiddleware)
-	.inputValidator(udpateUserSchema)
+	.inputValidator(zodInputValidator(updateUserSchema))
 	.handler(async ({ context, data }) => {
 		const result = await updateValidatedUserService(context.user.id, data);
 
@@ -80,7 +81,7 @@ export const updateCurrentUserProfilePictureFn = createServerFn({
 
 export const deleteCurrentUserFn = createServerFn({ method: "POST" })
 	.middleware(authenticatedServerFunctionMiddleware)
-	.inputValidator(deleteCurrentUserSchema)
+	.inputValidator(zodInputValidator(deleteCurrentUserSchema))
 	.handler(async ({ context, data }) => {
 		const result = await deleteUserService(context.user.id, data.email);
 

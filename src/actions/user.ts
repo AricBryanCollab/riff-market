@@ -11,8 +11,8 @@ import { env } from "@/env";
 import { logger } from "@/lib/logger";
 import {
 	type UpdateUserInput,
-	udpateUserSchema,
 	updateProfilePictureSchema,
+	updateUserSchema,
 } from "@/lib/zod/user-validation";
 import {
 	deleteImage,
@@ -43,7 +43,7 @@ export async function updateUserService(
 	userId: string,
 	rawData: UpdateUserInput,
 ) {
-	const parsed = udpateUserSchema.safeParse(rawData);
+	const parsed = updateUserSchema.safeParse(rawData);
 
 	if (!parsed.success) {
 		return {

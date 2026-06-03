@@ -1,6 +1,12 @@
 import z from "zod";
 import { themeClasses } from "@/constants/theme-classes";
 
+const emptyStringAsNull = z
+	.string()
+	.trim()
+	.length(0)
+	.transform(() => null);
+
 const profilePictureFile = z
 	.instanceof(File)
 	.refine(
@@ -15,23 +21,28 @@ const profilePictureFile = z
 		"File must be a JPEG, PNG, or WebP image",
 	);
 
-export const udpateUserSchema = z
+export const updateUserSchema = z
 	.object({
 		firstName: z.string().trim().min(1, "First name is required").optional(),
 		lastName: z.string().trim().min(1, "Last name is required").optional(),
 		theme: z.enum(themeClasses).optional(),
 		phone: z
-			.string()
-			.trim()
-			.regex(/^[0-9]+$/, "Phone number must contain only digits (0-9)")
-			.optional()
-			.nullable(),
+			.union([
+				emptyStringAsNull,
+				z
+					.string()
+					.trim()
+					.regex(/^[0-9]+$/, "Phone number must contain only digits (0-9)"),
+				z.null(),
+			])
+			.optional(),
 		address: z
-			.string()
-			.trim()
-			.min(10, "Please provide a valid address")
-			.optional()
-			.nullable(),
+			.union([
+				emptyStringAsNull,
+				z.string().trim().min(10, "Please provide a valid address"),
+				z.null(),
+			])
+			.optional(),
 	})
 	.refine(
 		(data) =>
@@ -49,5 +60,5 @@ export const updateProfilePictureSchema = z.object({
 	profilePic: profilePictureFile,
 });
 
-export type UpdateUserInput = z.infer<typeof udpateUserSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type UpdateProfilePicture = z.infer<typeof updateProfilePictureSchema>;
