@@ -3,9 +3,10 @@ import {
 	AtSign,
 	Camera,
 	MapPin,
-	Palette,
 	Pencil,
 	Phone,
+	RotateCcw,
+	Save,
 	ShieldCheck,
 	UserRound,
 } from "lucide-react";
@@ -49,6 +50,11 @@ function SettingsComponent() {
 
 	if (!user) return null;
 	const roleInfo = getRoleInfo(user?.role);
+	const savedThemeLabel =
+		themeOptions.find((theme) => theme.value === user.theme)?.label ?? "Light";
+	const selectedThemeLabel =
+		themeOptions.find((theme) => theme.value === themeValue)?.label ??
+		savedThemeLabel;
 
 	return (
 		<SectionContainer>
@@ -147,15 +153,29 @@ function SettingsComponent() {
 				</div>
 
 				{/* PREFERENCES */}
-				<div className="flex flex-col gap-4">
-					<H4>Preferences</H4>
-					<div className="flex flex-col">
-						<div className="flex justify-between max-w-xl items-center gap-4">
-							<div className="flex items-center gap-3">
-								<Palette size={18} />
-								<BodyLarge>Theme</BodyLarge>
+				<div className="flex flex-col gap-5">
+					<div className="flex flex-col gap-1">
+						<H4>Preferences</H4>
+						<BodySmall className="text-muted-foreground">
+							Account defaults for your browsing experience.
+						</BodySmall>
+					</div>
+					<div className="flex flex-col gap-4 border-y border-border py-6">
+						<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+							<div className="min-w-0">
+								<div className="flex flex-wrap items-center gap-2">
+									<BodyLarge className="text-base">Theme</BodyLarge>
+									<Badge variant={previewTheme ? "outline" : "secondary"}>
+										{previewTheme ? "Preview" : "Saved"}
+									</Badge>
+								</div>
+								<BodySmall className="mt-2 text-muted-foreground">
+									{previewTheme
+										? `${selectedThemeLabel} selected. Saved: ${savedThemeLabel}.`
+										: `${savedThemeLabel} is saved.`}
+								</BodySmall>
 							</div>
-							<div className="flex flex-col md:flex-row items-center gap-3">
+							<div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
 								<FormSelect
 									options={themeOptions.map((t) => ({
 										label: t.label,
@@ -163,18 +183,25 @@ function SettingsComponent() {
 									}))}
 									onValueChange={handleThemeSelectChange}
 									value={themeValue}
-									className="w-50"
+									className="w-full md:w-48"
 								/>
-								<div className="min-w-45">
+								<div className="min-h-9 min-w-0 md:min-w-48">
 									{previewTheme && (
-										<div className="flex items-center gap-3">
+										<div className="flex flex-col gap-2 sm:flex-row">
 											<Button
 												disabled={loadingUpdateTheme}
+												className="w-full sm:w-fit"
 												onClick={handleUpdateTheme}
 											>
+												<Save />
 												Save
 											</Button>
-											<Button variant="outline" onClick={handleClearTheme}>
+											<Button
+												variant="outline"
+												className="w-full sm:w-fit"
+												onClick={handleClearTheme}
+											>
+												<RotateCcw />
 												Cancel
 											</Button>
 										</div>
