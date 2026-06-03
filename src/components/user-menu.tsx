@@ -13,10 +13,7 @@ import {
 	cartDetailsQueryOpt,
 	default as useCartDetails,
 } from "@/hooks/use-cart-details";
-import {
-	ordersByRoleQueryOpt,
-	default as useGetOrders,
-} from "@/hooks/use-get-orders";
+import { ordersByRoleQueryOpt, useOrdersByRole } from "@/hooks/use-get-orders";
 import {
 	pendingProductsQueryOpt,
 	default as useGetPendingProducts,
@@ -130,7 +127,7 @@ const SellerActions = () => {
 		orderCount,
 		isLoading: isLoadingOrders,
 		isEmptyOrders,
-	} = useGetOrders("SELLER", { enabled: true, polling: true });
+	} = useOrdersByRole("SELLER", { polling: true });
 
 	const prefetchOrders = useCallback(() => {
 		void loadOrderList();

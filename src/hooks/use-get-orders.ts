@@ -14,7 +14,9 @@ import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import type { OrderStatus, UserRole } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 
-export const ordersByRoleQueryOpt = (userRole: UserRole) => {
+export type OrderQueryRole = Extract<UserRole, "CUSTOMER" | "SELLER">;
+
+export const ordersByRoleQueryOpt = (userRole: OrderQueryRole) => {
 	const queryFn =
 		userRole === "CUSTOMER" ? getOrderByCustomer : getOrderBySeller;
 
@@ -25,30 +27,37 @@ export const ordersByRoleQueryOpt = (userRole: UserRole) => {
 	});
 };
 
-interface UseGetOrdersOptions {
-	enabled?: boolean;
+interface UseOrdersByRoleOptions {
 	polling?: boolean;
 }
 
-const useGetOrders = (
-	userRole: UserRole,
-	options: UseGetOrdersOptions = {},
+export const useOrdersByRole = (
+	userRole: OrderQueryRole,
+	options: UseOrdersByRoleOptions = {},
 ) => {
-	const queryClient = useQueryClient();
-
-	const enabled = options.enabled ?? true;
 	const polling = options.polling ?? true;
-	const isQueryEnabled = enabled;
-	const queryKey = queryKeys.orders.byRole(userRole);
 
-	const { data, isLoading } = useQuery({
+	const { data, isLoading, isError } = useQuery({
 		...ordersByRoleQueryOpt(userRole),
-		refetchInterval: isQueryEnabled && polling ? 60000 : false,
-		enabled: isQueryEnabled,
+		refetchInterval: polling ? 60000 : false,
 	});
 
 	const orders = Array.isArray(data) ? data : [];
 	const orderCount = orders.length;
+	const isEmptyOrders = orders.length === 0;
+
+	return {
+		orders,
+		orderCount,
+		isLoading,
+		isError,
+		isEmptyOrders,
+	};
+};
+
+export const useUpdateOrderStatus = (userRole: OrderQueryRole) => {
+	const queryClient = useQueryClient();
+	const queryKey = queryKeys.orders.byRole(userRole);
 
 	const updateStatusMutation = useMutation({
 		mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
@@ -85,15 +94,11 @@ const useGetOrders = (
 		},
 	});
 
-	const isEmptyOrders = orders.length === 0;
-
 	return {
-		orders,
-		orderCount,
-		isLoading,
-		isEmptyOrders,
 		updateStatus: updateStatusMutation.mutate,
+		isUpdatingStatus: updateStatusMutation.isPending,
+		isUpdateStatusError: updateStatusMutation.isError,
 	};
 };
 
-export default useGetOrders;
+export default useOrdersByRole;
