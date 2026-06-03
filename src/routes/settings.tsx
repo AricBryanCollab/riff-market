@@ -18,19 +18,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BodyLarge, BodySmall, H2, H4 } from "@/components/ui/typography";
 import { ProfileInfoField } from "@/components/user-settings/profile-field";
-import {
-	CustomerSettingsOrdersSection,
-	SellerSettingsOrdersSection,
-} from "@/components/user-settings/settings-orders-section";
 import UpdateProfileForm from "@/components/user-settings/update-profile-form";
 import { themeOptions } from "@/constants/select-options";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import { ordersByRoleQueryOpt, useOrdersByRole } from "@/hooks/use-get-orders";
+import { ordersByRoleQueryOpt } from "@/hooks/use-get-orders";
 import useThemeChange from "@/hooks/use-theme-change";
 import { useDialogStore } from "@/store/dialog";
 import { useThemeStore } from "@/store/theme";
-import type { UserRole } from "@/types/enum";
 import { getRoleInfo, requireAuthUser } from "@/utils/require-role";
+import { SettingsOrdersSection } from "./settings/-components/settings-orders-section";
 
 export const Route = createFileRoute("/settings")({
 	beforeLoad: async ({ context }) => {
@@ -243,7 +239,7 @@ function SettingsComponent() {
 					</div>
 				</div>
 
-				<SettingsOrdersContainer userRole={user.role} />
+				<SettingsOrdersSection userRole={user.role} />
 
 				{/* Favorites */}
 				<div className="flex flex-col gap-4">
@@ -294,57 +290,5 @@ function SettingsComponent() {
 				</AppDialog>
 			</div>
 		</SectionContainer>
-	);
-}
-
-function SettingsOrdersContainer({ userRole }: { userRole: UserRole }) {
-	if (userRole === "CUSTOMER") {
-		return <CustomerSettingsOrders />;
-	}
-
-	if (userRole === "SELLER") {
-		return <SellerSettingsOrders />;
-	}
-
-	return null;
-}
-
-function CustomerSettingsOrders() {
-	const {
-		orders,
-		isLoading: isLoadingOrders,
-		isEmptyOrders,
-		isError: isErrorOrders,
-	} = useOrdersByRole("CUSTOMER", {
-		polling: false,
-	});
-
-	return (
-		<CustomerSettingsOrdersSection
-			orders={orders}
-			isLoading={isLoadingOrders}
-			isEmptyOrders={isEmptyOrders}
-			isError={isErrorOrders}
-		/>
-	);
-}
-
-function SellerSettingsOrders() {
-	const {
-		orders,
-		isLoading: isLoadingOrders,
-		isEmptyOrders,
-		isError: isErrorOrders,
-	} = useOrdersByRole("SELLER", {
-		polling: false,
-	});
-
-	return (
-		<SellerSettingsOrdersSection
-			orders={orders}
-			isLoading={isLoadingOrders}
-			isEmptyOrders={isEmptyOrders}
-			isError={isErrorOrders}
-		/>
 	);
 }

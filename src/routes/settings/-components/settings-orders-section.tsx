@@ -2,8 +2,9 @@ import { AlertCircle, Package, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animated-loader";
 import { Badge } from "@/components/ui/badge";
 import { BodyLarge, BodySmall, H4 } from "@/components/ui/typography";
+import { useOrdersByRole } from "@/hooks/use-get-orders";
 import { cn } from "@/lib/utils";
-import type { OrderStatus } from "@/types/enum";
+import type { OrderStatus, UserRole } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 import { formatRelativeTime } from "@/utils/format-date";
 
@@ -22,56 +23,142 @@ interface SettingsOrdersSectionState {
 	isError: boolean;
 }
 
-interface SettingsOrdersSectionBaseProps extends SettingsOrdersSectionState {
-	sectionTitle: string;
-	sectionDescription: string;
-	emptyTitle: string;
-	emptyDescription: string;
-	errorTitle: string;
-	showCustomerName?: boolean;
+type SettingsOrdersSectionStatus = "loading" | "error" | "empty" | "ready";
+type SettingsOrdersSectionVariant = "customer" | "seller";
+
+interface SettingsOrdersSectionProps {
+	orders: OrderResponse[];
+	status: SettingsOrdersSectionStatus;
 }
 
-export function CustomerSettingsOrdersSection(
-	props: SettingsOrdersSectionState,
-) {
-	return (
-		<SettingsOrdersSectionBase
-			{...props}
-			sectionTitle="Recent Orders"
-			sectionDescription="Your latest marketplace purchases."
-			emptyTitle="No orders yet"
-			emptyDescription="Orders will appear here after checkout."
-			errorTitle="Unable to load orders"
-		/>
-	);
+interface SettingsOrdersSectionBaseProps extends SettingsOrdersSectionProps {
+	variant: SettingsOrdersSectionVariant;
 }
 
-export function SellerSettingsOrdersSection(props: SettingsOrdersSectionState) {
-	return (
-		<SettingsOrdersSectionBase
-			{...props}
-			sectionTitle="Recent Sales"
-			sectionDescription="Recent orders that include your listed products."
-			emptyTitle="No sales yet"
-			emptyDescription="Sales orders will appear here when customers buy your products."
-			errorTitle="Unable to load sales"
-			showCustomerName
-		/>
-	);
-}
+const settingsOrdersCopy = {
+	customer: {
+		sectionTitle: "Recent Orders",
+		sectionDescription: "Your latest marketplace purchases.",
+		emptyTitle: "No orders yet",
+		emptyDescription: "Orders will appear here after checkout.",
+		errorTitle: "Unable to load orders",
+	},
+	seller: {
+		sectionTitle: "Recent Sales",
+		sectionDescription: "Recent orders that include your listed products.",
+		emptyTitle: "No sales yet",
+		emptyDescription:
+			"Sales orders will appear here when customers buy your products.",
+		errorTitle: "Unable to load sales",
+	},
+} satisfies Record<
+	SettingsOrdersSectionVariant,
+	{
+		sectionTitle: string;
+		sectionDescription: string;
+		emptyTitle: string;
+		emptyDescription: string;
+		errorTitle: string;
+	}
+>;
 
-function SettingsOrdersSectionBase({
-	orders,
+function getSettingsOrdersStatus({
 	isLoading,
-	isEmptyOrders,
 	isError,
-	sectionTitle,
-	sectionDescription,
-	emptyTitle,
-	emptyDescription,
-	errorTitle,
-	showCustomerName = false,
+	isEmptyOrders,
+}: Omit<SettingsOrdersSectionState, "orders">): SettingsOrdersSectionStatus {
+	if (isLoading) {
+		return "loading";
+	}
+
+	if (isError) {
+		return "error";
+	}
+
+	if (isEmptyOrders) {
+		return "empty";
+	}
+
+	return "ready";
+}
+
+export function SettingsOrdersSection({ userRole }: { userRole: UserRole }) {
+	if (userRole === "CUSTOMER") {
+		return <CustomerSettingsOrders />;
+	}
+
+	if (userRole === "SELLER") {
+		return <SellerSettingsOrders />;
+	}
+
+	return null;
+}
+
+function CustomerSettingsOrders() {
+	const {
+		orders,
+		isLoading: isLoadingOrders,
+		isEmptyOrders,
+		isError: isErrorOrders,
+	} = useOrdersByRole("CUSTOMER", {
+		polling: false,
+	});
+
+	return (
+		<CustomerSettingsOrdersSection
+			orders={orders}
+			status={getSettingsOrdersStatus({
+				isLoading: isLoadingOrders,
+				isEmptyOrders,
+				isError: isErrorOrders,
+			})}
+		/>
+	);
+}
+
+function SellerSettingsOrders() {
+	const {
+		orders,
+		isLoading: isLoadingOrders,
+		isEmptyOrders,
+		isError: isErrorOrders,
+	} = useOrdersByRole("SELLER", {
+		polling: false,
+	});
+
+	return (
+		<SellerSettingsOrdersSection
+			orders={orders}
+			status={getSettingsOrdersStatus({
+				isLoading: isLoadingOrders,
+				isEmptyOrders,
+				isError: isErrorOrders,
+			})}
+		/>
+	);
+}
+
+function CustomerSettingsOrdersSection(props: SettingsOrdersSectionProps) {
+	return <SettingsOrdersListSection {...props} variant="customer" />;
+}
+
+function SellerSettingsOrdersSection(props: SettingsOrdersSectionProps) {
+	return <SettingsOrdersListSection {...props} variant="seller" />;
+}
+
+function SettingsOrdersListSection({
+	orders,
+	status,
+	variant,
 }: SettingsOrdersSectionBaseProps) {
+	const {
+		sectionTitle,
+		sectionDescription,
+		emptyTitle,
+		emptyDescription,
+		errorTitle,
+	} = settingsOrdersCopy[variant];
+
 	return (
 		<div className="flex flex-col gap-5">
 			<div className="flex flex-col gap-1">
@@ -82,7 +169,7 @@ function SettingsOrdersSectionBase({
 			</div>
 
 			<div className="border-y border-border py-6">
-				{isLoading && (
+				{status === "loading" && (
 					<div className="flex min-h-32 items-center justify-center">
 						<AnimatedLoader
 							svgSize={80}
@@ -93,7 +180,7 @@ function SettingsOrdersSectionBase({
 					</div>
 				)}
 
-				{!isLoading && isError && (
+				{status === "error" && (
 					<div className="flex flex-col items-center justify-center py-10 text-center">
 						<div className="mb-3 rounded-md bg-destructive/10 p-3 text-destructive">
 							<AlertCircle className="size-6" />
@@ -105,7 +192,7 @@ function SettingsOrdersSectionBase({
 					</div>
 				)}
 
-				{!isLoading && !isError && isEmptyOrders && (
+				{status === "empty" && (
 					<div className="flex flex-col items-center justify-center py-10 text-center">
 						<div className="mb-3 rounded-md bg-muted p-3 text-muted-foreground">
 							<Package className="size-6" />
@@ -117,7 +204,7 @@ function SettingsOrdersSectionBase({
 					</div>
 				)}
 
-				{!isLoading && !isError && !isEmptyOrders && (
+				{status === "ready" && (
 					<ul className="grid gap-3">
 						{orders.slice(0, 4).map((order) => {
 							const itemCount = order.items?.length ?? 0;
@@ -145,7 +232,7 @@ function SettingsOrdersSectionBase({
 												{itemCount > 0
 													? ` · ${itemCount} ${itemCount === 1 ? "item" : "items"}`
 													: ""}
-												{showCustomerName && order.customer
+												{variant === "seller" && order.customer
 													? ` · ${order.customer.firstName} ${order.customer.lastName}`
 													: ""}
 											</BodySmall>
