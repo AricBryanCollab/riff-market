@@ -1,11 +1,8 @@
 import { updateProfilePicture } from "@/data/user-repo";
 import { env } from "@/env";
 import { logger } from "@/lib/logger";
-import {
-	deleteImage,
-	getPublicId,
-	unsignedUploadImage,
-} from "@/utils/cloudinary";
+import { unsignedUploadImage } from "@/utils/cloudinary";
+import { deleteCloudinaryImageAsset } from "@/utils/cloudinary-assets";
 import { compressImage } from "@/utils/compress-image";
 
 type ProfilePictureLifecycleError = {
@@ -27,8 +24,7 @@ async function deleteProfilePictureAsset(profilePicUrl: string | null) {
 		return;
 	}
 
-	const publicId = getPublicId(profilePicUrl);
-	await deleteImage(publicId);
+	await deleteCloudinaryImageAsset(profilePicUrl);
 }
 
 async function cleanupOrphanedProfilePictureAsset(

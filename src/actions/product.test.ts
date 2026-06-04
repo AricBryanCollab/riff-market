@@ -24,10 +24,6 @@ const { productRepoMock, cloudinaryMock, compressImageMock } = vi.hoisted(
 
 		const cloudinaryMock = {
 			deleteImage: vi.fn(),
-			getPublicId: vi.fn((url: string) => {
-				const filename = url.split("/").pop();
-				return filename ? filename.split(".")[0] : "";
-			}),
 			unsignedUploadImage: vi.fn(),
 		} as const;
 

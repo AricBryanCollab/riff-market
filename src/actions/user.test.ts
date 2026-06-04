@@ -13,10 +13,6 @@ const { userRepoMock, cloudinaryMock, compressImageMock, loggerMock } =
 
 		const cloudinaryMock = {
 			deleteImage: vi.fn(),
-			getPublicId: vi.fn((url: string) => {
-				const filename = url.split("/").pop();
-				return filename ? filename.split(".")[0] : "";
-			}),
 			unsignedUploadImage: vi.fn(),
 		} as const;
 
@@ -122,7 +118,6 @@ describe("user actions", () => {
 				deletedUserId: user.id,
 			});
 			expect(userRepoMock.deleteUser).toHaveBeenCalledWith(user.id);
-			expect(cloudinaryMock.getPublicId).toHaveBeenCalledWith(user.profilePic);
 			expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("avatar");
 			expect(
 				(userRepoMock.deleteUser as Mock).mock.invocationCallOrder[0],
@@ -143,7 +138,6 @@ describe("user actions", () => {
 				message: "Account has been deleted successfully",
 				deletedUserId: user.id,
 			});
-			expect(cloudinaryMock.getPublicId).not.toHaveBeenCalled();
 			expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
 			expect(userRepoMock.deleteUser).toHaveBeenCalledWith(user.id);
 		});
@@ -282,10 +276,6 @@ describe("user actions", () => {
 				error: "Failed to update the user profile picture",
 				details: "db failed",
 			});
-			expect(cloudinaryMock.getPublicId).toHaveBeenCalledWith(newProfilePicUrl);
-			expect(cloudinaryMock.getPublicId).not.toHaveBeenCalledWith(
-				user.profilePic,
-			);
 			expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("new");
 			expect(
 				(userRepoMock.updateProfilePicture as Mock).mock.invocationCallOrder[0],

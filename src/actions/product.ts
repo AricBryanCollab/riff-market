@@ -24,11 +24,11 @@ import {
 	updateProductSchema,
 	updateProductStatusSchema,
 } from "@/lib/zod/product-validation";
+import { unsignedUploadImage } from "@/utils/cloudinary";
 import {
-	deleteImage,
-	getPublicId,
-	unsignedUploadImage,
-} from "@/utils/cloudinary";
+	deleteCloudinaryImageAssets,
+	tryDeleteCloudinaryImageAssets,
+} from "@/utils/cloudinary-assets";
 import { compressImage } from "@/utils/compress-image";
 
 const MAX_PRODUCT_IMAGE_UPLOADS = 3;
@@ -107,12 +107,7 @@ async function cleanupUploadedImages(imageUrls: string[]) {
 		return;
 	}
 
-	await Promise.allSettled(
-		imageUrls.map(async (url) => {
-			const publicId = getPublicId(url);
-			await deleteImage(publicId);
-		}),
-	);
+	await tryDeleteCloudinaryImageAssets(imageUrls);
 }
 
 async function uploadProductImages(imageFiles: File[]) {
@@ -322,12 +317,7 @@ export async function updateProductService(
 				Array.isArray(existingProduct.images) &&
 				existingProduct.images.length > 0
 			) {
-				await Promise.all(
-					existingProduct.images.map((url) => {
-						const publicId = getPublicId(url);
-						return deleteImage(publicId);
-					}),
-				);
+				await deleteCloudinaryImageAssets(existingProduct.images);
 			}
 		} catch (error) {
 			return {
@@ -415,12 +405,7 @@ export async function deleteProductService(
 
 	if (Array.isArray(product.images) && product.images.length > 0) {
 		try {
-			await Promise.all(
-				product.images.map(async (url) => {
-					const publicId = getPublicId(url);
-					return deleteImage(publicId);
-				}),
-			);
+			await deleteCloudinaryImageAssets(product.images);
 		} catch (error) {
 			logger.error("Failed to delete images from Cloudinary", error);
 			return {
