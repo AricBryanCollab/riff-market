@@ -11,16 +11,16 @@ import useThemeChange from "@/hooks/use-theme-change";
 import { useDialogStore } from "@/store/dialog";
 import { useThemeStore } from "@/store/theme";
 import { getRoleInfo, requireAuthUser } from "@/utils/require-role";
-import { AppearanceSection } from "./settings/-components/appearance-section";
-import { DeleteAccountDialog } from "./settings/-components/delete-account-dialog";
-import { ProfileHeroCard } from "./settings/-components/profile-hero-card";
-import { ProfilePictureDialog } from "./settings/-components/profile-picture-dialog";
-import { SettingsOrdersSection } from "./settings/-components/settings-orders-section";
-import { SettingsPanel } from "./settings/-components/settings-panel";
+import { AppearanceSection } from "./-components/appearance-section";
+import { DeleteAccountDialog } from "./-components/delete-account-dialog";
+import { ProfileHeroCard } from "./-components/profile-hero-card";
+import { ProfilePictureDialog } from "./-components/profile-picture-dialog";
+import { SettingsOrdersSection } from "./-components/settings-orders-section";
+import { SettingsPanel } from "./-components/settings-panel";
 import {
-	getSettingsCompletionItems,
-	getSettingsProfileDetails,
-} from "./settings/-utils/settings-profile-summary";
+	SettingsCompletionList,
+	SettingsProfileDetailsList,
+} from "./-components/settings-summary-lists";
 
 export const Route = createFileRoute("/settings")({
 	beforeLoad: async ({ context }) => {
@@ -63,11 +63,6 @@ function SettingsComponent() {
 	const selectedThemeLabel =
 		themeOptions.find((theme) => theme.value === themeValue)?.label ??
 		savedThemeLabel;
-	const profileDetails = getSettingsProfileDetails({
-		roleLabel: roleInfo.label,
-		user,
-	});
-	const completionItems = getSettingsCompletionItems(user);
 
 	return (
 		<SectionContainer>
@@ -82,14 +77,7 @@ function SettingsComponent() {
 							account actions.
 						</BodySmall>
 					</div>
-					<dl className="grid grid-cols-3 gap-3 text-sm lg:grid-cols-1">
-						{completionItems.map(({ label, value }) => (
-							<div key={label} className="min-w-0 border-l border-border pl-3">
-								<dt className="text-muted-foreground">{label}</dt>
-								<dd className="mt-1 truncate font-medium">{value}</dd>
-							</div>
-						))}
-					</dl>
+					<SettingsCompletionList user={user} />
 				</header>
 
 				<ProfileHeroCard
@@ -104,19 +92,7 @@ function SettingsComponent() {
 					title="Profile"
 					description="Used for orders, seller communication, and account recovery."
 				>
-					<dl className="divide-y divide-border">
-						{profileDetails.map(({ label, value }) => (
-							<div
-								key={label}
-								className="grid gap-1 py-3 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-6"
-							>
-								<dt className="text-sm text-muted-foreground">{label}</dt>
-								<dd className="min-w-0 break-words text-sm font-medium">
-									{value}
-								</dd>
-							</div>
-						))}
-					</dl>
+					<SettingsProfileDetailsList roleLabel={roleInfo.label} user={user} />
 				</SettingsPanel>
 
 				<AppearanceSection
