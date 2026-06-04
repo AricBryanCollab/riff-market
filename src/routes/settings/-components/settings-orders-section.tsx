@@ -1,5 +1,3 @@
-import { AlertCircle, Package, ShoppingBag } from "lucide-react";
-import AnimatedLoader from "@/components/animated-loader";
 import { Badge } from "@/components/ui/badge";
 import { BodyLarge, BodySmall, H4 } from "@/components/ui/typography";
 import { useOrdersByRole } from "@/hooks/use-get-orders";
@@ -160,74 +158,59 @@ function SettingsOrdersListSection({
 	} = settingsOrdersCopy[variant];
 
 	return (
-		<div className="flex flex-col gap-5">
-			<div className="flex flex-col gap-1">
-				<H4>{sectionTitle}</H4>
-				<BodySmall className="text-muted-foreground">
-					{sectionDescription}
-				</BodySmall>
-			</div>
+		<section className="border-t border-border pt-6">
+			<div className="grid gap-5 lg:grid-cols-[12rem_minmax(0,1fr)]">
+				<div>
+					<H4 className="text-lg tracking-normal">{sectionTitle}</H4>
+					<BodySmall className="mt-2 text-muted-foreground leading-6">
+						{sectionDescription}
+					</BodySmall>
+				</div>
 
-			<div className="border-y border-border py-6">
-				{status === "loading" && (
-					<div className="flex min-h-32 items-center justify-center">
-						<AnimatedLoader
-							svgSize={80}
-							pingSize="size-24"
-							textSize="text-base"
-							containerSizeClass="w-fit min-h-fit"
-						/>
-					</div>
-				)}
-
-				{status === "error" && (
-					<div className="flex flex-col items-center justify-center py-10 text-center">
-						<div className="mb-3 rounded-md bg-destructive/10 p-3 text-destructive">
-							<AlertCircle className="size-6" />
-						</div>
-						<BodyLarge className="text-base">{errorTitle}</BodyLarge>
-						<BodySmall className="mt-1 max-w-sm text-muted-foreground">
-							Refresh the page or try again in a moment.
+				<div>
+					{status === "loading" && (
+						<BodySmall className="text-muted-foreground leading-6">
+							Loading recent activity...
 						</BodySmall>
-					</div>
-				)}
+					)}
 
-				{status === "empty" && (
-					<div className="flex flex-col items-center justify-center py-10 text-center">
-						<div className="mb-3 rounded-md bg-muted p-3 text-muted-foreground">
-							<Package className="size-6" />
-						</div>
-						<BodyLarge className="text-base">{emptyTitle}</BodyLarge>
-						<BodySmall className="mt-1 max-w-sm text-muted-foreground">
-							{emptyDescription}
+					{status === "error" && (
+						<BodySmall className="text-destructive leading-6">
+							{errorTitle}. Refresh the page or try again in a moment.
 						</BodySmall>
-					</div>
-				)}
+					)}
 
-				{status === "ready" && (
-					<ul className="grid gap-3">
-						{orders.slice(0, 4).map((order) => {
-							const itemCount = order.items?.length ?? 0;
+					{status === "empty" && (
+						<div className="rounded-md border border-border px-4 py-5">
+							<BodyLarge className="text-base tracking-normal">
+								{emptyTitle}
+							</BodyLarge>
+							<BodySmall className="mt-2 text-muted-foreground leading-6">
+								{emptyDescription}
+							</BodySmall>
+						</div>
+					)}
 
-							return (
-								<li
-									key={order.id}
-									className="flex flex-col gap-3 rounded-md border border-border bg-background px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-								>
-									<div className="flex min-w-0 gap-3">
-										<div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-											<ShoppingBag size={16} />
-										</div>
+					{status === "ready" && (
+						<ul className="divide-y divide-border border-y border-border">
+							{orders.slice(0, 4).map((order) => {
+								const itemCount = order.items?.length ?? 0;
+
+								return (
+									<li
+										key={order.id}
+										className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:justify-between"
+									>
 										<div className="min-w-0">
 											<div className="flex flex-wrap items-center gap-2">
-												<BodyLarge className="break-all text-base">
+												<BodyLarge className="break-all text-base tracking-normal">
 													#{order.trackingNumber}
 												</BodyLarge>
 												<Badge className={cn(orderStatusStyles[order.status])}>
 													{order.status}
 												</Badge>
 											</div>
-											<BodySmall className="mt-1 text-muted-foreground">
+											<BodySmall className="mt-2 text-muted-foreground leading-6">
 												{formatRelativeTime(order.orderDate)}
 												{itemCount > 0
 													? ` · ${itemCount} ${itemCount === 1 ? "item" : "items"}`
@@ -237,26 +220,26 @@ function SettingsOrdersListSection({
 													: ""}
 											</BodySmall>
 										</div>
-									</div>
 
-									<div className="shrink-0 sm:text-right">
-										<BodyLarge className="text-base font-semibold">
-											${order.totalAmount.toFixed(2)}
-										</BodyLarge>
-									</div>
-								</li>
-							);
-						})}
+										<div className="shrink-0 sm:text-right">
+											<BodyLarge className="text-base font-semibold tracking-normal">
+												${order.totalAmount.toFixed(2)}
+											</BodyLarge>
+										</div>
+									</li>
+								);
+							})}
 
-						{orders.length > 4 && (
-							<BodySmall className="text-muted-foreground">
-								+{orders.length - 4} more{" "}
-								{orders.length - 4 === 1 ? "order" : "orders"}
-							</BodySmall>
-						)}
-					</ul>
-				)}
+							{orders.length > 4 && (
+								<BodySmall className="py-3 text-muted-foreground leading-6">
+									+{orders.length - 4} more{" "}
+									{orders.length - 4 === 1 ? "order" : "orders"}
+								</BodySmall>
+							)}
+						</ul>
+					)}
+				</div>
 			</div>
-		</div>
+		</section>
 	);
 }

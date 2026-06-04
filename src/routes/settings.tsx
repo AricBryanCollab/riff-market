@@ -1,23 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-	AtSign,
-	Camera,
-	MapPin,
-	Pencil,
-	Phone,
-	RotateCcw,
-	Save,
-	ShieldCheck,
-	UserRound,
-} from "lucide-react";
 import { AppDialog } from "@/components/app-dialog";
-import Avatar from "@/components/avatar";
-import { FormSelect } from "@/components/form-select";
 import SectionContainer from "@/components/section-container";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BodyLarge, BodySmall, H2, H4 } from "@/components/ui/typography";
-import { ProfileInfoField } from "@/components/user-settings/profile-field";
+import { BodySmall, H2 } from "@/components/ui/typography";
 import UpdateProfileForm from "@/components/user-settings/update-profile-form";
 import { themeOptions } from "@/constants/select-options";
 import { useAuthUser } from "@/hooks/use-auth-user";
@@ -26,7 +11,12 @@ import useThemeChange from "@/hooks/use-theme-change";
 import { useDialogStore } from "@/store/dialog";
 import { useThemeStore } from "@/store/theme";
 import { getRoleInfo, requireAuthUser } from "@/utils/require-role";
+import { AppearanceSection } from "./settings/-components/appearance-section";
+import { DeleteAccountDialog } from "./settings/-components/delete-account-dialog";
+import { ProfileHeroCard } from "./settings/-components/profile-hero-card";
+import { ProfilePictureDialog } from "./settings/-components/profile-picture-dialog";
 import { SettingsOrdersSection } from "./settings/-components/settings-orders-section";
+import { SettingsPanel } from "./settings/-components/settings-panel";
 
 export const Route = createFileRoute("/settings")({
 	beforeLoad: async ({ context }) => {
@@ -63,230 +53,119 @@ function SettingsComponent() {
 
 	if (!user) return null;
 
-	const roleInfo = getRoleInfo(user?.role);
+	const roleInfo = getRoleInfo(user.role);
 	const savedThemeLabel =
 		themeOptions.find((theme) => theme.value === user.theme)?.label ?? "Light";
 	const selectedThemeLabel =
 		themeOptions.find((theme) => theme.value === themeValue)?.label ??
 		savedThemeLabel;
+	const profileDetails = [
+		["First name", user.firstName],
+		["Last name", user.lastName],
+		["Email", user.email],
+		["Address", user.address || "Not provided"],
+		["Phone", user.phone || "Not provided"],
+		["Role", roleInfo.label],
+	];
+	const completionItems = [
+		["Photo", user.profilePic ? "Added" : "Missing"],
+		["Address", user.address ? "Added" : "Missing"],
+		["Phone", user.phone ? "Added" : "Missing"],
+	];
 
 	return (
 		<SectionContainer>
-			<div className="flex w-full flex-col gap-8">
-				<div className="flex items-center justify-between my-6">
-					<div className="py-2">
-						<H2 className="text-3xl font-bold tracking-wider">
-							Account Settings
+			<div className="mx-auto flex w-full max-w-5xl flex-col gap-8 pb-10">
+				<header className="grid gap-5 border-b border-border pb-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
+					<div>
+						<H2 className="text-3xl font-semibold tracking-normal md:text-4xl">
+							Settings
 						</H2>
-						<BodySmall className="mt-3 text-muted-foreground">
-							Manage your profile, preferences, and activity
+						<BodySmall className="mt-3 max-w-2xl text-muted-foreground leading-6">
+							Keep the essentials current: identity, contact details, theme, and
+							account actions.
 						</BodySmall>
 					</div>
-				</div>
-
-				{/* PROFILE */}
-				<div className="flex flex-col gap-5">
-					<div className="flex flex-col gap-1">
-						<H4>Profile Information</H4>
-						<BodySmall className="text-muted-foreground">
-							Your public identity and account contact details.
-						</BodySmall>
-					</div>
-					<div className="flex flex-col gap-6 border-y border-border py-6">
-						<div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-							<div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-								<div className="relative w-fit">
-									<Avatar size="xl" />
-									<Button
-										size="icon-sm"
-										aria-label="Update profile picture"
-										className="absolute right-0 bottom-0 rounded-full"
-										onClick={() => setOpenDialog("updateProfilePic")}
-									>
-										<Camera />
-									</Button>
-								</div>
-								<div className="min-w-0">
-									<div className="flex flex-wrap items-center gap-2">
-										<H2 className="text-2xl">
-											{user.firstName} {user.lastName}
-										</H2>
-										<Badge variant="secondary">{roleInfo.label}</Badge>
-									</div>
-									<BodySmall className="mt-2 break-all text-muted-foreground">
-										{user.email}
-									</BodySmall>
-									<BodySmall className="mt-2 max-w-xl text-muted-foreground">
-										{roleInfo.description}
-									</BodySmall>
-								</div>
+					<dl className="grid grid-cols-3 gap-3 text-sm lg:grid-cols-1">
+						{completionItems.map(([label, value]) => (
+							<div key={label} className="min-w-0 border-l border-border pl-3">
+								<dt className="text-muted-foreground">{label}</dt>
+								<dd className="mt-1 truncate font-medium">{value}</dd>
 							</div>
-							<Button
-								variant="outline"
-								className="w-full sm:w-fit"
-								onClick={() => setOpenDialog("updateUser")}
+						))}
+					</dl>
+				</header>
+
+				<ProfileHeroCard
+					user={user}
+					roleLabel={roleInfo.label}
+					roleDescription={roleInfo.description}
+					onEditProfile={() => setOpenDialog("updateUser")}
+					onUpdateProfilePicture={() => setOpenDialog("updateProfilePic")}
+				/>
+
+				<SettingsPanel
+					title="Profile"
+					description="Used for orders, seller communication, and account recovery."
+				>
+					<dl className="divide-y divide-border">
+						{profileDetails.map(([label, value]) => (
+							<div
+								key={label}
+								className="grid gap-1 py-3 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-6"
 							>
-								<Pencil />
-								Edit Profile
-							</Button>
-						</div>
-
-						<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-							<ProfileInfoField
-								icon={UserRound}
-								label="First Name"
-								value={user.firstName}
-							/>
-							<ProfileInfoField
-								icon={UserRound}
-								label="Last Name"
-								value={user.lastName}
-							/>
-							<ProfileInfoField
-								icon={AtSign}
-								label="Email Address"
-								value={user.email}
-							/>
-							<ProfileInfoField
-								icon={MapPin}
-								label="Address"
-								value={user.address}
-							/>
-							<ProfileInfoField
-								icon={Phone}
-								label="Phone Number"
-								value={user.phone}
-							/>
-							<ProfileInfoField
-								icon={ShieldCheck}
-								label="Marketplace Role"
-								value={roleInfo.label}
-							/>
-						</div>
-					</div>
-				</div>
-
-				{/* PREFERENCES */}
-				<div className="flex flex-col gap-5">
-					<div className="flex flex-col gap-1">
-						<H4>Preferences</H4>
-						<BodySmall className="text-muted-foreground">
-							Account defaults for your browsing experience.
-						</BodySmall>
-					</div>
-					<div className="flex flex-col gap-4 border-y border-border py-6">
-						<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-							<div className="min-w-0">
-								<div className="flex flex-wrap items-center gap-2">
-									<BodyLarge className="text-base">Theme</BodyLarge>
-									<Badge variant={previewTheme ? "outline" : "secondary"}>
-										{previewTheme ? "Preview" : "Saved"}
-									</Badge>
-								</div>
-								<BodySmall className="mt-2 text-muted-foreground">
-									{previewTheme
-										? `${selectedThemeLabel} selected. Saved: ${savedThemeLabel}.`
-										: `${savedThemeLabel} is saved.`}
-								</BodySmall>
+								<dt className="text-sm text-muted-foreground">{label}</dt>
+								<dd className="min-w-0 break-words text-sm font-medium">
+									{value}
+								</dd>
 							</div>
-							<div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
-								<FormSelect
-									options={themeOptions.map((t) => ({
-										label: t.label,
-										value: t.value,
-									}))}
-									onValueChange={handleThemeSelectChange}
-									value={themeValue}
-									className="w-full md:w-48"
-								/>
-								<div className="min-h-9 min-w-0 md:min-w-48">
-									{previewTheme && (
-										<div className="flex flex-col gap-2 sm:flex-row">
-											<Button
-												disabled={loadingUpdateTheme}
-												className="w-full sm:w-fit"
-												onClick={handleUpdateTheme}
-											>
-												<Save />
-												Save
-											</Button>
-											<Button
-												variant="outline"
-												className="w-full sm:w-fit"
-												onClick={handleClearTheme}
-											>
-												<RotateCcw />
-												Cancel
-											</Button>
-										</div>
-									)}
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+						))}
+					</dl>
+				</SettingsPanel>
 
-				{/* SECURITY */}
-				<div className="flex flex-col gap-4">
-					<H4>Security</H4>
-					<div className="flex justify-between max-w-xl items-center gap-4">
-						<div className="">
-							<BodyLarge>Reset Password</BodyLarge>
-						</div>
-						<div className="">
-							<BodyLarge>Email Notifications</BodyLarge>
-						</div>
-					</div>
-				</div>
+				<AppearanceSection
+					themeValue={themeValue}
+					selectedThemeLabel={selectedThemeLabel}
+					savedThemeLabel={savedThemeLabel}
+					previewTheme={previewTheme}
+					loadingUpdateTheme={loadingUpdateTheme}
+					onThemeSelectChange={handleThemeSelectChange}
+					onUpdateTheme={handleUpdateTheme}
+					onClearTheme={handleClearTheme}
+				/>
 
 				<SettingsOrdersSection userRole={user.role} />
 
-				{/* Favorites */}
-				<div className="flex flex-col gap-4">
-					<H4>Your Product Favorites</H4>
-					<div className="space-y-3">
-						<div className="h-16 rounded bg-slate-200" />
-						<div className="h-16 rounded bg-slate-200" />
-						<div className="h-16 rounded bg-slate-200" />
+				<SettingsPanel
+					title="Account"
+					description="Permanent account-level actions."
+					tone="warning"
+				>
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+						<BodySmall className="max-w-xl text-muted-foreground leading-6">
+							Delete your profile, saved settings, and account activity tied to
+							this sign-in.
+						</BodySmall>
+						<Button
+							variant="destructive"
+							className="w-full sm:w-fit"
+							onClick={() => setOpenDialog("deleteUser")}
+						>
+							Delete account
+						</Button>
 					</div>
-				</div>
-
-				{/* REVIEWS */}
-				<div className="flex flex-col gap-4">
-					<H4>Your Reviews</H4>
-					<div className="grid gap-4 md:grid-cols-2">
-						<div className="h-24 rounded bg-slate-200" />
-						<div className="h-24 rounded bg-slate-200" />
-					</div>
-				</div>
-
-				{/* NOTIFICATIONS */}
-				<div className="flex flex-col gap-4">
-					<H4>Notifications</H4>
-					<div className="space-y-3">
-						<div className="h-14 rounded bg-slate-200" />
-						<div className="h-14 rounded bg-slate-200" />
-						<div className="h-14 rounded bg-slate-200" />
-					</div>
-				</div>
-
-				{/* DANGER ZONE */}
-				<div className="rounded-2xl border border-red-200 bg-red-50 p-6">
-					<h2 className="mb-4 text-xl font-semibold text-red-600">
-						Danger Zone
-					</h2>
-					<div className="flex gap-4">
-						<div className="h-10 w-40 rounded bg-red-300" />
-						<div className="h-10 w-40 rounded bg-red-200" />
-					</div>
-				</div>
+				</SettingsPanel>
 
 				<AppDialog type="updateUser" title="Update your profile information">
 					<UpdateProfileForm />
 				</AppDialog>
 
 				<AppDialog type="updateProfilePic" title="Upload your profile picture">
-					<h1>Test for Upload Profile Picture Dialog</h1>
+					<ProfilePictureDialog />
+				</AppDialog>
+
+				<AppDialog type="deleteUser" title="Delete your account">
+					<DeleteAccountDialog user={user} />
 				</AppDialog>
 			</div>
 		</SectionContainer>
