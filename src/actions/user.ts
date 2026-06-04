@@ -4,42 +4,18 @@ import {
 	deleteUser,
 	getAllUsers,
 	getUserById,
-	updateProfilePicture,
 	updateUser,
 } from "@/data/user-repo";
-import { env } from "@/env";
-import { logger } from "@/lib/logger";
 import {
 	type UpdateUserInput,
 	updateProfilePictureSchema,
 	updateUserSchema,
 } from "@/lib/zod/user-validation";
 import {
-	deleteImage,
-	getPublicId,
-	unsignedUploadImage,
-} from "@/utils/cloudinary";
-import { compressImage } from "@/utils/compress-image";
-
-async function deleteProfilePictureAsset(profilePicUrl: string | null) {
-	if (!profilePicUrl) {
-		return;
-	}
-
-	const publicId = getPublicId(profilePicUrl);
-	await deleteImage(publicId);
-}
-
-async function cleanupProfilePictureAsset(
-	profilePicUrl: string | null,
-	logMessage: string,
-) {
-	try {
-		await deleteProfilePictureAsset(profilePicUrl);
-	} catch (error) {
-		logger.error(logMessage, error);
-	}
-}
+	cleanupProfilePictureAfterAccountDeletion,
+	removeProfilePicture,
+	replaceProfilePicture,
+} from "./profile-picture-lifecycle";
 
 export async function getUserByIdService(userId: string) {
 	const user = await getUserById(userId);
@@ -127,53 +103,17 @@ export async function updateValidatedUserProfilePicService(
 	}
 
 	if (profilePic === null) {
-		await updateProfilePicture(userId, null);
-		await cleanupProfilePictureAsset(
-			existingUser.profilePic,
-			"Failed to delete removed profile picture asset",
-		);
-
-		return profilePic;
+		return removeProfilePicture({
+			userId,
+			existingProfilePicUrl: existingUser.profilePic,
+		});
 	}
 
-	let profPicUrl: string | null = null;
-
-	try {
-		const compressedImage = await compressImage({
-			file: profilePic,
-			options: {
-				maxSize: 800,
-				quality: 85,
-				format: "jpeg",
-			},
-		});
-
-		const uploadResult = await unsignedUploadImage({
-			buffer: compressedImage.buffer,
-			filename: profilePic.name,
-			uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
-		});
-
-		profPicUrl = uploadResult.secure_url;
-		await updateProfilePicture(userId, profPicUrl);
-	} catch (error) {
-		await cleanupProfilePictureAsset(
-			profPicUrl,
-			"Failed to delete uploaded profile picture after update failure",
-		);
-		logger.error("Failed to update profile picture", error);
-		return {
-			error: "Failed to update the user profile picture",
-			details: error instanceof Error ? error.message : "Internal server error",
-		};
-	}
-
-	await cleanupProfilePictureAsset(
-		existingUser.profilePic,
-		"Failed to delete replaced profile picture asset",
-	);
-
-	return profPicUrl;
+	return replaceProfilePicture({
+		userId,
+		profilePic,
+		existingProfilePicUrl: existingUser.profilePic,
+	});
 }
 
 export async function deleteUserService(userId: string, email: string) {
@@ -192,10 +132,7 @@ export async function deleteUserService(userId: string, email: string) {
 	}
 
 	await deleteUser(userId);
-	await cleanupProfilePictureAsset(
-		existingUser.profilePic,
-		"Failed to delete profile picture during account deletion",
-	);
+	await cleanupProfilePictureAfterAccountDeletion(existingUser.profilePic);
 
 	return {
 		message: "Account has been deleted successfully",

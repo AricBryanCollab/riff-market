@@ -1,29 +1,37 @@
 import { afterEach, describe, expect, it, type Mock, vi } from "vitest";
 import type { UserProfile } from "@/types/user";
 
-const { userRepoMock, cloudinaryMock } = vi.hoisted(() => {
-	const userRepoMock = {
-		deleteUser: vi.fn(),
-		getAllUsers: vi.fn(),
-		getUserById: vi.fn(),
-		updateProfilePicture: vi.fn(),
-		updateUser: vi.fn(),
-	} as const;
+const { userRepoMock, cloudinaryMock, compressImageMock, loggerMock } =
+	vi.hoisted(() => {
+		const userRepoMock = {
+			deleteUser: vi.fn(),
+			getAllUsers: vi.fn(),
+			getUserById: vi.fn(),
+			updateProfilePicture: vi.fn(),
+			updateUser: vi.fn(),
+		} as const;
 
-	const cloudinaryMock = {
-		deleteImage: vi.fn(),
-		getPublicId: vi.fn((url: string) => {
-			const filename = url.split("/").pop();
-			return filename ? filename.split(".")[0] : "";
-		}),
-		unsignedUploadImage: vi.fn(),
-	} as const;
+		const cloudinaryMock = {
+			deleteImage: vi.fn(),
+			getPublicId: vi.fn((url: string) => {
+				const filename = url.split("/").pop();
+				return filename ? filename.split(".")[0] : "";
+			}),
+			unsignedUploadImage: vi.fn(),
+		} as const;
 
-	return {
-		userRepoMock,
-		cloudinaryMock,
-	};
-});
+		const compressImageMock = vi.fn();
+		const loggerMock = {
+			error: vi.fn(),
+		};
+
+		return {
+			userRepoMock,
+			cloudinaryMock,
+			compressImageMock,
+			loggerMock,
+		};
+	});
 
 vi.mock("@/env", () => ({
 	env: {
@@ -44,7 +52,13 @@ vi.mock("@tanstack/react-start", () => ({
 }));
 
 vi.mock("@/data/user-repo", () => userRepoMock);
+vi.mock("@/lib/logger", () => ({
+	logger: loggerMock,
+}));
 vi.mock("@/utils/cloudinary", () => cloudinaryMock);
+vi.mock("@/utils/compress-image", () => ({
+	compressImage: compressImageMock,
+}));
 
 import {
 	deleteUserService,
@@ -64,6 +78,26 @@ function makeUser(overrides: Partial<UserProfile> = {}): UserProfile {
 		address: null,
 		...overrides,
 	};
+}
+
+function makeImage(name: string) {
+	return new File([`bytes-${name}`], name, {
+		type: "image/jpeg",
+	});
+}
+
+function withCompressedImage(): Promise<{
+	buffer: Buffer;
+	originalSize: number;
+	compressedSize: number;
+	mime: string;
+}> {
+	return Promise.resolve({
+		buffer: Buffer.from("compressed"),
+		originalSize: 10,
+		compressedSize: 8,
+		mime: "image/jpeg",
+	});
 }
 
 describe("user actions", () => {
@@ -172,6 +206,123 @@ describe("user actions", () => {
 				(userRepoMock.updateProfilePicture as Mock).mock.invocationCallOrder[0],
 			).toBeLessThan(
 				(cloudinaryMock.deleteImage as Mock).mock.invocationCallOrder[0],
+			);
+		});
+
+		it("replaces a profile picture before cleaning up the previous asset", async () => {
+			const user = makeUser({
+				profilePic: "https://res.cloudinary.com/riff/image/upload/old.jpg",
+			});
+			const newProfilePicUrl =
+				"https://res.cloudinary.com/riff/image/upload/new.jpg";
+			const profilePic = makeImage("new.jpg");
+
+			(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+			(compressImageMock as Mock).mockImplementation(withCompressedImage);
+			(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
+				secure_url: newProfilePicUrl,
+			});
+			(cloudinaryMock.deleteImage as Mock).mockResolvedValue({ result: "ok" });
+			(userRepoMock.updateProfilePicture as Mock).mockResolvedValue(undefined);
+
+			const result = await updateValidatedUserProfilePicService(
+				user.id,
+				profilePic,
+			);
+
+			expect(result).toBe(newProfilePicUrl);
+			expect(compressImageMock).toHaveBeenCalledWith({
+				file: profilePic,
+				options: {
+					maxSize: 800,
+					quality: 85,
+					format: "jpeg",
+				},
+			});
+			expect(cloudinaryMock.unsignedUploadImage).toHaveBeenCalledWith({
+				buffer: Buffer.from("compressed"),
+				filename: profilePic.name,
+				uploadPreset: "test-preset",
+			});
+			expect(userRepoMock.updateProfilePicture).toHaveBeenCalledWith(
+				user.id,
+				newProfilePicUrl,
+			);
+			expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old");
+			expect(
+				(userRepoMock.updateProfilePicture as Mock).mock.invocationCallOrder[0],
+			).toBeLessThan(
+				(cloudinaryMock.deleteImage as Mock).mock.invocationCallOrder[0],
+			);
+		});
+
+		it("cleans up the uploaded profile picture when the database update fails", async () => {
+			const user = makeUser({
+				profilePic: "https://res.cloudinary.com/riff/image/upload/old.jpg",
+			});
+			const newProfilePicUrl =
+				"https://res.cloudinary.com/riff/image/upload/new.jpg";
+
+			(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+			(compressImageMock as Mock).mockImplementation(withCompressedImage);
+			(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
+				secure_url: newProfilePicUrl,
+			});
+			(userRepoMock.updateProfilePicture as Mock).mockRejectedValue(
+				new Error("db failed"),
+			);
+			(cloudinaryMock.deleteImage as Mock).mockResolvedValue({ result: "ok" });
+
+			const result = await updateValidatedUserProfilePicService(
+				user.id,
+				makeImage("new.jpg"),
+			);
+
+			expect(result).toEqual({
+				error: "Failed to update the user profile picture",
+				details: "db failed",
+			});
+			expect(cloudinaryMock.getPublicId).toHaveBeenCalledWith(newProfilePicUrl);
+			expect(cloudinaryMock.getPublicId).not.toHaveBeenCalledWith(
+				user.profilePic,
+			);
+			expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("new");
+			expect(
+				(userRepoMock.updateProfilePicture as Mock).mock.invocationCallOrder[0],
+			).toBeLessThan(
+				(cloudinaryMock.deleteImage as Mock).mock.invocationCallOrder[0],
+			);
+		});
+
+		it("still returns the new profile picture when previous asset cleanup fails", async () => {
+			const cleanupError = new Error("cloudinary failed");
+			const user = makeUser({
+				profilePic: "https://res.cloudinary.com/riff/image/upload/old.jpg",
+			});
+			const newProfilePicUrl =
+				"https://res.cloudinary.com/riff/image/upload/new.jpg";
+
+			(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+			(compressImageMock as Mock).mockImplementation(withCompressedImage);
+			(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
+				secure_url: newProfilePicUrl,
+			});
+			(userRepoMock.updateProfilePicture as Mock).mockResolvedValue(undefined);
+			(cloudinaryMock.deleteImage as Mock).mockRejectedValue(cleanupError);
+
+			const result = await updateValidatedUserProfilePicService(
+				user.id,
+				makeImage("new.jpg"),
+			);
+
+			expect(result).toBe(newProfilePicUrl);
+			expect(userRepoMock.updateProfilePicture).toHaveBeenCalledWith(
+				user.id,
+				newProfilePicUrl,
+			);
+			expect(loggerMock.error).toHaveBeenCalledWith(
+				"Failed to clean up orphaned replaced profile picture asset",
+				cleanupError,
 			);
 		});
 	});
