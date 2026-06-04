@@ -23,13 +23,3 @@ export function getSettingsProfileDetails({
 		{ label: "Role", value: roleLabel },
 	];
 }
-
-export function getSettingsCompletionItems(
-	user: UserProfile,
-): SettingsSummaryItem[] {
-	return [
-		{ label: "Photo", value: user.profilePic ? "Added" : "Missing" },
-		{ label: "Address", value: user.address ? "Added" : "Missing" },
-		{ label: "Phone", value: user.phone ? "Added" : "Missing" },
-	];
-}

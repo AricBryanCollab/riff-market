@@ -1,23 +1,5 @@
 import type { UserProfile } from "@/types/user";
-import {
-	getSettingsCompletionItems,
-	getSettingsProfileDetails,
-} from "../-utils/settings-profile-summary";
-
-export function SettingsCompletionList({ user }: { user: UserProfile }) {
-	const completionItems = getSettingsCompletionItems(user);
-
-	return (
-		<dl className="grid grid-cols-3 gap-3 text-sm lg:grid-cols-1">
-			{completionItems.map(({ label, value }) => (
-				<div key={label} className="min-w-0 border-l border-border pl-3">
-					<dt className="text-muted-foreground">{label}</dt>
-					<dd className="mt-1 truncate font-medium">{value}</dd>
-				</div>
-			))}
-		</dl>
-	);
-}
+import { getSettingsProfileDetails } from "../-utils/settings-profile-summary";
 
 export function SettingsProfileDetailsList({
 	roleLabel,

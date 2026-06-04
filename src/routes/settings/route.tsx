@@ -17,10 +17,7 @@ import { ProfileHeroCard } from "./-components/profile-hero-card";
 import { ProfilePictureDialog } from "./-components/profile-picture-dialog";
 import { SettingsOrdersSection } from "./-components/settings-orders-section";
 import { SettingsPanel } from "./-components/settings-panel";
-import {
-	SettingsCompletionList,
-	SettingsProfileDetailsList,
-} from "./-components/settings-summary-lists";
+import { SettingsProfileDetailsList } from "./-components/settings-summary-lists";
 
 export const Route = createFileRoute("/settings")({
 	beforeLoad: async ({ context }) => {
@@ -67,7 +64,7 @@ function SettingsComponent() {
 	return (
 		<SectionContainer>
 			<div className="mx-auto flex w-full max-w-5xl flex-col gap-8 pb-10">
-				<header className="grid gap-5 border-b border-border pb-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
+				<header className="border-b border-border pb-6">
 					<div>
 						<H2 className="text-3xl font-semibold tracking-normal md:text-4xl">
 							Settings
@@ -77,7 +74,6 @@ function SettingsComponent() {
 							account actions.
 						</BodySmall>
 					</div>
-					<SettingsCompletionList user={user} />
 				</header>
 
 				<ProfileHeroCard
