@@ -4,12 +4,39 @@ import { prisma } from "@/data/connect-db";
 import { createNotification } from "@/data/notification-repo";
 import { logger } from "@/lib/logger";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
-import {
-	orderBaseQuery,
-	transformOrderResponse,
-} from "@/utils/transform-order-query-response";
+import { transformOrderResponse } from "@/utils/transform-order-query-response";
 
-// Create Order
+const orderBaseQuery = {
+	items: {
+		include: {
+			product: {
+				select: {
+					id: true,
+					name: true,
+					images: true,
+					price: true,
+					seller: {
+						select: {
+							id: true,
+							firstName: true,
+							lastName: true,
+							email: true,
+						},
+					},
+				},
+			},
+		},
+	},
+	user: {
+		select: {
+			id: true,
+			email: true,
+			firstName: true,
+			lastName: true,
+		},
+	},
+} as const;
+
 export const createOrder = async (
 	userId: string,
 	orderData: CreateOrderRepoData,

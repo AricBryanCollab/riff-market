@@ -79,9 +79,12 @@ function getCloudinaryImagePublicIdFromUrl(imageUrl: string) {
 }
 
 function getCloudinaryImagePublicId(image: CloudinaryImageSource) {
-	return typeof image === "string"
-		? getCloudinaryImagePublicIdFromUrl(image)
-		: image.publicId;
+	if (typeof image === "string") {
+		// Legacy rows only stored URLs, so parse until those rows are backfilled.
+		return getCloudinaryImagePublicIdFromUrl(image);
+	}
+
+	return image.publicId;
 }
 
 export async function deleteCloudinaryImageAsset(image: CloudinaryImageSource) {

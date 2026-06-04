@@ -1,6 +1,10 @@
-export interface CloudinaryImageRef {
-	url: string;
-	publicId: string;
-}
+import type { ImageAssetRef, ImageAssetSource } from "@/types/image-asset";
 
-export type CloudinaryImageSource = string | CloudinaryImageRef;
+export type CloudinaryImageRef = ImageAssetRef;
+export type CloudinaryImageSource = ImageAssetSource;
+
+export interface CloudinaryUploadResult {
+	secure_url?: string;
+	public_id?: string;
+	error?: string;
+}

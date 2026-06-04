@@ -1,44 +1,61 @@
-import { updateProfilePicture } from "@/data/user-repo";
+import type { Prisma } from "generated/prisma/client";
 import { env } from "@/env";
 import { logger } from "@/lib/logger";
+import type { CloudinaryUploadResult } from "@/types/cloudinary";
+import type { ImageAssetRef, ImageAssetSource } from "@/types/image-asset";
 import { unsignedUploadImage } from "@/utils/cloudinary";
 import { deleteCloudinaryImageAsset } from "@/utils/cloudinary-assets";
 import { compressImage } from "@/utils/compress-image";
+import { toImageAssetSource } from "@/utils/image-asset-ref";
 
-type ProfilePictureLifecycleError = {
-	error: string;
-	details: string;
-};
+function getMissingUploadMetadataMessage(
+	uploadResult: CloudinaryUploadResult | null | undefined,
+) {
+	const missingFields = [];
 
-type ProfilePictureUploadResult = {
-	secure_url?: string;
-	error?: string;
-};
+	if (!uploadResult?.secure_url) {
+		missingFields.push("secure URL");
+	}
 
-function getErrorMessage(error: unknown, fallback: string) {
-	return error instanceof Error ? error.message : fallback;
+	if (!uploadResult?.public_id) {
+		missingFields.push("public ID");
+	}
+
+	return `Image upload did not return required ${missingFields.join(" and ")}`;
 }
 
-async function deleteProfilePictureAsset(profilePicUrl: string | null) {
-	if (!profilePicUrl) {
+async function deleteProfilePictureAsset(profilePic: ImageAssetSource | null) {
+	if (!profilePic) {
 		return;
 	}
 
-	await deleteCloudinaryImageAsset(profilePicUrl);
+	await deleteCloudinaryImageAsset(profilePic);
 }
 
-async function cleanupOrphanedProfilePictureAsset(
-	profilePicUrl: string | null,
+export async function cleanupOrphanedProfilePictureAsset(
+	profilePic: ImageAssetSource | null,
 	logMessage: string,
 ) {
 	try {
-		await deleteProfilePictureAsset(profilePicUrl);
+		await deleteProfilePictureAsset(profilePic);
 	} catch (error) {
 		logger.error(logMessage, error);
 	}
 }
 
-async function uploadProfilePicture(profilePic: File) {
+export async function cleanupOrphanedProfilePictureAssetFromValue(
+	profilePicValue: Prisma.JsonValue | null | undefined,
+	logMessage: string,
+) {
+	await cleanupOrphanedProfilePictureAsset(
+		toImageAssetSource(profilePicValue),
+		logMessage,
+	);
+}
+
+export async function uploadProfilePicture(
+	profilePic: File,
+): Promise<ImageAssetRef> {
 	const compressedImage = await compressImage({
 		file: profilePic,
 		options: {
@@ -52,63 +69,25 @@ async function uploadProfilePicture(profilePic: File) {
 		buffer: compressedImage.buffer,
 		filename: profilePic.name,
 		uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
-	})) as ProfilePictureUploadResult;
+	})) as CloudinaryUploadResult;
 
-	if (!uploadResult?.secure_url) {
-		throw new Error(uploadResult?.error || "Cloudinary upload failed");
-	}
-
-	return uploadResult.secure_url;
-}
-
-export async function removeProfilePicture(params: {
-	userId: string;
-	existingProfilePicUrl: string | null;
-}) {
-	await updateProfilePicture(params.userId, null);
-	await cleanupOrphanedProfilePictureAsset(
-		params.existingProfilePicUrl,
-		"Failed to clean up orphaned removed profile picture asset",
-	);
-
-	return null;
-}
-
-export async function replaceProfilePicture(params: {
-	userId: string;
-	profilePic: File;
-	existingProfilePicUrl: string | null;
-}): Promise<string | ProfilePictureLifecycleError> {
-	let uploadedProfilePicUrl: string | null = null;
-
-	try {
-		uploadedProfilePicUrl = await uploadProfilePicture(params.profilePic);
-		await updateProfilePicture(params.userId, uploadedProfilePicUrl);
-	} catch (error) {
-		await cleanupOrphanedProfilePictureAsset(
-			uploadedProfilePicUrl,
-			"Failed to clean up orphaned uploaded profile picture after update failure",
+	if (!uploadResult?.secure_url || !uploadResult.public_id) {
+		throw new Error(
+			uploadResult?.error ?? getMissingUploadMetadataMessage(uploadResult),
 		);
-		logger.error("Failed to update profile picture", error);
-		return {
-			error: "Failed to update the user profile picture",
-			details: getErrorMessage(error, "Internal server error"),
-		};
 	}
 
-	await cleanupOrphanedProfilePictureAsset(
-		params.existingProfilePicUrl,
-		"Failed to clean up orphaned replaced profile picture asset",
-	);
-
-	return uploadedProfilePicUrl;
+	return {
+		url: uploadResult.secure_url,
+		publicId: uploadResult.public_id,
+	};
 }
 
 export async function cleanupProfilePictureAfterAccountDeletion(
-	profilePicUrl: string | null,
+	profilePicValue: Prisma.JsonValue | null | undefined,
 ) {
-	await cleanupOrphanedProfilePictureAsset(
-		profilePicUrl,
+	await cleanupOrphanedProfilePictureAssetFromValue(
+		profilePicValue,
 		"Failed to clean up orphaned profile picture during account deletion",
 	);
 }

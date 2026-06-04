@@ -1,4 +1,12 @@
-import { afterEach, describe, expect, it, type Mock, vi } from "vitest";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	type Mock,
+	vi,
+} from "vitest";
 
 import type {
 	CreateProductInput,
@@ -15,6 +23,7 @@ const { productRepoMock, cloudinaryMock, compressImageMock } = vi.hoisted(
 			getProductById: vi.fn(),
 			getProductCountByCategory: vi.fn(),
 			getProductCountByStatus: vi.fn(),
+			getProductImageValuesById: vi.fn(),
 			getProductsByIds: vi.fn(),
 			getProductsBySellerId: vi.fn(),
 			getRecentProducts: vi.fn(),
@@ -72,6 +81,13 @@ function makeImage(name: string) {
 	});
 }
 
+function makeUploadResult(filename: string) {
+	return {
+		secure_url: `https://cdn.example.com/${filename}`,
+		public_id: filename.split(".")[0],
+	};
+}
+
 function createValidPayload(images: File[]): CreateProductInput {
 	return {
 		name: "Telecaster",
@@ -125,9 +141,15 @@ function makeExistingProduct() {
 }
 
 describe("product actions", () => {
+	beforeEach(() => {
+		(cloudinaryMock.deleteImage as Mock).mockResolvedValue(undefined);
+		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue([
+			"https://cdn.example.com/old.jpg",
+		]);
+	});
+
 	afterEach(() => {
 		vi.clearAllMocks();
-		(cloudinaryMock.deleteImage as Mock).mockResolvedValue(undefined);
 	});
 
 	it("uploads new-product images using bounded parallelism", async () => {
@@ -153,6 +175,7 @@ describe("product actions", () => {
 
 				return {
 					secure_url: `https://cdn.example.com/${Date.now()}.jpg`,
+					public_id: "uploaded-image",
 				};
 			},
 		);
@@ -197,7 +220,7 @@ describe("product actions", () => {
 				}
 
 				await sleep(1);
-				return { secure_url: `https://cdn.example.com/${filename}` };
+				return makeUploadResult(filename);
 			},
 		);
 
@@ -226,7 +249,7 @@ describe("product actions", () => {
 				}
 
 				await sleep(1);
-				return { secure_url: `https://cdn.example.com/${filename}` };
+				return makeUploadResult(filename);
 			},
 		);
 
@@ -276,6 +299,7 @@ describe("product actions", () => {
 		(compressImageMock as Mock).mockImplementation(withCompressedImage);
 		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
 			secure_url: "https://cdn.example.com/img-1.jpg",
+			public_id: "img-1",
 		});
 		(productRepoMock.createProduct as Mock).mockRejectedValue(
 			new Error("create failed"),
@@ -289,7 +313,12 @@ describe("product actions", () => {
 		expect(productRepoMock.createProduct).toHaveBeenCalledWith(
 			expect.objectContaining({
 				sellerId: "seller-1",
-				images: ["https://cdn.example.com/img-1.jpg"],
+				images: [
+					{
+						url: "https://cdn.example.com/img-1.jpg",
+						publicId: "img-1",
+					},
+				],
 			}),
 		);
 	});
@@ -338,6 +367,7 @@ describe("product actions", () => {
 		(compressImageMock as Mock).mockImplementation(withCompressedImage);
 		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
 			secure_url: "https://cdn.example.com/new.jpg",
+			public_id: "new",
 		});
 
 		const result = await updateProductService("prod-1", "seller-1", "SELLER", {
@@ -349,7 +379,12 @@ describe("product actions", () => {
 		expect(productRepoMock.updateProductById).toHaveBeenCalledWith(
 			"prod-1",
 			expect.objectContaining({
-				images: ["https://cdn.example.com/new.jpg"],
+				images: [
+					{
+						url: "https://cdn.example.com/new.jpg",
+						publicId: "new",
+					},
+				],
 				isApproved: false,
 			}),
 		);
@@ -802,7 +837,6 @@ describe("product actions", () => {
 			"prod-1",
 			expect.objectContaining({
 				name: "Name only update",
-				images: existingProduct.images,
 				isApproved: false,
 			}),
 		);
@@ -850,7 +884,6 @@ describe("product actions", () => {
 			expect.objectContaining({
 				name: "Admin approved",
 				isApproved: true,
-				images: existingProduct.images,
 			}),
 		);
 	});
@@ -870,7 +903,6 @@ describe("product actions", () => {
 			"prod-1",
 			expect.objectContaining({
 				name: "No-op update",
-				images: existingProduct.images,
 				isApproved: false,
 			}),
 		);
@@ -1045,6 +1077,9 @@ describe("product actions", () => {
 	it("deletes product and images successfully", async () => {
 		const existingProduct = makeExistingProduct();
 		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
+		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue(
+			existingProduct.images,
+		);
 		(productRepoMock.deleteProductById as Mock).mockResolvedValue({
 			id: "prod-1",
 		});
@@ -1065,6 +1100,9 @@ describe("product actions", () => {
 			],
 		};
 		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
+		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue(
+			existingProduct.images,
+		);
 		(productRepoMock.deleteProductById as Mock).mockResolvedValue({
 			id: "prod-1",
 		});
@@ -1086,6 +1124,9 @@ describe("product actions", () => {
 			],
 		};
 		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
+		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue(
+			existingProduct.images,
+		);
 		(cloudinaryMock.deleteImage as Mock).mockImplementation((id: string) => {
 			if (id === "old2") {
 				return Promise.reject(new Error("cleanup failed"));
@@ -1150,7 +1191,7 @@ describe("product actions", () => {
 					throw new Error("update upload failed");
 				}
 
-				return { secure_url: `https://cdn.example.com/${filename}` };
+				return makeUploadResult(filename);
 			},
 		);
 

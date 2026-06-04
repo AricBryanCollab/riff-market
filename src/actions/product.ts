@@ -1,3 +1,4 @@
+import type { Prisma } from "generated/prisma/client";
 import {
 	createProduct,
 	deleteProductById,
@@ -6,13 +7,13 @@ import {
 	getProductById,
 	getProductCountByCategory,
 	getProductCountByStatus,
+	getProductImageValuesById,
 	getProductsByIds,
 	getProductsBySellerId,
 	getRecentProducts,
 	updateProductById,
 	updateProductStatus,
 } from "@/data/product-repo";
-import { env } from "@/env";
 import { logger } from "@/lib/logger";
 import {
 	type CreateProductInput,
@@ -24,111 +25,29 @@ import {
 	updateProductSchema,
 	updateProductStatusSchema,
 } from "@/lib/zod/product-validation";
-import { unsignedUploadImage } from "@/utils/cloudinary";
+import type { ImageAssetRef } from "@/types/image-asset";
+import { toImageAssetUrls } from "@/utils/image-asset-ref";
 import {
-	deleteCloudinaryImageAssets,
-	tryDeleteCloudinaryImageAssets,
-} from "@/utils/cloudinary-assets";
-import { compressImage } from "@/utils/compress-image";
+	deleteProductImagesFromValue,
+	uploadProductImages,
+} from "./product-image-assets";
 
-const MAX_PRODUCT_IMAGE_UPLOADS = 3;
-const productImageOptions = {
-	maxSize: 2400,
-	quality: 85,
-	format: "jpeg",
-} as const;
-
-type ProductImageUploadResult = {
-	secure_url?: string;
-	error?: string;
-};
 const UNAUTHORIZED_PRODUCT_MODIFICATION =
 	"Unauthorized, user cannot modify this product";
 
-async function mapWithConcurrency<T, R>(
-	items: T[],
-	concurrency: number,
-	mapFn: (item: T, index: number) => Promise<R>,
-): Promise<R[]> {
-	// This uses bounded async worker loops (via Promise workers), not Browser Worker API.
-	// Each worker grabs the next pending item and processes it until none remain.
-	if (items.length === 0) {
-		return [];
-	}
-
-	const normalizedConcurrency = Math.max(
-		1,
-		Math.min(concurrency, items.length),
-	);
-	const results = new Array<R>(items.length);
-	let nextIndex = 0;
-
-	const worker = async () => {
-		while (nextIndex < items.length) {
-			const index = nextIndex++;
-			results[index] = await mapFn(items[index], index);
-		}
+function toProductResponse<T extends { images: Prisma.JsonValue }>(
+	product: T,
+): Omit<T, "images"> & { images: string[] } {
+	return {
+		...product,
+		images: toImageAssetUrls(product.images),
 	};
-
-	await Promise.all(
-		Array.from({ length: normalizedConcurrency }, () => worker()),
-	);
-
-	return results;
 }
 
-async function uploadProductImage(imageFile: File) {
-	const compressedImage = await compressImage({
-		file: imageFile,
-		options: productImageOptions,
-	});
-
-	const uploadResult = (await unsignedUploadImage({
-		buffer: compressedImage.buffer,
-		filename: imageFile.name,
-		uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
-		folder: "products",
-	})) as ProductImageUploadResult;
-
-	if (!uploadResult || !uploadResult.secure_url) {
-		const message =
-			uploadResult && "error" in uploadResult
-				? uploadResult.error || "Cloudinary upload failed"
-				: "Cloudinary upload failed";
-
-		throw new Error(message);
-	}
-
-	return uploadResult.secure_url;
-}
-
-async function cleanupUploadedImages(imageUrls: string[]) {
-	if (imageUrls.length === 0) {
-		return;
-	}
-
-	await tryDeleteCloudinaryImageAssets(imageUrls);
-}
-
-async function uploadProductImages(imageFiles: File[]) {
-	const uploadedImageUrls: string[] = [];
-
-	try {
-		const urls = await mapWithConcurrency(
-			imageFiles,
-			MAX_PRODUCT_IMAGE_UPLOADS,
-			async (imageFile) => {
-				const url = await uploadProductImage(imageFile);
-				uploadedImageUrls.push(url);
-				return url;
-			},
-		);
-
-		return urls;
-	} catch (error) {
-		await cleanupUploadedImages(uploadedImageUrls);
-		throw error;
-	}
+function toProductResponses<T extends { images: Prisma.JsonValue }>(
+	products: T[],
+) {
+	return products.map(toProductResponse);
 }
 
 export async function createProductService(
@@ -153,14 +72,14 @@ export async function createProductService(
 		return { error: "Unauthorized, user must be a seller" };
 	}
 
-	const imageUrls: string[] = [];
+	const images: ImageAssetRef[] = [];
 	const imageFiles = data.images;
 
 	try {
 		// Upload image pipelines with bounded parallelism (max 3 at once).
-		const uploadedUrls = await uploadProductImages(imageFiles);
+		const uploadedImages = await uploadProductImages(imageFiles);
 
-		imageUrls.push(...uploadedUrls);
+		images.push(...uploadedImages);
 	} catch (error) {
 		return {
 			error: "Failed to upload images",
@@ -177,13 +96,13 @@ export async function createProductService(
 		description: data.description,
 		price: Number(data.price),
 		stock: Number(data.stock),
-		images: imageUrls,
+		images,
 		sellerId: sellerId,
 	};
 
 	const newProduct = await createProduct(productData);
 
-	return newProduct;
+	return toProductResponse(newProduct);
 }
 
 export async function getProductByIdService(productId: string) {
@@ -193,7 +112,7 @@ export async function getProductByIdService(productId: string) {
 		return { error: "Product not found" };
 	}
 
-	return product;
+	return toProductResponse(product);
 }
 
 export async function getProductsByIdsService(role: string, rawQuery: unknown) {
@@ -213,7 +132,7 @@ export async function getProductsByIdsService(role: string, rawQuery: unknown) {
 	const uniqueIds = Array.from(new Set(parsed.data.ids));
 	const products = await getProductsByIds(uniqueIds);
 
-	return products;
+	return toProductResponses(products);
 }
 
 export async function getProductsBySellerService(id: string, role: string) {
@@ -224,7 +143,7 @@ export async function getProductsBySellerService(id: string, role: string) {
 
 	const products = await getProductsBySellerId(userId);
 
-	return products;
+	return toProductResponses(products);
 }
 
 export async function getApprovedProductsService(rawQuery: unknown) {
@@ -240,12 +159,12 @@ export async function getApprovedProductsService(rawQuery: unknown) {
 	const validQuery = parsed.data;
 
 	const products = await getApprovedProducts(validQuery);
-	return products;
+	return toProductResponses(products);
 }
 
 export async function getPendingProductsService() {
 	const products = await getPendingApprovalProducts();
-	return products;
+	return toProductResponses(products);
 }
 
 export async function getProductCountByCategoryService() {
@@ -262,7 +181,7 @@ export async function getProductCountByStatusService(isApproved: boolean) {
 
 export async function getRecentProductsService(limit: number = 8) {
 	const products = await getRecentProducts(limit);
-	return products;
+	return toProductResponses(products);
 }
 
 export async function updateProductService(
@@ -299,26 +218,16 @@ export async function updateProductService(
 
 	const data = parsed.data;
 
-	let imageUrls: string[] = existingProduct.images;
+	let images: ImageAssetRef[] | undefined;
 
 	if (data.images && data.images.length > 0) {
-		const newImageUrls: string[] = [];
-
 		try {
 			// Upload image pipelines with bounded parallelism (max 3 at once).
-			const uploadedUrls = await uploadProductImages(data.images);
+			images = await uploadProductImages(data.images);
 
-			newImageUrls.push(...uploadedUrls);
-
-			imageUrls = newImageUrls;
-
-			// Delete old images
-			if (
-				Array.isArray(existingProduct.images) &&
-				existingProduct.images.length > 0
-			) {
-				await deleteCloudinaryImageAssets(existingProduct.images);
-			}
+			await deleteProductImagesFromValue(
+				await getProductImageValuesById(productId),
+			);
 		} catch (error) {
 			return {
 				error: "Failed to upload images",
@@ -335,7 +244,7 @@ export async function updateProductService(
 		...(data.description && { description: data.description }),
 		...(data.price && { price: Number(data.price) }),
 		...(data.stock !== undefined && { stock: Number(data.stock) }),
-		images: imageUrls,
+		...(images ? { images } : {}),
 		isApproved: role === "ADMIN",
 	};
 
@@ -347,7 +256,7 @@ export async function updateProductService(
 		};
 	}
 
-	return updatedProduct;
+	return toProductResponse(updatedProduct);
 }
 
 export async function updateProductStatusService(
@@ -405,9 +314,11 @@ export async function deleteProductService(
 
 	if (Array.isArray(product.images) && product.images.length > 0) {
 		try {
-			await deleteCloudinaryImageAssets(product.images);
+			await deleteProductImagesFromValue(
+				await getProductImageValuesById(productId),
+			);
 		} catch (error) {
-			logger.error("Failed to delete images from Cloudinary", error);
+			logger.error("Failed to delete product image assets", error);
 			return {
 				error: "Failed to delete product images",
 				details: error instanceof Error ? error.message : "Unknown error",

@@ -1,3 +1,4 @@
+import { Prisma } from "generated/prisma/client";
 import { afterEach, describe, expect, it, type Mock, vi } from "vitest";
 import type { UserProfile } from "@/types/user";
 
@@ -7,6 +8,7 @@ const { userRepoMock, cloudinaryMock, compressImageMock, loggerMock } =
 			deleteUser: vi.fn(),
 			getAllUsers: vi.fn(),
 			getUserById: vi.fn(),
+			getUserProfilePictureValueById: vi.fn(),
 			updateProfilePicture: vi.fn(),
 			updateUser: vi.fn(),
 		} as const;
@@ -76,6 +78,13 @@ function makeUser(overrides: Partial<UserProfile> = {}): UserProfile {
 	};
 }
 
+function mockExistingUser(user: UserProfile) {
+	(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+	(userRepoMock.getUserProfilePictureValueById as Mock).mockResolvedValue(
+		user.profilePic,
+	);
+}
+
 function makeImage(name: string) {
 	return new File([`bytes-${name}`], name, {
 		type: "image/jpeg",
@@ -107,7 +116,7 @@ describe("user actions", () => {
 				profilePic: "https://res.cloudinary.com/riff/image/upload/avatar.jpg",
 			});
 
-			(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+			mockExistingUser(user);
 			(cloudinaryMock.deleteImage as Mock).mockResolvedValue({ result: "ok" });
 			(userRepoMock.deleteUser as Mock).mockResolvedValue(undefined);
 
@@ -129,7 +138,7 @@ describe("user actions", () => {
 		it("skips profile picture cleanup when the user has no profile picture", async () => {
 			const user = makeUser();
 
-			(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+			mockExistingUser(user);
 			(userRepoMock.deleteUser as Mock).mockResolvedValue(undefined);
 
 			const result = await deleteUserService(user.id, user.email);
@@ -147,7 +156,7 @@ describe("user actions", () => {
 				profilePic: "https://res.cloudinary.com/riff/image/upload/avatar.jpg",
 			});
 
-			(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+			mockExistingUser(user);
 			(cloudinaryMock.deleteImage as Mock).mockRejectedValue(
 				new Error("cloudinary failed"),
 			);
@@ -166,7 +175,7 @@ describe("user actions", () => {
 				profilePic: "https://res.cloudinary.com/riff/image/upload/avatar.jpg",
 			});
 
-			(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+			mockExistingUser(user);
 			(userRepoMock.deleteUser as Mock).mockRejectedValue(
 				new Error("delete failed"),
 			);
@@ -184,7 +193,7 @@ describe("user actions", () => {
 				profilePic: "https://res.cloudinary.com/riff/image/upload/avatar.jpg",
 			});
 
-			(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+			mockExistingUser(user);
 			(cloudinaryMock.deleteImage as Mock).mockResolvedValue({ result: "ok" });
 			(userRepoMock.updateProfilePicture as Mock).mockResolvedValue(undefined);
 
@@ -193,7 +202,7 @@ describe("user actions", () => {
 			expect(result).toBeNull();
 			expect(userRepoMock.updateProfilePicture).toHaveBeenCalledWith(
 				user.id,
-				null,
+				Prisma.JsonNull,
 			);
 			expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("avatar");
 			expect(
@@ -211,10 +220,11 @@ describe("user actions", () => {
 				"https://res.cloudinary.com/riff/image/upload/new.jpg";
 			const profilePic = makeImage("new.jpg");
 
-			(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+			mockExistingUser(user);
 			(compressImageMock as Mock).mockImplementation(withCompressedImage);
 			(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
 				secure_url: newProfilePicUrl,
+				public_id: "new",
 			});
 			(cloudinaryMock.deleteImage as Mock).mockResolvedValue({ result: "ok" });
 			(userRepoMock.updateProfilePicture as Mock).mockResolvedValue(undefined);
@@ -238,10 +248,10 @@ describe("user actions", () => {
 				filename: profilePic.name,
 				uploadPreset: "test-preset",
 			});
-			expect(userRepoMock.updateProfilePicture).toHaveBeenCalledWith(
-				user.id,
-				newProfilePicUrl,
-			);
+			expect(userRepoMock.updateProfilePicture).toHaveBeenCalledWith(user.id, {
+				url: newProfilePicUrl,
+				publicId: "new",
+			});
 			expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old");
 			expect(
 				(userRepoMock.updateProfilePicture as Mock).mock.invocationCallOrder[0],
@@ -257,10 +267,11 @@ describe("user actions", () => {
 			const newProfilePicUrl =
 				"https://res.cloudinary.com/riff/image/upload/new.jpg";
 
-			(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+			mockExistingUser(user);
 			(compressImageMock as Mock).mockImplementation(withCompressedImage);
 			(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
 				secure_url: newProfilePicUrl,
+				public_id: "new",
 			});
 			(userRepoMock.updateProfilePicture as Mock).mockRejectedValue(
 				new Error("db failed"),
@@ -292,10 +303,11 @@ describe("user actions", () => {
 			const newProfilePicUrl =
 				"https://res.cloudinary.com/riff/image/upload/new.jpg";
 
-			(userRepoMock.getUserById as Mock).mockResolvedValue(user);
+			mockExistingUser(user);
 			(compressImageMock as Mock).mockImplementation(withCompressedImage);
 			(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
 				secure_url: newProfilePicUrl,
+				public_id: "new",
 			});
 			(userRepoMock.updateProfilePicture as Mock).mockResolvedValue(undefined);
 			(cloudinaryMock.deleteImage as Mock).mockRejectedValue(cleanupError);
@@ -306,10 +318,10 @@ describe("user actions", () => {
 			);
 
 			expect(result).toBe(newProfilePicUrl);
-			expect(userRepoMock.updateProfilePicture).toHaveBeenCalledWith(
-				user.id,
-				newProfilePicUrl,
-			);
+			expect(userRepoMock.updateProfilePicture).toHaveBeenCalledWith(user.id, {
+				url: newProfilePicUrl,
+				publicId: "new",
+			});
 			expect(loggerMock.error).toHaveBeenCalledWith(
 				"Failed to clean up orphaned replaced profile picture asset",
 				cleanupError,

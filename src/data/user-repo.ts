@@ -7,9 +7,19 @@ import type {
 import { prisma } from "@/data/connect-db";
 import { logger } from "@/lib/logger";
 import type { UpdateUserInput } from "@/lib/zod/user-validation";
-import type { UserProfile } from "@/types/user";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
+export type UserProfileRecord = {
+	id: string;
+	firstName: string;
+	lastName: string;
+	email: string;
+	role: User["role"];
+	theme: string;
+	phone: string | null;
+	profilePic: Prisma.JsonValue | null;
+	address: string | null;
+};
 type UserSettingsWriteData = Partial<
 	Pick<UserSettings, "address" | "phone" | "theme">
 >;
@@ -25,7 +35,7 @@ const getProvidedUserSettingsData = (
 const getUserProfiles = async (
 	db: DbClient,
 	where?: Prisma.UserWhereInput,
-): Promise<UserProfile[]> => {
+): Promise<UserProfileRecord[]> => {
 	const users = await db.user.findMany({
 		where,
 	});
@@ -61,7 +71,9 @@ const getUserProfiles = async (
 	});
 };
 
-export const getUserById = async (id: string): Promise<UserProfile | null> => {
+export const getUserById = async (
+	id: string,
+): Promise<UserProfileRecord | null> => {
 	try {
 		const users = await getUserProfiles(prisma, { id });
 		return users[0] ?? null;
@@ -71,7 +83,23 @@ export const getUserById = async (id: string): Promise<UserProfile | null> => {
 	}
 };
 
-export const getAllUsers = async (): Promise<UserProfile[]> => {
+export const getUserProfilePictureValueById = async (
+	userId: string,
+): Promise<Prisma.JsonValue | null> => {
+	try {
+		const settings = await prisma.userSettings.findUnique({
+			where: { userId },
+			select: { profilePic: true },
+		});
+
+		return settings?.profilePic ?? null;
+	} catch (err) {
+		logger.error("Error at getUserProfilePictureValueById", err);
+		throw err;
+	}
+};
+
+export const getAllUsers = async (): Promise<UserProfileRecord[]> => {
 	try {
 		return await getUserProfiles(prisma);
 	} catch (err) {
@@ -83,7 +111,7 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
 export const updateUser = async (
 	id: string,
 	data: UpdateUserInput,
-): Promise<UserProfile> => {
+): Promise<UserProfileRecord> => {
 	try {
 		const result = await prisma.$transaction(async (tx) => {
 			if (data.firstName || data.lastName) {
@@ -127,7 +155,7 @@ export const updateUser = async (
 
 export const updateProfilePicture = async (
 	userId: string,
-	profilePic: string | null,
+	profilePic: Prisma.InputJsonValue | typeof Prisma.JsonNull,
 ): Promise<void> => {
 	try {
 		await prisma.userSettings.upsert({
