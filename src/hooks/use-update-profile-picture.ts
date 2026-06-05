@@ -1,10 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { clientLogger } from "@/lib/client-logger";
-import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import { updateCurrentUserCache } from "@/lib/tanstack-query/cache-policy";
 import { updateCurrentUserProfilePictureFn } from "@/server/user.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
-import type { UserProfile } from "@/types/user";
 
 const useUpdateProfilePicture = () => {
 	const queryClient = useQueryClient();
@@ -25,10 +24,8 @@ const useUpdateProfilePicture = () => {
 			});
 		},
 		onSuccess: ({ profilePic }) => {
-			queryClient.setQueryData<UserProfile | null>(
-				queryKeys.auth.user,
-				(currentUser) =>
-					currentUser ? { ...currentUser, profilePic } : currentUser,
+			updateCurrentUserCache(queryClient, (currentUser) =>
+				currentUser ? { ...currentUser, profilePic } : currentUser,
 			);
 
 			setCloseDialog();

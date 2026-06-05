@@ -3,8 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { clientLogger } from "@/lib/client-logger";
+import { invalidateOrdersCache } from "@/lib/tanstack-query/cache-policy";
 import { createOrder } from "@/lib/tanstack-query/orders-queries";
-import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { useCartStore } from "@/store/cart";
 import { useToastStore } from "@/store/toast";
 import type { PaymentMethod } from "@/types/enum";
@@ -26,7 +26,7 @@ const usePlaceOrder = () => {
 	const { mutate, isPending, isError } = useMutation({
 		mutationFn: createOrder,
 		onSuccess: async () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.orders.root });
+			await invalidateOrdersCache(queryClient);
 			showToast(
 				"Order placed successfully! Please wait for seller confirmation",
 				"success",

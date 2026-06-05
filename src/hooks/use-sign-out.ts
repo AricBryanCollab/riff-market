@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { signOut } from "@/lib/tanstack-query/auth-queries";
-import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import { clearAccountCache } from "@/lib/tanstack-query/cache-policy";
 import { useToastStore } from "@/store/toast";
 
 export const useSignOut = () => {
@@ -10,10 +10,7 @@ export const useSignOut = () => {
 	const { mutate, isPending, isError } = useMutation({
 		mutationFn: signOut,
 		onSuccess: () => {
-			queryClient.setQueryData(queryKeys.auth.user, null);
-			queryClient.removeQueries({ queryKey: queryKeys.notifications.root });
-			queryClient.removeQueries({ queryKey: queryKeys.orders.root });
-
+			clearAccountCache(queryClient);
 			showToast("You have logged out", "success");
 		},
 	});

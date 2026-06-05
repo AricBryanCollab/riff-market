@@ -2,11 +2,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { clientLogger } from "@/lib/client-logger";
-import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import { setCurrentUserCache } from "@/lib/tanstack-query/cache-policy";
 import { updateCurrentUserFn } from "@/server/user.functions";
 import { useThemeStore } from "@/store/theme";
 import { useToastStore } from "@/store/toast";
-import type { UserProfile } from "@/types/user";
 
 const useThemeChange = () => {
 	const queryClient = useQueryClient();
@@ -39,7 +38,7 @@ const useThemeChange = () => {
 	} = useMutation({
 		mutationFn: (theme: string) => updateCurrentUserFn({ data: { theme } }),
 		onSuccess: (updatedUser) => {
-			queryClient.setQueryData<UserProfile>(queryKeys.auth.user, updatedUser);
+			setCurrentUserCache(queryClient, updatedUser);
 			commitPreview();
 			showToast("Your theme has been saved", "success");
 		},
