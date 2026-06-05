@@ -17,4 +17,7 @@ tmp/
 .githuman/
 
 /generated/prisma
-/prisma/migrations
+/prisma/migrations/*
+!/prisma/migrations/migration_lock.toml
+!/prisma/migrations/*/
+!/prisma/migrations/*/migration.sql

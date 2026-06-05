@@ -81,8 +81,15 @@ function makeUser(overrides: Partial<UserProfile> = {}): UserProfile {
 function mockExistingUser(user: UserProfile) {
 	(userRepoMock.getUserById as Mock).mockResolvedValue(user);
 	(userRepoMock.getUserProfilePictureValueById as Mock).mockResolvedValue(
-		user.profilePic,
+		user.profilePic ? makeImageAssetRef(user.profilePic) : null,
 	);
+}
+
+function makeImageAssetRef(url: string) {
+	return {
+		url,
+		publicId: url.split("/").pop()?.replace(/\.[^/.]+$/, "") ?? "",
+	};
 }
 
 function makeImage(name: string) {

@@ -1,6 +1,6 @@
 import { Prisma } from "generated/prisma/client";
 import z from "zod";
-import type { ImageAssetRef, ImageAssetSource } from "@/types/image-asset";
+import type { ImageAssetRef } from "@/types/image-asset";
 
 const imageAssetRefSchema = z.object({
 	url: z.string(),
@@ -12,10 +12,6 @@ export function isImageAssetRef(value: unknown): value is ImageAssetRef {
 }
 
 export function toImageAssetUrl(value: Prisma.JsonValue | null | undefined) {
-	if (typeof value === "string") {
-		return value;
-	}
-
 	if (isImageAssetRef(value)) {
 		return value.url;
 	}
@@ -23,13 +19,9 @@ export function toImageAssetUrl(value: Prisma.JsonValue | null | undefined) {
 	return null;
 }
 
-export function toImageAssetSource(
+export function toImageAssetRef(
 	value: Prisma.JsonValue | null | undefined,
-): ImageAssetSource | null {
-	if (typeof value === "string") {
-		return value;
-	}
-
+): ImageAssetRef | null {
 	if (isImageAssetRef(value)) {
 		return {
 			url: value.url,
@@ -47,23 +39,21 @@ export function toImageAssetUrls(value: Prisma.JsonValue | null | undefined) {
 
 	return value
 		.map((image) =>
-			typeof image === "string" || isImageAssetRef(image)
-				? toImageAssetUrl(image)
-				: null,
+			isImageAssetRef(image) ? toImageAssetUrl(image) : null,
 		)
 		.filter((imageUrl): imageUrl is string => imageUrl !== null);
 }
 
-export function toImageAssetSources(
+export function toImageAssetRefs(
 	value: Prisma.JsonValue | null | undefined,
 ) {
 	if (Array.isArray(value)) {
 		return value
-			.map(toImageAssetSource)
-			.filter((image): image is ImageAssetSource => image !== null);
+			.map(toImageAssetRef)
+			.filter((image): image is ImageAssetRef => image !== null);
 	}
 
-	const image = toImageAssetSource(value);
+	const image = toImageAssetRef(value);
 	return image ? [image] : [];
 }
 

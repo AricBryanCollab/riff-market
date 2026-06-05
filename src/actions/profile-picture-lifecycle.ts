@@ -2,11 +2,11 @@ import type { Prisma } from "generated/prisma/client";
 import { env } from "@/env";
 import { logger } from "@/lib/logger";
 import type { CloudinaryUploadResult } from "@/types/cloudinary";
-import type { ImageAssetRef, ImageAssetSource } from "@/types/image-asset";
+import type { ImageAssetRef } from "@/types/image-asset";
 import { unsignedUploadImage } from "@/utils/cloudinary";
 import { deleteCloudinaryImageAsset } from "@/utils/cloudinary-assets";
 import { compressImage } from "@/utils/compress-image";
-import { toImageAssetSource } from "@/utils/image-asset-ref";
+import { toImageAssetRef } from "@/utils/image-asset-ref";
 
 function getMissingUploadMetadataMessage(
 	uploadResult: CloudinaryUploadResult | null | undefined,
@@ -24,7 +24,7 @@ function getMissingUploadMetadataMessage(
 	return `Image upload did not return required ${missingFields.join(" and ")}`;
 }
 
-async function deleteProfilePictureAsset(profilePic: ImageAssetSource | null) {
+async function deleteProfilePictureAsset(profilePic: ImageAssetRef | null) {
 	if (!profilePic) {
 		return;
 	}
@@ -33,7 +33,7 @@ async function deleteProfilePictureAsset(profilePic: ImageAssetSource | null) {
 }
 
 export async function cleanupOrphanedProfilePictureAsset(
-	profilePic: ImageAssetSource | null,
+	profilePic: ImageAssetRef | null,
 	logMessage: string,
 ) {
 	try {
@@ -48,7 +48,7 @@ export async function cleanupOrphanedProfilePictureAssetFromValue(
 	logMessage: string,
 ) {
 	await cleanupOrphanedProfilePictureAsset(
-		toImageAssetSource(profilePicValue),
+		toImageAssetRef(profilePicValue),
 		logMessage,
 	);
 }

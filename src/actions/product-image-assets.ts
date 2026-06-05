@@ -1,14 +1,14 @@
 import type { Prisma } from "generated/prisma/client";
 import { env } from "@/env";
 import type { CloudinaryUploadResult } from "@/types/cloudinary";
-import type { ImageAssetRef, ImageAssetSource } from "@/types/image-asset";
+import type { ImageAssetRef } from "@/types/image-asset";
 import { unsignedUploadImage } from "@/utils/cloudinary";
 import {
 	deleteCloudinaryImageAssets,
 	tryDeleteCloudinaryImageAssets,
 } from "@/utils/cloudinary-assets";
 import { compressImage } from "@/utils/compress-image";
-import { toImageAssetSources } from "@/utils/image-asset-ref";
+import { toImageAssetRefs } from "@/utils/image-asset-ref";
 
 const MAX_PRODUCT_IMAGE_UPLOADS = 3;
 const productImageOptions = {
@@ -121,12 +121,12 @@ export async function uploadProductImages(
 	}
 }
 
-export async function deleteProductImages(images: ImageAssetSource[]) {
+export async function deleteProductImages(images: ImageAssetRef[]) {
 	await deleteCloudinaryImageAssets(images);
 }
 
 export async function deleteProductImagesFromValue(
 	imagesValue: Prisma.JsonValue | null | undefined,
 ) {
-	await deleteProductImages(toImageAssetSources(imagesValue));
+	await deleteProductImages(toImageAssetRefs(imagesValue));
 }

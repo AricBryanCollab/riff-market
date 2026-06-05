@@ -88,6 +88,20 @@ function makeUploadResult(filename: string) {
 	};
 }
 
+function makeImageAssetRef(url: string) {
+	return {
+		url,
+		publicId: url.split("/").pop()?.replace(/\.[^/.]+$/, "") ?? "",
+	};
+}
+
+function withImageRefs<T extends { images: string[] }>(product: T) {
+	return {
+		...product,
+		images: product.images.map(makeImageAssetRef),
+	};
+}
+
 function createValidPayload(images: File[]): CreateProductInput {
 	return {
 		name: "Telecaster",
@@ -144,7 +158,7 @@ describe("product actions", () => {
 	beforeEach(() => {
 		(cloudinaryMock.deleteImage as Mock).mockResolvedValue(undefined);
 		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue([
-			"https://cdn.example.com/old.jpg",
+			makeImageAssetRef("https://cdn.example.com/old.jpg"),
 		]);
 	});
 
@@ -346,7 +360,9 @@ describe("product actions", () => {
 			},
 		};
 
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
+		(productRepoMock.getProductById as Mock).mockResolvedValue(
+			withImageRefs(existingProduct),
+		);
 		(productRepoMock.updateProductById as Mock).mockResolvedValue({
 			id: "prod-1",
 			sellerId: "seller-1",
@@ -356,7 +372,7 @@ describe("product actions", () => {
 			brand: "Fender",
 			model: "Player",
 			description: "Great guitar",
-			images: ["https://cdn.example.com/new.jpg"],
+			images: [makeImageAssetRef("https://cdn.example.com/new.jpg")],
 			price: 200,
 			stock: 5,
 			isApproved: false,
@@ -415,7 +431,9 @@ describe("product actions", () => {
 
 	it("returns product when reading by id succeeds", async () => {
 		const expectedProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(expectedProduct);
+		(productRepoMock.getProductById as Mock).mockResolvedValue(
+			withImageRefs(expectedProduct),
+		);
 
 		const result = await getProductByIdService("prod-1");
 
@@ -490,7 +508,9 @@ describe("product actions", () => {
 			},
 		];
 
-		(productRepoMock.getProductsByIds as Mock).mockResolvedValue(products);
+		(productRepoMock.getProductsByIds as Mock).mockResolvedValue(
+			products.map(withImageRefs),
+		);
 
 		const result = await getProductsByIdsService("CUSTOMER", {
 			ids: ["prod-1", "prod-1", "prod-2"],
@@ -537,7 +557,9 @@ describe("product actions", () => {
 			},
 		];
 
-		(productRepoMock.getProductsBySellerId as Mock).mockResolvedValue(products);
+		(productRepoMock.getProductsBySellerId as Mock).mockResolvedValue(
+			products.map(withImageRefs),
+		);
 
 		const result = await getProductsBySellerService("seller-1", "SELLER");
 
@@ -604,7 +626,9 @@ describe("product actions", () => {
 			},
 		];
 
-		(productRepoMock.getApprovedProducts as Mock).mockResolvedValue(products);
+		(productRepoMock.getApprovedProducts as Mock).mockResolvedValue(
+			products.map(withImageRefs),
+		);
 
 		const result = await getApprovedProductsService({
 			limit: "5",
@@ -658,7 +682,7 @@ describe("product actions", () => {
 		];
 
 		(productRepoMock.getPendingApprovalProducts as Mock).mockResolvedValue(
-			products,
+			products.map(withImageRefs),
 		);
 
 		const result = await getPendingProductsService();
@@ -749,7 +773,7 @@ describe("product actions", () => {
 		];
 
 		(productRepoMock.getRecentProducts as Mock).mockResolvedValue(
-			recentProducts,
+			recentProducts.map(withImageRefs),
 		);
 
 		const limitedResult = await getRecentProductsService(4);
@@ -1078,7 +1102,7 @@ describe("product actions", () => {
 		const existingProduct = makeExistingProduct();
 		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
 		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue(
-			existingProduct.images,
+			withImageRefs(existingProduct).images,
 		);
 		(productRepoMock.deleteProductById as Mock).mockResolvedValue({
 			id: "prod-1",
@@ -1101,7 +1125,7 @@ describe("product actions", () => {
 		};
 		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
 		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue(
-			existingProduct.images,
+			withImageRefs(existingProduct).images,
 		);
 		(productRepoMock.deleteProductById as Mock).mockResolvedValue({
 			id: "prod-1",
@@ -1125,7 +1149,7 @@ describe("product actions", () => {
 		};
 		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
 		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue(
-			existingProduct.images,
+			withImageRefs(existingProduct).images,
 		);
 		(cloudinaryMock.deleteImage as Mock).mockImplementation((id: string) => {
 			if (id === "old2") {
