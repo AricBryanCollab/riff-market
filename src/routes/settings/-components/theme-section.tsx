@@ -7,7 +7,7 @@ import { BodyLarge, BodySmall } from "@/components/ui/typography";
 import { themeOptions } from "@/constants/select-options";
 import { SettingsPanel } from "./settings-panel";
 
-interface AppearanceSectionProps {
+interface ThemeSectionProps {
 	loadingUpdateTheme: boolean;
 	onClearTheme: () => void;
 	onThemeSelectChange: (value: string) => void;
@@ -18,7 +18,7 @@ interface AppearanceSectionProps {
 	themeValue: string;
 }
 
-export function AppearanceSection({
+export function ThemeSection({
 	loadingUpdateTheme,
 	onClearTheme,
 	onThemeSelectChange,
@@ -27,10 +27,10 @@ export function AppearanceSection({
 	savedThemeLabel,
 	selectedThemeLabel,
 	themeValue,
-}: AppearanceSectionProps) {
+}: ThemeSectionProps) {
 	return (
 		<SettingsPanel
-			title="Appearance"
+			title="Theme"
 			description="Choose the theme you want to use across RiffMarket."
 		>
 			<div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">

@@ -4,20 +4,16 @@ import SectionContainer from "@/components/section-container";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H2 } from "@/components/ui/typography";
 import UpdateProfileForm from "@/components/user-settings/update-profile-form";
-import { themeOptions } from "@/constants/select-options";
-import { useAuthUser } from "@/hooks/use-auth-user";
 import { ordersByRoleQueryOpt } from "@/hooks/use-get-orders";
-import useThemeChange from "@/hooks/use-theme-change";
-import { useDialogStore } from "@/store/dialog";
-import { useThemeStore } from "@/store/theme";
-import { getRoleInfo, requireAuthUser } from "@/utils/require-role";
-import { AppearanceSection } from "./-components/appearance-section";
+import { requireAuthUser } from "@/utils/require-role";
+import { ThemeSection } from "./-components/theme-section";
 import { DeleteAccountDialog } from "./-components/delete-account-dialog";
 import { ProfileHeroCard } from "./-components/profile-hero-card";
 import { ProfilePictureDialog } from "./-components/profile-picture-dialog";
 import { SettingsOrdersSection } from "./-components/settings-orders-section";
 import { SettingsPanel } from "./-components/settings-panel";
 import { SettingsProfileDetailsList } from "./-components/settings-summary-lists";
+import { useSettingsPage } from "./-hooks/use-settings-page";
 
 export const Route = createFileRoute("/settings")({
 	beforeLoad: async ({ context }) => {
@@ -41,25 +37,10 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsComponent() {
-	const { data: user } = useAuthUser();
-	const { setOpenDialog } = useDialogStore();
-	const { previewTheme } = useThemeStore();
-	const {
-		themeValue,
-		handleThemeSelectChange,
-		handleUpdateTheme,
-		handleClearTheme,
-		loadingUpdateTheme,
-	} = useThemeChange();
+	const settingsPage = useSettingsPage();
+	const { user } = settingsPage;
 
 	if (!user) return null;
-
-	const roleInfo = getRoleInfo(user.role);
-	const savedThemeLabel =
-		themeOptions.find((theme) => theme.value === user.theme)?.label ?? "Light";
-	const selectedThemeLabel =
-		themeOptions.find((theme) => theme.value === themeValue)?.label ??
-		savedThemeLabel;
 
 	return (
 		<SectionContainer>
@@ -78,29 +59,23 @@ function SettingsComponent() {
 
 				<ProfileHeroCard
 					user={user}
-					roleLabel={roleInfo.label}
-					roleDescription={roleInfo.description}
-					onEditProfile={() => setOpenDialog("updateUser")}
-					onUpdateProfilePicture={() => setOpenDialog("updateProfilePic")}
+					roleLabel={settingsPage.role.label}
+					roleDescription={settingsPage.role.description}
+					onEditProfile={settingsPage.actions.openEditProfile}
+					onUpdateProfilePicture={settingsPage.actions.openProfilePicture}
 				/>
 
 				<SettingsPanel
 					title="Profile"
 					description="Used for orders, seller communication, and account recovery."
 				>
-					<SettingsProfileDetailsList roleLabel={roleInfo.label} user={user} />
+					<SettingsProfileDetailsList
+						roleLabel={settingsPage.role.label}
+						user={user}
+					/>
 				</SettingsPanel>
 
-				<AppearanceSection
-					themeValue={themeValue}
-					selectedThemeLabel={selectedThemeLabel}
-					savedThemeLabel={savedThemeLabel}
-					previewTheme={previewTheme}
-					loadingUpdateTheme={loadingUpdateTheme}
-					onThemeSelectChange={handleThemeSelectChange}
-					onUpdateTheme={handleUpdateTheme}
-					onClearTheme={handleClearTheme}
-				/>
+				<ThemeSection {...settingsPage.theme} />
 
 				<SettingsOrdersSection userRole={user.role} />
 
@@ -117,7 +92,7 @@ function SettingsComponent() {
 						<Button
 							variant="destructive"
 							className="w-full sm:w-fit"
-							onClick={() => setOpenDialog("deleteUser")}
+							onClick={settingsPage.actions.openDeleteAccount}
 						>
 							Delete account
 						</Button>
