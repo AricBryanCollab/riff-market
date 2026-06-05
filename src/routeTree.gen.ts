@@ -22,14 +22,12 @@ import { Route as ShopIndexRouteImport } from './routes/shop/index'
 import { Route as ReviewsIndexRouteImport } from './routes/reviews/index'
 import { Route as ProductNewRouteImport } from './routes/product/new'
 import { Route as ProductIdRouteImport } from './routes/product/$id'
-import { Route as ApiUserRouteImport } from './routes/api/user'
 import { Route as ApiUploadimageRouteImport } from './routes/api/uploadimage'
 import { Route as ApiReviewsRouteImport } from './routes/api/reviews'
 import { Route as ApiProductsRouteImport } from './routes/api/products'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
 import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
 import { Route as ProductEditIdRouteImport } from './routes/product/edit.$id'
-import { Route as ApiUserProfilePictureRouteImport } from './routes/api/user.profile-picture'
 import { Route as ApiProductsSellerRouteImport } from './routes/api/products.seller'
 import { Route as ApiProductsRecentRouteImport } from './routes/api/products.recent'
 import { Route as ApiProductsPendingRouteImport } from './routes/api/products.pending'
@@ -111,11 +109,6 @@ const ProductIdRoute = ProductIdRouteImport.update({
   path: '/product/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUserRoute = ApiUserRouteImport.update({
-  id: '/api/user',
-  path: '/api/user',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiUploadimageRoute = ApiUploadimageRouteImport.update({
   id: '/api/uploadimage',
   path: '/api/uploadimage',
@@ -145,11 +138,6 @@ const ProductEditIdRoute = ProductEditIdRouteImport.update({
   id: '/product/edit/$id',
   path: '/product/edit/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
-const ApiUserProfilePictureRoute = ApiUserProfilePictureRouteImport.update({
-  id: '/profile-picture',
-  path: '/profile-picture',
-  getParentRoute: () => ApiUserRoute,
 } as any)
 const ApiProductsSellerRoute = ApiProductsSellerRouteImport.update({
   id: '/seller',
@@ -243,7 +231,6 @@ export interface FileRoutesByFullPath {
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/reviews': typeof ApiReviewsRoute
   '/api/uploadimage': typeof ApiUploadimageRoute
-  '/api/user': typeof ApiUserRouteWithChildren
   '/product/$id': typeof ProductIdRoute
   '/product/new': typeof ProductNewRoute
   '/reviews': typeof ReviewsIndexRoute
@@ -261,7 +248,6 @@ export interface FileRoutesByFullPath {
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
-  '/api/user/profile-picture': typeof ApiUserProfilePictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
@@ -280,7 +266,6 @@ export interface FileRoutesByTo {
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/reviews': typeof ApiReviewsRoute
   '/api/uploadimage': typeof ApiUploadimageRoute
-  '/api/user': typeof ApiUserRouteWithChildren
   '/product/$id': typeof ProductIdRoute
   '/product/new': typeof ProductNewRoute
   '/reviews': typeof ReviewsIndexRoute
@@ -298,7 +283,6 @@ export interface FileRoutesByTo {
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
-  '/api/user/profile-picture': typeof ApiUserProfilePictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
@@ -319,7 +303,6 @@ export interface FileRoutesById {
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/reviews': typeof ApiReviewsRoute
   '/api/uploadimage': typeof ApiUploadimageRoute
-  '/api/user': typeof ApiUserRouteWithChildren
   '/product/$id': typeof ProductIdRoute
   '/product/new': typeof ProductNewRoute
   '/reviews/': typeof ReviewsIndexRoute
@@ -337,7 +320,6 @@ export interface FileRoutesById {
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
-  '/api/user/profile-picture': typeof ApiUserProfilePictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
@@ -359,7 +341,6 @@ export interface FileRouteTypes {
     | '/api/products'
     | '/api/reviews'
     | '/api/uploadimage'
-    | '/api/user'
     | '/product/$id'
     | '/product/new'
     | '/reviews'
@@ -377,7 +358,6 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/recent'
     | '/api/products/seller'
-    | '/api/user/profile-picture'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
@@ -396,7 +376,6 @@ export interface FileRouteTypes {
     | '/api/products'
     | '/api/reviews'
     | '/api/uploadimage'
-    | '/api/user'
     | '/product/$id'
     | '/product/new'
     | '/reviews'
@@ -414,7 +393,6 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/recent'
     | '/api/products/seller'
-    | '/api/user/profile-picture'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
@@ -434,7 +412,6 @@ export interface FileRouteTypes {
     | '/api/products'
     | '/api/reviews'
     | '/api/uploadimage'
-    | '/api/user'
     | '/product/$id'
     | '/product/new'
     | '/reviews/'
@@ -452,7 +429,6 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/recent'
     | '/api/products/seller'
-    | '/api/user/profile-picture'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
@@ -473,7 +449,6 @@ export interface RootRouteChildren {
   ApiProductsRoute: typeof ApiProductsRouteWithChildren
   ApiReviewsRoute: typeof ApiReviewsRoute
   ApiUploadimageRoute: typeof ApiUploadimageRoute
-  ApiUserRoute: typeof ApiUserRouteWithChildren
   ProductIdRoute: typeof ProductIdRoute
   ProductNewRoute: typeof ProductNewRoute
   ReviewsIndexRoute: typeof ReviewsIndexRoute
@@ -576,13 +551,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/user': {
-      id: '/api/user'
-      path: '/api/user'
-      fullPath: '/api/user'
-      preLoaderRoute: typeof ApiUserRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/uploadimage': {
       id: '/api/uploadimage'
       path: '/api/uploadimage'
@@ -624,13 +592,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/product/edit/$id'
       preLoaderRoute: typeof ProductEditIdRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/api/user/profile-picture': {
-      id: '/api/user/profile-picture'
-      path: '/profile-picture'
-      fullPath: '/api/user/profile-picture'
-      preLoaderRoute: typeof ApiUserProfilePictureRouteImport
-      parentRoute: typeof ApiUserRoute
     }
     '/api/products/seller': {
       id: '/api/products/seller'
@@ -814,17 +775,6 @@ const ApiProductsRouteWithChildren = ApiProductsRoute._addFileChildren(
   ApiProductsRouteChildren,
 )
 
-interface ApiUserRouteChildren {
-  ApiUserProfilePictureRoute: typeof ApiUserProfilePictureRoute
-}
-
-const ApiUserRouteChildren: ApiUserRouteChildren = {
-  ApiUserProfilePictureRoute: ApiUserProfilePictureRoute,
-}
-
-const ApiUserRouteWithChildren =
-  ApiUserRoute._addFileChildren(ApiUserRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRouteRoute: SettingsRouteRoute,
@@ -840,7 +790,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiProductsRoute: ApiProductsRouteWithChildren,
   ApiReviewsRoute: ApiReviewsRoute,
   ApiUploadimageRoute: ApiUploadimageRoute,
-  ApiUserRoute: ApiUserRouteWithChildren,
   ProductIdRoute: ProductIdRoute,
   ProductNewRoute: ProductNewRoute,
   ReviewsIndexRoute: ReviewsIndexRoute,
