@@ -3,10 +3,7 @@ import { env } from "@/env";
 import type { CloudinaryUploadResult } from "@/types/cloudinary";
 import type { ImageAssetRef } from "@/types/image-asset";
 import { unsignedUploadImage } from "@/utils/cloudinary";
-import {
-	deleteCloudinaryImageAssets,
-	tryDeleteCloudinaryImageAssets,
-} from "@/utils/cloudinary-assets";
+import { tryDeleteCloudinaryImageAssets } from "@/utils/cloudinary-assets";
 import { compressImage } from "@/utils/compress-image";
 import { toImageAssetRefs } from "@/utils/image-asset-ref";
 
@@ -34,17 +31,26 @@ async function mapWithConcurrency<T, R>(
 	);
 	const results = new Array<R>(items.length);
 	let nextIndex = 0;
+	let firstError: unknown;
 
 	const worker = async () => {
-		while (nextIndex < items.length) {
+		while (nextIndex < items.length && firstError === undefined) {
 			const index = nextIndex++;
-			results[index] = await mapFn(items[index], index);
+			try {
+				results[index] = await mapFn(items[index], index);
+			} catch (error) {
+				firstError ??= error;
+			}
 		}
 	};
 
-	await Promise.all(
+	await Promise.allSettled(
 		Array.from({ length: normalizedConcurrency }, () => worker()),
 	);
+
+	if (firstError !== undefined) {
+		throw firstError;
+	}
 
 	return results;
 }
@@ -117,16 +123,104 @@ export async function uploadProductImages(
 		return images;
 	} catch (error) {
 		await cleanupUploadedProductImages(uploadedImages);
+		throw new ProductImageUploadError(error);
+	}
+}
+
+export class ProductImageUploadError extends Error {
+	constructor(error: unknown) {
+		super(
+			error instanceof Error ? error.message : "Unknown image upload error",
+		);
+		this.name = "ProductImageUploadError";
+	}
+}
+
+export function isProductImageUploadError(
+	error: unknown,
+): error is ProductImageUploadError {
+	return error instanceof ProductImageUploadError;
+}
+
+async function cleanupProductImagesBestEffort(images: ImageAssetRef[]) {
+	if (images.length === 0) {
+		return;
+	}
+
+	await tryDeleteCloudinaryImageAssets(images);
+}
+
+interface CreateProductWithImagesOptions<TProduct> {
+	imageFiles: File[];
+	persistProduct: (images: ImageAssetRef[]) => Promise<TProduct>;
+}
+
+export async function createProductWithImages<TProduct>({
+	imageFiles,
+	persistProduct,
+}: CreateProductWithImagesOptions<TProduct>): Promise<TProduct> {
+	const uploadedImages = await uploadProductImages(imageFiles);
+
+	try {
+		return await persistProduct(uploadedImages);
+	} catch (error) {
+		await cleanupUploadedProductImages(uploadedImages);
 		throw error;
 	}
 }
 
-export async function deleteProductImages(images: ImageAssetRef[]) {
-	await deleteCloudinaryImageAssets(images);
+interface ReplaceProductImagesOptions<TProduct> {
+	currentImagesValue: Prisma.JsonValue | null | undefined;
+	imageFiles: File[];
+	persistProductImages: (
+		images: ImageAssetRef[],
+	) => Promise<TProduct | null | undefined>;
 }
 
-export async function deleteProductImagesFromValue(
-	imagesValue: Prisma.JsonValue | null | undefined,
-) {
-	await deleteProductImages(toImageAssetRefs(imagesValue));
+export async function replaceProductImages<TProduct>({
+	currentImagesValue,
+	imageFiles,
+	persistProductImages,
+}: ReplaceProductImagesOptions<TProduct>): Promise<
+	TProduct | null | undefined
+> {
+	const currentImages = toImageAssetRefs(currentImagesValue);
+	const uploadedImages = await uploadProductImages(imageFiles);
+
+	try {
+		const product = await persistProductImages(uploadedImages);
+
+		if (!product) {
+			await cleanupUploadedProductImages(uploadedImages);
+			return product;
+		}
+
+		await cleanupProductImagesBestEffort(currentImages);
+		return product;
+	} catch (error) {
+		await cleanupUploadedProductImages(uploadedImages);
+		throw error;
+	}
+}
+
+interface DeleteProductWithImagesOptions<TDeletedProduct> {
+	currentImagesValue: Prisma.JsonValue | null | undefined;
+	deleteProduct: () => Promise<TDeletedProduct | null | undefined>;
+}
+
+export async function deleteProductWithImages<TDeletedProduct>({
+	currentImagesValue,
+	deleteProduct,
+}: DeleteProductWithImagesOptions<TDeletedProduct>): Promise<
+	TDeletedProduct | null | undefined
+> {
+	const currentImages = toImageAssetRefs(currentImagesValue);
+	const deletedProduct = await deleteProduct();
+
+	if (!deletedProduct) {
+		return deletedProduct;
+	}
+
+	await cleanupProductImagesBestEffort(currentImages);
+	return deletedProduct;
 }

@@ -23,7 +23,6 @@ const { productRepoMock, cloudinaryMock, compressImageMock } = vi.hoisted(
 			getProductById: vi.fn(),
 			getProductCountByCategory: vi.fn(),
 			getProductCountByStatus: vi.fn(),
-			getProductImageValuesById: vi.fn(),
 			getProductsByIds: vi.fn(),
 			getProductsBySellerId: vi.fn(),
 			getRecentProducts: vi.fn(),
@@ -91,7 +90,11 @@ function makeUploadResult(filename: string) {
 function makeImageAssetRef(url: string) {
 	return {
 		url,
-		publicId: url.split("/").pop()?.replace(/\.[^/.]+$/, "") ?? "",
+		publicId:
+			url
+				.split("/")
+				.pop()
+				?.replace(/\.[^/.]+$/, "") ?? "",
 	};
 }
 
@@ -157,9 +160,6 @@ function makeExistingProduct() {
 describe("product actions", () => {
 	beforeEach(() => {
 		(cloudinaryMock.deleteImage as Mock).mockResolvedValue(undefined);
-		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue([
-			makeImageAssetRef("https://cdn.example.com/old.jpg"),
-		]);
 	});
 
 	afterEach(() => {
@@ -247,7 +247,8 @@ describe("product actions", () => {
 		});
 		expect(productRepoMock.createProduct).not.toHaveBeenCalled();
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("img-1");
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledTimes(1);
+		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("img-3");
+		expect(cloudinaryMock.deleteImage).toHaveBeenCalledTimes(2);
 	});
 
 	it("returns upload error if cleanup fails on create", async () => {
@@ -335,6 +336,7 @@ describe("product actions", () => {
 				],
 			}),
 		);
+		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("img-1");
 	});
 
 	it("updates images for existing products through same upload pipeline", async () => {
@@ -404,6 +406,58 @@ describe("product actions", () => {
 				isApproved: false,
 			}),
 		);
+		expect(
+			(productRepoMock.updateProductById as Mock).mock.invocationCallOrder[0],
+		).toBeLessThan(
+			(cloudinaryMock.deleteImage as Mock).mock.invocationCallOrder[0],
+		);
+	});
+
+	it("cleans up uploaded replacement images when product update fails", async () => {
+		const existingProduct = makeExistingProduct();
+
+		(productRepoMock.getProductById as Mock).mockResolvedValue(
+			withImageRefs(existingProduct),
+		);
+		(compressImageMock as Mock).mockImplementation(withCompressedImage);
+		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
+			secure_url: "https://cdn.example.com/new.jpg",
+			public_id: "new",
+		});
+		(productRepoMock.updateProductById as Mock).mockRejectedValue(
+			new Error("update failed"),
+		);
+
+		await expect(
+			updateProductService("prod-1", "seller-1", "SELLER", {
+				images: [makeImage("img-new.jpg")],
+			} as UpdateProductInput),
+		).rejects.toThrow("update failed");
+
+		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("new");
+		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalledWith("old");
+	});
+
+	it("cleans up uploaded replacement images when update does not persist", async () => {
+		const existingProduct = makeExistingProduct();
+
+		(productRepoMock.getProductById as Mock).mockResolvedValue(
+			withImageRefs(existingProduct),
+		);
+		(compressImageMock as Mock).mockImplementation(withCompressedImage);
+		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
+			secure_url: "https://cdn.example.com/new.jpg",
+			public_id: "new",
+		});
+		(productRepoMock.updateProductById as Mock).mockResolvedValue(null);
+
+		const result = await updateProductService("prod-1", "seller-1", "SELLER", {
+			images: [makeImage("img-new.jpg")],
+		} as UpdateProductInput);
+
+		expect(result).toMatchObject({ error: "Failed to update the product" });
+		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("new");
+		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalledWith("old");
 	});
 
 	it("does not process uploads when update target does not exist", async () => {
@@ -1100,9 +1154,8 @@ describe("product actions", () => {
 
 	it("deletes product and images successfully", async () => {
 		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue(
-			withImageRefs(existingProduct).images,
+		(productRepoMock.getProductById as Mock).mockResolvedValue(
+			withImageRefs(existingProduct),
 		);
 		(productRepoMock.deleteProductById as Mock).mockResolvedValue({
 			id: "prod-1",
@@ -1113,6 +1166,11 @@ describe("product actions", () => {
 		expect(result).toEqual({ message: "Product deleted successfully" });
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old");
 		expect(productRepoMock.deleteProductById).toHaveBeenCalledWith("prod-1");
+		expect(
+			(productRepoMock.deleteProductById as Mock).mock.invocationCallOrder[0],
+		).toBeLessThan(
+			(cloudinaryMock.deleteImage as Mock).mock.invocationCallOrder[0],
+		);
 	});
 
 	it("deletes all attached images during product delete", async () => {
@@ -1123,9 +1181,8 @@ describe("product actions", () => {
 				"https://cdn.example.com/old2.jpg",
 			],
 		};
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue(
-			withImageRefs(existingProduct).images,
+		(productRepoMock.getProductById as Mock).mockResolvedValue(
+			withImageRefs(existingProduct),
 		);
 		(productRepoMock.deleteProductById as Mock).mockResolvedValue({
 			id: "prod-1",
@@ -1139,7 +1196,7 @@ describe("product actions", () => {
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledTimes(2);
 	});
 
-	it("returns image cleanup error when deleting product images fails", async () => {
+	it("deletes the product when best-effort image cleanup fails", async () => {
 		const existingProduct = {
 			...makeExistingProduct(),
 			images: [
@@ -1147,10 +1204,12 @@ describe("product actions", () => {
 				"https://cdn.example.com/old2.jpg",
 			],
 		};
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-		(productRepoMock.getProductImageValuesById as Mock).mockResolvedValue(
-			withImageRefs(existingProduct).images,
+		(productRepoMock.getProductById as Mock).mockResolvedValue(
+			withImageRefs(existingProduct),
 		);
+		(productRepoMock.deleteProductById as Mock).mockResolvedValue({
+			id: "prod-1",
+		});
 		(cloudinaryMock.deleteImage as Mock).mockImplementation((id: string) => {
 			if (id === "old2") {
 				return Promise.reject(new Error("cleanup failed"));
@@ -1161,14 +1220,16 @@ describe("product actions", () => {
 
 		const result = await deleteProductService("prod-1", "seller-1", "SELLER");
 
-		expect(result).toMatchObject({
-			error: "Failed to delete product images",
-			details: "cleanup failed",
-		});
+		expect(result).toEqual({ message: "Product deleted successfully" });
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old1");
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old2");
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledTimes(2);
-		expect(productRepoMock.deleteProductById).not.toHaveBeenCalled();
+		expect(productRepoMock.deleteProductById).toHaveBeenCalledWith("prod-1");
+		expect(
+			(productRepoMock.deleteProductById as Mock).mock.invocationCallOrder[0],
+		).toBeLessThan(
+			(cloudinaryMock.deleteImage as Mock).mock.invocationCallOrder[0],
+		);
 	});
 
 	it("returns failure when product deletion does not persist", async () => {

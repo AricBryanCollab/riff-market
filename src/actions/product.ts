@@ -7,14 +7,12 @@ import {
 	getProductById,
 	getProductCountByCategory,
 	getProductCountByStatus,
-	getProductImageValuesById,
 	getProductsByIds,
 	getProductsBySellerId,
 	getRecentProducts,
 	updateProductById,
 	updateProductStatus,
 } from "@/data/product-repo";
-import { logger } from "@/lib/logger";
 import {
 	type CreateProductInput,
 	createProductSchema,
@@ -25,15 +23,32 @@ import {
 	updateProductSchema,
 	updateProductStatusSchema,
 } from "@/lib/zod/product-validation";
-import type { ImageAssetRef } from "@/types/image-asset";
 import { toImageAssetUrls } from "@/utils/image-asset-ref";
 import {
-	deleteProductImagesFromValue,
-	uploadProductImages,
+	createProductWithImages,
+	deleteProductWithImages,
+	isProductImageUploadError,
+	replaceProductImages,
 } from "./product-image-assets";
 
 const UNAUTHORIZED_PRODUCT_MODIFICATION =
 	"Unauthorized, user cannot modify this product";
+
+type ProductUpdateResult =
+	| Awaited<ReturnType<typeof updateProductById>>
+	| null
+	| undefined;
+
+function toProductImageUploadErrorResponse(error: unknown) {
+	if (!isProductImageUploadError(error)) {
+		throw error;
+	}
+
+	return {
+		error: "Failed to upload images",
+		details: error.message,
+	};
+}
 
 function toProductResponse<T extends { images: Prisma.JsonValue }>(
 	product: T,
@@ -72,21 +87,6 @@ export async function createProductService(
 		return { error: "Unauthorized, user must be a seller" };
 	}
 
-	const images: ImageAssetRef[] = [];
-	const imageFiles = data.images;
-
-	try {
-		// Upload image pipelines with bounded parallelism (max 3 at once).
-		const uploadedImages = await uploadProductImages(imageFiles);
-
-		images.push(...uploadedImages);
-	} catch (error) {
-		return {
-			error: "Failed to upload images",
-			details: error instanceof Error ? error.message : "Unknown error",
-		};
-	}
-
 	const productData = {
 		name: data.name,
 		category: data.category,
@@ -96,13 +96,23 @@ export async function createProductService(
 		description: data.description,
 		price: Number(data.price),
 		stock: Number(data.stock),
-		images,
 		sellerId: sellerId,
 	};
 
-	const newProduct = await createProduct(productData);
+	try {
+		const newProduct = await createProductWithImages({
+			imageFiles: data.images,
+			persistProduct: (images) =>
+				createProduct({
+					...productData,
+					images,
+				}),
+		});
 
-	return toProductResponse(newProduct);
+		return toProductResponse(newProduct);
+	} catch (error) {
+		return toProductImageUploadErrorResponse(error);
+	}
 }
 
 export async function getProductByIdService(productId: string) {
@@ -218,24 +228,6 @@ export async function updateProductService(
 
 	const data = parsed.data;
 
-	let images: ImageAssetRef[] | undefined;
-
-	if (data.images && data.images.length > 0) {
-		try {
-			// Upload image pipelines with bounded parallelism (max 3 at once).
-			images = await uploadProductImages(data.images);
-
-			await deleteProductImagesFromValue(
-				await getProductImageValuesById(productId),
-			);
-		} catch (error) {
-			return {
-				error: "Failed to upload images",
-				details: error instanceof Error ? error.message : "Unknown error",
-			};
-		}
-	}
-
 	const updateData = {
 		...(data.name && { name: data.name }),
 		...(data.category && { category: data.category }),
@@ -244,11 +236,28 @@ export async function updateProductService(
 		...(data.description && { description: data.description }),
 		...(data.price && { price: Number(data.price) }),
 		...(data.stock !== undefined && { stock: Number(data.stock) }),
-		...(images ? { images } : {}),
 		isApproved: role === "ADMIN",
 	};
 
-	const updatedProduct = await updateProductById(productId, updateData);
+	let updatedProduct: ProductUpdateResult;
+
+	if (data.images && data.images.length > 0) {
+		try {
+			updatedProduct = await replaceProductImages({
+				currentImagesValue: existingProduct.images,
+				imageFiles: data.images,
+				persistProductImages: (images) =>
+					updateProductById(productId, {
+						...updateData,
+						images,
+					}),
+			});
+		} catch (error) {
+			return toProductImageUploadErrorResponse(error);
+		}
+	} else {
+		updatedProduct = await updateProductById(productId, updateData);
+	}
 
 	if (!updatedProduct) {
 		return {
@@ -312,21 +321,10 @@ export async function deleteProductService(
 		return { error: UNAUTHORIZED_PRODUCT_MODIFICATION };
 	}
 
-	if (Array.isArray(product.images) && product.images.length > 0) {
-		try {
-			await deleteProductImagesFromValue(
-				await getProductImageValuesById(productId),
-			);
-		} catch (error) {
-			logger.error("Failed to delete product image assets", error);
-			return {
-				error: "Failed to delete product images",
-				details: error instanceof Error ? error.message : "Unknown error",
-			};
-		}
-	}
-
-	const deletedProduct = await deleteProductById(productId);
+	const deletedProduct = await deleteProductWithImages({
+		currentImagesValue: product.images,
+		deleteProduct: () => deleteProductById(productId),
+	});
 
 	if (!deletedProduct) {
 		return {

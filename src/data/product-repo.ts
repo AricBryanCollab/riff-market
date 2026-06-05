@@ -70,22 +70,6 @@ export const getProductById = async (id: string) => {
 	}
 };
 
-export const getProductImageValuesById = async (
-	id: string,
-): Promise<Prisma.JsonValue | null> => {
-	try {
-		const product = await prisma.product.findFirst({
-			where: { id },
-			select: { images: true },
-		});
-
-		return product?.images ?? null;
-	} catch (err) {
-		logger.error("Error at getProductImageValuesById", err);
-		throw err;
-	}
-};
-
 export const getProductsByIds = async (productIds: string[]) => {
 	try {
 		const products = await prisma.product.findMany({
