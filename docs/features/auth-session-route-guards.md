@@ -21,7 +21,7 @@ last_reviewed: 2026-02-17
 - Sign-up and sign-in create a server session and store `userId` + `role`.
 - Sign-out clears the session.
 - Client route guards use `requireAuthUser` and `requireRole` and redirect unauthorized users to `/unauthorized`.
-- `requireAuthUser` checks cached auth user first, then calls `getCurrentUserFn` once with query key `["auth", "user"]`, no retries.
+- `requireAuthUser` checks cached auth user first, then fetches `/api/user` once with query key `["auth", "user"]`, no retries.
 - Server API handlers that need auth use `authMiddleware`; missing session or missing user returns `401`.
 - Role-only access can be enforced with `roleMiddleware(allowedRoles)` for server handlers.
 
@@ -29,11 +29,11 @@ last_reviewed: 2026-02-17
 - `src/actions/auth.ts`
 - `src/utils/session.ts`
 - `src/middleware.ts`
-- `src/server/user.functions.ts`
 - `src/utils/require-role.ts`
 - `src/routes/api/auth.signin.ts`
 - `src/routes/api/auth.signup.ts`
 - `src/routes/api/auth.signout.ts`
+- `src/routes/api/user.ts`
 - `src/routes/cart.tsx`
 - `src/routes/checkout.tsx`
 
