@@ -93,5 +93,8 @@ src/
 ## Routing
 
 - **TanStack Router** for file-based routing in `src/routes`.
+- Do not edit `src/routeTree.gen.ts` by hand. This repo uses the TanStack Start Vite plugin, so route tree updates are generated through the Vite pipeline.
+- After adding, renaming, or deleting route files, run `bun run build` to regenerate `src/routeTree.gen.ts`; `bun run dev` also regenerates it while the dev server is running.
+- Vite requires Node `20.19+` or `22.12+`. If the build fails because `generated/prisma/client` is missing, run `bun run db:generate` with `DATABASE_URL` set, then rerun the build.
 
 ---

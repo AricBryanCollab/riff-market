@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { BodySmall, H2 } from "@/components/ui/typography";
 import UpdateProfileForm from "@/components/user-settings/update-profile-form";
 import { ordersByRoleQueryOpt } from "@/hooks/use-get-orders";
+import { sellerProductsQueryOpt } from "@/hooks/use-get-products";
 import { requireAuthUser } from "@/utils/require-role";
+import { SettingsActivitySection } from "./-components/settings-activity-section";
 import { ThemeSection } from "./-components/theme-section";
 import { DeleteAccountDialog } from "./-components/delete-account-dialog";
 import { ProfileHeroCard } from "./-components/profile-hero-card";
 import { ProfilePictureDialog } from "./-components/profile-picture-dialog";
-import { SettingsOrdersSection } from "./-components/settings-orders-section";
 import { SettingsPanel } from "./-components/settings-panel";
 import { SettingsProfileDetailsList } from "./-components/settings-summary-lists";
 import { useSettingsPage } from "./-hooks/use-settings-page";
@@ -32,6 +33,15 @@ export const Route = createFileRoute("/settings")({
 				revalidateIfStale: true,
 			})
 			.catch(() => undefined);
+
+		if (context.user.role === "SELLER") {
+			await context.queryClient
+				.ensureQueryData({
+					...sellerProductsQueryOpt,
+					revalidateIfStale: true,
+				})
+				.catch(() => undefined);
+		}
 	},
 	component: SettingsComponent,
 });
@@ -77,7 +87,7 @@ function SettingsComponent() {
 
 				<ThemeSection {...settingsPage.theme} />
 
-				<SettingsOrdersSection userRole={user.role} />
+				<SettingsActivitySection userRole={user.role} />
 
 				<SettingsPanel
 					title="Account"

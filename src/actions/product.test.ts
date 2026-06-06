@@ -577,15 +577,6 @@ describe("product actions", () => {
 		]);
 	});
 
-	it("enforces seller access when querying products by seller", async () => {
-		const result = await getProductsBySellerService("", "CUSTOMER");
-
-		expect(result).toMatchObject({
-			error: "Unauthorized, user must be a seller",
-		});
-		expect(productRepoMock.getProductsBySellerId).not.toHaveBeenCalled();
-	});
-
 	it("returns products for seller on valid seller query", async () => {
 		const products = [
 			{
@@ -615,21 +606,12 @@ describe("product actions", () => {
 			products.map(withImageRefs),
 		);
 
-		const result = await getProductsBySellerService("seller-1", "SELLER");
+		const result = await getProductsBySellerService("seller-1");
 
 		expect(result).toEqual(products);
 		expect(productRepoMock.getProductsBySellerId).toHaveBeenCalledWith(
 			"seller-1",
 		);
-	});
-
-	it("requires seller id for seller products lookup", async () => {
-		const result = await getProductsBySellerService("", "SELLER");
-
-		expect(result).toMatchObject({
-			error: "Unauthorized, user must be a seller",
-		});
-		expect(productRepoMock.getProductsBySellerId).not.toHaveBeenCalled();
 	});
 
 	it("propagates repository failures for seller products lookup", async () => {
@@ -638,7 +620,7 @@ describe("product actions", () => {
 		);
 
 		await expect(
-			getProductsBySellerService("seller-1", "SELLER"),
+			getProductsBySellerService("seller-1"),
 		).rejects.toThrow("failed to fetch seller products");
 	});
 
