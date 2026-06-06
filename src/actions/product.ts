@@ -145,13 +145,12 @@ export async function getProductsByIdsService(role: string, rawQuery: unknown) {
 	return toProductResponses(products);
 }
 
-export async function getProductsBySellerService(id: string, role: string) {
-	const userId = id;
-	if (role !== "SELLER" || !userId) {
-		return { error: "Unauthorized, user must be a seller" };
+export async function getProductsBySellerService(sellerId: string) {
+	if (!sellerId) {
+		throw new Error("Seller ID is required");
 	}
 
-	const products = await getProductsBySellerId(userId);
+	const products = await getProductsBySellerId(sellerId);
 
 	return toProductResponses(products);
 }

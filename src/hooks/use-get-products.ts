@@ -6,6 +6,7 @@ import {
 	getProductDetailsById,
 } from "@/lib/tanstack-query/product-queries";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import { getCurrentSellerProductsFn } from "@/server/product.functions";
 import type {
 	ApprovedProductCount,
 	BaseProduct,
@@ -41,6 +42,12 @@ export const productCountByStatusQueryOpt = (status: ProductCountStatusQuery) =>
 		queryKey: queryKeys.products.countByStatus(status),
 		queryFn: () => getProductCountByStatus(status),
 	});
+
+export const sellerProductsQueryOpt = queryOptions<BaseProduct[]>({
+	queryKey: queryKeys.products.bySeller,
+	queryFn: () => getCurrentSellerProductsFn(),
+	staleTime: 30000,
+});
 
 export const useApprovedProducts = (
 	filters: GetApprovedProductsFilterQuery,
@@ -107,5 +114,27 @@ export const useFeaturedProducts = () => {
 		loadingFeatured,
 		isErrorFeatured,
 		refetchFeatured,
+	};
+};
+
+export const useSellerProducts = () => {
+	const {
+		data,
+		isLoading: isLoadingSellerProducts,
+		isError: isErrorSellerProducts,
+		refetch: refetchSellerProducts,
+	} = useQuery(sellerProductsQueryOpt);
+
+	const sellerProducts = data ?? [];
+	const sellerProductCount = sellerProducts.length;
+	const isEmptySellerProducts = sellerProducts.length === 0;
+
+	return {
+		sellerProducts,
+		sellerProductCount,
+		isLoadingSellerProducts,
+		isErrorSellerProducts,
+		isEmptySellerProducts,
+		refetchSellerProducts,
 	};
 };

@@ -21,6 +21,7 @@ export const queryKeys = {
 		root: ["products"] as const,
 		approved: (filters: GetApprovedProductsFilterQuery) =>
 			["products", "approved", filters] as const,
+		bySeller: ["products", "by-seller"] as const,
 		cartDetails: (productIds: readonly string[]) =>
 			["products", "cart-details", productIds] as const,
 		countByCategory: ["products", "count", "by-category"] as const,
