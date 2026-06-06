@@ -2,7 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { clientLogger } from "@/lib/client-logger";
-import { updateUserProfile } from "@/lib/tanstack-query/user-queries";
+import { setCurrentUserCache } from "@/lib/tanstack-query/cache-policy";
+import { updateCurrentUserFn } from "@/server/user.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { UpdateUserRequest } from "@/types/user";
@@ -60,13 +61,14 @@ const useUpdateUser = () => {
 		isPending: loadingUpdateUser,
 		isError: errorUpdateUser,
 	} = useMutation({
-		mutationFn: updateUserProfile,
+		mutationFn: (nextUserData: UpdateUserRequest) =>
+			updateCurrentUserFn({ data: nextUserData }),
 		onSuccess: async (response) => {
 			const updatedUser =
 				response || (user && userData ? { ...user, ...userData } : null);
 
 			if (updatedUser) {
-				queryClient.setQueryData(["auth", "user"], updatedUser);
+				setCurrentUserCache(queryClient, updatedUser);
 			}
 
 			showToast("Your profile has been successfully updated", "success");

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { clientLogger } from "@/lib/client-logger";
+import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
 import { deleteProduct } from "@/lib/tanstack-query/product-queries";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
@@ -20,7 +21,7 @@ const useDeleteProduct = () => {
 	} = useMutation({
 		mutationFn: deleteProduct,
 		onSuccess: async () => {
-			queryClient.invalidateQueries({ queryKey: ["product"] });
+			await invalidateProductCache(queryClient);
 			showToast("Product has been successfully deleted", "success");
 			navigate({ to: "/shop" });
 		},

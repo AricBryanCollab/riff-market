@@ -1,24 +1,48 @@
 import { createServerFn } from "@tanstack/react-start";
+import z from "zod";
 import {
 	deleteUser,
 	getAllUsers,
 	getUserById,
+	getUserProfilePictureValueById,
+	type UserProfileRecord,
 	updateProfilePicture,
 	updateUser,
 } from "@/data/user-repo";
-import { env } from "@/env";
 import { logger } from "@/lib/logger";
 import {
 	type UpdateUserInput,
-	udpateUserSchema,
 	updateProfilePictureSchema,
+	updateUserSchema,
 } from "@/lib/zod/user-validation";
+import type { ImageAssetRef } from "@/types/image-asset";
+import type { UserProfile } from "@/types/user";
 import {
-	deleteImage,
-	getPublicId,
-	unsignedUploadImage,
-} from "@/utils/cloudinary";
-import { compressImage } from "@/utils/compress-image";
+	toImageAssetUrl,
+	toNullableJsonImageAssetRef,
+} from "@/utils/image-asset-ref";
+import {
+	cleanupOrphanedProfilePictureAsset,
+	cleanupOrphanedProfilePictureAssetFromValue,
+	cleanupProfilePictureAfterAccountDeletion,
+	uploadProfilePicture,
+} from "./profile-picture-lifecycle";
+
+type ProfilePictureUpdateError = {
+	error: string;
+	details: string;
+};
+
+function getErrorMessage(error: unknown, fallback: string) {
+	return error instanceof Error ? error.message : fallback;
+}
+
+function toUserProfile(user: UserProfileRecord): UserProfile {
+	return {
+		...user,
+		profilePic: toImageAssetUrl(user.profilePic),
+	};
+}
 
 export async function getUserByIdService(userId: string) {
 	const user = await getUserById(userId);
@@ -28,29 +52,38 @@ export async function getUserByIdService(userId: string) {
 		};
 	}
 
-	return { data: user };
+	return { data: toUserProfile(user) };
 }
 
 export const getAllUsersService = createServerFn({
 	method: "GET",
 }).handler(async () => {
 	const users = await getAllUsers();
-	return users;
+	return users.map(toUserProfile);
 });
 
 export async function updateUserService(
 	userId: string,
 	rawData: UpdateUserInput,
 ) {
-	const parsed = udpateUserSchema.safeParse(rawData);
+	const parsed = updateUserSchema.safeParse(rawData);
 
 	if (!parsed.success) {
 		return {
 			error: "Invalid user data to update",
-			details: parsed.error,
+			details: z.flattenError(parsed.error),
 		};
 	}
 
+	const updatedUser = await updateValidatedUserService(userId, parsed.data);
+
+	return updatedUser;
+}
+
+export async function updateValidatedUserService(
+	userId: string,
+	data: UpdateUserInput,
+) {
 	const existingUser = await getUserById(userId);
 
 	if (!existingUser) {
@@ -59,14 +92,32 @@ export async function updateUserService(
 		};
 	}
 
-	const data = parsed.data;
-
 	const updatedUser = await updateUser(userId, data);
 
-	return updatedUser;
+	return toUserProfile(updatedUser);
 }
 
 export async function updateUserProfilePicService(
+	userId: string,
+	profilePic: File | null,
+) {
+	if (profilePic !== null) {
+		const parsed = updateProfilePictureSchema.safeParse({
+			profilePic: profilePic,
+		});
+
+		if (!parsed.success) {
+			return {
+				error: "Invalid profile picture",
+				details: z.flattenError(parsed.error),
+			};
+		}
+	}
+
+	return updateValidatedUserProfilePicService(userId, profilePic);
+}
+
+export async function updateValidatedUserProfilePicService(
 	userId: string,
 	profilePic: File | null,
 ) {
@@ -78,62 +129,44 @@ export async function updateUserProfilePicService(
 		};
 	}
 
+	const existingProfilePicValue = await getUserProfilePictureValueById(userId);
+
 	if (profilePic === null) {
-		if (existingUser?.profilePic) {
-			const publicId = getPublicId(existingUser?.profilePic);
-			await deleteImage(publicId);
-		}
-		await updateProfilePicture(userId, null);
+		await updateProfilePicture(userId, toNullableJsonImageAssetRef(null));
+		await cleanupOrphanedProfilePictureAssetFromValue(
+			existingProfilePicValue,
+			"Failed to clean up orphaned removed profile picture asset",
+		);
 
-		return profilePic;
+		return null;
 	}
 
-	const parsed = updateProfilePictureSchema.safeParse({
-		profilePic: profilePic,
-	});
-
-	if (!parsed.success) {
-		return {
-			error: "Invalid profile picture",
-			details: parsed.error,
-		};
-	}
-
-	let profPicUrl: string;
+	let uploadedProfilePic: ImageAssetRef | null = null;
 
 	try {
-		const compressedImage = await compressImage({
-			file: profilePic,
-			options: {
-				maxSize: 800,
-				quality: 85,
-				format: "jpeg",
-			},
-		});
-
-		const uploadResult = await unsignedUploadImage({
-			buffer: compressedImage.buffer,
-			filename: profilePic.name,
-			uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
-		});
-
-		profPicUrl = uploadResult.secure_url;
-
-		if (existingUser?.profilePic) {
-			const publicId = getPublicId(existingUser?.profilePic);
-			await deleteImage(publicId);
-		}
+		uploadedProfilePic = await uploadProfilePicture(profilePic);
+		await updateProfilePicture(
+			userId,
+			toNullableJsonImageAssetRef(uploadedProfilePic),
+		);
 	} catch (error) {
+		await cleanupOrphanedProfilePictureAsset(
+			uploadedProfilePic,
+			"Failed to clean up orphaned uploaded profile picture after update failure",
+		);
 		logger.error("Failed to update profile picture", error);
 		return {
 			error: "Failed to update the user profile picture",
-			details: error instanceof Error ? error.message : "Internal server error",
-		};
+			details: getErrorMessage(error, "Internal server error"),
+		} satisfies ProfilePictureUpdateError;
 	}
 
-	await updateProfilePicture(userId, profPicUrl);
+	await cleanupOrphanedProfilePictureAssetFromValue(
+		existingProfilePicValue,
+		"Failed to clean up orphaned replaced profile picture asset",
+	);
 
-	return profPicUrl;
+	return uploadedProfilePic.url;
 }
 
 export async function deleteUserService(userId: string, email: string) {
@@ -151,7 +184,10 @@ export async function deleteUserService(userId: string, email: string) {
 		};
 	}
 
+	const existingProfilePicValue = await getUserProfilePictureValueById(userId);
+
 	await deleteUser(userId);
+	await cleanupProfilePictureAfterAccountDeletion(existingProfilePicValue);
 
 	return {
 		message: "Account has been deleted successfully",

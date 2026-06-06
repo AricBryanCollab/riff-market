@@ -10,26 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
-import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ShopRouteRouteImport } from './routes/shop/route'
+import { Route as SettingsRouteRouteImport } from './routes/settings/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopIndexRouteImport } from './routes/shop/index'
 import { Route as ReviewsIndexRouteImport } from './routes/reviews/index'
 import { Route as ProductNewRouteImport } from './routes/product/new'
 import { Route as ProductIdRouteImport } from './routes/product/$id'
-import { Route as ApiUserRouteImport } from './routes/api/user'
 import { Route as ApiUploadimageRouteImport } from './routes/api/uploadimage'
 import { Route as ApiReviewsRouteImport } from './routes/api/reviews'
 import { Route as ApiProductsRouteImport } from './routes/api/products'
 import { Route as ApiOrdersRouteImport } from './routes/api/orders'
 import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
 import { Route as ProductEditIdRouteImport } from './routes/product/edit.$id'
-import { Route as ApiUserProfilePictureRouteImport } from './routes/api/user.profile-picture'
 import { Route as ApiProductsSellerRouteImport } from './routes/api/products.seller'
 import { Route as ApiProductsRecentRouteImport } from './routes/api/products.recent'
 import { Route as ApiProductsPendingRouteImport } from './routes/api/products.pending'
@@ -49,11 +47,6 @@ import { Route as ApiNotificationsUnreadCountRouteImport } from './routes/api/no
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
   path: '/unauthorized',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -86,6 +79,11 @@ const ShopRouteRoute = ShopRouteRouteImport.update({
   path: '/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRouteRoute = SettingsRouteRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -109,11 +107,6 @@ const ProductNewRoute = ProductNewRouteImport.update({
 const ProductIdRoute = ProductIdRouteImport.update({
   id: '/product/$id',
   path: '/product/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiUserRoute = ApiUserRouteImport.update({
-  id: '/api/user',
-  path: '/api/user',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUploadimageRoute = ApiUploadimageRouteImport.update({
@@ -145,11 +138,6 @@ const ProductEditIdRoute = ProductEditIdRouteImport.update({
   id: '/product/edit/$id',
   path: '/product/edit/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
-const ApiUserProfilePictureRoute = ApiUserProfilePictureRouteImport.update({
-  id: '/profile-picture',
-  path: '/profile-picture',
-  getParentRoute: () => ApiUserRoute,
 } as any)
 const ApiProductsSellerRoute = ApiProductsSellerRouteImport.update({
   id: '/seller',
@@ -230,20 +218,19 @@ const ApiNotificationsUnreadCountRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRouteRoute
   '/shop': typeof ShopRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/community': typeof CommunityRoute
   '/notifications': typeof NotificationsRoute
-  '/settings': typeof SettingsRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/api/notifications': typeof ApiNotificationsRouteWithChildren
   '/api/orders': typeof ApiOrdersRouteWithChildren
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/reviews': typeof ApiReviewsRoute
   '/api/uploadimage': typeof ApiUploadimageRoute
-  '/api/user': typeof ApiUserRouteWithChildren
   '/product/$id': typeof ProductIdRoute
   '/product/new': typeof ProductNewRoute
   '/reviews': typeof ReviewsIndexRoute
@@ -261,26 +248,24 @@ export interface FileRoutesByFullPath {
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
-  '/api/user/profile-picture': typeof ApiUserProfilePictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRouteRoute
   '/about': typeof AboutRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/community': typeof CommunityRoute
   '/notifications': typeof NotificationsRoute
-  '/settings': typeof SettingsRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/api/notifications': typeof ApiNotificationsRouteWithChildren
   '/api/orders': typeof ApiOrdersRouteWithChildren
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/reviews': typeof ApiReviewsRoute
   '/api/uploadimage': typeof ApiUploadimageRoute
-  '/api/user': typeof ApiUserRouteWithChildren
   '/product/$id': typeof ProductIdRoute
   '/product/new': typeof ProductNewRoute
   '/reviews': typeof ReviewsIndexRoute
@@ -298,7 +283,6 @@ export interface FileRoutesByTo {
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
-  '/api/user/profile-picture': typeof ApiUserProfilePictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
@@ -306,20 +290,19 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRouteRoute
   '/shop': typeof ShopRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/community': typeof CommunityRoute
   '/notifications': typeof NotificationsRoute
-  '/settings': typeof SettingsRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/api/notifications': typeof ApiNotificationsRouteWithChildren
   '/api/orders': typeof ApiOrdersRouteWithChildren
   '/api/products': typeof ApiProductsRouteWithChildren
   '/api/reviews': typeof ApiReviewsRoute
   '/api/uploadimage': typeof ApiUploadimageRoute
-  '/api/user': typeof ApiUserRouteWithChildren
   '/product/$id': typeof ProductIdRoute
   '/product/new': typeof ProductNewRoute
   '/reviews/': typeof ReviewsIndexRoute
@@ -337,7 +320,6 @@ export interface FileRoutesById {
   '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
-  '/api/user/profile-picture': typeof ApiUserProfilePictureRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
   '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
@@ -346,20 +328,19 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/settings'
     | '/shop'
     | '/about'
     | '/cart'
     | '/checkout'
     | '/community'
     | '/notifications'
-    | '/settings'
     | '/unauthorized'
     | '/api/notifications'
     | '/api/orders'
     | '/api/products'
     | '/api/reviews'
     | '/api/uploadimage'
-    | '/api/user'
     | '/product/$id'
     | '/product/new'
     | '/reviews'
@@ -377,26 +358,24 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/recent'
     | '/api/products/seller'
-    | '/api/user/profile-picture'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/settings'
     | '/about'
     | '/cart'
     | '/checkout'
     | '/community'
     | '/notifications'
-    | '/settings'
     | '/unauthorized'
     | '/api/notifications'
     | '/api/orders'
     | '/api/products'
     | '/api/reviews'
     | '/api/uploadimage'
-    | '/api/user'
     | '/product/$id'
     | '/product/new'
     | '/reviews'
@@ -414,27 +393,25 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/recent'
     | '/api/products/seller'
-    | '/api/user/profile-picture'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
   id:
     | '__root__'
     | '/'
+    | '/settings'
     | '/shop'
     | '/about'
     | '/cart'
     | '/checkout'
     | '/community'
     | '/notifications'
-    | '/settings'
     | '/unauthorized'
     | '/api/notifications'
     | '/api/orders'
     | '/api/products'
     | '/api/reviews'
     | '/api/uploadimage'
-    | '/api/user'
     | '/product/$id'
     | '/product/new'
     | '/reviews/'
@@ -452,7 +429,6 @@ export interface FileRouteTypes {
     | '/api/products/pending'
     | '/api/products/recent'
     | '/api/products/seller'
-    | '/api/user/profile-picture'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
     | '/api/products/pending/$id'
@@ -460,20 +436,19 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SettingsRouteRoute: typeof SettingsRouteRoute
   ShopRouteRoute: typeof ShopRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   CommunityRoute: typeof CommunityRoute
   NotificationsRoute: typeof NotificationsRoute
-  SettingsRoute: typeof SettingsRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
   ApiNotificationsRoute: typeof ApiNotificationsRouteWithChildren
   ApiOrdersRoute: typeof ApiOrdersRouteWithChildren
   ApiProductsRoute: typeof ApiProductsRouteWithChildren
   ApiReviewsRoute: typeof ApiReviewsRoute
   ApiUploadimageRoute: typeof ApiUploadimageRoute
-  ApiUserRoute: typeof ApiUserRouteWithChildren
   ProductIdRoute: typeof ProductIdRoute
   ProductNewRoute: typeof ProductNewRoute
   ReviewsIndexRoute: typeof ReviewsIndexRoute
@@ -490,13 +465,6 @@ declare module '@tanstack/react-router' {
       path: '/unauthorized'
       fullPath: '/unauthorized'
       preLoaderRoute: typeof UnauthorizedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -541,6 +509,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -574,13 +549,6 @@ declare module '@tanstack/react-router' {
       path: '/product/$id'
       fullPath: '/product/$id'
       preLoaderRoute: typeof ProductIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/user': {
-      id: '/api/user'
-      path: '/api/user'
-      fullPath: '/api/user'
-      preLoaderRoute: typeof ApiUserRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/uploadimage': {
@@ -624,13 +592,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/product/edit/$id'
       preLoaderRoute: typeof ProductEditIdRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/api/user/profile-picture': {
-      id: '/api/user/profile-picture'
-      path: '/profile-picture'
-      fullPath: '/api/user/profile-picture'
-      preLoaderRoute: typeof ApiUserProfilePictureRouteImport
-      parentRoute: typeof ApiUserRoute
     }
     '/api/products/seller': {
       id: '/api/products/seller'
@@ -814,33 +775,21 @@ const ApiProductsRouteWithChildren = ApiProductsRoute._addFileChildren(
   ApiProductsRouteChildren,
 )
 
-interface ApiUserRouteChildren {
-  ApiUserProfilePictureRoute: typeof ApiUserProfilePictureRoute
-}
-
-const ApiUserRouteChildren: ApiUserRouteChildren = {
-  ApiUserProfilePictureRoute: ApiUserProfilePictureRoute,
-}
-
-const ApiUserRouteWithChildren =
-  ApiUserRoute._addFileChildren(ApiUserRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SettingsRouteRoute: SettingsRouteRoute,
   ShopRouteRoute: ShopRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   CommunityRoute: CommunityRoute,
   NotificationsRoute: NotificationsRoute,
-  SettingsRoute: SettingsRoute,
   UnauthorizedRoute: UnauthorizedRoute,
   ApiNotificationsRoute: ApiNotificationsRouteWithChildren,
   ApiOrdersRoute: ApiOrdersRouteWithChildren,
   ApiProductsRoute: ApiProductsRouteWithChildren,
   ApiReviewsRoute: ApiReviewsRoute,
   ApiUploadimageRoute: ApiUploadimageRoute,
-  ApiUserRoute: ApiUserRouteWithChildren,
   ProductIdRoute: ProductIdRoute,
   ProductNewRoute: ProductNewRoute,
   ReviewsIndexRoute: ReviewsIndexRoute,

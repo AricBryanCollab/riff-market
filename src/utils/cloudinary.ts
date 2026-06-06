@@ -48,12 +48,6 @@ export async function unsignedUploadImage(params: ImageParams) {
 	return res.json();
 }
 
-export function getPublicId(url: string): string {
-	const urlParts = url.split("/");
-	const filenameWithExt = urlParts[urlParts.length - 1].split(".")[0];
-	return filenameWithExt;
-}
-
 export async function deleteImage(publicId: string) {
 	const res = await cloudinary.uploader.destroy(publicId, {
 		resource_type: "image",

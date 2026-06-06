@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import type { ImageFile } from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
+import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
 import { createProduct } from "@/lib/tanstack-query/product-queries";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
@@ -32,7 +33,7 @@ const useCreateProduct = () => {
 	const { mutate, isPending, isError } = useMutation({
 		mutationFn: createProduct,
 		onSuccess: async () => {
-			queryClient.invalidateQueries({ queryKey: ["product"] });
+			await invalidateProductCache(queryClient);
 			showToast(
 				"You have successfully added your product. Please wait for admin approval",
 				"success",

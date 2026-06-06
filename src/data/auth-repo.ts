@@ -1,4 +1,4 @@
-import type { User, UserSettings } from "generated/prisma/client";
+import { Prisma, type User, type UserSettings } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
 import { logger } from "@/lib/logger";
 
@@ -55,7 +55,7 @@ export const createUser = async (user: ReqUser): Promise<CreateUserResult> => {
 					theme: "light",
 					phone: null,
 					address: null,
-					profilePic: null,
+					profilePic: Prisma.JsonNull,
 				},
 			});
 

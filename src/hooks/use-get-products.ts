@@ -5,6 +5,7 @@ import {
 	getProductCountByStatus,
 	getProductDetailsById,
 } from "@/lib/tanstack-query/product-queries";
+import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import type {
 	ApprovedProductCount,
 	BaseProduct,
@@ -17,27 +18,27 @@ export const approvedProductsQueryOpt = (
 	filters: GetApprovedProductsFilterQuery,
 ) =>
 	queryOptions<BaseProduct[]>({
-		queryKey: ["products", "approved", filters],
+		queryKey: queryKeys.products.approved(filters),
 		queryFn: () => getApprovedProducts(filters),
 		staleTime: 1000 * 60 * 5,
 	});
 
 export const featuredProductsQueryOpt = queryOptions<BaseProduct[]>({
-	queryKey: ["products", "featured"],
+	queryKey: queryKeys.products.featured,
 	queryFn: getFeaturedProducts,
 	staleTime: 1000 * 60 * 5,
 });
 
 export const productbyIdQueryOpt = (id: string) =>
 	queryOptions<BaseProduct>({
-		queryKey: ["product", id],
+		queryKey: queryKeys.products.detail(id),
 		queryFn: () => getProductDetailsById(id),
 		retry: false,
 	});
 
 export const productCountByStatusQueryOpt = (status: ProductCountStatusQuery) =>
 	queryOptions<ApprovedProductCount | PendingProductCount>({
-		queryKey: ["products", "count", status],
+		queryKey: queryKeys.products.countByStatus(status),
 		queryFn: () => getProductCountByStatus(status),
 	});
 

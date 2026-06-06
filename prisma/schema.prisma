@@ -78,7 +78,7 @@ model UserSettings {
   theme      String
   phone      String?
   address    String?
-  profilePic String?
+  profilePic Json?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -131,7 +131,7 @@ model Product {
   condition   ProductCondtion
   brand       String
   model       String
-  images       String[]
+  images      Json
   description String
   price       Float
   stock       Int

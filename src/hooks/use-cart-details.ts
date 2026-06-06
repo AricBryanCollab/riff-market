@@ -1,11 +1,12 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getProductsByIds } from "@/lib/tanstack-query/product-queries";
+import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { useCartStore } from "@/store/cart";
 import type { BaseProduct } from "@/types/product";
 
 export const cartDetailsQueryOpt = (productIds: string[]) =>
 	queryOptions<BaseProduct[]>({
-		queryKey: ["products", "cart-details", productIds],
+		queryKey: queryKeys.products.cartDetails(productIds),
 		queryFn: () => getProductsByIds(productIds),
 		staleTime: 1000 * 60 * 2,
 	});

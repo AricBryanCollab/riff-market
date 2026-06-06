@@ -7,14 +7,17 @@ import { createNotification } from "./notification-repo";
 
 type CreateProductRepoInput = Omit<
 	Product,
-	"id" | "createdAt" | "updatedAt" | "isApproved"
->;
+	"id" | "createdAt" | "updatedAt" | "isApproved" | "images"
+> & {
+	images: Prisma.InputJsonValue;
+};
 
 type UpdateProductRepoInput = Partial<
-	Omit<Product, "id" | "sellerId" | "createdAt" | "updatedAt">
+	Omit<Product, "id" | "sellerId" | "createdAt" | "updatedAt" | "images"> & {
+		images: Prisma.InputJsonValue;
+	}
 >;
 
-// Create Product
 export const createProduct = async (product: CreateProductRepoInput) => {
 	try {
 		return await prisma.product.create({
@@ -29,7 +32,6 @@ export const createProduct = async (product: CreateProductRepoInput) => {
 	}
 };
 
-// Get Products Base Query
 const baseProductQuery = {
 	id: true,
 	sellerId: true,
@@ -54,20 +56,20 @@ const baseProductQuery = {
 	},
 };
 
-// Get Product By ID
 export const getProductById = async (id: string) => {
 	try {
-		return await prisma.product.findFirst({
+		const product = await prisma.product.findFirst({
 			where: { id },
 			select: baseProductQuery,
 		});
+
+		return product;
 	} catch (err) {
 		logger.error("Error at getProductById", err);
 		throw err;
 	}
 };
 
-// Get Multiple Product By IDs
 export const getProductsByIds = async (productIds: string[]) => {
 	try {
 		const products = await prisma.product.findMany({
@@ -86,21 +88,21 @@ export const getProductsByIds = async (productIds: string[]) => {
 	}
 };
 
-// Get Product By Seller
 export const getProductsBySellerId = async (sellerId: string) => {
 	try {
-		return await prisma.product.findMany({
+		const products = await prisma.product.findMany({
 			where: { sellerId },
 			orderBy: { createdAt: "desc" },
 			select: baseProductQuery,
 		});
+
+		return products;
 	} catch (err) {
 		logger.error("Error at getProductsBySellerId", err);
 		throw err;
 	}
 };
 
-// Get Approved Products
 export const getApprovedProducts = async ({
 	limit = 12,
 	offset = 0,
@@ -142,42 +144,46 @@ export const getApprovedProducts = async ({
 			const randomSkip =
 				total > limit ? Math.floor(Math.random() * (total - limit)) : 0;
 
-			return await prisma.product.findMany({
+			const products = await prisma.product.findMany({
 				where: whereClause,
 				select: baseProductQuery,
 				take: limit,
 				skip: randomSkip,
 			});
+
+			return products;
 		}
 
-		return await prisma.product.findMany({
+		const products = await prisma.product.findMany({
 			where: whereClause,
 			orderBy: { createdAt: "desc" },
 			select: baseProductQuery,
 			take: limit,
 			skip: offset,
 		});
+
+		return products;
 	} catch (err) {
 		logger.error("Error at getApprovedProducts", err);
 		throw err;
 	}
 };
 
-//  Get Pending Approval Products
 export const getPendingApprovalProducts = async () => {
 	try {
-		return await prisma.product.findMany({
+		const products = await prisma.product.findMany({
 			where: { isApproved: false },
 			orderBy: { createdAt: "desc" },
 			select: baseProductQuery,
 		});
+
+		return products;
 	} catch (err) {
 		logger.error("Error at getPendingApprovalProducts", err);
 		throw err;
 	}
 };
 
-// Get Product Count By Category
 export const getProductCountByCategory = async () => {
 	try {
 		const groupedProducts = await prisma.product.groupBy({
@@ -200,7 +206,6 @@ export const getProductCountByCategory = async () => {
 	}
 };
 
-// Get Product Count By Status
 export const getProductCountByStatus = async (isApproved: boolean) => {
 	try {
 		const productCount = await prisma.product.count({
@@ -216,38 +221,54 @@ export const getProductCountByStatus = async (isApproved: boolean) => {
 	}
 };
 
-// Get Recent Products (Up to 8 products)
 export const getRecentProducts = async (limit: number = 8) => {
 	try {
-		return await prisma.product.findMany({
+		const products = await prisma.product.findMany({
 			where: { isApproved: true },
 			orderBy: { updatedAt: "desc" },
 			select: baseProductQuery,
 			take: limit,
 		});
+
+		return products;
 	} catch (err) {
 		logger.error("Error at getRecentProducts", err);
 		throw err;
 	}
 };
 
-// Update Product By ID
 export const updateProductById = async (
 	id: string,
 	product: UpdateProductRepoInput,
-): Promise<Product> => {
+) => {
 	try {
-		return await prisma.product.update({
+		const { images, ...productWithoutImages } = product;
+		const updateData = {
+			...productWithoutImages,
+			...(images ? { images } : {}),
+		};
+
+		const updatedProduct = await prisma.product.update({
 			where: { id },
-			data: product,
+			data: updateData,
+			include: {
+				seller: {
+					select: {
+						firstName: true,
+						lastName: true,
+						email: true,
+					},
+				},
+			},
 		});
+
+		return updatedProduct;
 	} catch (err) {
 		logger.error("Error at updateProductById", err);
 		throw err;
 	}
 };
 
-// Update Product Status
 export const updateProductStatus = async (
 	id: string,
 	sellerId: string,
@@ -298,7 +319,6 @@ export const updateProductStatus = async (
 	}
 };
 
-//  Delete Product By ID
 export const deleteProductById = async (id: string) => {
 	try {
 		return await prisma.product.delete({

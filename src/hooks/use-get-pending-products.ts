@@ -1,9 +1,10 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getPendingApprovalProducts } from "@/lib/tanstack-query/product-queries";
+import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import type { BaseProduct } from "@/types/product";
 
 export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
-	queryKey: ["pendingProducts"],
+	queryKey: queryKeys.products.pending,
 	queryFn: getPendingApprovalProducts,
 	retry: false,
 	staleTime: 30000,
@@ -34,7 +35,7 @@ const useGetPendingProducts = (options: UseGetPendingProductsOptions = {}) => {
 	const isEmptyPendingProducts = pendingProducts.length === 0;
 
 	const refetch = () => {
-		queryClient.invalidateQueries({ queryKey: ["pendingProducts"] });
+		queryClient.invalidateQueries({ queryKey: queryKeys.products.pending });
 	};
 
 	return {
