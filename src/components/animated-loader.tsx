@@ -38,10 +38,13 @@ const AnimatedLoader = ({
 
 			<div className="text-center mt-4">
 				<p
-					className={`${textSize} font-semibold tracking-wide text-foreground`}
+					className={`relative inline-block ${textSize} font-semibold tracking-wide text-foreground`}
 				>
 					{text}
-					<span className="inline-flex ml-1">
+					<span
+						className="absolute left-full top-0 inline-flex w-[0.9em] justify-start"
+						aria-hidden="true"
+					>
 						<span className="animate-bounce" style={{ animationDelay: "0ms" }}>
 							.
 						</span>
