@@ -36,7 +36,7 @@ export class CurrentUserRequestError extends Error {
 }
 
 const deleteCurrentUserSchema = z.object({
-	email: z.string().email("Enter the email address on your account"),
+	email: z.email("Enter the email address on your account"),
 });
 
 export type DeleteCurrentUserInput = z.infer<typeof deleteCurrentUserSchema>;
