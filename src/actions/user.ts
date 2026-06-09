@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
 import {
-	deleteUser,
+	deleteUserAndEnqueueMediaCleanupJobs,
 	getAllUsers,
 	getUserById,
 	getUserProfilePictureValueById,
@@ -24,7 +24,6 @@ import {
 import {
 	cleanupOrphanedProfilePictureAsset,
 	cleanupOrphanedProfilePictureAssetFromValue,
-	cleanupProfilePictureAfterAccountDeletion,
 	uploadProfilePicture,
 } from "./profile-picture-lifecycle";
 
@@ -184,10 +183,7 @@ export async function deleteUserService(userId: string, email: string) {
 		};
 	}
 
-	const existingProfilePicValue = await getUserProfilePictureValueById(userId);
-
-	await deleteUser(userId);
-	await cleanupProfilePictureAfterAccountDeletion(existingProfilePicValue);
+	await deleteUserAndEnqueueMediaCleanupJobs(userId);
 
 	return {
 		message: "Account has been deleted successfully",

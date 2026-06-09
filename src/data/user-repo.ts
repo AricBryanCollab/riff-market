@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type {
 	Prisma,
 	PrismaClient,
@@ -7,6 +8,7 @@ import type {
 import { prisma } from "@/data/connect-db";
 import { logger } from "@/lib/logger";
 import type { UpdateUserInput } from "@/lib/zod/user-validation";
+import { getAccountMediaCleanupJobInputs } from "./media-cleanup-job-data";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 export type UserProfileRecord = {
@@ -173,13 +175,49 @@ export const updateProfilePicture = async (
 	}
 };
 
-export const deleteUser = async (id: string): Promise<void> => {
+export const deleteUserAndEnqueueMediaCleanupJobs = async (
+	id: string,
+): Promise<void> => {
 	try {
-		await prisma.user.delete({
-			where: { id },
+		const cleanupBatchId = randomUUID();
+
+		await prisma.$transaction(async (tx) => {
+			const [settings, products] = await Promise.all([
+				tx.userSettings.findUnique({
+					where: { userId: id },
+					select: {
+						id: true,
+						profilePic: true,
+					},
+				}),
+				tx.product.findMany({
+					where: { sellerId: id },
+					select: {
+						id: true,
+						images: true,
+					},
+				}),
+			]);
+
+			const mediaCleanupJobs = getAccountMediaCleanupJobInputs({
+				cleanupBatchId,
+				userId: id,
+				settings,
+				products,
+			});
+
+			if (mediaCleanupJobs.length > 0) {
+				await tx.mediaCleanupJob.createMany({
+					data: mediaCleanupJobs,
+				});
+			}
+
+			await tx.user.delete({
+				where: { id },
+			});
 		});
 	} catch (err) {
-		logger.error("Error at deleteUser", err);
+		logger.error("Error at deleteUserAndEnqueueMediaCleanupJobs", err);
 		throw err;
 	}
 };
