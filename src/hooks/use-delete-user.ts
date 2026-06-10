@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { clearAuthenticatedClientState } from "@/lib/client-account-state";
 import { clientLogger } from "@/lib/client-logger";
-import { clearAccountCache } from "@/lib/tanstack-query/cache-policy";
 import { deleteCurrentUserFn } from "@/server/user.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
@@ -19,7 +19,7 @@ const useDeleteUser = () => {
 	} = useMutation({
 		mutationFn: (email: string) => deleteCurrentUserFn({ data: { email } }),
 		onSuccess: () => {
-			clearAccountCache(queryClient);
+			clearAuthenticatedClientState(queryClient);
 			setCloseDialog();
 			showToast("Your account has been deleted", "success");
 			navigate({ to: "/" });
