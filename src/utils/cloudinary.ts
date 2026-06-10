@@ -48,11 +48,21 @@ export async function unsignedUploadImage(params: ImageParams) {
 	return res.json();
 }
 
-export async function deleteImage(publicId: string) {
-	const res = await cloudinary.uploader.destroy(publicId, {
+type DeleteImageOptions = {
+	timeoutMs?: number;
+};
+
+export async function deleteImage(
+	publicId: string,
+	options: DeleteImageOptions = {},
+) {
+	const destroyOptions = {
 		resource_type: "image",
 		invalidate: true,
-	});
+		...(options.timeoutMs !== undefined ? { timeout: options.timeoutMs } : {}),
+	} as const;
+
+	const res = await cloudinary.uploader.destroy(publicId, destroyOptions);
 
 	if (res.result !== "ok" && res.result !== "not found") {
 		throw new Error("Failed to delete image from Cloudinary");
