@@ -52,6 +52,18 @@ enum ChatRole {
   ASSISTANT
 }
 
+enum MediaCleanupJobStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum MediaCleanupJobSourceType {
+  USER_PROFILE
+  PRODUCT
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -217,4 +229,33 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, isRead])
+}
+
+model MediaCleanupJob {
+  id           String                    @id @default(uuid())
+  cleanupBatchId String
+  provider     String
+  assetType    String
+  providerAssetId String
+  sourceType   MediaCleanupJobSourceType
+  sourceId     String
+  sourceUserId String
+  status       MediaCleanupJobStatus     @default(PENDING)
+  attempts     Int                       @default(0)
+  maxAttempts  Int                       @default(5)
+  runAt        DateTime                  @default(now())
+  lockedUntil  DateTime?
+  lockedBy     String?
+  completedAt  DateTime?
+  failedAt     DateTime?
+  lastError    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cleanupBatchId, provider, assetType, providerAssetId])
+  @@index([status, runAt, createdAt, id])
+  @@index([status, lockedUntil])
+  @@index([cleanupBatchId])
+  @@index([sourceUserId])
 }

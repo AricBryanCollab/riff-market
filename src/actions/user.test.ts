@@ -5,7 +5,7 @@ import type { UserProfile } from "@/types/user";
 const { userRepoMock, cloudinaryMock, compressImageMock, loggerMock } =
 	vi.hoisted(() => {
 		const userRepoMock = {
-			deleteUser: vi.fn(),
+			deleteUserAndEnqueueMediaCleanupJobs: vi.fn(),
 			getAllUsers: vi.fn(),
 			getUserById: vi.fn(),
 			getUserProfilePictureValueById: vi.fn(),
@@ -118,14 +118,15 @@ describe("user actions", () => {
 	});
 
 	describe("deleteUserService", () => {
-		it("deletes the profile picture asset after deleting the user", async () => {
+		it("deletes a verified account through the transactional delete module", async () => {
 			const user = makeUser({
 				profilePic: "https://res.cloudinary.com/riff/image/upload/avatar.jpg",
 			});
 
 			mockExistingUser(user);
-			(cloudinaryMock.deleteImage as Mock).mockResolvedValue({ result: "ok" });
-			(userRepoMock.deleteUser as Mock).mockResolvedValue(undefined);
+			(
+				userRepoMock.deleteUserAndEnqueueMediaCleanupJobs as Mock
+			).mockResolvedValue(undefined);
 
 			const result = await deleteUserService(user.id, user.email);
 
@@ -133,63 +134,62 @@ describe("user actions", () => {
 				message: "Account has been deleted successfully",
 				deletedUserId: user.id,
 			});
-			expect(userRepoMock.deleteUser).toHaveBeenCalledWith(user.id);
-			expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("avatar");
 			expect(
-				(userRepoMock.deleteUser as Mock).mock.invocationCallOrder[0],
-			).toBeLessThan(
-				(cloudinaryMock.deleteImage as Mock).mock.invocationCallOrder[0],
-			);
+				userRepoMock.deleteUserAndEnqueueMediaCleanupJobs,
+			).toHaveBeenCalledWith(user.id);
+			expect(
+				userRepoMock.getUserProfilePictureValueById,
+			).not.toHaveBeenCalled();
+			expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
 		});
 
-		it("skips profile picture cleanup when the user has no profile picture", async () => {
+		it("rejects account deletion when the user does not exist", async () => {
+			(userRepoMock.getUserById as Mock).mockResolvedValue(null);
+
+			const result = await deleteUserService(
+				"missing-user",
+				"angus@example.com",
+			);
+
+			expect(result).toEqual({
+				error: "User not found",
+			});
+			expect(
+				userRepoMock.deleteUserAndEnqueueMediaCleanupJobs,
+			).not.toHaveBeenCalled();
+			expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
+		});
+
+		it("rejects account deletion when the confirmation email does not match", async () => {
 			const user = makeUser();
 
 			mockExistingUser(user);
-			(userRepoMock.deleteUser as Mock).mockResolvedValue(undefined);
 
-			const result = await deleteUserService(user.id, user.email);
+			const result = await deleteUserService(user.id, "wrong@example.com");
 
 			expect(result).toEqual({
-				message: "Account has been deleted successfully",
-				deletedUserId: user.id,
+				error: "Email verification failed for account deletion",
 			});
+			expect(
+				userRepoMock.deleteUserAndEnqueueMediaCleanupJobs,
+			).not.toHaveBeenCalled();
 			expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
-			expect(userRepoMock.deleteUser).toHaveBeenCalledWith(user.id);
 		});
 
-		it("still returns success when profile picture cleanup fails after user deletion", async () => {
+		it("propagates account deletion transaction failures", async () => {
 			const user = makeUser({
 				profilePic: "https://res.cloudinary.com/riff/image/upload/avatar.jpg",
 			});
 
 			mockExistingUser(user);
-			(cloudinaryMock.deleteImage as Mock).mockRejectedValue(
-				new Error("cloudinary failed"),
-			);
-
-			const result = await deleteUserService(user.id, user.email);
-
-			expect(result).toEqual({
-				message: "Account has been deleted successfully",
-				deletedUserId: user.id,
-			});
-			expect(userRepoMock.deleteUser).toHaveBeenCalledWith(user.id);
-		});
-
-		it("does not delete the profile picture asset when user deletion fails", async () => {
-			const user = makeUser({
-				profilePic: "https://res.cloudinary.com/riff/image/upload/avatar.jpg",
-			});
-
-			mockExistingUser(user);
-			(userRepoMock.deleteUser as Mock).mockRejectedValue(
-				new Error("delete failed"),
-			);
+			(
+				userRepoMock.deleteUserAndEnqueueMediaCleanupJobs as Mock
+			).mockRejectedValue(new Error("delete failed"));
 
 			await expect(deleteUserService(user.id, user.email)).rejects.toThrow(
 				"delete failed",
 			);
+
 			expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
 		});
 	});

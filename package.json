@@ -7,6 +7,7 @@
 		"build": "bun --bun vite build",
 		"preview": "bun --bun vite preview",
 		"deploy": "vite build",
+		"media-cleanup": "bun scripts/process-media-cleanup-jobs.ts",
 		"db:generate": "bun prisma generate",
 		"test": "vitest run",
 		"test:unit": "vitest run --config vitest.config.ts",
