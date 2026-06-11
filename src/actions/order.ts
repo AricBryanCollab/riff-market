@@ -145,7 +145,15 @@ export async function getOrdersBySellerService(userId: string, role: string) {
 	return orders;
 }
 
-export async function getOrderByIdService(role: string, orderId: string) {
+export async function getOrderByIdService(
+	userId: string,
+	role: string,
+	orderId: string,
+) {
+	if (!userId) {
+		return { error: "User ID not found" };
+	}
+
 	if (!orderId) {
 		return { error: "Order ID not found" };
 	}
@@ -163,6 +171,10 @@ export async function getOrderByIdService(role: string, orderId: string) {
 		return {
 			error: "Order not found with the provided order ID",
 		};
+	}
+
+	if (order.userId !== userId) {
+		return { error: "Unauthorized, you can only view your own orders" };
 	}
 
 	const { user, ...rest } = order;

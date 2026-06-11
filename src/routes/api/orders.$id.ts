@@ -10,9 +10,10 @@ export const Route = createFileRoute("/api/orders/$id")({
 			GET: async ({ params, context }) => {
 				try {
 					const { id } = params;
+					const userId = context.id;
 					const role = context.role;
 
-					const order = await getOrderByIdService(role, id);
+					const order = await getOrderByIdService(userId, role, id);
 
 					if ("error" in order) {
 						return new Response(

@@ -81,7 +81,7 @@ describe("/api/products/$id handlers", () => {
 		const formData = new URLSearchParams({ name: "Blocked update" });
 		const request = new Request("http://localhost/api/products/prod-1", {
 			method: "PUT",
-			body: formData,
+			body: formData.toString(),
 			headers: {
 				"Content-Type": "application/x-www-form-urlencoded",
 			},
