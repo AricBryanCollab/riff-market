@@ -96,7 +96,7 @@ export const Route = createFileRoute("/api/products")({
 								brand,
 								model,
 								description,
-								price: Number(price),
+								price,
 								stock: Number(stock),
 								images,
 							};

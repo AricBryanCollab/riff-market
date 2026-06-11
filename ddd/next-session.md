@@ -19,27 +19,35 @@ Do not rely on any manually maintained current-state file. The repo is the curre
 
 ## Recommended Next Task
 
-Start Slice `0.5`: money persistence migration.
+Start Slice `1`: `PlacePurchase` vertical path.
 
 Exact next task:
 
-- Add transitional `Product.priceCents` and `Product.currencyCode` persistence support while `Product` is still the schema name.
-- Add deterministic mapper/backfill tests for converting existing Float prices to integer cents.
-- Add create/update dual-write behavior for product/listing prices so live product writes populate both the old Float field and the new cent field during transition.
-- Update read mappers to prefer cents when present and fall back to Float only as migration compatibility.
-- Do not migrate old fake `Order` / `OrderItem` Float money fields unless temporary compatibility proves unavoidable.
+- Apply or verify the new product money migration against a real local database before relying on Prisma runtime behavior.
+- Add domain models/tests for the minimal purchase-placement behavior:
+  - `Listing` purchase checks: approved/orderable, stock availability, stock reduction.
+  - `Purchase`: customer ID, purchase number, total `Money`, manual-payment status, shipping/contact snapshot, `PurchasePlaced` event.
+  - `SellerOrder`: seller ID, item snapshots, subtotal `Money`, status, nullable tracking number, seller permissions.
+- Add a `PlacePurchase` use-case test suite with fake ports before wiring Prisma.
+- Define the first application ports:
+  - `ListingsForPurchasePort.reserveForPurchase(...)`
+  - purchase persistence
+  - seller-order persistence
+  - purchase number generation
+  - notification projection inside the same transaction
+- Keep old API/cart reads as compatibility until the vertical path proves out.
 
 Useful first inspection targets:
 
-- `prisma/schema.prisma`
+- `ddd/migration-plan.md` Slice `1`
+- `src/domains/shared/domain/money.ts`
+- `src/domains/shared/application/unit-of-work.ts`
+- `src/actions/order.ts`
+- `src/data/order.repo.ts`
 - `src/data/product-repo.ts`
-- `src/actions/product.ts`
-- `src/actions/product.test.ts`
-- `src/lib/zod/product-validation.ts`
-- `src/utils/validate-product-search.ts`
-- `src/hooks/use-create-product.ts`
-- `src/hooks/use-update-product.ts`
-- checkout/cart product price readers, especially `src/actions/order.ts` and `src/routes/api/products.cart-details.ts`
+- `src/types/order.ts`
+- `src/lib/zod/order-validation.ts`
+- `prisma/schema.prisma`
 
 ## Do Not Start With
 
@@ -57,7 +65,7 @@ Useful first inspection targets:
 
 ## Current Repo State From Latest Completed Session
 
-- Slice `-1` and Slice `0` initial implementation are complete.
+- Slice `-1`, Slice `0`, and Slice `0.5` initial implementation are complete.
 - The Slice `-1` customer order-by-id ownership characterization gap is fixed:
   - `getOrderByIdService` now receives authenticated `userId`.
   - `/api/orders/$id` GET passes `context.id` into the service.
@@ -68,9 +76,24 @@ Useful first inspection targets:
 - Shared primitives exist under `src/domains/shared`.
 - `Money` tests pass.
 - `src/test/api-products-id-route.test.ts` was adjusted to serialize the form body for Node `Request` compatibility.
+- Transitional product money persistence exists:
+  - `Product.priceCents`
+  - `Product.currencyCode`
+  - deterministic Float-to-cent backfill migration
+  - product create/update dual-write
+  - product reads prefer cents and fall back to legacy Float only when cents are absent
+  - approved product price filters parse to cents and query with Float fallback
 
 Latest checks:
 
+- `bun run test:unit -- src/domains/listings/application/product-money.test.ts` passed: 1 file, 9 tests.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bun run db:generate` passed.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma validate` passed.
+- `bun run test:unit -- src/domains/listings/application/product-money.test.ts src/actions/product.test.ts src/domains/shared/domain/money.test.ts src/actions/order.test.ts` passed: 4 files, 82 tests.
+- `bun run typecheck` passed.
+- `bunx biome check <touched implementation files>` passed.
+- `bun run docs:check` passed.
+- `bun run test:unit` passed: 12 files, 126 tests.
 - `bun run test:unit -- src/actions/order.test.ts` passed.
 - `bun run typecheck` passed.
 - `bunx biome check src/actions/order.ts src/actions/order.test.ts 'src/routes/api/orders.$id.ts'` passed.
@@ -81,11 +104,15 @@ Latest checks:
 
 ## Expected End State For Next Session
 
-- Transitional product/listing cent fields added and generated Prisma types updated.
-- Float-to-cent mapper/backfill behavior covered by focused tests.
-- Product create/update paths dual-write Float and cent fields during transition.
-- Product reads prefer cent fields when present and use Float fallback only as a temporary migration bridge.
-- Old fake `Order` / `OrderItem` Float money fields are not migrated unless a concrete compatibility blocker is found.
+- Minimal `Listing`, `Purchase`, and `SellerOrder` domain behavior for purchase placement is covered by unit tests.
+- `PlacePurchase` use case exists with fake-port tests proving:
+  - customer-only placement
+  - missing/unapproved/insufficient-stock rejection
+  - multi-seller grouping into independent seller orders
+  - purchase total and seller subtotals use integer-cent `Money`
+  - manual-payment policy creates seller orders as ready for fulfillment
+- Initial application port contracts exist without leaking Prisma records into domain/application tests.
+- No Prisma purchase/seller-order persistence is required until the fake-port use-case contract is clear.
 - `ddd/progress.md` updated with:
   - work completed
   - files changed

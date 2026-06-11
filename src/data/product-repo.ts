@@ -1,5 +1,10 @@
 import type { Prisma, Product } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
+import {
+	normalizeProductMoney,
+	type ProductMoneySource,
+	toProductPriceRangePersistence,
+} from "@/domains/listings/application/product-money";
 import { logger } from "@/lib/logger";
 import type { GetProductQuery } from "@/lib/zod/product-validation";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
@@ -20,12 +25,14 @@ type UpdateProductRepoInput = Partial<
 
 export const createProduct = async (product: CreateProductRepoInput) => {
 	try {
-		return await prisma.product.create({
+		const createdProduct = await prisma.product.create({
 			data: {
 				...product,
 				isApproved: false,
 			},
 		});
+
+		return normalizeProductMoney(createdProduct);
 	} catch (err) {
 		logger.error("Error at createProduct", err);
 		throw err;
@@ -43,6 +50,8 @@ const baseProductQuery = {
 	images: true,
 	description: true,
 	price: true,
+	priceCents: true,
+	currencyCode: true,
 	stock: true,
 	isApproved: true,
 	createdAt: true,
@@ -63,7 +72,7 @@ export const getProductById = async (id: string) => {
 			select: baseProductQuery,
 		});
 
-		return product;
+		return product ? normalizeProductMoney(product) : product;
 	} catch (err) {
 		logger.error("Error at getProductById", err);
 		throw err;
@@ -81,7 +90,7 @@ export const getProductsByIds = async (productIds: string[]) => {
 			select: baseProductQuery,
 		});
 
-		return products;
+		return normalizeProductsMoney(products);
 	} catch (err) {
 		logger.error("Error at findProductsByIds:", err);
 		throw err;
@@ -96,7 +105,7 @@ export const getProductsBySellerId = async (sellerId: string) => {
 			select: baseProductQuery,
 		});
 
-		return products;
+		return normalizeProductsMoney(products);
 	} catch (err) {
 		logger.error("Error at getProductsBySellerId", err);
 		throw err;
@@ -111,10 +120,14 @@ export const getApprovedProducts = async ({
 	condition,
 	brand,
 	search,
-	priceMin,
-	priceMax,
+	priceMinCents,
+	priceMaxCents,
 }: GetProductQuery) => {
 	try {
+		const priceRange = toProductPriceRangePersistence({
+			priceMinCents,
+			priceMaxCents,
+		});
 		const whereClause: Prisma.ProductWhereInput = {
 			isApproved: true,
 			...(category && { category: category as ProductCategory }),
@@ -128,11 +141,18 @@ export const getApprovedProducts = async ({
 					{ model: { contains: search, mode: "insensitive" } },
 				],
 			}),
-			...((priceMin !== undefined || priceMax !== undefined) && {
-				price: {
-					...(priceMin !== undefined && { gte: priceMin }),
-					...(priceMax !== undefined && { lte: priceMax }),
-				},
+			...(priceRange && {
+				AND: [
+					{
+						OR: [
+							{ priceCents: priceRange.priceCents },
+							{
+								priceCents: null,
+								price: priceRange.legacyPrice,
+							},
+						],
+					},
+				],
 			}),
 		};
 
@@ -151,7 +171,7 @@ export const getApprovedProducts = async ({
 				skip: randomSkip,
 			});
 
-			return products;
+			return normalizeProductsMoney(products);
 		}
 
 		const products = await prisma.product.findMany({
@@ -162,7 +182,7 @@ export const getApprovedProducts = async ({
 			skip: offset,
 		});
 
-		return products;
+		return normalizeProductsMoney(products);
 	} catch (err) {
 		logger.error("Error at getApprovedProducts", err);
 		throw err;
@@ -177,7 +197,7 @@ export const getPendingApprovalProducts = async () => {
 			select: baseProductQuery,
 		});
 
-		return products;
+		return normalizeProductsMoney(products);
 	} catch (err) {
 		logger.error("Error at getPendingApprovalProducts", err);
 		throw err;
@@ -230,12 +250,16 @@ export const getRecentProducts = async (limit: number = 8) => {
 			take: limit,
 		});
 
-		return products;
+		return normalizeProductsMoney(products);
 	} catch (err) {
 		logger.error("Error at getRecentProducts", err);
 		throw err;
 	}
 };
+
+function normalizeProductsMoney<T extends ProductMoneySource>(products: T[]) {
+	return products.map(normalizeProductMoney);
+}
 
 export const updateProductById = async (
 	id: string,
@@ -262,7 +286,7 @@ export const updateProductById = async (
 			},
 		});
 
-		return updatedProduct;
+		return normalizeProductMoney(updatedProduct);
 	} catch (err) {
 		logger.error("Error at updateProductById", err);
 		throw err;

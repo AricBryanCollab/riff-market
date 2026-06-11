@@ -57,10 +57,6 @@ export const Route = createFileRoute("/api/products/$id")({
 
 							const rawData: UpdateProductInput = {
 								...extractedData,
-
-								...(extractedData.price && {
-									price: Number(extractedData.price),
-								}),
 								...(extractedData.stock && {
 									stock: Number(extractedData.stock),
 								}),

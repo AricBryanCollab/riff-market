@@ -213,6 +213,35 @@ describe("product actions", () => {
 		expect(maxActiveUploads).toBeGreaterThan(1);
 	});
 
+	it("dual-writes product price as decimal dollars and integer cents on create", async () => {
+		const files = [makeImage("img-1.jpg")];
+
+		(compressImageMock as Mock).mockImplementation(withCompressedImage);
+		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
+			secure_url: "https://cdn.example.com/img-1.jpg",
+			public_id: "img-1",
+		});
+		(productRepoMock.createProduct as Mock).mockResolvedValue({
+			id: "new-product",
+			images: [],
+		});
+
+		const payload = {
+			...createValidPayload(files),
+			price: "199.95",
+		} as CreateProductInput;
+
+		await createProductService("seller-1", "SELLER", payload);
+
+		expect(productRepoMock.createProduct).toHaveBeenCalledWith(
+			expect.objectContaining({
+				price: 199.95,
+				priceCents: 19995,
+				currencyCode: "USD",
+			}),
+		);
+	});
+
 	it("cleans up already uploaded images when create upload fails", async () => {
 		const files = [
 			makeImage("img-1.jpg"),
@@ -705,8 +734,8 @@ describe("product actions", () => {
 			condition: "NEW",
 			brand: "Gibson",
 			search: "pickup",
-			priceMin: 50,
-			priceMax: 150,
+			priceMinCents: 5000,
+			priceMaxCents: 15000,
 		});
 	});
 
@@ -921,6 +950,34 @@ describe("product actions", () => {
 		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
 	});
 
+	it("dual-writes product price as decimal dollars and integer cents on update", async () => {
+		const existingProduct = makeExistingProduct();
+		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
+
+		const updatedProduct = {
+			...existingProduct,
+			price: 49.9,
+			priceCents: 4990,
+			currencyCode: "USD",
+		};
+		(productRepoMock.updateProductById as Mock).mockResolvedValue(
+			updatedProduct,
+		);
+
+		await updateProductService("prod-1", "seller-1", "SELLER", {
+			price: "49.90",
+		} as UpdateProductInput);
+
+		expect(productRepoMock.updateProductById).toHaveBeenCalledWith(
+			"prod-1",
+			expect.objectContaining({
+				price: 49.9,
+				priceCents: 4990,
+				currencyCode: "USD",
+			}),
+		);
+	});
+
 	it("validates update payload before saving", async () => {
 		const existingProduct = makeExistingProduct();
 		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
@@ -934,6 +991,20 @@ describe("product actions", () => {
 		});
 		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
 		expect(cloudinaryMock.unsignedUploadImage).not.toHaveBeenCalled();
+	});
+
+	it("rejects update prices with more than two decimal places", async () => {
+		const existingProduct = makeExistingProduct();
+		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
+
+		const result = await updateProductService("prod-1", "seller-1", "SELLER", {
+			price: "49.999",
+		} as UpdateProductInput);
+
+		expect(result).toMatchObject({
+			error: "Invalid data to update product",
+		});
+		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
 	});
 
 	it("auto-approves on update when actor is admin", async () => {

@@ -16,8 +16,78 @@ Clean slate started: 2026-06-11
 - Slice `-1` and Slice `0` initial implementation completed on 2026-06-11.
 - Foundation DDD folders and shared primitives are in place.
 - Slice `-1` customer order-read ownership characterization gap was fixed on 2026-06-11.
+- Slice `0.5` transitional product money persistence implementation completed on 2026-06-11.
 
 ## Latest Session Notes
+
+- Completed Slice `0.5`: product/listing money persistence migration while persistence vocabulary is still `Product`.
+- Added transitional `Product.priceCents` and `Product.currencyCode` schema fields.
+- Added a tracked Prisma migration that:
+  - adds nullable `priceCents`
+  - adds defaulted `currencyCode = 'USD'`
+  - backfills `priceCents` from existing Float `price` using deterministic SQL rounding
+  - indexes `priceCents`
+- Added listing money mapping helpers covering:
+  - decimal input parsing to integer cents
+  - optional query price parsing
+  - legacy Float-to-cent backfill conversion
+  - dual-write persistence payloads
+  - read fallback that prefers cents and falls back to legacy Float only when cents are absent
+  - cent-based price range conversion with legacy Float fallback ranges
+- Refactored product money validation so Zod schemas share one price-error adapter instead of duplicating parse/catch logic.
+- Product create/update paths now dual-write:
+  - legacy decimal `price`
+  - integer `priceCents`
+  - `currencyCode`
+- Product read paths select `priceCents` and `currencyCode`, then normalize `price` from cents for existing UI compatibility.
+- Approved product price filters now parse to `priceMinCents` / `priceMaxCents` at the DTO boundary and query cents with Float fallback for old rows.
+- Product API create/update adapters now pass raw price strings into validation so max-two-decimal validation is not bypassed by early `Number(...)` conversion.
+- Regenerated the ignored local Prisma client after the schema change.
+
+## Files Changed In Latest Session
+
+- `prisma/schema.prisma`
+- `prisma/migrations/20260611043000_add_product_money_columns/migration.sql`
+- `src/domains/listings/application/product-money.ts`
+- `src/domains/listings/application/product-money.test.ts`
+- `src/lib/zod/product-validation.ts`
+- `src/data/product-repo.ts`
+- `src/actions/product.ts`
+- `src/actions/product.test.ts`
+- `src/routes/api/products.ts`
+- `src/routes/api/products.$id.ts`
+- `src/types/product.ts`
+- `ddd/progress.md`
+- `ddd/next-session.md`
+
+## Tests And Checks In Latest Session
+
+- `bun run test:unit -- src/domains/listings/application/product-money.test.ts` passed: 1 file, 9 tests.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bun run db:generate` passed.
+- `bun run test:unit -- src/domains/listings/application/product-money.test.ts src/actions/product.test.ts src/domains/shared/domain/money.test.ts src/actions/order.test.ts` passed: 4 files, 82 tests.
+- `bun run typecheck` passed.
+- `bunx biome check <touched implementation files>` passed.
+- `bun run docs:check` passed.
+- `bun run test:unit` passed: 12 files, 126 tests.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma validate` passed.
+
+## Decisions In Latest Session
+
+- Keep public product response compatibility by continuing to expose decimal `price`, normalized from `priceCents` when available.
+- Keep `priceCents` nullable during the transition so older rows and out-of-band writes do not break before full cutover.
+- Use `USD` as the transitional product currency code.
+- Do not migrate old fake `Order` / `OrderItem` Float money fields in Slice `0.5`.
+- Keep existing cart/order compatibility for now by normalizing product repo reads rather than rewriting checkout.
+
+## Risks / Follow-Ups From Latest Session
+
+- The new migration file exists but was not applied against a real local database in this session.
+- Existing fake `Order` / `OrderItem` persistence still stores Float money and remains a migration bridge only.
+- `src/actions/order.test.ts` still contains the expected-failing seller status update ownership test; address it in the seller-order lifecycle/security slice or another narrow authorization fix.
+- `ddd/` files are committed as temporary worktree handoff docs and should be removed before opening a PR.
+- Full `bun run check` was not rerun; previous full-check formatting issues outside the touched files may still exist.
+
+## Previous Session Notes
 
 - Fixed the Slice `-1` customer order read authorization characterization gap without migrating order architecture.
 - Updated `getOrderByIdService` to receive the authenticated `userId` along with `role` and `orderId`.
@@ -26,7 +96,7 @@ Clean slate started: 2026-06-11
 - Added positive coverage proving a customer can read their own order.
 - Kept the seller order-status ownership test as expected-failing characterization for a later seller-order lifecycle/security slice.
 
-## Files Changed In Latest Session
+## Files Changed In Previous Session
 
 - `src/actions/order.ts`
 - `src/actions/order.test.ts`
@@ -34,19 +104,19 @@ Clean slate started: 2026-06-11
 - `ddd/progress.md`
 - `ddd/next-session.md`
 
-## Tests And Checks In Latest Session
+## Tests And Checks In Previous Session
 
 - `bun run test:unit -- src/actions/order.test.ts` passed: 1 file, 3 tests.
 - `bun run typecheck` passed.
 - `bunx biome check src/actions/order.ts src/actions/order.test.ts 'src/routes/api/orders.$id.ts'` passed.
 
-## Decisions In Latest Session
+## Decisions In Previous Session
 
 - Keep this as a narrow Slice `-1` fix in the existing action/API route seam.
 - Do not introduce `Purchase`, `SellerOrder`, new ordering use cases, or domain actor wiring yet.
 - Do not add tests asserting old fake `Order` / `OrderItem` internals beyond the minimal `userId` ownership field needed for authorization.
 
-## Risks / Follow-Ups From Latest Session
+## Risks / Follow-Ups From Previous Session
 
 - `src/actions/order.test.ts` still contains the expected-failing seller status update ownership test; address it in the seller-order lifecycle/security slice or another narrow authorization fix.
 - The next planned migration task remains Slice `0.5`: product/listing cent-based money persistence.
@@ -142,6 +212,7 @@ Clean slate started: 2026-06-11
 - [x] Start Slice `-1`: narrow risk/security characterization review.
 - [x] Start Slice `0`: foundation primitives and folder structure.
 - [x] Add `Money` tests.
-- [ ] Start Slice `0.5`: money persistence migration.
-- [ ] Exact next task: add transitional `Product.priceCents` and `Product.currencyCode` persistence support with deterministic mapper/backfill tests and create/update dual-write behavior; do not migrate old fake `Order` / `OrderItem` Float money fields unless temporary compatibility proves unavoidable.
+- [x] Start Slice `0.5`: money persistence migration.
+- [x] Add transitional `Product.priceCents` and `Product.currencyCode` persistence support with deterministic mapper/backfill tests and create/update dual-write behavior.
+- [ ] Exact next task: start Slice `1` with the `PlacePurchase` vertical path, beginning with listing/purchase/seller-order domain models and fake-port use-case tests before wiring Prisma.
 - [ ] Update this progress log at the end of each future session.

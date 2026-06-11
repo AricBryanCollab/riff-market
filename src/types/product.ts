@@ -42,6 +42,8 @@ export interface BaseProduct {
 	images: string[];
 	description: string;
 	price: number;
+	priceCents?: number;
+	currencyCode?: string;
 	stock: number;
 	isApproved: boolean;
 	createdAt?: string;
@@ -59,6 +61,8 @@ export interface MutateProductResponse {
 	images: string[];
 	description: string;
 	price: number;
+	priceCents?: number;
+	currencyCode?: string;
 	stock: number;
 	isApproved: boolean;
 	createdAt?: string;

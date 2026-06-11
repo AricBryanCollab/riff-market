@@ -13,6 +13,7 @@ import {
 	updateProductById,
 	updateProductStatus,
 } from "@/data/product-repo";
+import { toProductMoneyPersistence } from "@/domains/listings/application/product-money";
 import {
 	type CreateProductInput,
 	createProductSchema,
@@ -94,7 +95,7 @@ export async function createProductService(
 		condition: data.condition,
 		model: data.model,
 		description: data.description,
-		price: Number(data.price),
+		...toProductMoneyPersistence(data.price),
 		stock: Number(data.stock),
 		sellerId: sellerId,
 	};
@@ -227,6 +228,8 @@ export async function updateProductService(
 	}
 
 	const data = parsed.data;
+	const priceData =
+		data.price !== undefined ? toProductMoneyPersistence(data.price) : {};
 
 	const updateData = {
 		...(data.name && { name: data.name }),
@@ -234,7 +237,7 @@ export async function updateProductService(
 		...(data.brand && { brand: data.brand }),
 		...(data.model && { model: data.model }),
 		...(data.description && { description: data.description }),
-		...(data.price && { price: Number(data.price) }),
+		...priceData,
 		...(data.stock !== undefined && { stock: Number(data.stock) }),
 		isApproved: role === "ADMIN",
 	};
