@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, type Mock, vi } from "vitest";
 
 const { orderRepoMock, productRepoMock } = vi.hoisted(() => {
 	const orderRepoMock = {
+		changeSellerOrderStatus: vi.fn(),
 		createOrder: vi.fn(),
 		getCustomerOrders: vi.fn(),
 		getOrderById: vi.fn(),
@@ -22,7 +23,7 @@ const { orderRepoMock, productRepoMock } = vi.hoisted(() => {
 vi.mock("@/data/order.repo", () => orderRepoMock);
 vi.mock("@/data/product-repo", () => productRepoMock);
 
-import { getOrderByIdService, updateOrderStatusService } from "@/actions/order";
+import { getOrderByIdService } from "@/actions/order";
 
 describe("order action security characterization", () => {
 	afterEach(() => {
@@ -80,38 +81,5 @@ describe("order action security characterization", () => {
 		expect(result).toMatchObject({
 			error: "Unauthorized, you can only view your own orders",
 		});
-	});
-
-	it.fails("blocks sellers from updating orders that do not contain their listings", async () => {
-		(orderRepoMock.getOrderById as Mock).mockResolvedValue({
-			id: "order-1",
-			userId: "customer-1",
-			status: "PENDING",
-			items: [
-				{
-					product: {
-						seller: {
-							id: "seller-2",
-						},
-					},
-				},
-			],
-		});
-		(orderRepoMock.updateOrderStatus as Mock).mockResolvedValue({
-			id: "order-1",
-			status: "PROCESSING",
-		});
-
-		const result = await updateOrderStatusService(
-			"seller-1",
-			"SELLER",
-			"order-1",
-			"PROCESSING",
-		);
-
-		expect(result).toMatchObject({
-			error: "Unauthorized, you can only update orders for your own listings",
-		});
-		expect(orderRepoMock.updateOrderStatus).not.toHaveBeenCalled();
 	});
 });

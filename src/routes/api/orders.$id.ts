@@ -38,7 +38,8 @@ export const Route = createFileRoute("/api/orders/$id")({
 			PUT: async ({ params, context, request }) => {
 				try {
 					const { id } = params;
-					const { status } = await request.json();
+					const body = (await request.json()) as unknown;
+					const { status, trackingNumber } = parseStatusUpdateBody(body);
 					const userId = context.id;
 					const role = context.role;
 
@@ -47,6 +48,7 @@ export const Route = createFileRoute("/api/orders/$id")({
 						role,
 						id,
 						status,
+						trackingNumber,
 					);
 
 					if ("error" in order) {
@@ -75,3 +77,33 @@ export const Route = createFileRoute("/api/orders/$id")({
 		},
 	},
 });
+
+function parseStatusUpdateBody(body: unknown) {
+	if (typeof body === "string") {
+		return {
+			status: body,
+			trackingNumber: undefined,
+		};
+	}
+
+	if (body && typeof body === "object") {
+		const status =
+			"status" in body && typeof body.status === "string"
+				? body.status
+				: undefined;
+		const trackingNumber =
+			"trackingNumber" in body && typeof body.trackingNumber === "string"
+				? body.trackingNumber
+				: undefined;
+
+		return {
+			status,
+			trackingNumber,
+		};
+	}
+
+	return {
+		status: undefined,
+		trackingNumber: undefined,
+	};
+}

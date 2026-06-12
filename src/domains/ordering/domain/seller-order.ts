@@ -17,6 +17,10 @@ export const sellerOrderStatuses = [
 
 export type SellerOrderStatus = (typeof sellerOrderStatuses)[number];
 
+export function isSellerOrderStatus(value: string): value is SellerOrderStatus {
+	return sellerOrderStatuses.includes(value as SellerOrderStatus);
+}
+
 export type SellerOrderItemSnapshot = {
 	readonly listingId: string;
 	readonly listingName: string;
@@ -46,6 +50,20 @@ export type SellerOrderCreatedEvent = DomainEvent<
 	SellerOrderCreatedPayload
 >;
 
+export type SellerOrderStatusChangedPayload = {
+	readonly sellerOrderId: string;
+	readonly purchaseId: string;
+	readonly sellerId: string;
+	readonly previousStatus: SellerOrderStatus;
+	readonly nextStatus: SellerOrderStatus;
+	readonly trackingNumber: string | null;
+};
+
+export type SellerOrderStatusChangedEvent = DomainEvent<
+	"SellerOrderStatusChanged",
+	SellerOrderStatusChangedPayload
+>;
+
 export type CreateSellerOrderInput = {
 	readonly id: string;
 	readonly purchaseId: string;
@@ -55,21 +73,28 @@ export type CreateSellerOrderInput = {
 	readonly occurredAt?: Date;
 };
 
+export type ReconstituteSellerOrderInput = CreateSellerOrderInput & {
+	readonly status: SellerOrderStatus;
+	readonly trackingNumber: string | null;
+};
+
 export class SellerOrder implements RecordsDomainEvents {
 	readonly id: string;
 	readonly purchaseId: string;
 	readonly sellerId: string;
 	readonly items: readonly SellerOrderItemSnapshot[];
 	readonly subtotal: Money;
-	readonly status: SellerOrderStatus;
-	readonly trackingNumber: string | null;
+
+	private _status: SellerOrderStatus;
+	private _trackingNumber: string | null;
 
 	private readonly events: DomainEvent[] = [];
 
-	private constructor(input: CreateSellerOrderInput) {
+	private constructor(input: ReconstituteSellerOrderInput) {
 		assertPresent(input.id, "Seller order ID");
 		assertPresent(input.purchaseId, "Purchase ID");
 		assertPresent(input.sellerId, "Seller ID");
+		assertSellerOrderStatus(input.status);
 		assertItems(input.sellerId, input.items);
 		const items = copyItemSnapshots(input.items);
 
@@ -78,12 +103,24 @@ export class SellerOrder implements RecordsDomainEvents {
 		this.sellerId = input.sellerId;
 		this.items = items;
 		this.subtotal = calculateSubtotal(items);
-		this.status = "NEW";
-		this.trackingNumber = null;
+		this._status = input.status;
+		this._trackingNumber = input.trackingNumber;
+	}
+
+	get status() {
+		return this._status;
+	}
+
+	get trackingNumber() {
+		return this._trackingNumber;
 	}
 
 	static createManualPaymentReady(input: CreateSellerOrderInput): SellerOrder {
-		const sellerOrder = new SellerOrder(input);
+		const sellerOrder = new SellerOrder({
+			...input,
+			status: "NEW",
+			trackingNumber: null,
+		});
 
 		sellerOrder.record(
 			createDomainEvent({
@@ -104,11 +141,35 @@ export class SellerOrder implements RecordsDomainEvents {
 		return sellerOrder;
 	}
 
+	static reconstitute(input: ReconstituteSellerOrderInput): SellerOrder {
+		return new SellerOrder(input);
+	}
+
 	canBeManagedBy(actor: Actor) {
 		return (
 			actor.role === "ADMIN" ||
 			(actor.role === "SELLER" && actor.id === this.sellerId)
 		);
+	}
+
+	process() {
+		this.transitionTo("PROCESSING", ["NEW"]);
+	}
+
+	ship(trackingNumber: string) {
+		this.transitionTo(
+			"SHIPPED",
+			["PROCESSING"],
+			normalizeTrackingNumber(trackingNumber),
+		);
+	}
+
+	deliver() {
+		this.transitionTo("DELIVERED", ["SHIPPED"]);
+	}
+
+	cancel(_actor: Actor) {
+		this.transitionTo("CANCELED", ["ON_HOLD_PAYMENT", "NEW", "PROCESSING"]);
 	}
 
 	pullDomainEvents() {
@@ -120,6 +181,40 @@ export class SellerOrder implements RecordsDomainEvents {
 
 	private record(event: DomainEvent) {
 		this.events.push(event);
+	}
+
+	private transitionTo(
+		nextStatus: SellerOrderStatus,
+		allowedCurrentStatuses: SellerOrderStatus[],
+		trackingNumber = this.trackingNumber,
+	) {
+		if (this.status === nextStatus) {
+			return;
+		}
+
+		if (!allowedCurrentStatuses.includes(this.status)) {
+			throw new Error(
+				`Cannot change seller order status from ${this.status} to ${nextStatus}`,
+			);
+		}
+
+		const previousStatus = this.status;
+		this._status = nextStatus;
+		this._trackingNumber = trackingNumber;
+		this.record(
+			createDomainEvent({
+				eventName: "SellerOrderStatusChanged",
+				aggregateId: this.id,
+				payload: {
+					sellerOrderId: this.id,
+					purchaseId: this.purchaseId,
+					sellerId: this.sellerId,
+					previousStatus,
+					nextStatus,
+					trackingNumber: this.trackingNumber,
+				},
+			}),
+		);
 	}
 }
 
@@ -185,8 +280,21 @@ function assertItems(
 	}
 }
 
+function assertSellerOrderStatus(status: SellerOrderStatus) {
+	if (!sellerOrderStatuses.includes(status)) {
+		throw new Error(`Invalid seller order status: ${status}`);
+	}
+}
+
 function assertPresent(value: string, label: string) {
 	if (value.trim().length === 0) {
 		throw new Error(`${label} is required`);
 	}
+}
+
+function normalizeTrackingNumber(trackingNumber: string) {
+	const normalized = trackingNumber.trim();
+	assertPresent(normalized, "Tracking number");
+
+	return normalized;
 }

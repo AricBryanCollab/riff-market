@@ -2,11 +2,14 @@ import type { OrderStatus } from "generated/prisma/enums";
 
 import { prisma } from "@/data/connect-db";
 import { createNotification } from "@/data/notification-repo";
+import { ChangeSellerOrderStatus } from "@/domains/ordering/application/change-seller-order-status";
 import {
 	ListBuyerPurchaseHistory,
 	ListSellerOrderDashboard,
 } from "@/domains/ordering/application/order-read-models";
+import type { SellerOrderStatus } from "@/domains/ordering/domain/seller-order";
 import { PrismaOrderReadModels } from "@/domains/ordering/infrastructure/prisma-order-read-models";
+import { PrismaSellerOrderStatusRepository } from "@/domains/ordering/infrastructure/prisma-seller-order-status-repository";
 import type { ActorRole } from "@/domains/shared/domain/actor";
 import { logger } from "@/lib/logger";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
@@ -216,6 +219,42 @@ export const updateOrderStatus = async (
 		});
 	} catch (err) {
 		logger.error("Error at updateOrderStatus", err);
+		throw err;
+	}
+};
+
+export const changeSellerOrderStatus = async (
+	userId: string,
+	role: Extract<ActorRole, "CUSTOMER" | "SELLER" | "ADMIN">,
+	sellerOrderId: string,
+	status: SellerOrderStatus,
+	trackingNumber?: string | null,
+) => {
+	try {
+		const result = await new ChangeSellerOrderStatus(
+			new PrismaSellerOrderStatusRepository(prisma),
+		).execute(
+			{
+				id: userId,
+				role,
+			},
+			{
+				sellerOrderId,
+				status,
+				trackingNumber,
+			},
+		);
+
+		if (!result.ok) {
+			return {
+				error: result.error.message,
+				details: result.error,
+			};
+		}
+
+		return result.value;
+	} catch (err) {
+		logger.error("Error at changeSellerOrderStatus", err);
 		throw err;
 	}
 };

@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "generated/prisma/client";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { ChangeSellerOrderStatus } from "@/domains/ordering/application/change-seller-order-status";
 import {
 	ListBuyerPurchaseHistory,
 	ListSellerOrderDashboard,
@@ -13,6 +14,7 @@ import type {
 import { PrismaOrderReadModels } from "@/domains/ordering/infrastructure/prisma-order-read-models";
 import { createPrismaPlacePurchase } from "@/domains/ordering/infrastructure/prisma-place-purchase";
 import { PrismaPurchasePlacedNotificationCreator } from "@/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator";
+import { PrismaSellerOrderStatusRepository } from "@/domains/ordering/infrastructure/prisma-seller-order-status-repository";
 import type { PrismaTransactionContext } from "@/domains/shared/infrastructure/prisma-unit-of-work";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -260,6 +262,94 @@ describeDb("PlacePurchase Prisma integration", () => {
 					],
 				}),
 			],
+		});
+	});
+
+	it("updates seller order status through the target repository", async () => {
+		await seedUsers(db);
+		await seedProduct(db, {
+			id: "listing-1",
+			sellerId: "seller-1",
+			priceCents: 125_00,
+			stock: 2,
+		});
+		const placePurchase = createUseCase(
+			db,
+			new SequentialPurchaseNumberGenerator(),
+		);
+		const placed = await placePurchase.execute(
+			{ id: "customer-1", role: "CUSTOMER" },
+			{
+				items: [{ listingId: "listing-1", quantity: 1 }],
+				buyerName: "Pat Buyer",
+				buyerEmail: "pat@example.com",
+				buyerPhone: null,
+				shippingAddress: "123 Market St",
+			},
+		);
+
+		expect(placed.ok).toBe(true);
+		if (!placed.ok) {
+			throw new Error(placed.error.message);
+		}
+		const sellerOrderId = placed.value.sellerOrderIds[0];
+		if (!sellerOrderId) {
+			throw new Error("Expected seller order");
+		}
+
+		const changeStatus = new ChangeSellerOrderStatus(
+			new PrismaSellerOrderStatusRepository(db),
+		);
+		const denied = await changeStatus.execute(
+			{ id: "seller-2", role: "SELLER" },
+			{ sellerOrderId, status: "PROCESSING" },
+		);
+
+		expect(denied).toMatchObject({
+			ok: false,
+			error: {
+				code: "CHANGE_SELLER_ORDER_STATUS_UNAUTHORIZED",
+			},
+		});
+
+		const processed = await changeStatus.execute(
+			{ id: "seller-1", role: "SELLER" },
+			{ sellerOrderId, status: "PROCESSING" },
+		);
+		expect(processed).toMatchObject({
+			ok: true,
+			value: {
+				sellerOrderId,
+				status: "PROCESSING",
+			},
+		});
+
+		const shipped = await changeStatus.execute(
+			{ id: "seller-1", role: "SELLER" },
+			{
+				sellerOrderId,
+				status: "SHIPPED",
+				trackingNumber: "TRACK-1",
+			},
+		);
+		expect(shipped).toMatchObject({
+			ok: true,
+			value: {
+				status: "SHIPPED",
+				trackingNumber: "TRACK-1",
+			},
+		});
+		await expect(
+			db.sellerOrder.findUniqueOrThrow({
+				where: { id: sellerOrderId },
+				select: {
+					status: true,
+					trackingNumber: true,
+				},
+			}),
+		).resolves.toEqual({
+			status: "SHIPPED",
+			trackingNumber: "TRACK-1",
 		});
 	});
 

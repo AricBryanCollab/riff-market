@@ -78,6 +78,138 @@ describe("SellerOrder", () => {
 		expect(sellerOrder.pullDomainEvents()).toEqual([]);
 	});
 
+	it("reconstitutes persisted seller orders without recording creation events", () => {
+		const sellerOrder = SellerOrder.reconstitute({
+			id: "seller-order-1",
+			purchaseId: "purchase-1",
+			sellerId: "seller-1",
+			status: "SHIPPED",
+			trackingNumber: "TRACK-1",
+			items: [makeItem()],
+		});
+
+		expect(sellerOrder).toMatchObject({
+			id: "seller-order-1",
+			status: "SHIPPED",
+			trackingNumber: "TRACK-1",
+		});
+		expect(sellerOrder.pullDomainEvents()).toEqual([]);
+	});
+
+	it("processes a new seller order and records a status changed event", () => {
+		const sellerOrder = createSellerOrder();
+
+		sellerOrder.process();
+
+		expect(sellerOrder.status).toBe("PROCESSING");
+		expect(sellerOrder.pullDomainEvents()).toEqual([
+			expect.objectContaining({
+				eventName: "SellerOrderCreated",
+			}),
+			expect.objectContaining({
+				eventName: "SellerOrderStatusChanged",
+				aggregateId: "seller-order-1",
+				payload: {
+					sellerOrderId: "seller-order-1",
+					purchaseId: "purchase-1",
+					sellerId: "seller-1",
+					previousStatus: "NEW",
+					nextStatus: "PROCESSING",
+					trackingNumber: null,
+				},
+			}),
+		]);
+	});
+
+	it("ships a processing seller order with a tracking number", () => {
+		const sellerOrder = SellerOrder.reconstitute({
+			id: "seller-order-1",
+			purchaseId: "purchase-1",
+			sellerId: "seller-1",
+			status: "PROCESSING",
+			trackingNumber: null,
+			items: [makeItem()],
+		});
+
+		sellerOrder.ship(" TRACK-1 ");
+
+		expect(sellerOrder.status).toBe("SHIPPED");
+		expect(sellerOrder.trackingNumber).toBe("TRACK-1");
+		expect(sellerOrder.pullDomainEvents()).toEqual([
+			expect.objectContaining({
+				eventName: "SellerOrderStatusChanged",
+				payload: expect.objectContaining({
+					previousStatus: "PROCESSING",
+					nextStatus: "SHIPPED",
+					trackingNumber: "TRACK-1",
+				}),
+			}),
+		]);
+	});
+
+	it("delivers a shipped seller order", () => {
+		const sellerOrder = SellerOrder.reconstitute({
+			id: "seller-order-1",
+			purchaseId: "purchase-1",
+			sellerId: "seller-1",
+			status: "SHIPPED",
+			trackingNumber: "TRACK-1",
+			items: [makeItem()],
+		});
+
+		sellerOrder.deliver();
+
+		expect(sellerOrder.status).toBe("DELIVERED");
+		expect(sellerOrder.trackingNumber).toBe("TRACK-1");
+	});
+
+	it("cancels a new seller order", () => {
+		const sellerOrder = createSellerOrder();
+
+		sellerOrder.cancel({ id: "customer-1", role: "CUSTOMER" });
+
+		expect(sellerOrder.status).toBe("CANCELED");
+	});
+
+	it("rejects invalid status transitions", () => {
+		const sellerOrder = createSellerOrder();
+
+		expect(() => sellerOrder.deliver()).toThrow(
+			"Cannot change seller order status from NEW to DELIVERED",
+		);
+		expect(() => sellerOrder.ship("TRACK-1")).toThrow(
+			"Cannot change seller order status from NEW to SHIPPED",
+		);
+	});
+
+	it("requires a tracking number before shipping", () => {
+		const sellerOrder = SellerOrder.reconstitute({
+			id: "seller-order-1",
+			purchaseId: "purchase-1",
+			sellerId: "seller-1",
+			status: "PROCESSING",
+			trackingNumber: null,
+			items: [makeItem()],
+		});
+
+		expect(() => sellerOrder.ship(" ")).toThrow("Tracking number is required");
+	});
+
+	it("does not cancel shipped seller orders", () => {
+		const sellerOrder = SellerOrder.reconstitute({
+			id: "seller-order-1",
+			purchaseId: "purchase-1",
+			sellerId: "seller-1",
+			status: "SHIPPED",
+			trackingNumber: "TRACK-1",
+			items: [makeItem()],
+		});
+
+		expect(() =>
+			sellerOrder.cancel({ id: "seller-1", role: "SELLER" }),
+		).toThrow("Cannot change seller order status from SHIPPED to CANCELED");
+	});
+
 	it("allows the owning seller and admins to manage it", () => {
 		const sellerOrder = createSellerOrder();
 

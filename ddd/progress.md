@@ -25,8 +25,78 @@ Clean slate started: 2026-06-11
 - Slice `1` notification boundary/UI moved to purchase/seller-order IDs on 2026-06-11.
 - Slice `1` checkout delivery wiring to the DB-backed `PlacePurchase` path added on 2026-06-12.
 - Slice `2` buyer purchase history and seller-order dashboard read migration started on 2026-06-12.
+- Slice `2` seller-order status lifecycle and target status update path started on 2026-06-12.
 
 ## Latest Session Notes
+
+- Committed the Slice `2` read-model migration as `7f72621` with message `feat: add ordering read models`.
+- Added seller-order lifecycle behavior to the `SellerOrder` domain model:
+  - reconstitution from persistence
+  - `process()`
+  - `ship(trackingNumber)`
+  - `deliver()`
+  - `cancel(actor)`
+  - `SellerOrderStatusChanged` domain events
+- Added `ChangeSellerOrderStatus` application use case:
+  - uses explicit `Actor`
+  - blocks sellers from changing other sellers' `SellerOrder`
+  - allows customers to cancel only seller orders from their own purchases
+  - allows admins under the current admin policy
+  - requires a tracking number before shipping
+  - rejects invalid domain transitions
+- Added `PrismaSellerOrderStatusRepository` to load target `SellerOrder` rows with item snapshots and purchase customer snapshots, then persist status/tracking changes.
+- Updated legacy `/api/orders/$id` PUT compatibility delivery:
+  - interprets the path id as `SellerOrder.id` for status updates
+  - delegates to `ChangeSellerOrderStatus`
+  - accepts the old raw-string JSON body and an object body with optional `trackingNumber`
+- Removed the action-level seller status ownership characterization because it asserted implementation details instead of the stable behavior flow.
+- Deferred replacement seller-status delivery coverage until the whole status-change flow is sliced through the stable server-function/application boundary.
+- Kept target authorization coverage in the `ChangeSellerOrderStatus` use-case tests.
+- Added gated local Postgres integration coverage for target seller-order status updates.
+
+## Files Changed In Latest Session
+
+- `src/domains/ordering/domain/seller-order.ts`
+- `src/domains/ordering/domain/seller-order.test.ts`
+- `src/domains/ordering/application/change-seller-order-status.ts`
+- `src/domains/ordering/application/change-seller-order-status.test.ts`
+- `src/domains/ordering/infrastructure/prisma-seller-order-status-repository.ts`
+- `src/domains/ordering/application/place-purchase.prisma.test.ts`
+- `src/data/order.repo.ts`
+- `src/actions/order.ts`
+- `src/actions/order.test.ts`
+- `src/routes/api/orders.$id.ts`
+- `ddd/progress.md`
+- `ddd/next-session.md`
+
+## Tests And Checks In Latest Session
+
+- `bun run test:unit -- src/domains/ordering/domain/seller-order.test.ts src/domains/ordering/application/change-seller-order-status.test.ts src/actions/order.test.ts src/domains/ordering/application/place-purchase.prisma.test.ts` passed: 3 files passed, 1 DB integration file skipped by default; 26 tests passed, 7 skipped.
+- `bun run typecheck` passed.
+- `bunx biome check src/domains/ordering/domain/seller-order.ts src/domains/ordering/domain/seller-order.test.ts src/domains/ordering/application/change-seller-order-status.ts src/domains/ordering/application/change-seller-order-status.test.ts src/domains/ordering/infrastructure/prisma-seller-order-status-repository.ts src/domains/ordering/application/place-purchase.prisma.test.ts src/data/order.repo.ts src/actions/order.ts src/actions/order.test.ts 'src/routes/api/orders.$id.ts'` passed after `--write` formatting.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff RUN_DB_TESTS=1 bun run test:unit -- src/domains/ordering/application/place-purchase.prisma.test.ts` passed after sandbox escalation: 1 file, 7 tests.
+- `bun run test:unit` passed: 20 files passed, 1 DB integration file skipped by default; 199 tests passed, 7 skipped.
+- `bun run docs:check` passed.
+
+## Decisions In Latest Session
+
+- Treat `/api/orders/$id` PUT as a compatibility delivery shell for target `SellerOrder.id` status updates.
+- Keep `/api/orders/$id` GET on the legacy `Order` detail path until a dedicated purchase/seller-order detail read model is migrated.
+- Keep `PENDING` as an invalid target command status; the target seller-order lifecycle accepts `PROCESSING`, `SHIPPED`, `DELIVERED`, and `CANCELED` commands.
+- Require `trackingNumber` for `SHIPPED`; the current UI/query helper still sends a raw status string, so shipping needs UI/API caller polish before exposing that transition broadly.
+- Persist status/tracking only in the repository for now; domain events are captured by the use case for future notification/outbox handling but are not yet dispatched.
+- Do not add route-level seller status flow tests while `/api/orders/$id` is a temporary compatibility route; add behavior coverage when the stable server-function/application flow exists.
+
+## Risks / Follow-Ups From Latest Session
+
+- Seller status UI may need a tracking-number input before sellers can successfully command `SHIPPED`.
+- Legacy `/api/orders/$id` GET still reads old `Order` / `OrderItem`; purchase detail/admin target reads remain for a follow-up.
+- Full seller status delivery coverage still needs to be added after the stable server-function/application flow is sliced out.
+- No browser smoke was run for seller status updates in this session.
+- Existing follow-ups remain: non-fatal add-to-cart router warning from `src/components/product-actions.tsx`, misleading server-function request logging for non-`Response` returns, and old `/api/orders` POST compatibility cleanup.
+- `ddd/` files remain temporary worktree handoff docs and should be removed before opening a PR.
+
+## Previous Slice 2 Read-Model Session Notes
 
 - Started Slice `2` read-model migration for buyer purchase history and seller-order dashboard reads.
 - Added ordering read DTOs for target purchase/seller-order list rows and the approved buyer-facing summary statuses.
@@ -43,7 +113,7 @@ Clean slate started: 2026-06-11
 - Updated order read status typing and display badges so the settings page and seller dropdown can render target statuses such as `OPEN`, `NEW`, `PENDING_PAYMENT`, `PARTIALLY_SHIPPED`, and `PARTIALLY_CANCELED`.
 - Kept legacy order detail and status-update paths untouched for the next lifecycle/status slice.
 
-## Files Changed In Latest Session
+## Files Changed In Previous Slice 2 Read-Model Session
 
 - `src/domains/ordering/dto/order-read-model.ts`
 - `src/domains/ordering/application/order-read-models.ts`
@@ -59,7 +129,7 @@ Clean slate started: 2026-06-11
 - `ddd/progress.md`
 - `ddd/next-session.md`
 
-## Tests And Checks In Latest Session
+## Tests And Checks In Previous Slice 2 Read-Model Session
 
 - `bun run test:unit -- src/domains/ordering/application/order-read-models.test.ts src/actions/order.test.ts` passed: 2 files, 16 tests.
 - `bun run typecheck` passed.
@@ -69,7 +139,7 @@ Clean slate started: 2026-06-11
 - `bun run test:unit` passed: 19 files passed, 1 DB integration file skipped by default; 183 tests passed, 6 skipped.
 - `bun run docs:check` passed.
 
-## Decisions In Latest Session
+## Decisions In Previous Slice 2 Read-Model Session
 
 - Keep the existing `/api/orders` and `/api/orders/seller` routes as compatibility delivery shells for this increment, but move the actual list read behavior to ordering-context use cases and Prisma adapters.
 - Buyer list rows use `Purchase.id` as the compatibility row ID; seller dashboard rows use `SellerOrder.id` so the next status slice can target seller orders directly.
@@ -78,7 +148,7 @@ Clean slate started: 2026-06-11
 - Admin seller-dashboard reads use the approved admin policy to read all seller orders.
 - Do not add new server-function read wrappers in this step because `requestLoggerMiddleware` still logs successful non-`Response` server-function returns as status `500`; keep that as an explicit follow-up before broad server-function read migration.
 
-## Risks / Follow-Ups From Latest Session
+## Risks / Follow-Ups From Previous Slice 2 Read-Model Session
 
 - `ChangeSellerOrderStatus` is not implemented yet; legacy `/api/orders/$id` PUT still updates old global `Order.status`.
 - Legacy `/api/orders/$id` detail reads still use old `Order` / `OrderItem`; purchase detail/admin target reads remain for a follow-up.

@@ -19,13 +19,14 @@ Do not rely on any manually maintained current-state file. The repo is the curre
 
 ## Recommended Next Task
 
-Continue Slice `2`: seller-order lifecycle/status migration and remaining target reads.
+Continue Slice `2`: target order detail/admin reads and seller status UX polish.
 
 Exact next task:
 
-- Add `ChangeSellerOrderStatus` with `SellerOrderStatus` transitions, actor ownership checks, and `SellerOrderStatusChanged`.
-- Wire seller status updates to target `SellerOrder` IDs and fix the expected-failing seller ownership characterization in `src/actions/order.test.ts`.
-- Migrate order detail/admin reads to a target `Purchase` / `SellerOrder` read model, or explicitly leave `/api/orders/$id` as compatibility with a documented next step.
+- Migrate `/api/orders/$id` GET and any purchase detail/admin reads to a target `Purchase` / `SellerOrder` read model, or explicitly keep a narrow compatibility path with tests.
+- Add UI/API caller support for `SHIPPED` tracking numbers, or keep ship unavailable until a tracking number can be provided.
+- Keep the target status update path: `/api/orders/$id` PUT now treats the id as `SellerOrder.id` and delegates to `ChangeSellerOrderStatus`.
+- Add seller status delivery coverage only after the whole stable flow is sliced out, preferably at the server-function/application boundary. Do not add route-delegation tests or tests that assert internal repository calls.
 - Consider adding server-function read wrappers only after fixing or working around the misleading `requestLoggerMiddleware` non-`Response` status logging.
 - Keep old cart details reads and legacy order APIs as temporary compatibility only where callers still need them.
 - Preserve the new Slice `2` list-read path: `/api/orders` and `/api/orders/seller` are compatibility shells over ordering-context `Purchase` / `SellerOrder` reads.
@@ -41,7 +42,9 @@ Useful first inspection targets:
 - `src/domains/ordering/domain/purchase.ts`
 - `src/domains/ordering/domain/seller-order.ts`
 - `src/domains/ordering/dto/order-read-model.ts`
+- `src/domains/ordering/application/change-seller-order-status.ts`
 - `src/domains/ordering/application/order-read-models.ts`
+- `src/domains/ordering/infrastructure/prisma-seller-order-status-repository.ts`
 - `src/domains/ordering/infrastructure/prisma-order-read-models.ts`
 - `src/domains/ordering/application/place-purchase.ts`
 - `src/domains/ordering/application/place-purchase.prisma.test.ts`
@@ -57,6 +60,7 @@ Useful first inspection targets:
 - `src/lib/tanstack-query/orders-queries.ts`
 - `src/actions/order.ts`
 - `src/data/order.repo.ts`
+- `src/routes/api/orders.$id.ts`
 - `src/data/product-repo.ts`
 - `src/types/order.ts`
 - `src/lib/zod/order-validation.ts`
@@ -78,6 +82,13 @@ Useful first inspection targets:
 
 ## Current Repo State From Latest Completed Session
 
+- Latest implementation session completed on 2026-06-12:
+  - work completed: Slice `2` seller-order lifecycle/status update path started; `SellerOrder` has transition methods/events; `ChangeSellerOrderStatus` enforces actor ownership; `/api/orders/$id` PUT now delegates status changes to target `SellerOrder`
+  - files changed: seller-order domain/test, new change-status use case/test, new Prisma seller-order status repository, status integration coverage, legacy order status service/route wrapper, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: focused seller-order/change-status/action tests passed; typecheck passed; touched-file Biome passed after formatting; escalated gated DB integration test passed
+  - decisions made: treat `/api/orders/$id` PUT id as `SellerOrder.id`; keep `/api/orders/$id` GET legacy until target detail reads are migrated; `PENDING` is not a target seller-order command status; `SHIPPED` requires a tracking number; status-change events are captured but not dispatched yet
+  - blockers or risks: seller status UI/caller still needs tracking-number support before exposing `SHIPPED`; legacy `/api/orders/$id` GET still reads old `Order`; no browser status smoke was run; full delivery coverage for seller status is intentionally deferred until the server-function/application flow is sliced out
+  - exact next recommended task: migrate order detail/admin reads to a target purchase/seller-order read model, polish status update caller support for tracking numbers, then add a behavior test at the stable seller-status delivery boundary
 - Latest implementation session completed on 2026-06-12:
   - work completed: Slice `2` buyer purchase history and seller-order dashboard list reads now use target `Purchase` / `SellerOrder` read models behind legacy API compatibility shells
   - files changed: new ordering read DTO/use-case/Prisma adapter/test, legacy order repo delegation, seller admin role pass-through, order read status typing, status display labels/styles, gated Prisma integration read assertion, `ddd/progress.md`, `ddd/next-session.md`
@@ -152,15 +163,15 @@ Useful first inspection targets:
 - Buyer purchase history list reads now query `Purchase` plus joined `SellerOrder` / `SellerOrderItem` snapshots through ordering-context read use cases.
 - Seller dashboard list reads now query `SellerOrder` directly through ordering-context read use cases.
 - `/api/orders` and `/api/orders/seller` remain as temporary compatibility delivery shells over the target reads.
-- `/api/orders/$id` detail and PUT remain legacy compatibility paths.
+- `/api/orders/$id` PUT now delegates to target `ChangeSellerOrderStatus` and treats the path id as `SellerOrder.id`.
+- `/api/orders/$id` GET remains a legacy compatibility detail path.
 - Legacy `src/data/order.repo.ts` still orchestrates old fake order creation, stock decrement, and generic notification creation for the `/api/orders` POST compatibility path only.
 - Slice `-1`, Slice `0`, and Slice `0.5` initial implementation are complete.
 - The Slice `-1` customer order-by-id ownership characterization gap is fixed:
   - `getOrderByIdService` now receives authenticated `userId`.
   - `/api/orders/$id` GET passes `context.id` into the service.
   - `src/actions/order.test.ts` proves customers can read their own order and cannot read another customer's order.
-- `src/actions/order.test.ts` still contains one expected-failing security characterization test:
-  - seller order-status ownership gap
+- The old action-level seller order-status ownership characterization was removed because it tested implementation details instead of the stable flow. Add replacement behavior coverage when the seller status delivery path is sliced through its server-function/application boundary.
 - DDD foundation folders exist under `src/domains`.
 - Shared primitives exist under `src/domains/shared`.
 - `Money` tests pass.
@@ -175,6 +186,12 @@ Useful first inspection targets:
 
 Latest checks:
 
+- `bun run test:unit -- src/domains/ordering/domain/seller-order.test.ts src/domains/ordering/application/change-seller-order-status.test.ts src/actions/order.test.ts src/domains/ordering/application/place-purchase.prisma.test.ts` passed: 3 files passed, 1 DB integration file skipped by default; 26 tests passed, 7 skipped.
+- `bun run typecheck` passed.
+- `bunx biome check src/domains/ordering/domain/seller-order.ts src/domains/ordering/domain/seller-order.test.ts src/domains/ordering/application/change-seller-order-status.ts src/domains/ordering/application/change-seller-order-status.test.ts src/domains/ordering/infrastructure/prisma-seller-order-status-repository.ts src/domains/ordering/application/place-purchase.prisma.test.ts src/data/order.repo.ts src/actions/order.ts src/actions/order.test.ts 'src/routes/api/orders.$id.ts'` passed after formatting with `--write`.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff RUN_DB_TESTS=1 bun run test:unit -- src/domains/ordering/application/place-purchase.prisma.test.ts` passed after sandbox escalation: 1 file, 7 tests.
+- `bun run test:unit` passed: 20 files passed, 1 DB integration file skipped by default; 199 tests passed, 7 skipped.
+- `bun run docs:check` passed.
 - `bun run test:unit -- src/domains/ordering/application/order-read-models.test.ts src/actions/order.test.ts` passed: 2 files, 16 tests.
 - `bun run typecheck` passed.
 - `bunx biome check src/domains/ordering/application/place-purchase.prisma.test.ts src/domains/ordering/dto/order-read-model.ts src/domains/ordering/application/order-read-models.ts src/domains/ordering/application/order-read-models.test.ts src/domains/ordering/infrastructure/prisma-order-read-models.ts src/utils/order-status-label.ts src/types/enum.ts src/types/order.ts src/data/order.repo.ts src/actions/order.ts src/routes/settings/-components/settings-orders-section.tsx src/components/order-list.tsx` passed after formatting with `--write`.
@@ -232,9 +249,10 @@ Latest checks:
 
 ## Expected End State For Next Session
 
-- Slice `2` seller-order status lifecycle has started, or there is a documented blocker from status migration.
-- The expected-failing seller status ownership characterization is fixed or replaced by target `SellerOrder` authorization coverage.
+- Slice `2` detail/admin read migration has started, or there is a documented blocker from target detail read migration.
+- Seller status update callers either provide tracking numbers for `SHIPPED` or do not expose ship transitions yet.
 - Buyer/seller list reads remain backed by target `Purchase` / `SellerOrder` read models.
+- Seller status updates remain backed by target `ChangeSellerOrderStatus`.
 - Existing checkout UX remains backed by the server-function `PlacePurchase` path.
 - Legacy order detail/status APIs remain in place only where target purchase/seller-order reads or commands have not been migrated yet.
 - `ddd/progress.md` updated with:

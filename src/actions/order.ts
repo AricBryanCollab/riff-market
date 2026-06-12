@@ -1,17 +1,17 @@
 import {
+	changeSellerOrderStatus,
 	createOrder,
 	getCustomerOrders,
 	getOrderById,
 	getSellerOrders,
-	updateOrderStatus,
 } from "@/data/order.repo";
 import { getProductsByIds } from "@/data/product-repo";
+import type { SellerOrderStatus } from "@/domains/ordering/domain/seller-order";
 import { logger } from "@/lib/logger";
 import {
 	orderStatusSchema,
 	type PlaceOrderInput,
 	placeOrderSchema,
-	validOrderTransitions,
 } from "@/lib/zod/order-validation";
 import type { OrderStatus } from "@/types/enum";
 import type {
@@ -192,7 +192,8 @@ export async function updateOrderStatusService(
 	userId: string,
 	role: string,
 	orderId: string,
-	status: OrderStatus,
+	status: unknown,
+	trackingNumber?: string | null,
 ) {
 	if (!userId || !orderId || !status) {
 		return { error: "Missing required fields" };
@@ -207,6 +208,12 @@ export async function updateOrderStatusService(
 	}
 
 	const orderStatus = statusValidation.data;
+	const sellerOrderStatus = toSellerOrderStatus(orderStatus);
+	if (!sellerOrderStatus) {
+		return {
+			error: `Cannot command seller order status ${orderStatus}`,
+		};
+	}
 
 	// Check Role authorization
 	if (role !== "CUSTOMER" && role !== "SELLER" && role !== "ADMIN") {
@@ -219,34 +226,14 @@ export async function updateOrderStatusService(
 		};
 	}
 
-	// Get Order
-	const order = await getOrderById(orderId);
-
-	if (!order) {
-		return { error: "Order not found with the provided order ID" };
-	}
-
-	// Order ownership validation by customer
-	if (role === "CUSTOMER" && order.userId !== userId) {
-		return { error: "Unauthorized, you can only modify your own orders" };
-	}
-
-	const currentStatus = order.status;
-	if (currentStatus === orderStatus) {
-		return order;
-	}
-
-	// Order Status Transition Validation
-	const allowedOrderTransition = validOrderTransitions[currentStatus];
-	if (!allowedOrderTransition.includes(orderStatus)) {
-		return {
-			error: `Cannot change order status from ${currentStatus} to ${orderStatus}`,
-		};
-	}
-
 	try {
-		const updatedOrder = await updateOrderStatus(orderId, orderStatus);
-		return updatedOrder;
+		return await changeSellerOrderStatus(
+			userId,
+			role,
+			orderId,
+			sellerOrderStatus,
+			trackingNumber,
+		);
 	} catch (err) {
 		logger.error("Failed to update order status", err);
 		return { error: "Failed to update order status" };
@@ -254,3 +241,11 @@ export async function updateOrderStatusService(
 }
 
 export async function cancelOrder() {}
+
+function toSellerOrderStatus(status: OrderStatus): SellerOrderStatus | null {
+	if (status === "PENDING") {
+		return null;
+	}
+
+	return status;
+}
