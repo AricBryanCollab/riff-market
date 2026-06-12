@@ -16,7 +16,10 @@ import {
 	type Result,
 } from "@/domains/shared/domain/result";
 
-export type OrderReadErrorCode = "ORDER_READ_UNAUTHORIZED";
+export type OrderReadErrorCode =
+	| "ORDER_READ_UNAUTHORIZED"
+	| "ORDER_READ_INVALID_ID"
+	| "ORDER_READ_NOT_FOUND";
 
 export type OrderReadError = AppError<OrderReadErrorCode>;
 
@@ -27,6 +30,18 @@ export interface BuyerPurchaseHistoryPort {
 export interface SellerOrderDashboardPort {
 	listForSeller(sellerId: string): Promise<OrderingOrderReadModel[]>;
 	listAllForAdmin(): Promise<OrderingOrderReadModel[]>;
+}
+
+export interface OrderDetailReadPort {
+	findPurchaseForCustomer(
+		purchaseId: string,
+		customerId: string,
+	): Promise<OrderingOrderReadModel | null>;
+	findSellerOrderForSeller(
+		sellerOrderId: string,
+		sellerId: string,
+	): Promise<OrderingOrderReadModel | null>;
+	findForAdmin(orderId: string): Promise<OrderingOrderReadModel | null>;
 }
 
 export class ListBuyerPurchaseHistory {
@@ -68,6 +83,49 @@ export class ListSellerOrderDashboard {
 		}
 
 		return ok(await this.sellerOrders.listForSeller(actor.id));
+	}
+}
+
+export class GetOrderDetail {
+	constructor(private readonly orderDetails: OrderDetailReadPort) {}
+
+	async execute(
+		actor: Actor,
+		orderId: string,
+	): Promise<Result<OrderingOrderReadModel, OrderReadError>> {
+		if (orderId.trim().length === 0) {
+			return err(
+				orderReadError(
+					"ORDER_READ_INVALID_ID",
+					"Order ID is required",
+					"validation",
+				),
+			);
+		}
+
+		const order = await this.findAuthorizedOrder(actor, orderId);
+		if (!order) {
+			return err(
+				orderReadError(
+					"ORDER_READ_NOT_FOUND",
+					"Order not found with the provided order ID",
+					"not-found",
+				),
+			);
+		}
+
+		return ok(order);
+	}
+
+	private findAuthorizedOrder(actor: Actor, orderId: string) {
+		switch (actor.role) {
+			case "CUSTOMER":
+				return this.orderDetails.findPurchaseForCustomer(orderId, actor.id);
+			case "SELLER":
+				return this.orderDetails.findSellerOrderForSeller(orderId, actor.id);
+			case "ADMIN":
+				return this.orderDetails.findForAdmin(orderId);
+		}
 	}
 }
 
@@ -119,10 +177,11 @@ export function deriveBuyerOrderSummaryStatus(input: {
 function orderReadError(
 	code: OrderReadErrorCode,
 	message: string,
+	kind: OrderReadError["kind"] = "authorization",
 ): OrderReadError {
 	return appError({
 		code,
 		message,
-		kind: "authorization",
+		kind,
 	});
 }

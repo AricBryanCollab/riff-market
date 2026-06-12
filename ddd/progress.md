@@ -26,8 +26,96 @@ Clean slate started: 2026-06-11
 - Slice `1` checkout delivery wiring to the DB-backed `PlacePurchase` path added on 2026-06-12.
 - Slice `2` buyer purchase history and seller-order dashboard read migration started on 2026-06-12.
 - Slice `2` seller-order status lifecycle and target status update path started on 2026-06-12.
+- Slice `2` target order detail reads for `/api/orders/$id` GET added on 2026-06-12.
+- Slice `2` active order read/detail/status delivery moved to TanStack server functions on 2026-06-12.
 
 ## Latest Session Notes
+
+- Committed the Slice `2` seller-order status lifecycle migration as `0700fcb` with message `feat: add seller order status lifecycle`.
+- Migrated target order detail reads into the ordering read-model layer:
+  - customers read purchase detail by `Purchase.id`
+  - sellers read seller-order detail by `SellerOrder.id`
+  - admins can read either purchase or seller-order detail by id
+- Added `GetOrderDetail` application use case with explicit `Actor` authorization and not-found behavior that does not expose another user's order existence.
+- Extended `PrismaOrderReadModels` with target detail queries over `Purchase` and `SellerOrder`.
+- Added `src/server/order-service.ts` as the server-function delivery helper for active order reads, detail reads, and seller-order status changes.
+- Added TanStack server functions:
+  - `listOrdersForCurrentUserFn`
+  - `getOrderDetailFn`
+  - `changeSellerOrderStatusFn`
+- Updated order query/mutation callers to use server functions instead of `/api/orders`.
+- Added seller settings status controls for `NEW -> PROCESSING`, `PROCESSING -> SHIPPED` with tracking number, `SHIPPED -> DELIVERED`, and cancelable seller states.
+- Removed the legacy order API route files:
+  - `src/routes/api/orders.ts`
+  - `src/routes/api/orders.seller.ts`
+  - `src/routes/api/orders.$id.ts`
+- Removed the old compatibility action/repo/fake-order helper layer:
+  - `src/actions/order.ts`
+  - `src/actions/order.test.ts`
+  - `src/data/order.repo.ts`
+  - `src/lib/zod/order-validation.ts`
+  - `src/utils/generate-tracking-number.ts`
+  - `src/utils/transform-order-query-response.ts`
+- Regenerated `src/routeTree.gen.ts` after deleting the order API routes.
+- Added focused server-service tests for list reads, detail reads, hidden unauthorized detail reads, tracking-number validation, and seller status command execution.
+
+## Files Changed In Latest Session
+
+- `src/domains/ordering/application/order-read-models.ts`
+- `src/domains/ordering/application/order-read-models.test.ts`
+- `src/domains/ordering/infrastructure/prisma-order-read-models.ts`
+- `src/domains/ordering/application/place-purchase.prisma.test.ts`
+- `src/server/order-service.ts`
+- `src/server/order-service.test.ts`
+- `src/server/order.functions.ts`
+- `src/lib/tanstack-query/orders-queries.ts`
+- `src/hooks/use-get-orders.ts`
+- `src/routes/settings/-components/settings-orders-section.tsx`
+- `src/types/order.ts`
+- `src/routeTree.gen.ts`
+- deleted `src/actions/order.ts`
+- deleted `src/actions/order.test.ts`
+- deleted `src/data/order.repo.ts`
+- deleted `src/lib/zod/order-validation.ts`
+- deleted `src/routes/api/orders.ts`
+- deleted `src/routes/api/orders.seller.ts`
+- deleted `src/routes/api/orders.$id.ts`
+- deleted `src/utils/generate-tracking-number.ts`
+- deleted `src/utils/transform-order-query-response.ts`
+- `ddd/progress.md`
+- `ddd/next-session.md`
+
+## Tests And Checks In Latest Session
+
+- `bun run test:unit -- src/server/order-service.test.ts src/server/place-purchase-service.test.ts src/domains/ordering/application/change-seller-order-status.test.ts src/actions/order.test.ts` passed before deleting the legacy action layer: 4 files, 20 tests.
+- `bun run test:unit -- src/server/order-service.test.ts src/server/place-purchase-service.test.ts src/domains/ordering/application/order-read-models.test.ts src/domains/ordering/application/change-seller-order-status.test.ts src/domains/ordering/application/place-purchase.prisma.test.ts` passed after deleting the order API/action/repo layer: 4 files passed, 1 DB integration file skipped by default; 37 tests passed, 7 skipped.
+- `bun run typecheck` passed.
+- `bunx biome check src/server/order-service.ts src/server/order-service.test.ts src/server/order.functions.ts src/lib/tanstack-query/orders-queries.ts src/hooks/use-get-orders.ts src/routes/settings/-components/settings-orders-section.tsx src/types/order.ts src/routeTree.gen.ts src/domains/ordering/application/order-read-models.ts src/domains/ordering/application/order-read-models.test.ts src/domains/ordering/infrastructure/prisma-order-read-models.ts src/domains/ordering/application/place-purchase.prisma.test.ts` passed.
+- `bun run test:unit` passed: 20 files passed, 1 DB integration file skipped by default; 208 tests passed, 7 skipped.
+- `bun run docs:check` passed.
+- `bun run build` passed with the existing large client chunk warning.
+
+## Decisions In Latest Session
+
+- Interpret detail IDs by actor role:
+  - customer: `Purchase.id`
+  - seller: `SellerOrder.id`
+  - admin: either `Purchase.id` or `SellerOrder.id`
+- Return not found for unauthorized customer/seller detail reads so the target read path does not disclose ownership boundaries.
+- Use TanStack server functions as the active delivery path for order list reads, detail reads, and seller-order status commands.
+- Delete the old `/api/orders` route family instead of preserving compatibility shells once read/status callers moved to server functions.
+- Delete `src/actions/order.ts` and `src/data/order.repo.ts` rather than keeping dead fake-order compatibility code.
+- Keep the UI display field name `trackingNumber` as a temporary `OrderResponse` compatibility field, but seller `SHIPPED` commands now require an actual seller tracking number.
+
+## Risks / Follow-Ups From Latest Session
+
+- No browser smoke was run yet for the new seller status controls or server-function order reads.
+- Local browser smoke was attempted, but `bun run dev` failed on an internal framework port and `vite preview` kept scanning occupied ports; no dev/preview server was left running.
+- The gated local Postgres integration test was not rerun after route/action cleanup in this session.
+- Existing follow-ups remain: non-fatal add-to-cart router warning from `src/components/product-actions.tsx` and misleading server-function request logging for non-`Response` returns.
+- `ddd/` files remain temporary worktree handoff docs and should be removed before opening a PR.
+
+## Previous Slice 2 Status Lifecycle Session Notes
 
 - Committed the Slice `2` read-model migration as `7f72621` with message `feat: add ordering read models`.
 - Added seller-order lifecycle behavior to the `SellerOrder` domain model:
@@ -54,7 +142,7 @@ Clean slate started: 2026-06-11
 - Kept target authorization coverage in the `ChangeSellerOrderStatus` use-case tests.
 - Added gated local Postgres integration coverage for target seller-order status updates.
 
-## Files Changed In Latest Session
+## Files Changed In Previous Slice 2 Status Lifecycle Session
 
 - `src/domains/ordering/domain/seller-order.ts`
 - `src/domains/ordering/domain/seller-order.test.ts`
@@ -69,7 +157,7 @@ Clean slate started: 2026-06-11
 - `ddd/progress.md`
 - `ddd/next-session.md`
 
-## Tests And Checks In Latest Session
+## Tests And Checks In Previous Slice 2 Status Lifecycle Session
 
 - `bun run test:unit -- src/domains/ordering/domain/seller-order.test.ts src/domains/ordering/application/change-seller-order-status.test.ts src/actions/order.test.ts src/domains/ordering/application/place-purchase.prisma.test.ts` passed: 3 files passed, 1 DB integration file skipped by default; 26 tests passed, 7 skipped.
 - `bun run typecheck` passed.
@@ -78,7 +166,7 @@ Clean slate started: 2026-06-11
 - `bun run test:unit` passed: 20 files passed, 1 DB integration file skipped by default; 199 tests passed, 7 skipped.
 - `bun run docs:check` passed.
 
-## Decisions In Latest Session
+## Decisions In Previous Slice 2 Status Lifecycle Session
 
 - Treat `/api/orders/$id` PUT as a compatibility delivery shell for target `SellerOrder.id` status updates.
 - Keep `/api/orders/$id` GET on the legacy `Order` detail path until a dedicated purchase/seller-order detail read model is migrated.
@@ -87,7 +175,7 @@ Clean slate started: 2026-06-11
 - Persist status/tracking only in the repository for now; domain events are captured by the use case for future notification/outbox handling but are not yet dispatched.
 - Do not add route-level seller status flow tests while `/api/orders/$id` is a temporary compatibility route; add behavior coverage when the stable server-function/application flow exists.
 
-## Risks / Follow-Ups From Latest Session
+## Risks / Follow-Ups From Previous Slice 2 Status Lifecycle Session
 
 - Seller status UI may need a tracking-number input before sellers can successfully command `SHIPPED`.
 - Legacy `/api/orders/$id` GET still reads old `Order` / `OrderItem`; purchase detail/admin target reads remain for a follow-up.

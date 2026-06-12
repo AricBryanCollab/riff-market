@@ -1,5 +1,9 @@
-import { apiFetch } from "@/lib/tanstack-query/fetch";
-import { placePurchaseFn } from "@/server/order.functions";
+import {
+	changeSellerOrderStatusFn,
+	getOrderDetailFn,
+	listOrdersForCurrentUserFn,
+	placePurchaseFn,
+} from "@/server/order.functions";
 import type { PlacePurchaseResponse } from "@/server/place-purchase-service";
 import type { OrderStatus } from "@/types/enum";
 import type {
@@ -15,32 +19,33 @@ export function createOrder(
 }
 
 export function getOrderByCustomer() {
-	return apiFetch<OrderResponse[] | GetUserOrdersErrorResponse>("/api/orders", {
-		method: "GET",
-	});
+	return listOrdersForCurrentUserFn() as Promise<
+		OrderResponse[] | GetUserOrdersErrorResponse
+	>;
 }
 
 export function getOrderBySeller() {
-	return apiFetch<OrderResponse[] | GetUserOrdersErrorResponse>(
-		"/api/orders/seller",
-		{
-			method: "GET",
-		},
-	);
+	return listOrdersForCurrentUserFn() as Promise<
+		OrderResponse[] | GetUserOrdersErrorResponse
+	>;
 }
 
 export function getOrderById(id: string) {
-	return apiFetch<OrderResponse | GetUserOrdersErrorResponse>(
-		`/api/orders/${id}`,
-		{
-			method: "GET",
-		},
-	);
+	return getOrderDetailFn({ data: { orderId: id } }) as Promise<
+		OrderResponse | GetUserOrdersErrorResponse
+	>;
 }
 
-export function updateOrderStatus(id: string, status: OrderStatus) {
-	return apiFetch<OrderResponse>(`/api/orders/${id}`, {
-		method: "PUT",
-		body: JSON.stringify(status),
+export function updateOrderStatus(
+	id: string,
+	status: OrderStatus,
+	trackingNumber?: string | null,
+) {
+	return changeSellerOrderStatusFn({
+		data: {
+			sellerOrderId: id,
+			status,
+			trackingNumber,
+		},
 	});
 }

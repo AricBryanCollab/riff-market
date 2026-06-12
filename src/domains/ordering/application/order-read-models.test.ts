@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
 	type BuyerPurchaseHistoryPort,
 	deriveBuyerOrderSummaryStatus,
+	GetOrderDetail,
 	ListBuyerPurchaseHistory,
 	ListSellerOrderDashboard,
+	type OrderDetailReadPort,
 	type SellerOrderDashboardPort,
 } from "@/domains/ordering/application/order-read-models";
 import type { OrderingOrderReadModel } from "@/domains/ordering/dto/order-read-model";
@@ -108,6 +110,105 @@ describe("ListSellerOrderDashboard", () => {
 	});
 });
 
+describe("GetOrderDetail", () => {
+	it("allows customers to read their own purchase detail", async () => {
+		const port = new FakeOrderDetailReadPort({
+			customerPurchase: customerOrder,
+		});
+		const useCase = new GetOrderDetail(port);
+
+		const result = await useCase.execute(
+			{ id: "customer-1", role: "CUSTOMER" },
+			"purchase-1",
+		);
+
+		expect(result).toEqual({
+			ok: true,
+			value: customerOrder,
+		});
+		expect(port.requests).toEqual([
+			["findPurchaseForCustomer", "purchase-1", "customer-1"],
+		]);
+	});
+
+	it("returns not found when a customer reads another customer's purchase", async () => {
+		const port = new FakeOrderDetailReadPort({
+			customerPurchase: null,
+		});
+		const useCase = new GetOrderDetail(port);
+
+		const result = await useCase.execute(
+			{ id: "customer-1", role: "CUSTOMER" },
+			"purchase-2",
+		);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: {
+				code: "ORDER_READ_NOT_FOUND",
+				kind: "not-found",
+			},
+		});
+	});
+
+	it("allows sellers to read their own seller-order detail", async () => {
+		const port = new FakeOrderDetailReadPort({
+			sellerOrder,
+		});
+		const useCase = new GetOrderDetail(port);
+
+		const result = await useCase.execute(
+			{ id: "seller-1", role: "SELLER" },
+			"seller-order-1",
+		);
+
+		expect(result).toEqual({
+			ok: true,
+			value: sellerOrder,
+		});
+		expect(port.requests).toEqual([
+			["findSellerOrderForSeller", "seller-order-1", "seller-1"],
+		]);
+	});
+
+	it("allows admins to read either purchase or seller-order detail", async () => {
+		const port = new FakeOrderDetailReadPort({
+			adminOrder: sellerOrder,
+		});
+		const useCase = new GetOrderDetail(port);
+
+		const result = await useCase.execute(
+			{ id: "admin-1", role: "ADMIN" },
+			"seller-order-1",
+		);
+
+		expect(result).toEqual({
+			ok: true,
+			value: sellerOrder,
+		});
+		expect(port.requests).toEqual([["findForAdmin", "seller-order-1"]]);
+	});
+
+	it("rejects blank order IDs", async () => {
+		const port = new FakeOrderDetailReadPort({});
+		const useCase = new GetOrderDetail(port);
+
+		const result = await useCase.execute(
+			{ id: "customer-1", role: "CUSTOMER" },
+			" ",
+		);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: {
+				code: "ORDER_READ_INVALID_ID",
+				kind: "validation",
+			},
+		});
+		expect(port.requests).toEqual([]);
+	});
+});
+
 describe("deriveBuyerOrderSummaryStatus", () => {
 	it.each([
 		{
@@ -194,6 +295,36 @@ class FakeSellerOrderDashboardPort implements SellerOrderDashboardPort {
 		this.adminReadCount += 1;
 
 		return this.orders;
+	}
+}
+
+class FakeOrderDetailReadPort implements OrderDetailReadPort {
+	readonly requests: unknown[][] = [];
+
+	constructor(
+		private readonly orders: {
+			readonly customerPurchase?: OrderingOrderReadModel | null;
+			readonly sellerOrder?: OrderingOrderReadModel | null;
+			readonly adminOrder?: OrderingOrderReadModel | null;
+		},
+	) {}
+
+	async findPurchaseForCustomer(purchaseId: string, customerId: string) {
+		this.requests.push(["findPurchaseForCustomer", purchaseId, customerId]);
+
+		return this.orders.customerPurchase ?? null;
+	}
+
+	async findSellerOrderForSeller(sellerOrderId: string, sellerId: string) {
+		this.requests.push(["findSellerOrderForSeller", sellerOrderId, sellerId]);
+
+		return this.orders.sellerOrder ?? null;
+	}
+
+	async findForAdmin(orderId: string) {
+		this.requests.push(["findForAdmin", orderId]);
+
+		return this.orders.adminOrder ?? null;
 	}
 }
 

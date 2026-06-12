@@ -3,6 +3,7 @@ import { PrismaClient } from "generated/prisma/client";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ChangeSellerOrderStatus } from "@/domains/ordering/application/change-seller-order-status";
 import {
+	GetOrderDetail,
 	ListBuyerPurchaseHistory,
 	ListSellerOrderDashboard,
 } from "@/domains/ordering/application/order-read-models";
@@ -262,6 +263,88 @@ describeDb("PlacePurchase Prisma integration", () => {
 					],
 				}),
 			],
+		});
+
+		const customerDetail = await new GetOrderDetail(readModels).execute(
+			{ id: "customer-1", role: "CUSTOMER" },
+			result.value.purchaseId,
+		);
+		expect(customerDetail).toEqual({
+			ok: true,
+			value: expect.objectContaining({
+				id: result.value.purchaseId,
+				purchaseId: result.value.purchaseId,
+				totalAmount: 275,
+				status: "OPEN",
+				items: expect.arrayContaining([
+					expect.objectContaining({
+						productId: "listing-1",
+					}),
+					expect.objectContaining({
+						productId: "listing-2",
+					}),
+				]),
+			}),
+		});
+
+		const sellerOrderId =
+			sellerDashboard.ok && sellerDashboard.value[0]
+				? sellerDashboard.value[0].id
+				: "";
+		const sellerDetail = await new GetOrderDetail(readModels).execute(
+			{ id: "seller-1", role: "SELLER" },
+			sellerOrderId,
+		);
+		expect(sellerDetail).toEqual({
+			ok: true,
+			value: expect.objectContaining({
+				id: sellerOrderId,
+				sellerOrderId,
+				status: "NEW",
+				totalAmount: 125,
+				customer: expect.objectContaining({
+					id: "customer-1",
+					email: "pat@example.com",
+				}),
+			}),
+		});
+
+		const adminPurchaseDetail = await new GetOrderDetail(readModels).execute(
+			{ id: "admin-1", role: "ADMIN" },
+			result.value.purchaseId,
+		);
+		expect(adminPurchaseDetail).toEqual({
+			ok: true,
+			value: expect.objectContaining({
+				id: result.value.purchaseId,
+				purchaseId: result.value.purchaseId,
+				totalAmount: 275,
+				status: "OPEN",
+			}),
+		});
+
+		const adminSellerDetail = await new GetOrderDetail(readModels).execute(
+			{ id: "admin-1", role: "ADMIN" },
+			sellerOrderId,
+		);
+		expect(adminSellerDetail).toEqual({
+			ok: true,
+			value: expect.objectContaining({
+				id: sellerOrderId,
+				sellerOrderId,
+				totalAmount: 125,
+				status: "NEW",
+			}),
+		});
+
+		const unauthorizedSellerDetail = await new GetOrderDetail(
+			readModels,
+		).execute({ id: "seller-2", role: "SELLER" }, sellerOrderId);
+		expect(unauthorizedSellerDetail).toMatchObject({
+			ok: false,
+			error: {
+				code: "ORDER_READ_NOT_FOUND",
+			},
 		});
 	});
 

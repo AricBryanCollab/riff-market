@@ -19,21 +19,28 @@ Do not rely on any manually maintained current-state file. The repo is the curre
 
 ## Recommended Next Task
 
-Continue Slice `2`: target order detail/admin reads and seller status UX polish.
+Continue Slice `2`: verify the completed server-function order flow, then move to the next migration slice.
 
 Exact next task:
 
-- Migrate `/api/orders/$id` GET and any purchase detail/admin reads to a target `Purchase` / `SellerOrder` read model, or explicitly keep a narrow compatibility path with tests.
-- Add UI/API caller support for `SHIPPED` tracking numbers, or keep ship unavailable until a tracking number can be provided.
-- Keep the target status update path: `/api/orders/$id` PUT now treats the id as `SellerOrder.id` and delegates to `ChangeSellerOrderStatus`.
-- Add seller status delivery coverage only after the whole stable flow is sliced out, preferably at the server-function/application boundary. Do not add route-delegation tests or tests that assert internal repository calls.
-- Consider adding server-function read wrappers only after fixing or working around the misleading `requestLoggerMiddleware` non-`Response` status logging.
-- Keep old cart details reads and legacy order APIs as temporary compatibility only where callers still need them.
-- Preserve the new Slice `2` list-read path: `/api/orders` and `/api/orders/seller` are compatibility shells over ordering-context `Purchase` / `SellerOrder` reads.
-- Preserve the existing checkout success/error UX and the now-smoked `usePlaceOrder` -> `createOrder` -> `placePurchaseFn` -> `PlacePurchase` delivery path.
+- Browser-smoke the active order server-function flow:
+  - seller settings list loads through `listOrdersForCurrentUserFn`
+  - seller can move `NEW -> PROCESSING`
+  - seller can move `PROCESSING -> SHIPPED` only after entering a tracking number
+  - seller can move `SHIPPED -> DELIVERED`
+  - customer settings list still loads purchase history
+- Rerun the gated DB integration test after the route/action cleanup if local Postgres is available.
+- If smoke passes, start Slice `3` listing lifecycle. If smoke reveals a status/read issue, fix it before starting Slice `3`.
+- Active order delivery is now server functions only for migrated flows:
+  - `listOrdersForCurrentUserFn`
+  - `getOrderDetailFn`
+  - `changeSellerOrderStatusFn`
+- The old `/api/orders`, `/api/orders/seller`, and `/api/orders/$id` route files have been deleted.
+- `src/actions/order.ts`, `src/data/order.repo.ts`, and the old fake-order helper files have been deleted.
+- Keep old cart details reads and non-order legacy APIs as temporary compatibility only where callers still need them.
+- Preserve the existing checkout success/error UX and the smoked `usePlaceOrder` -> `createOrder` -> `placePurchaseFn` -> `PlacePurchase` delivery path.
 - Fix or track the non-fatal add-to-cart router warning from `src/components/product-actions.tsx` (`navigate({ from: "/cart" })`) before broad checkout polish.
 - Fix or track misleading server-function request logging in `requestLoggerMiddleware`; successful server-function return values without a `Response` wrapper are currently logged as status `500`.
-- Do not start by deleting the old `/api/orders` compatibility path until read callers and tests are migrated.
 
 Useful first inspection targets:
 
@@ -54,16 +61,13 @@ Useful first inspection targets:
 - `src/domains/shared/infrastructure/prisma-unit-of-work.ts`
 - `src/server/function-middleware.ts`
 - `src/server/order.functions.ts`
+- `src/server/order-service.ts`
 - `src/server/place-purchase-service.ts`
 - `src/server/user.functions.ts`
 - `src/hooks/use-place-order.ts`
 - `src/lib/tanstack-query/orders-queries.ts`
-- `src/actions/order.ts`
-- `src/data/order.repo.ts`
-- `src/routes/api/orders.$id.ts`
 - `src/data/product-repo.ts`
 - `src/types/order.ts`
-- `src/lib/zod/order-validation.ts`
 - `prisma/schema.prisma`
 
 ## Do Not Start With
@@ -82,6 +86,20 @@ Useful first inspection targets:
 
 ## Current Repo State From Latest Completed Session
 
+- Latest implementation session completed on 2026-06-12:
+  - work completed: Slice `2` active order read/detail/status delivery moved from order API routes to TanStack server functions; seller settings status controls added with required shipping tracking number; old `/api/orders` route family, `src/actions/order.ts`, `src/data/order.repo.ts`, and fake-order helper files deleted
+  - files changed: new `src/server/order-service.ts` and test, `src/server/order.functions.ts`, order query/hook wrappers, seller settings orders UI, route tree, order read-model files from the detail-read migration, `src/types/order.ts`, `ddd/progress.md`, `ddd/next-session.md`; deleted old order API/action/repo/helper files
+  - tests/checks run: focused server-service/read/status tests passed; typecheck passed; touched-file Biome passed; full unit suite passed with gated DB tests skipped by default; docs check passed; production build passed with existing large client chunk warning
+  - decisions made: migrated order flows use server functions only; no `/api/orders` compatibility shell remains; status delivery coverage lives at the server-service/application boundary, not route delegation
+  - blockers or risks: no browser smoke was completed for seller status controls because `bun run dev` failed on an internal framework port and `vite preview` kept scanning occupied ports; gated DB integration was not rerun after route/action cleanup; server-function request logging still misreports successful non-`Response` returns
+  - exact next recommended task: browser-smoke seller status and customer/seller settings reads, rerun the gated DB integration test if local Postgres is available, then start Slice `3` listing lifecycle if clean
+- Latest implementation session completed on 2026-06-12:
+  - work completed: Slice `2` target order detail reads added for `/api/orders/$id` GET; customers read by `Purchase.id`, sellers by `SellerOrder.id`, admins by either
+  - files changed: ordering read use case/test, Prisma order read adapter, gated DB integration test, legacy detail service delegation, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: focused order-detail/action tests passed; typecheck passed; touched-file Biome passed; escalated gated DB integration test passed; full unit suite passed with DB integration skipped by default; docs check passed
+  - decisions made: keep `/api/orders/$id` GET as a compatibility route but delegate to target ordering reads; unauthorized customer/seller detail reads return not found; `src/actions/order.ts` remains temporary compatibility glue only
+  - blockers or risks: no browser smoke was run for target detail reads; seller status UI still needs tracking-number support; old `/api/orders` POST and `createOrderService` remain compatibility/dead-path risk
+  - exact next recommended task: add status caller support for shipping tracking numbers or hide ship transitions, then continue draining legacy order compatibility paths
 - Latest implementation session completed on 2026-06-12:
   - work completed: Slice `2` seller-order lifecycle/status update path started; `SellerOrder` has transition methods/events; `ChangeSellerOrderStatus` enforces actor ownership; `/api/orders/$id` PUT now delegates status changes to target `SellerOrder`
   - files changed: seller-order domain/test, new change-status use case/test, new Prisma seller-order status repository, status integration coverage, legacy order status service/route wrapper, `ddd/progress.md`, `ddd/next-session.md`
@@ -162,16 +180,15 @@ Useful first inspection targets:
 - Existing checkout now calls `usePlaceOrder` -> `createOrder` -> `placePurchaseFn` -> `PlacePurchase`.
 - Buyer purchase history list reads now query `Purchase` plus joined `SellerOrder` / `SellerOrderItem` snapshots through ordering-context read use cases.
 - Seller dashboard list reads now query `SellerOrder` directly through ordering-context read use cases.
-- `/api/orders` and `/api/orders/seller` remain as temporary compatibility delivery shells over the target reads.
-- `/api/orders/$id` PUT now delegates to target `ChangeSellerOrderStatus` and treats the path id as `SellerOrder.id`.
-- `/api/orders/$id` GET remains a legacy compatibility detail path.
-- Legacy `src/data/order.repo.ts` still orchestrates old fake order creation, stock decrement, and generic notification creation for the `/api/orders` POST compatibility path only.
+- Active order list reads now call `listOrdersForCurrentUserFn`.
+- Active order detail reads now call `getOrderDetailFn`; customers read `Purchase.id`, sellers read `SellerOrder.id`, and admins can read either.
+- Active seller-order status updates now call `changeSellerOrderStatusFn`.
+- Seller settings exposes status controls for processing, shipping with tracking number, delivery, and cancellation where the target lifecycle allows them.
+- The `/api/orders` route family, `src/actions/order.ts`, `src/data/order.repo.ts`, and old fake-order helper files have been deleted.
 - Slice `-1`, Slice `0`, and Slice `0.5` initial implementation are complete.
 - The Slice `-1` customer order-by-id ownership characterization gap is fixed:
-  - `getOrderByIdService` now receives authenticated `userId`.
-  - `/api/orders/$id` GET passes `context.id` into the service.
-  - `src/actions/order.test.ts` proves customers can read their own order and cannot read another customer's order.
-- The old action-level seller order-status ownership characterization was removed because it tested implementation details instead of the stable flow. Add replacement behavior coverage when the seller status delivery path is sliced through its server-function/application boundary.
+  - replacement target read coverage now lives in `src/server/order-service.test.ts` and `src/domains/ordering/application/order-read-models.test.ts`.
+- The old action-level seller order-status ownership characterization was removed because it tested implementation details instead of the stable flow. Replacement behavior coverage now exists at the server-service/application boundary.
 - DDD foundation folders exist under `src/domains`.
 - Shared primitives exist under `src/domains/shared`.
 - `Money` tests pass.
@@ -186,75 +203,21 @@ Useful first inspection targets:
 
 Latest checks:
 
-- `bun run test:unit -- src/domains/ordering/domain/seller-order.test.ts src/domains/ordering/application/change-seller-order-status.test.ts src/actions/order.test.ts src/domains/ordering/application/place-purchase.prisma.test.ts` passed: 3 files passed, 1 DB integration file skipped by default; 26 tests passed, 7 skipped.
+- `bun run test:unit -- src/server/order-service.test.ts src/server/place-purchase-service.test.ts src/domains/ordering/application/order-read-models.test.ts src/domains/ordering/application/change-seller-order-status.test.ts src/domains/ordering/application/place-purchase.prisma.test.ts` passed: 4 files passed, 1 DB integration file skipped by default; 37 tests passed, 7 skipped.
 - `bun run typecheck` passed.
-- `bunx biome check src/domains/ordering/domain/seller-order.ts src/domains/ordering/domain/seller-order.test.ts src/domains/ordering/application/change-seller-order-status.ts src/domains/ordering/application/change-seller-order-status.test.ts src/domains/ordering/infrastructure/prisma-seller-order-status-repository.ts src/domains/ordering/application/place-purchase.prisma.test.ts src/data/order.repo.ts src/actions/order.ts src/actions/order.test.ts 'src/routes/api/orders.$id.ts'` passed after formatting with `--write`.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff RUN_DB_TESTS=1 bun run test:unit -- src/domains/ordering/application/place-purchase.prisma.test.ts` passed after sandbox escalation: 1 file, 7 tests.
-- `bun run test:unit` passed: 20 files passed, 1 DB integration file skipped by default; 199 tests passed, 7 skipped.
+- `bunx biome check src/server/order-service.ts src/server/order-service.test.ts src/server/order.functions.ts src/lib/tanstack-query/orders-queries.ts src/hooks/use-get-orders.ts src/routes/settings/-components/settings-orders-section.tsx src/types/order.ts src/routeTree.gen.ts src/domains/ordering/application/order-read-models.ts src/domains/ordering/application/order-read-models.test.ts src/domains/ordering/infrastructure/prisma-order-read-models.ts src/domains/ordering/application/place-purchase.prisma.test.ts` passed.
+- `bun run test:unit` passed: 20 files passed, 1 DB integration file skipped by default; 208 tests passed, 7 skipped.
 - `bun run docs:check` passed.
-- `bun run test:unit -- src/domains/ordering/application/order-read-models.test.ts src/actions/order.test.ts` passed: 2 files, 16 tests.
-- `bun run typecheck` passed.
-- `bunx biome check src/domains/ordering/application/place-purchase.prisma.test.ts src/domains/ordering/dto/order-read-model.ts src/domains/ordering/application/order-read-models.ts src/domains/ordering/application/order-read-models.test.ts src/domains/ordering/infrastructure/prisma-order-read-models.ts src/utils/order-status-label.ts src/types/enum.ts src/types/order.ts src/data/order.repo.ts src/actions/order.ts src/routes/settings/-components/settings-orders-section.tsx src/components/order-list.tsx` passed after formatting with `--write`.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma migrate status` passed after sandbox escalation: database schema is up to date.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff RUN_DB_TESTS=1 bun run test:unit -- src/domains/ordering/application/place-purchase.prisma.test.ts` passed after sandbox escalation: 1 file, 6 tests.
-- `bun run test:unit` passed: 19 files passed, 1 DB integration file skipped by default; 183 tests passed, 6 skipped.
-- `bun run docs:check` passed.
-- Codex Desktop in-app browser checkout smoke passed against `http://127.0.0.1:43177`:
-  - seeded customer checkout placed a target `Purchase`
-  - product stock decremented from `3` to `2`
-  - success toast rendered and cart header count cleared
-  - DB verification confirmed `Purchase`, `SellerOrder`, `SellerOrderItem`, and target DDD notification links
-- `bun run typecheck` passed.
-- `bunx biome check src/types/notification.ts src/data/notification-repo.ts src/data/order.repo.ts src/routes/notifications.tsx src/components/notification-list.tsx src/components/notification-display.tsx` passed.
-- `bun run docs:check` passed.
-- `bun run typecheck` passed.
-- `bun run test:unit -- src/domains/ordering/application/place-purchase.test.ts src/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator.test.ts` passed: 2 files, 13 tests.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff RUN_DB_TESTS=1 bun run test:unit -- src/domains/ordering/application/place-purchase.prisma.test.ts` passed: 1 file, 4 tests.
-- `bunx biome check src/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator.ts src/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator.test.ts src/domains/ordering/application/place-purchase.test.ts` passed.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma validate` passed.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bun run db:generate` passed.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma migrate deploy` passed for `20260611110000_account_deletion_safe_purchase_history`.
-- `bun run typecheck` passed.
-- `bun run test:unit -- src/domains/listings/domain/listing.test.ts src/domains/ordering/domain/purchase.test.ts src/domains/ordering/domain/seller-order.test.ts src/domains/ordering/application/place-purchase.test.ts` passed: 4 files, 29 tests.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff RUN_DB_TESTS=1 bun run test:unit -- src/domains/ordering/application/place-purchase.prisma.test.ts` passed: 1 file, 4 tests.
-- `bunx biome check prisma/schema.prisma src/domains/ordering/infrastructure/prisma-purchase-persistence.ts src/domains/ordering/infrastructure/prisma-seller-order-persistence.ts src/domains/ordering/application/place-purchase.prisma.test.ts` passed.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma migrate deploy` passed.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bun run db:generate` passed.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma validate` passed.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma migrate status` passed: database schema is up to date.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff RUN_DB_TESTS=1 bun run test:unit -- src/domains/ordering/application/place-purchase.prisma.test.ts` passed: 1 file, 3 tests.
-- `bun run test:unit` passed: 16 files, 155 tests; 1 DB integration file skipped by default.
-- `bun run typecheck` passed.
-- `bunx biome check <touched schema/domain/application/infrastructure files>` passed.
-- `bun run test:unit -- src/domains/listings/domain/listing.test.ts src/domains/ordering/domain/purchase.test.ts src/domains/ordering/domain/seller-order.test.ts src/domains/ordering/application/place-purchase.test.ts` passed: 4 files, 29 tests.
-- `bun run typecheck` passed.
-- `bunx biome check <touched domain/application files>` passed.
-- `bun run test:unit` passed: 16 files, 155 tests.
-- `bun run docs:check` passed.
-- `bun run test:unit -- src/domains/listings/application/product-money.test.ts` passed: 1 file, 9 tests.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bun run db:generate` passed.
-- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma validate` passed.
-- `bun run test:unit -- src/domains/listings/application/product-money.test.ts src/actions/product.test.ts src/domains/shared/domain/money.test.ts src/actions/order.test.ts` passed: 4 files, 82 tests.
-- `bun run typecheck` passed.
-- `bunx biome check <touched implementation files>` passed.
-- `bun run docs:check` passed.
-- `bun run test:unit` passed: 12 files, 126 tests.
-- `bun run test:unit -- src/actions/order.test.ts` passed.
-- `bun run typecheck` passed.
-- `bunx biome check src/actions/order.ts src/actions/order.test.ts 'src/routes/api/orders.$id.ts'` passed.
-- `bun run test:unit -- src/domains/shared/domain/money.test.ts src/actions/order.test.ts` passed.
-- `bun run test:unit` passed.
-- `bunx biome check <touched files>` passed.
-- Full `bun run check` still reports unrelated pre-existing formatting issues outside the touched files.
+- `bun run build` passed with the existing large client chunk warning.
 
 ## Expected End State For Next Session
 
-- Slice `2` detail/admin read migration has started, or there is a documented blocker from target detail read migration.
-- Seller status update callers either provide tracking numbers for `SHIPPED` or do not expose ship transitions yet.
-- Buyer/seller list reads remain backed by target `Purchase` / `SellerOrder` read models.
-- Seller status updates remain backed by target `ChangeSellerOrderStatus`.
+- Seller status controls are browser-smoked against the server-function flow, including `SHIPPED` tracking-number input.
+- Buyer/seller list reads remain backed by target `Purchase` / `SellerOrder` read models through `listOrdersForCurrentUserFn`.
+- Order detail reads remain backed by target `GetOrderDetail` through `getOrderDetailFn`.
+- Seller status updates remain backed by target `ChangeSellerOrderStatus` through `changeSellerOrderStatusFn`.
 - Existing checkout UX remains backed by the server-function `PlacePurchase` path.
-- Legacy order detail/status APIs remain in place only where target purchase/seller-order reads or commands have not been migrated yet.
+- No `/api/orders` compatibility route, old order action layer, or old fake-order repo is reintroduced.
 - `ddd/progress.md` updated with:
   - work completed
   - files changed

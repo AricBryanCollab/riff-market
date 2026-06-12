@@ -3,6 +3,7 @@ import type { Prisma, PrismaClient } from "generated/prisma/client";
 import {
 	type BuyerPurchaseHistoryPort,
 	deriveBuyerOrderSummaryStatus,
+	type OrderDetailReadPort,
 	type SellerOrderDashboardPort,
 } from "@/domains/ordering/application/order-read-models";
 import type {
@@ -33,7 +34,10 @@ type SellerOrderItemRow =
 	PurchaseHistoryRow["sellerOrders"][number]["items"][number];
 
 export class PrismaOrderReadModels
-	implements BuyerPurchaseHistoryPort, SellerOrderDashboardPort
+	implements
+		BuyerPurchaseHistoryPort,
+		SellerOrderDashboardPort,
+		OrderDetailReadPort
 {
 	constructor(private readonly db: OrderingReadPrisma) {}
 
@@ -89,6 +93,82 @@ export class PrismaOrderReadModels
 		});
 
 		return sellerOrders.map(toSellerOrderDashboardReadModel);
+	}
+
+	async findPurchaseForCustomer(
+		purchaseId: string,
+		customerId: string,
+	): Promise<OrderingOrderReadModel | null> {
+		const purchase = await this.db.purchase.findFirst({
+			where: {
+				id: purchaseId,
+				customerIdSnapshot: customerId,
+			},
+			include: {
+				sellerOrders: {
+					include: {
+						items: true,
+					},
+					orderBy: {
+						createdAt: "asc",
+					},
+				},
+			},
+		});
+
+		return purchase ? toBuyerPurchaseHistoryReadModel(purchase) : null;
+	}
+
+	async findSellerOrderForSeller(
+		sellerOrderId: string,
+		sellerId: string,
+	): Promise<OrderingOrderReadModel | null> {
+		const sellerOrder = await this.db.sellerOrder.findFirst({
+			where: {
+				id: sellerOrderId,
+				sellerIdSnapshot: sellerId,
+			},
+			include: {
+				items: true,
+				purchase: true,
+			},
+		});
+
+		return sellerOrder ? toSellerOrderDashboardReadModel(sellerOrder) : null;
+	}
+
+	async findForAdmin(orderId: string): Promise<OrderingOrderReadModel | null> {
+		const purchase = await this.db.purchase.findUnique({
+			where: {
+				id: orderId,
+			},
+			include: {
+				sellerOrders: {
+					include: {
+						items: true,
+					},
+					orderBy: {
+						createdAt: "asc",
+					},
+				},
+			},
+		});
+
+		if (purchase) {
+			return toBuyerPurchaseHistoryReadModel(purchase);
+		}
+
+		const sellerOrder = await this.db.sellerOrder.findUnique({
+			where: {
+				id: orderId,
+			},
+			include: {
+				items: true,
+				purchase: true,
+			},
+		});
+
+		return sellerOrder ? toSellerOrderDashboardReadModel(sellerOrder) : null;
 	}
 }
 

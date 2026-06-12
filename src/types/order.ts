@@ -5,7 +5,7 @@ export interface OrderItem {
 	quantity: number;
 }
 
-interface OrderItemWithPricing extends OrderItem {
+export interface OrderItemWithPricing extends OrderItem {
 	unitPrice: number;
 	subTotal: number;
 }
@@ -17,13 +17,6 @@ interface OrderCheckoutData {
 
 export interface OrderRequest extends OrderCheckoutData {
 	items: OrderItem[];
-}
-
-export interface CreateOrderRepoData extends OrderCheckoutData {
-	orderDate: Date;
-	totalAmount: number;
-	trackingNumber: string;
-	items: OrderItemWithPricing[];
 }
 
 interface SellerDetails {
@@ -60,16 +53,6 @@ export interface OrderResponse {
 		firstName: string;
 		lastName: string;
 	};
-}
-
-export interface OrderErrorResponse {
-	error: string;
-	details?: string | unknown;
-}
-
-export interface GetUserOrdersResponse {
-	orders: OrderResponse[];
-	total: number;
 }
 
 export interface GetUserOrdersErrorResponse {

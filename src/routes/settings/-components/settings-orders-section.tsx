@@ -1,8 +1,13 @@
+import { Ban, CheckCircle2, PackageCheck, Truck } from "lucide-react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { BodyLarge, BodySmall, H4 } from "@/components/ui/typography";
-import { useOrdersByRole } from "@/hooks/use-get-orders";
+import { useOrdersByRole, useUpdateOrderStatus } from "@/hooks/use-get-orders";
 import { cn } from "@/lib/utils";
-import type { OrderDisplayStatus, UserRole } from "@/types/enum";
+import { useToastStore } from "@/store/toast";
+import type { OrderDisplayStatus, OrderStatus, UserRole } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 import { formatRelativeTime } from "@/utils/format-date";
 import { formatOrderStatusLabel } from "@/utils/order-status-label";
@@ -38,7 +43,20 @@ interface SettingsOrdersSectionProps {
 
 interface SettingsOrdersSectionBaseProps extends SettingsOrdersSectionProps {
 	variant: SettingsOrdersSectionVariant;
+	sellerStatusControls?: SellerStatusControlsProps;
 }
+
+type SellerStatusCommand = Extract<
+	OrderStatus,
+	"PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELED"
+>;
+
+type SellerStatusControlsProps = {
+	isUpdatingStatus: boolean;
+	trackingNumbers: Record<string, string>;
+	onTrackingNumberChange: (orderId: string, trackingNumber: string) => void;
+	onStatusCommand: (order: OrderResponse, status: SellerStatusCommand) => void;
+};
 
 const settingsOrdersCopy = {
 	customer: {
@@ -122,6 +140,11 @@ function CustomerSettingsOrders() {
 }
 
 function SellerSettingsOrders() {
+	const [trackingNumbers, setTrackingNumbers] = useState<
+		Record<string, string>
+	>({});
+	const { showToast } = useToastStore();
+	const { updateStatus, isUpdatingStatus } = useUpdateOrderStatus("SELLER");
 	const {
 		orders,
 		isLoading: isLoadingOrders,
@@ -131,6 +154,54 @@ function SellerSettingsOrders() {
 		polling: false,
 	});
 
+	const onTrackingNumberChange = (orderId: string, trackingNumber: string) => {
+		setTrackingNumbers((current) => ({
+			...current,
+			[orderId]: trackingNumber,
+		}));
+	};
+
+	const onStatusCommand = (
+		order: OrderResponse,
+		status: SellerStatusCommand,
+	) => {
+		const trackingNumber = trackingNumbers[order.id]?.trim();
+
+		if (status === "SHIPPED" && !trackingNumber) {
+			showToast("Tracking number is required to ship this order", "error");
+			return;
+		}
+
+		updateStatus(
+			{
+				id: order.id,
+				status,
+				trackingNumber: status === "SHIPPED" ? trackingNumber : undefined,
+			},
+			{
+				onSuccess: () => {
+					if (status === "SHIPPED") {
+						setTrackingNumbers((current) => {
+							const next = { ...current };
+							delete next[order.id];
+							return next;
+						});
+					}
+
+					showToast("Order status updated", "success");
+				},
+				onError: (error) => {
+					showToast(
+						error instanceof Error
+							? error.message
+							: "Failed to update order status",
+						"error",
+					);
+				},
+			},
+		);
+	};
+
 	return (
 		<SellerSettingsOrdersSection
 			orders={orders}
@@ -139,6 +210,12 @@ function SellerSettingsOrders() {
 				isEmptyOrders,
 				isError: isErrorOrders,
 			})}
+			sellerStatusControls={{
+				isUpdatingStatus,
+				trackingNumbers,
+				onTrackingNumberChange,
+				onStatusCommand,
+			}}
 		/>
 	);
 }
@@ -147,7 +224,11 @@ function CustomerSettingsOrdersSection(props: SettingsOrdersSectionProps) {
 	return <SettingsOrdersListSection {...props} variant="customer" />;
 }
 
-function SellerSettingsOrdersSection(props: SettingsOrdersSectionProps) {
+function SellerSettingsOrdersSection(
+	props: SettingsOrdersSectionProps & {
+		sellerStatusControls: SellerStatusControlsProps;
+	},
+) {
 	return <SettingsOrdersListSection {...props} variant="seller" />;
 }
 
@@ -155,6 +236,7 @@ function SettingsOrdersListSection({
 	orders,
 	status,
 	variant,
+	sellerStatusControls,
 }: SettingsOrdersSectionBaseProps) {
 	const {
 		sectionTitle,
@@ -204,35 +286,43 @@ function SettingsOrdersListSection({
 								const itemCount = order.items?.length ?? 0;
 
 								return (
-									<li
-										key={order.id}
-										className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:justify-between"
-									>
-										<div className="min-w-0">
-											<div className="flex flex-wrap items-center gap-2">
-												<BodyLarge className="break-all text-base tracking-normal">
-													#{order.trackingNumber}
-												</BodyLarge>
-												<Badge className={cn(orderStatusStyles[order.status])}>
-													{formatOrderStatusLabel(order.status)}
-												</Badge>
+									<li key={order.id} className="flex flex-col gap-3 py-4">
+										<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+											<div className="min-w-0">
+												<div className="flex flex-wrap items-center gap-2">
+													<BodyLarge className="break-all text-base tracking-normal">
+														#{order.trackingNumber}
+													</BodyLarge>
+													<Badge
+														className={cn(orderStatusStyles[order.status])}
+													>
+														{formatOrderStatusLabel(order.status)}
+													</Badge>
+												</div>
+												<BodySmall className="mt-2 text-muted-foreground leading-6">
+													{formatRelativeTime(order.orderDate)}
+													{itemCount > 0
+														? ` · ${itemCount} ${itemCount === 1 ? "item" : "items"}`
+														: ""}
+													{variant === "seller" && order.customer
+														? ` · ${order.customer.firstName} ${order.customer.lastName}`
+														: ""}
+												</BodySmall>
 											</div>
-											<BodySmall className="mt-2 text-muted-foreground leading-6">
-												{formatRelativeTime(order.orderDate)}
-												{itemCount > 0
-													? ` · ${itemCount} ${itemCount === 1 ? "item" : "items"}`
-													: ""}
-												{variant === "seller" && order.customer
-													? ` · ${order.customer.firstName} ${order.customer.lastName}`
-													: ""}
-											</BodySmall>
+
+											<div className="shrink-0 sm:text-right">
+												<BodyLarge className="text-base font-semibold tracking-normal">
+													${order.totalAmount.toFixed(2)}
+												</BodyLarge>
+											</div>
 										</div>
 
-										<div className="shrink-0 sm:text-right">
-											<BodyLarge className="text-base font-semibold tracking-normal">
-												${order.totalAmount.toFixed(2)}
-											</BodyLarge>
-										</div>
+										{variant === "seller" && sellerStatusControls ? (
+											<SellerOrderStatusControls
+												order={order}
+												{...sellerStatusControls}
+											/>
+										) : null}
 									</li>
 								);
 							})}
@@ -249,4 +339,102 @@ function SettingsOrdersListSection({
 			</div>
 		</section>
 	);
+}
+
+function SellerOrderStatusControls({
+	order,
+	isUpdatingStatus,
+	trackingNumbers,
+	onTrackingNumberChange,
+	onStatusCommand,
+}: SellerStatusControlsProps & { order: OrderResponse }) {
+	const commands = getSellerStatusCommands(order.status);
+
+	if (commands.length === 0) {
+		return null;
+	}
+
+	const trackingNumber = trackingNumbers[order.id] ?? "";
+
+	return (
+		<div className="flex flex-col gap-2 rounded-md border border-border bg-muted/25 p-2 sm:flex-row sm:items-center sm:justify-between">
+			{commands.includes("SHIPPED") ? (
+				<Input
+					value={trackingNumber}
+					onChange={(event) =>
+						onTrackingNumberChange(order.id, event.target.value)
+					}
+					placeholder="Tracking number"
+					aria-label="Tracking number"
+					className="h-8 sm:max-w-56"
+					disabled={isUpdatingStatus}
+				/>
+			) : (
+				<BodySmall className="text-muted-foreground leading-6">
+					Next status
+				</BodySmall>
+			)}
+
+			<div className="flex flex-wrap gap-2">
+				{commands.map((command) => (
+					<Button
+						key={command}
+						type="button"
+						size="xs"
+						variant={command === "CANCELED" ? "destructive" : "outline"}
+						disabled={isUpdatingStatus}
+						onClick={() => onStatusCommand(order, command)}
+					>
+						<SellerStatusCommandIcon command={command} />
+						<span>{getSellerStatusCommandLabel(command)}</span>
+					</Button>
+				))}
+			</div>
+		</div>
+	);
+}
+
+function getSellerStatusCommands(
+	status: OrderDisplayStatus,
+): SellerStatusCommand[] {
+	switch (status) {
+		case "NEW":
+			return ["PROCESSING", "CANCELED"];
+		case "PROCESSING":
+			return ["SHIPPED", "CANCELED"];
+		case "SHIPPED":
+			return ["DELIVERED"];
+		default:
+			return [];
+	}
+}
+
+function getSellerStatusCommandLabel(command: SellerStatusCommand) {
+	switch (command) {
+		case "PROCESSING":
+			return "Process";
+		case "SHIPPED":
+			return "Ship";
+		case "DELIVERED":
+			return "Delivered";
+		case "CANCELED":
+			return "Cancel";
+	}
+}
+
+function SellerStatusCommandIcon({
+	command,
+}: {
+	command: SellerStatusCommand;
+}) {
+	switch (command) {
+		case "PROCESSING":
+			return <PackageCheck className="size-3" aria-hidden="true" />;
+		case "SHIPPED":
+			return <Truck className="size-3" aria-hidden="true" />;
+		case "DELIVERED":
+			return <CheckCircle2 className="size-3" aria-hidden="true" />;
+		case "CANCELED":
+			return <Ban className="size-3" aria-hidden="true" />;
+	}
 }

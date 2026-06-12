@@ -15,6 +15,11 @@ import type { OrderStatus, UserRole } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 
 export type OrderQueryRole = Extract<UserRole, "CUSTOMER" | "SELLER">;
+export type UpdateOrderStatusInput = {
+	id: string;
+	status: OrderStatus;
+	trackingNumber?: string | null;
+};
 
 export const ordersByRoleQueryOpt = (userRole: OrderQueryRole) => {
 	const queryFn =
@@ -60,9 +65,9 @@ export const useUpdateOrderStatus = (userRole: OrderQueryRole) => {
 	const queryKey = queryKeys.orders.byRole(userRole);
 
 	const updateStatusMutation = useMutation({
-		mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
-			updateOrderStatus(id, status),
-		onMutate: async ({ id, status }) => {
+		mutationFn: ({ id, status, trackingNumber }: UpdateOrderStatusInput) =>
+			updateOrderStatus(id, status, trackingNumber),
+		onMutate: async ({ id, status, trackingNumber }) => {
 			await queryClient.cancelQueries({ queryKey });
 
 			const previousOrders =
@@ -74,7 +79,13 @@ export const useUpdateOrderStatus = (userRole: OrderQueryRole) => {
 				}
 
 				return currentOrders.map((order) =>
-					order.id === id ? { ...order, status } : order,
+					order.id === id
+						? {
+								...order,
+								status,
+								trackingNumber: trackingNumber ?? order.trackingNumber,
+							}
+						: order,
 				);
 			});
 
