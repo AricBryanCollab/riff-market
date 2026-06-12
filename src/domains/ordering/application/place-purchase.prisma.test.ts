@@ -1,11 +1,16 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "generated/prisma/client";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+	ListBuyerPurchaseHistory,
+	ListSellerOrderDashboard,
+} from "@/domains/ordering/application/order-read-models";
 import type {
 	PurchaseNumberGeneratorPort,
 	PurchasePlacedNotificationCreatorPort,
 	PurchasePlacedNotificationInput,
 } from "@/domains/ordering/application/place-purchase";
+import { PrismaOrderReadModels } from "@/domains/ordering/infrastructure/prisma-order-read-models";
 import { createPrismaPlacePurchase } from "@/domains/ordering/infrastructure/prisma-place-purchase";
 import { PrismaPurchasePlacedNotificationCreator } from "@/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator";
 import type { PrismaTransactionContext } from "@/domains/shared/infrastructure/prisma-unit-of-work";
@@ -148,6 +153,114 @@ describeDb("PlacePurchase Prisma integration", () => {
 				},
 			}),
 		).toBe(2);
+	});
+
+	it("serves buyer history and seller dashboard reads from target models", async () => {
+		await seedUsers(db);
+		await seedProduct(db, {
+			id: "listing-1",
+			sellerId: "seller-1",
+			priceCents: 125_00,
+			stock: 2,
+		});
+		await seedProduct(db, {
+			id: "listing-2",
+			sellerId: "seller-2",
+			name: "Jazzmaster",
+			priceCents: 75_00,
+			stock: 3,
+		});
+		const useCase = createUseCase(db, new SequentialPurchaseNumberGenerator());
+
+		const result = await useCase.execute(
+			{ id: "customer-1", role: "CUSTOMER" },
+			{
+				items: [
+					{ listingId: "listing-1", quantity: 1 },
+					{ listingId: "listing-2", quantity: 2 },
+				],
+				buyerName: "Pat Buyer",
+				buyerEmail: "pat@example.com",
+				buyerPhone: null,
+				shippingAddress: "123 Market St",
+			},
+		);
+
+		expect(result.ok).toBe(true);
+		if (!result.ok) {
+			throw new Error(result.error.message);
+		}
+
+		const readModels = new PrismaOrderReadModels(db);
+		const buyerHistory = await new ListBuyerPurchaseHistory(readModels).execute(
+			{
+				id: "customer-1",
+				role: "CUSTOMER",
+			},
+		);
+
+		expect(buyerHistory).toEqual({
+			ok: true,
+			value: [
+				expect.objectContaining({
+					id: result.value.purchaseId,
+					purchaseId: result.value.purchaseId,
+					trackingNumber: "RM-1",
+					totalAmount: 275,
+					shippingAddress: "123 Market St",
+					status: "OPEN",
+					items: expect.arrayContaining([
+						expect.objectContaining({
+							productId: "listing-1",
+							quantity: 1,
+							unitPrice: 125,
+							subTotal: 125,
+							product: expect.objectContaining({
+								name: "Telecaster",
+								images: ["https://cdn.example.com/listing-1.jpg"],
+							}),
+						}),
+						expect.objectContaining({
+							productId: "listing-2",
+							quantity: 2,
+							unitPrice: 75,
+							subTotal: 150,
+						}),
+					]),
+				}),
+			],
+		});
+
+		const sellerDashboard = await new ListSellerOrderDashboard(
+			readModels,
+		).execute({
+			id: "seller-1",
+			role: "SELLER",
+		});
+
+		expect(sellerDashboard).toEqual({
+			ok: true,
+			value: [
+				expect.objectContaining({
+					purchaseId: result.value.purchaseId,
+					trackingNumber: "RM-1",
+					totalAmount: 125,
+					status: "NEW",
+					customer: {
+						id: "customer-1",
+						email: "pat@example.com",
+						firstName: "Pat",
+						lastName: "Buyer",
+					},
+					items: [
+						expect.objectContaining({
+							productId: "listing-1",
+							quantity: 1,
+						}),
+					],
+				}),
+			],
+		});
 	});
 
 	it("combines duplicate cart rows for the same listing", async () => {

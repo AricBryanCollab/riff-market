@@ -140,7 +140,10 @@ export async function getOrdersBySellerService(userId: string, role: string) {
 		};
 	}
 
-	const orders = await getSellerOrders(userId);
+	const orders = await getSellerOrders(
+		userId,
+		role === "ADMIN" ? "ADMIN" : "SELLER",
+	);
 
 	return orders;
 }

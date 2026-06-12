@@ -24,8 +24,70 @@ Clean slate started: 2026-06-11
 - Slice `1` notification creation event-contract hardening added on 2026-06-11.
 - Slice `1` notification boundary/UI moved to purchase/seller-order IDs on 2026-06-11.
 - Slice `1` checkout delivery wiring to the DB-backed `PlacePurchase` path added on 2026-06-12.
+- Slice `2` buyer purchase history and seller-order dashboard read migration started on 2026-06-12.
 
 ## Latest Session Notes
+
+- Started Slice `2` read-model migration for buyer purchase history and seller-order dashboard reads.
+- Added ordering read DTOs for target purchase/seller-order list rows and the approved buyer-facing summary statuses.
+- Added `ListBuyerPurchaseHistory` and `ListSellerOrderDashboard` use cases:
+  - use explicit `Actor`
+  - enforce customer-only purchase history reads
+  - enforce seller/admin-only seller-order dashboard reads
+  - derive buyer-facing purchase summary status from `Purchase.paymentStatus`, `Purchase.status`, and `SellerOrder.status[]`
+- Added `PrismaOrderReadModels` infrastructure:
+  - customer history reads from `Purchase` plus joined `SellerOrder` / `SellerOrderItem` snapshots
+  - seller dashboard reads directly from `SellerOrder` plus its `Purchase` buyer snapshot
+  - item display data comes from seller-order item snapshots rather than joining back to mutable products
+- Updated legacy `getCustomerOrders` / `getSellerOrders` compatibility functions to delegate to the new ordering read use cases while leaving `/api/orders` and `/api/orders/seller` as temporary API shells.
+- Updated order read status typing and display badges so the settings page and seller dropdown can render target statuses such as `OPEN`, `NEW`, `PENDING_PAYMENT`, `PARTIALLY_SHIPPED`, and `PARTIALLY_CANCELED`.
+- Kept legacy order detail and status-update paths untouched for the next lifecycle/status slice.
+
+## Files Changed In Latest Session
+
+- `src/domains/ordering/dto/order-read-model.ts`
+- `src/domains/ordering/application/order-read-models.ts`
+- `src/domains/ordering/application/order-read-models.test.ts`
+- `src/domains/ordering/infrastructure/prisma-order-read-models.ts`
+- `src/data/order.repo.ts`
+- `src/actions/order.ts`
+- `src/types/enum.ts`
+- `src/types/order.ts`
+- `src/utils/order-status-label.ts`
+- `src/components/order-list.tsx`
+- `src/routes/settings/-components/settings-orders-section.tsx`
+- `ddd/progress.md`
+- `ddd/next-session.md`
+
+## Tests And Checks In Latest Session
+
+- `bun run test:unit -- src/domains/ordering/application/order-read-models.test.ts src/actions/order.test.ts` passed: 2 files, 16 tests.
+- `bun run typecheck` passed.
+- `bunx biome check src/domains/ordering/application/place-purchase.prisma.test.ts src/domains/ordering/dto/order-read-model.ts src/domains/ordering/application/order-read-models.ts src/domains/ordering/application/order-read-models.test.ts src/domains/ordering/infrastructure/prisma-order-read-models.ts src/utils/order-status-label.ts src/types/enum.ts src/types/order.ts src/data/order.repo.ts src/actions/order.ts src/routes/settings/-components/settings-orders-section.tsx src/components/order-list.tsx` passed after `--write` formatting.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma migrate status` passed after sandbox escalation: database schema is up to date.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff RUN_DB_TESTS=1 bun run test:unit -- src/domains/ordering/application/place-purchase.prisma.test.ts` passed after sandbox escalation: 1 file, 6 tests.
+- `bun run test:unit` passed: 19 files passed, 1 DB integration file skipped by default; 183 tests passed, 6 skipped.
+- `bun run docs:check` passed.
+
+## Decisions In Latest Session
+
+- Keep the existing `/api/orders` and `/api/orders/seller` routes as compatibility delivery shells for this increment, but move the actual list read behavior to ordering-context use cases and Prisma adapters.
+- Buyer list rows use `Purchase.id` as the compatibility row ID; seller dashboard rows use `SellerOrder.id` so the next status slice can target seller orders directly.
+- The legacy `trackingNumber` display field now carries `Purchase.purchaseNumber` for buyer rows and `SellerOrder.trackingNumber ?? Purchase.purchaseNumber` for seller rows.
+- Target read rows do not invent a persisted payment method; `OrderResponse.paymentMethod` is optional for reads because payment-method selection currently remains DTO validation only.
+- Admin seller-dashboard reads use the approved admin policy to read all seller orders.
+- Do not add new server-function read wrappers in this step because `requestLoggerMiddleware` still logs successful non-`Response` server-function returns as status `500`; keep that as an explicit follow-up before broad server-function read migration.
+
+## Risks / Follow-Ups From Latest Session
+
+- `ChangeSellerOrderStatus` is not implemented yet; legacy `/api/orders/$id` PUT still updates old global `Order.status`.
+- Legacy `/api/orders/$id` detail reads still use old `Order` / `OrderItem`; purchase detail/admin target reads remain for a follow-up.
+- `src/actions/order.test.ts` still contains the expected-failing seller order-status ownership characterization test.
+- No browser smoke was run for the new read adapter in this session; coverage includes focused use-case tests, typecheck, full unit suite, Biome, and the gated local Postgres integration test.
+- Existing follow-ups remain: non-fatal add-to-cart router warning from `src/components/product-actions.tsx`, misleading server-function request logging for non-`Response` returns, and old `/api/orders` POST compatibility cleanup.
+- `ddd/` files remain temporary worktree handoff docs and should be removed before opening a PR.
+
+## Previous Slice 1 Checkout Delivery Session Notes
 
 - Added `placePurchaseFn` as the TanStack server-function delivery adapter for the new `PlacePurchase` use case.
 - Added a checkout DTO boundary for the current cart/order payload shape:
@@ -40,8 +102,17 @@ Clean slate started: 2026-06-11
 - Updated the existing `createOrder` mutation compatibility wrapper to call `placePurchaseFn` instead of posting to `/api/orders`.
 - Kept old order read APIs and the old `/api/orders` create route in place as compatibility; checkout mutation now uses the target DDD path.
 - Refactored the DB integration test to use the production Prisma composition factory.
+- Ran a Codex Desktop in-app browser checkout smoke on 2026-06-12 through `usePlaceOrder` -> `createOrder` -> `placePurchaseFn` -> `PlacePurchase`.
+- Browser smoke confirmed:
+  - customer login works with a seeded customer
+  - an approved listing can be added to cart and checked out
+  - checkout shows the existing success toast and returns to `/shop`
+  - product stock decrements from `3` to `2`
+  - cart header count clears after success
+- Post-smoke DB verification confirmed one target `Purchase`, one target `SellerOrder`, one `SellerOrderItem`, and buyer/seller notifications with target DDD IDs.
+- Smoke notifications used `purchaseId` / `sellerOrderId` with `orderId = null`.
 
-## Files Changed In Latest Session
+## Files Changed In Previous Slice 1 Checkout Delivery Session
 
 - `src/domains/ordering/dto/place-purchase-request.ts`
 - `src/domains/ordering/infrastructure/prisma-place-purchase.ts`
@@ -54,7 +125,7 @@ Clean slate started: 2026-06-11
 - `ddd/progress.md`
 - `ddd/next-session.md`
 
-## Tests And Checks In Latest Session
+## Tests And Checks In Previous Slice 1 Checkout Delivery Session
 
 - `bun run test:unit -- src/server/place-purchase-service.test.ts src/domains/ordering/application/place-purchase.test.ts src/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator.test.ts` passed: 3 files, 17 tests.
 - `bun run typecheck` passed.
@@ -63,16 +134,25 @@ Clean slate started: 2026-06-11
 - `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff RUN_DB_TESTS=1 bun run test:unit -- src/domains/ordering/application/place-purchase.prisma.test.ts` passed after sandbox escalation was required for localhost database access: 1 file, 4 tests.
 - `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bun run build` passed.
 - `bun run docs:check` passed.
+- Codex Desktop in-app browser checkout smoke passed against `http://127.0.0.1:43177` after local smoke data seeding and sandbox escalation for localhost server/database access.
+- Post-smoke DB verification passed:
+  - `Purchase.customerId = customerIdSnapshot = smoke-customer-ddd`
+  - `SellerOrder.sellerId = sellerIdSnapshot = smoke-seller-ddd`
+  - `SellerOrderItem.listingId = smoke-listing-ddd`
+  - buyer notification has `purchaseId` and no `sellerOrderId`
+  - seller notification has both `purchaseId` and `sellerOrderId`
+  - both target notifications have `orderId = null`
 
-## Decisions In Latest Session
+## Decisions In Previous Slice 1 Checkout Delivery Session
 
 - Preserve existing checkout UX and `createOrder` mutation naming as a compatibility wrapper while changing its implementation to the target `PlacePurchase` path.
 - Keep the current payment-method selection validated at the delivery DTO edge, but do not let it alter domain payment state; current checkout still creates `Purchase.paymentStatus = MANUALLY_CONFIRMED`.
 - Keep Prisma singleton access lazy in the server delivery helper so unit tests can exercise the delivery mapping module without importing environment-bound infrastructure.
 
-## Risks / Follow-Ups From Latest Session
+## Risks / Follow-Ups From Previous Slice 1 Checkout Delivery Session
 
-- No browser/manual checkout smoke test was run in this session.
+- Browser smoke found one non-fatal existing router warning from product add-to-cart flow: `Could not find match for from: /cart`, likely from `navigate({ from: "/cart" })` in `src/components/product-actions.tsx`.
+- Browser smoke also exposed misleading server-function request logs: successful server-function returns without a `Response` wrapper are logged as status `500` by `requestLoggerMiddleware` because it defaults non-`Response` results to `new Response(null, { status: 500 })`.
 - Old order read APIs still read legacy `Order` / `OrderItem` records until Slice `2` read-model migration.
 - The old `/api/orders` POST route and `createOrderService` remain as compatibility/dead-path risk until API cleanup confirms no callers remain.
 - `src/actions/order.test.ts` still contains the expected-failing seller order-status ownership characterization test.

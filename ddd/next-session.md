@@ -19,15 +19,20 @@ Do not rely on any manually maintained current-state file. The repo is the curre
 
 ## Recommended Next Task
 
-Continue Slice `1` verification, then start Slice `2` if checkout smoke is clean.
+Continue Slice `2`: seller-order lifecycle/status migration and remaining target reads.
 
 Exact next task:
 
-- Smoke-test checkout through `usePlaceOrder` -> `createOrder` -> `placePurchaseFn` -> `PlacePurchase`.
-- Verify the checkout still shows the existing success/error UX and clears the cart after success.
-- Keep old cart details reads and order read APIs as compatibility for now.
-- If smoke is clean, start Slice `2`: purchase/seller-order lifecycle and read-model migration.
-- First Slice `2` target should be secure buyer purchase history and seller-order dashboard reads backed by `Purchase` / `SellerOrder`, while leaving legacy order reads only as temporary compatibility.
+- Add `ChangeSellerOrderStatus` with `SellerOrderStatus` transitions, actor ownership checks, and `SellerOrderStatusChanged`.
+- Wire seller status updates to target `SellerOrder` IDs and fix the expected-failing seller ownership characterization in `src/actions/order.test.ts`.
+- Migrate order detail/admin reads to a target `Purchase` / `SellerOrder` read model, or explicitly leave `/api/orders/$id` as compatibility with a documented next step.
+- Consider adding server-function read wrappers only after fixing or working around the misleading `requestLoggerMiddleware` non-`Response` status logging.
+- Keep old cart details reads and legacy order APIs as temporary compatibility only where callers still need them.
+- Preserve the new Slice `2` list-read path: `/api/orders` and `/api/orders/seller` are compatibility shells over ordering-context `Purchase` / `SellerOrder` reads.
+- Preserve the existing checkout success/error UX and the now-smoked `usePlaceOrder` -> `createOrder` -> `placePurchaseFn` -> `PlacePurchase` delivery path.
+- Fix or track the non-fatal add-to-cart router warning from `src/components/product-actions.tsx` (`navigate({ from: "/cart" })`) before broad checkout polish.
+- Fix or track misleading server-function request logging in `requestLoggerMiddleware`; successful server-function return values without a `Response` wrapper are currently logged as status `500`.
+- Do not start by deleting the old `/api/orders` compatibility path until read callers and tests are migrated.
 
 Useful first inspection targets:
 
@@ -35,6 +40,9 @@ Useful first inspection targets:
 - `src/domains/listings/domain/listing.ts`
 - `src/domains/ordering/domain/purchase.ts`
 - `src/domains/ordering/domain/seller-order.ts`
+- `src/domains/ordering/dto/order-read-model.ts`
+- `src/domains/ordering/application/order-read-models.ts`
+- `src/domains/ordering/infrastructure/prisma-order-read-models.ts`
 - `src/domains/ordering/application/place-purchase.ts`
 - `src/domains/ordering/application/place-purchase.prisma.test.ts`
 - `src/domains/ordering/infrastructure/prisma-listings-for-purchase.ts`
@@ -71,12 +79,19 @@ Useful first inspection targets:
 ## Current Repo State From Latest Completed Session
 
 - Latest implementation session completed on 2026-06-12:
+  - work completed: Slice `2` buyer purchase history and seller-order dashboard list reads now use target `Purchase` / `SellerOrder` read models behind legacy API compatibility shells
+  - files changed: new ordering read DTO/use-case/Prisma adapter/test, legacy order repo delegation, seller admin role pass-through, order read status typing, status display labels/styles, gated Prisma integration read assertion, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: focused order-read/action tests passed; typecheck passed; touched-file Biome passed after formatting; escalated Prisma migrate status passed; escalated gated DB integration test passed; full unit suite passed with DB integration skipped by default; docs check passed
+  - decisions made: keep `/api/orders` and `/api/orders/seller` as compatibility shells while moving list read behavior into ordering use cases; buyer list row IDs are `Purchase.id`; seller dashboard row IDs are `SellerOrder.id`; compatibility `trackingNumber` displays purchase number until seller tracking exists; `OrderResponse.paymentMethod` is optional for target reads; defer new server-function read wrappers until request logging is fixed or worked around
+  - blockers or risks: status lifecycle is not migrated yet; `/api/orders/$id` detail and PUT still use legacy `Order`; seller status authorization characterization remains expected-failing; no browser read smoke was run for the new read adapter
+  - exact next recommended task: add `ChangeSellerOrderStatus` and migrate seller status updates to target `SellerOrder`
+- Latest implementation session completed on 2026-06-12:
   - work completed: checkout delivery wiring to the DB-backed `PlacePurchase` path
   - files changed: new place-purchase DTO, Prisma composition factory, server delivery helper/test, `placePurchaseFn`, `createOrder` mutation wrapper, shared Prisma unit-of-work type export, DB integration test factory use, `ddd/progress.md`, `ddd/next-session.md`
-  - tests/checks run: focused delivery/use-case/creator tests passed; typecheck passed; full unit suite passed with DB file skipped by default; touched-file Biome passed; gated DB integration test passed with `RUN_DB_TESTS=1` after sandbox escalation for localhost DB access; production build passed; docs check passed
+  - tests/checks run: focused delivery/use-case/creator tests passed; typecheck passed; full unit suite passed with DB file skipped by default; touched-file Biome passed; gated DB integration test passed with `RUN_DB_TESTS=1` after sandbox escalation for localhost DB access; production build passed; docs check passed; Codex Desktop in-app browser checkout smoke passed
   - decisions made: preserve checkout UX and `createOrder` mutation naming while changing the mutation implementation to `placePurchaseFn`; keep payment-method selection as DTO validation only; keep Prisma singleton access lazy in the delivery helper
-  - blockers or risks: no browser/manual checkout smoke test was run; legacy order read APIs and old `/api/orders` POST remain until follow-up cleanup; seller status authorization characterization remains expected-failing
-  - exact next recommended task: smoke-test checkout through the new server-function path, then start Slice `2` read/lifecycle migration
+  - blockers or risks: browser smoke found a non-fatal router warning from `navigate({ from: "/cart" })` in product add-to-cart flow; server-function request logging currently reports successful non-`Response` server-function returns as status `500`; legacy order read APIs and old `/api/orders` POST remain until follow-up cleanup; seller status authorization characterization remains expected-failing
+  - exact next recommended task: start Slice `2` read/lifecycle migration
 - Latest implementation session completed on 2026-06-11:
   - work completed: notification boundary/UI moved to target purchase/seller-order IDs
   - files changed: notification DTO/repo, notification full page and dropdown UI, new notification display helper, old fake order notification payloads, `ddd/progress.md`, `ddd/next-session.md`
@@ -134,6 +149,10 @@ Useful first inspection targets:
 - `PlacePurchase` validates required buyer snapshot fields before opening a transaction.
 - `SellerOrder` keeps item snapshots as defensive immutable copies.
 - Existing checkout now calls `usePlaceOrder` -> `createOrder` -> `placePurchaseFn` -> `PlacePurchase`.
+- Buyer purchase history list reads now query `Purchase` plus joined `SellerOrder` / `SellerOrderItem` snapshots through ordering-context read use cases.
+- Seller dashboard list reads now query `SellerOrder` directly through ordering-context read use cases.
+- `/api/orders` and `/api/orders/seller` remain as temporary compatibility delivery shells over the target reads.
+- `/api/orders/$id` detail and PUT remain legacy compatibility paths.
 - Legacy `src/data/order.repo.ts` still orchestrates old fake order creation, stock decrement, and generic notification creation for the `/api/orders` POST compatibility path only.
 - Slice `-1`, Slice `0`, and Slice `0.5` initial implementation are complete.
 - The Slice `-1` customer order-by-id ownership characterization gap is fixed:
@@ -156,6 +175,18 @@ Useful first inspection targets:
 
 Latest checks:
 
+- `bun run test:unit -- src/domains/ordering/application/order-read-models.test.ts src/actions/order.test.ts` passed: 2 files, 16 tests.
+- `bun run typecheck` passed.
+- `bunx biome check src/domains/ordering/application/place-purchase.prisma.test.ts src/domains/ordering/dto/order-read-model.ts src/domains/ordering/application/order-read-models.ts src/domains/ordering/application/order-read-models.test.ts src/domains/ordering/infrastructure/prisma-order-read-models.ts src/utils/order-status-label.ts src/types/enum.ts src/types/order.ts src/data/order.repo.ts src/actions/order.ts src/routes/settings/-components/settings-orders-section.tsx src/components/order-list.tsx` passed after formatting with `--write`.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma migrate status` passed after sandbox escalation: database schema is up to date.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff RUN_DB_TESTS=1 bun run test:unit -- src/domains/ordering/application/place-purchase.prisma.test.ts` passed after sandbox escalation: 1 file, 6 tests.
+- `bun run test:unit` passed: 19 files passed, 1 DB integration file skipped by default; 183 tests passed, 6 skipped.
+- `bun run docs:check` passed.
+- Codex Desktop in-app browser checkout smoke passed against `http://127.0.0.1:43177`:
+  - seeded customer checkout placed a target `Purchase`
+  - product stock decremented from `3` to `2`
+  - success toast rendered and cart header count cleared
+  - DB verification confirmed `Purchase`, `SellerOrder`, `SellerOrderItem`, and target DDD notification links
 - `bun run typecheck` passed.
 - `bunx biome check src/types/notification.ts src/data/notification-repo.ts src/data/order.repo.ts src/routes/notifications.tsx src/components/notification-list.tsx src/components/notification-display.tsx` passed.
 - `bun run docs:check` passed.
@@ -201,10 +232,11 @@ Latest checks:
 
 ## Expected End State For Next Session
 
-- Checkout has been smoke-tested through the server-function `PlacePurchase` path.
-- Existing checkout UX still places a purchase successfully for customers and shows useful errors for expected placement failures.
-- Slice `2` has either started with purchase/seller-order read models, or there is a documented blocker from checkout smoke verification.
-- Old order read APIs remain in place until purchase/seller-order read models are migrated.
+- Slice `2` seller-order status lifecycle has started, or there is a documented blocker from status migration.
+- The expected-failing seller status ownership characterization is fixed or replaced by target `SellerOrder` authorization coverage.
+- Buyer/seller list reads remain backed by target `Purchase` / `SellerOrder` read models.
+- Existing checkout UX remains backed by the server-function `PlacePurchase` path.
+- Legacy order detail/status APIs remain in place only where target purchase/seller-order reads or commands have not been migrated yet.
 - `ddd/progress.md` updated with:
   - work completed
   - files changed

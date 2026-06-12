@@ -2,6 +2,12 @@ import type { OrderStatus } from "generated/prisma/enums";
 
 import { prisma } from "@/data/connect-db";
 import { createNotification } from "@/data/notification-repo";
+import {
+	ListBuyerPurchaseHistory,
+	ListSellerOrderDashboard,
+} from "@/domains/ordering/application/order-read-models";
+import { PrismaOrderReadModels } from "@/domains/ordering/infrastructure/prisma-order-read-models";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 import { logger } from "@/lib/logger";
 import type { CreateOrderRepoData, OrderResponse } from "@/types/order";
 import { transformOrderResponse } from "@/utils/transform-order-query-response";
@@ -141,14 +147,18 @@ export const createOrder = async (
 // Get Order By Customer
 export const getCustomerOrders = async (userId: string) => {
 	try {
-		const orders = await prisma.order.findMany({
-			where: { userId },
-			orderBy: {
-				orderDate: "desc",
-			},
+		const result = await new ListBuyerPurchaseHistory(
+			new PrismaOrderReadModels(prisma),
+		).execute({
+			id: userId,
+			role: "CUSTOMER",
 		});
 
-		return orders;
+		if (!result.ok) {
+			throw new Error(result.error.message);
+		}
+
+		return result.value;
 	} catch (err) {
 		logger.error("Error at getCustomerOrders", err);
 		throw err;
@@ -156,35 +166,23 @@ export const getCustomerOrders = async (userId: string) => {
 };
 
 // Get Order By Seller
-export const getSellerOrders = async (userId: string) => {
+export const getSellerOrders = async (
+	userId: string,
+	role: Extract<ActorRole, "SELLER" | "ADMIN"> = "SELLER",
+) => {
 	try {
-		const orders = await prisma.order.findMany({
-			where: {
-				items: {
-					some: {
-						product: {
-							sellerId: userId,
-						},
-					},
-				},
-			},
-			include: orderBaseQuery,
-			orderBy: {
-				orderDate: "desc",
-			},
+		const result = await new ListSellerOrderDashboard(
+			new PrismaOrderReadModels(prisma),
+		).execute({
+			id: userId,
+			role,
 		});
 
-		return orders.map((order) => {
-			const sellerItemsTotal = order.items.reduce(
-				(sum, item) => sum + item.subTotal,
-				0,
-			);
+		if (!result.ok) {
+			throw new Error(result.error.message);
+		}
 
-			return {
-				...transformOrderResponse(order),
-				totalAmount: sellerItemsTotal,
-			};
-		});
+		return result.value;
 	} catch (err) {
 		logger.error("Error at getSellerOrders", err);
 		throw err;

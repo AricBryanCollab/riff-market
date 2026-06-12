@@ -2,15 +2,22 @@ import { Badge } from "@/components/ui/badge";
 import { BodyLarge, BodySmall, H4 } from "@/components/ui/typography";
 import { useOrdersByRole } from "@/hooks/use-get-orders";
 import { cn } from "@/lib/utils";
-import type { OrderStatus, UserRole } from "@/types/enum";
+import type { OrderDisplayStatus, UserRole } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 import { formatRelativeTime } from "@/utils/format-date";
+import { formatOrderStatusLabel } from "@/utils/order-status-label";
 
-const orderStatusStyles: Record<OrderStatus, string> = {
+const orderStatusStyles: Record<OrderDisplayStatus, string> = {
 	PENDING: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
+	PENDING_PAYMENT: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
+	ON_HOLD_PAYMENT: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
+	OPEN: "bg-blue-500/10 text-blue-700 border-blue-500/20",
+	NEW: "bg-blue-500/10 text-blue-700 border-blue-500/20",
 	PROCESSING: "bg-blue-500/10 text-blue-700 border-blue-500/20",
+	PARTIALLY_SHIPPED: "bg-purple-500/10 text-purple-700 border-purple-500/20",
 	SHIPPED: "bg-purple-500/10 text-purple-700 border-purple-500/20",
 	DELIVERED: "bg-green-500/10 text-green-700 border-green-500/20",
+	PARTIALLY_CANCELED: "bg-red-500/10 text-red-700 border-red-500/20",
 	CANCELED: "bg-red-500/10 text-red-700 border-red-500/20",
 };
 
@@ -207,7 +214,7 @@ function SettingsOrdersListSection({
 													#{order.trackingNumber}
 												</BodyLarge>
 												<Badge className={cn(orderStatusStyles[order.status])}>
-													{order.status}
+													{formatOrderStatusLabel(order.status)}
 												</Badge>
 											</div>
 											<BodySmall className="mt-2 text-muted-foreground leading-6">
