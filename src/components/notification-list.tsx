@@ -1,7 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
-import { Bell, Package, ShoppingBag } from "lucide-react";
+import { Bell } from "lucide-react";
 import AnimatedLoader from "@/components/animated-loader";
+import {
+	NotificationOrderingBadge,
+	NotificationTypeIcon,
+} from "@/components/notification-display";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
@@ -51,12 +55,6 @@ const NotificationList = ({
 	markAsRead,
 }: NotificationListProps) => {
 	const navigate = useNavigate();
-	const getNotificationIcon = (notification: NotificationData) => {
-		if (notification.orderId) {
-			return <Package className="size-5 text-primary" />;
-		}
-		return <Bell className="size-5 text-primary" />;
-	};
 
 	const handleNotificationClick = (notification: NotificationData) => {
 		if (!notification.isRead && notification.id) {
@@ -127,7 +125,10 @@ const NotificationList = ({
 									)}
 
 									<div className="shrink-0 mt-0.5">
-										{getNotificationIcon(notification)}
+										<NotificationTypeIcon
+											notification={notification}
+											className="size-5"
+										/>
 									</div>
 
 									<div className="flex-1 min-w-0">
@@ -141,12 +142,10 @@ const NotificationList = ({
 											{notification.message}
 										</p>
 
-										{notification.orderId && (
-											<div className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-md bg-muted text-xs text-muted-foreground">
-												<ShoppingBag className="size-3" />
-												<span>Order #{notification.orderId.slice(0, 8)}</span>
-											</div>
-										)}
+										<NotificationOrderingBadge
+											notification={notification}
+											className="gap-1 mt-1.5 px-2 py-0.5 text-xs"
+										/>
 
 										<p className="text-xs text-muted-foreground mt-1.5">
 											{formatRelativeTime(notification?.createdAt || "None")}

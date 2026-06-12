@@ -51,7 +51,7 @@ Accepted aggregate roots:
 - `Review`
 - `MediaCleanupJob`
 
-Current note: `Notification` is treated as a local inbox/read model and use-case boundary for now, not necessarily a rich aggregate root. Promote it to an aggregate only if notification behavior gains meaningful invariants beyond read/unread and message projection.
+Current note: `Notification` is treated as a local inbox/read model and use-case boundary for now, not necessarily a rich aggregate root. Promote it to an aggregate only if notification behavior gains meaningful invariants beyond read/unread and message creation.
 
 Approved domain decisions:
 
@@ -253,7 +253,7 @@ Work:
   - `ListingsForPurchasePort.reserveForPurchase(...)`
   - purchase persistence
   - seller-order persistence
-  - same-transaction notification projector/handler for `PurchasePlaced` / seller-order creation events
+  - same-transaction notification creator/handler for `PurchasePlaced` / seller-order creation events
   - purchase number generation
 - Notifications created from purchase/seller-order events should carry both `purchaseId` and `sellerOrderId` where relevant.
 - Add Prisma implementations for required ports.
@@ -484,7 +484,7 @@ Work:
   - seller-order creation/status events as needed
   - `ListingApproved`
   - `ListingDeclined`
-- Treat local notification rows as same-transaction projections for now.
+- Write local notification rows in the same transaction for now.
 - Reserve outbox for future reliable external/async delivery.
 - Add notification DTO/schema support for `purchaseId` and `sellerOrderId` links where relevant.
 

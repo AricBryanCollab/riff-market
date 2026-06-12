@@ -23,3 +23,35 @@ export interface DomainEvent<
 export interface RecordsDomainEvents {
 	pullDomainEvents(): DomainEvent[];
 }
+
+export type CreateDomainEventInput<
+	TName extends string,
+	TPayload extends DomainEventPayload,
+> = Omit<DomainEvent<TName, TPayload>, "eventId" | "occurredAt"> & {
+	readonly eventId?: string;
+	readonly occurredAt?: Date;
+};
+
+export function createDomainEvent<
+	TName extends string,
+	TPayload extends DomainEventPayload,
+>(
+	input: CreateDomainEventInput<TName, TPayload>,
+): DomainEvent<TName, TPayload> {
+	return {
+		...input,
+		eventId: input.eventId ?? createDomainEventId(),
+		occurredAt: input.occurredAt ?? new Date(),
+	};
+}
+
+function createDomainEventId() {
+	if (
+		typeof crypto !== "undefined" &&
+		typeof crypto.randomUUID === "function"
+	) {
+		return crypto.randomUUID();
+	}
+
+	return `event_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+}

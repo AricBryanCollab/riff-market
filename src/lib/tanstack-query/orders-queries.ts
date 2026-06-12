@@ -1,17 +1,17 @@
 import { apiFetch } from "@/lib/tanstack-query/fetch";
+import { placePurchaseFn } from "@/server/order.functions";
+import type { PlacePurchaseResponse } from "@/server/place-purchase-service";
 import type { OrderStatus } from "@/types/enum";
 import type {
 	GetUserOrdersErrorResponse,
-	OrderErrorResponse,
 	OrderRequest,
 	OrderResponse,
 } from "@/types/order";
 
-export function createOrder(data: OrderRequest) {
-	return apiFetch<OrderResponse | OrderErrorResponse>("/api/orders", {
-		method: "POST",
-		body: JSON.stringify(data),
-	});
+export function createOrder(
+	data: OrderRequest,
+): Promise<PlacePurchaseResponse> {
+	return placePurchaseFn({ data });
 }
 
 export function getOrderByCustomer() {

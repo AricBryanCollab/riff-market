@@ -109,7 +109,6 @@ export const createOrder = async (
 			await createNotification(
 				{
 					userId: userId,
-					orderId: createdOrder.id,
 					message: `Your order #${order.trackingNumber} has been placed successfully! Total: $${order.totalAmount.toFixed(2)}`,
 					isRead: false,
 				},
@@ -122,7 +121,6 @@ export const createOrder = async (
 				await createNotification(
 					{
 						userId: sellerId,
-						orderId: createdOrder.id,
 						message: `New order received! Order #${order.trackingNumber} Products: ${productList}  Amount: $${data.totalAmount.toFixed(2)}`,
 						isRead: false,
 					},

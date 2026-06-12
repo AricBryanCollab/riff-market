@@ -1,0 +1,156 @@
+import { z } from "zod";
+import type {
+	PlacePurchaseCommand,
+	PlacePurchaseError,
+	PlacePurchaseResult,
+} from "@/domains/ordering/application/place-purchase";
+import {
+	type PlacePurchaseInput,
+	placePurchaseInputSchema,
+} from "@/domains/ordering/dto/place-purchase-request";
+import type { Actor } from "@/domains/shared/domain/actor";
+import type { Result } from "@/domains/shared/domain/result";
+import type { ServerUserContext } from "@/server/function-middleware";
+
+type PlacePurchaseExecutor = {
+	execute(
+		actor: Actor,
+		command: PlacePurchaseCommand,
+	): Promise<Result<PlacePurchaseResult, PlacePurchaseError>>;
+};
+
+export type PlacePurchaseResponse = {
+	readonly message: string;
+	readonly purchase: {
+		readonly id: string;
+		readonly purchaseNumber: string;
+		readonly totalAmountCents: number;
+		readonly currencyCode: string;
+		readonly paymentStatus: string;
+		readonly status: string;
+		readonly sellerOrderIds: string[];
+	};
+};
+
+export class PlacePurchaseRequestError extends Error {
+	readonly code?: string;
+	readonly details?: unknown;
+	readonly status: number;
+
+	constructor(
+		message: string,
+		options: { code?: string; details?: unknown; status?: number } = {},
+	) {
+		super(message);
+		this.name = "PlacePurchaseRequestError";
+		this.code = options.code;
+		this.details = options.details;
+		this.status = options.status ?? 400;
+	}
+}
+
+export function validatePlacePurchaseInput(data: unknown): PlacePurchaseInput {
+	const parsed = placePurchaseInputSchema.safeParse(data);
+
+	if (!parsed.success) {
+		throw new PlacePurchaseRequestError("Invalid order data", {
+			details: z.flattenError(parsed.error),
+		});
+	}
+
+	return parsed.data;
+}
+
+export async function placePurchaseForCurrentUser(
+	user: ServerUserContext,
+	input: PlacePurchaseInput,
+	executor?: PlacePurchaseExecutor,
+): Promise<PlacePurchaseResponse> {
+	const placePurchase =
+		executor ?? (await createDefaultPlacePurchaseExecutor());
+	const result = await placePurchase.execute(
+		toActor(user),
+		toCommand(user, input),
+	);
+
+	if (!result.ok) {
+		throw toRequestError(result.error);
+	}
+
+	return toResponse(result.value);
+}
+
+async function createDefaultPlacePurchaseExecutor() {
+	const [{ prisma }, { createPrismaPlacePurchase }] = await Promise.all([
+		import("@/data/connect-db"),
+		import("@/domains/ordering/infrastructure/prisma-place-purchase"),
+	]);
+
+	return createPrismaPlacePurchase({ db: prisma });
+}
+
+function toActor(user: ServerUserContext): Actor {
+	return {
+		id: user.id,
+		role: user.role,
+	};
+}
+
+function toCommand(
+	user: ServerUserContext,
+	input: PlacePurchaseInput,
+): PlacePurchaseCommand {
+	return {
+		items: input.items.map((item) => ({
+			listingId: item.productId,
+			quantity: item.quantity,
+		})),
+		buyerName: getBuyerName(user),
+		buyerEmail: user.email,
+		buyerPhone: null,
+		shippingAddress: input.shippingAddress,
+	};
+}
+
+function getBuyerName(user: ServerUserContext) {
+	return [user.firstName, user.lastName].join(" ").trim() || user.email;
+}
+
+function toResponse(result: PlacePurchaseResult): PlacePurchaseResponse {
+	return {
+		message: "An order has been placed",
+		purchase: {
+			id: result.purchaseId,
+			purchaseNumber: result.purchaseNumber,
+			totalAmountCents: result.total.amountCents,
+			currencyCode: result.total.currencyCode,
+			paymentStatus: result.paymentStatus,
+			status: result.status,
+			sellerOrderIds: result.sellerOrderIds,
+		},
+	};
+}
+
+function toRequestError(error: PlacePurchaseError) {
+	return new PlacePurchaseRequestError(error.message, {
+		code: error.code,
+		details: error.details,
+		status: toStatus(error),
+	});
+}
+
+function toStatus(error: PlacePurchaseError) {
+	switch (error.kind) {
+		case "authorization":
+			return 403;
+		case "not-found":
+			return 404;
+		case "conflict":
+			return 409;
+		case "validation":
+			return 400;
+		case "invariant":
+		case "unexpected":
+			return 500;
+	}
+}

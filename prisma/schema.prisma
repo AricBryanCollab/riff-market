@@ -47,6 +47,30 @@ enum OrderStatus {
   CANCELED
 }
 
+enum PurchaseStatus {
+  OPEN
+  CANCELED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  MANUALLY_CONFIRMED
+  PENDING_PAYMENT
+  AUTHORIZED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum SellerOrderStatus {
+  ON_HOLD_PAYMENT
+  NEW
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELED
+}
+
 enum ChatRole {
   USER
   ASSISTANT
@@ -75,6 +99,8 @@ model User {
   settings      UserSettings?
   products       Product[]
   orders        Order[]
+  purchases     Purchase[]
+  sellerOrders  SellerOrder[]
   reviews       Review[]
   notifications Notification[]
   favorites Favorite[]
@@ -133,6 +159,83 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+model Purchase {
+  id               String @id @default(uuid())
+  customerId         String?
+  customerIdSnapshot String
+  purchaseNumber     String @unique
+  totalAmountCents   Int
+  currencyCode       String @default("USD")
+  paymentStatus      PaymentStatus @default(MANUALLY_CONFIRMED)
+  status             PurchaseStatus @default(OPEN)
+  buyerName          String
+  buyerEmail         String
+  buyerPhone         String?
+  shippingAddress    String
+
+  customer      User?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  sellerOrders  SellerOrder[]
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([customerIdSnapshot])
+  @@index([createdAt])
+}
+
+model SellerOrder {
+  id               String @id @default(uuid())
+  purchaseId       String
+  sellerId         String?
+  sellerIdSnapshot String
+  subtotalCents    Int
+  currencyCode     String @default("USD")
+  status           SellerOrderStatus @default(NEW)
+  trackingNumber   String?
+
+  purchase      Purchase          @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  seller        User?             @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  items         SellerOrderItem[]
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([purchaseId])
+  @@index([sellerId])
+  @@index([sellerIdSnapshot])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model SellerOrderItem {
+  id                String @id @default(uuid())
+  sellerOrderId     String
+  listingId         String
+  listingName       String
+  brand             String
+  model             String
+  category          String
+  condition         String
+  primaryImageUrl   String
+  sellerId          String
+  sellerDisplayName String
+  unitPriceCents    Int
+  quantity          Int
+  subTotalCents     Int
+  currencyCode      String @default("USD")
+
+  sellerOrder SellerOrder @relation(fields: [sellerOrderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([sellerOrderId])
+  @@index([listingId])
+  @@index([sellerId])
 }
 
 model Product {
@@ -222,15 +325,21 @@ model Notification {
   id      String @id @default(uuid())
   userId  String
   orderId String?
+  purchaseId String?
+  sellerOrderId String?
   message String
   isRead  Boolean @default(false)
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  order Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order       Order?       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  purchase    Purchase?    @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  sellerOrder SellerOrder? @relation(fields: [sellerOrderId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
   @@index([userId, isRead])
+  @@index([purchaseId])
+  @@index([sellerOrderId])
 }
 
 model MediaCleanupJob {

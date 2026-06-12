@@ -1,19 +1,34 @@
 import type { Prisma } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
 import { logger } from "@/lib/logger";
-import type { NotificationData } from "@/types/notification";
+import type {
+	CreateNotificationData,
+	NotificationData,
+} from "@/types/notification";
+
+const notificationDtoSelect = {
+	id: true,
+	userId: true,
+	purchaseId: true,
+	sellerOrderId: true,
+	message: true,
+	isRead: true,
+	createdAt: true,
+} satisfies Prisma.NotificationSelect;
 
 export const createNotification = async (
-	notificationData: NotificationData,
+	notificationData: CreateNotificationData,
 	prismaClient: Prisma.TransactionClient | typeof prisma = prisma,
 ) => {
 	try {
-		return await prismaClient.notification.create({
+		const notification = await prismaClient.notification.create({
 			data: {
 				...notificationData,
-				orderId: notificationData.orderId || undefined,
 			},
+			select: notificationDtoSelect,
 		});
+
+		return toNotificationDto(notification);
 	} catch (err) {
 		logger.error("Error at createNotification", err);
 		throw err;
@@ -22,12 +37,15 @@ export const createNotification = async (
 
 export const getNotificationsByUser = async (userId: string) => {
 	try {
-		return await prisma.notification.findMany({
+		const notifications = await prisma.notification.findMany({
 			where: { userId },
+			select: notificationDtoSelect,
 			orderBy: {
 				createdAt: "desc",
 			},
 		});
+
+		return notifications.map(toNotificationDto);
 	} catch (err) {
 		logger.error("Error at getNotificationsByUser", err);
 		throw err;
@@ -50,12 +68,15 @@ export const getNotificationsCount = async (userId: string) => {
 
 export const readNotificationById = async (notificationId: string) => {
 	try {
-		return await prisma.notification.update({
+		const notification = await prisma.notification.update({
 			where: { id: notificationId },
 			data: {
 				isRead: true,
 			},
+			select: notificationDtoSelect,
 		});
+
+		return toNotificationDto(notification);
 	} catch (err) {
 		logger.error("Error at readNotificationsById", err);
 		throw err;
@@ -86,3 +107,19 @@ export const readAllNotifications = async (userId: string) => {
 		throw err;
 	}
 };
+
+function toNotificationDto(
+	notification: Prisma.NotificationGetPayload<{
+		select: typeof notificationDtoSelect;
+	}>,
+): NotificationData {
+	return {
+		id: notification.id,
+		userId: notification.userId,
+		purchaseId: notification.purchaseId,
+		sellerOrderId: notification.sellerOrderId,
+		message: notification.message,
+		isRead: notification.isRead,
+		createdAt: notification.createdAt.toISOString(),
+	};
+}
