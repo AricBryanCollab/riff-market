@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import { getCurrentUserFn } from "@/server/user.functions";
+import { getOptionalCurrentUserFn } from "@/server/user.functions";
 import type { UserProfile } from "@/types/user";
 
 export const useAuthUser = () => {
-	const userQuery = useQuery<UserProfile>({
+	const userQuery = useQuery<UserProfile | null>({
 		queryKey: queryKeys.auth.user,
-		queryFn: () => getCurrentUserFn(),
+		queryFn: () => getOptionalCurrentUserFn(),
 		retry: false,
 		refetchOnMount: false,
 		refetchOnWindowFocus: false,
