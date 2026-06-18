@@ -1,12 +1,18 @@
 import { apiFetch } from "@/lib/tanstack-query/fetch";
-
 import type {
 	CreateProductInput,
 	UpdateProductInput,
 } from "@/lib/zod/product-validation";
+import {
+	createListingFn,
+	deleteListingFn,
+	moderateListingFn,
+	updateListingFn,
+} from "@/server/listing.functions";
 import type {
 	ApprovedProductCount,
 	BaseProduct,
+	DeleteProductResponse,
 	GetApprovedProductsFilterQuery,
 	PendingProductCount,
 	ProductCountByCategoryData,
@@ -44,11 +50,7 @@ function prepareProductFormData(
 export function createProduct(data: CreateProductInput) {
 	const formData = prepareProductFormData(data);
 
-	return apiFetch<ProductResponse>("/api/products", {
-		method: "POST",
-		body: formData,
-		contentType: "multipart/form-data",
-	});
+	return createListingFn({ data: formData }) as Promise<ProductResponse>;
 }
 
 // Get Product Details By ID
@@ -127,25 +129,24 @@ export function getRecentProducts() {
 // Update Product
 export function updateProduct(id: string, data: UpdateProductInput) {
 	const formData = prepareProductFormData(data);
+	formData.append("listingId", id);
 
-	return apiFetch<ProductResponse>(`/api/products/${id}`, {
-		method: "PUT",
-		body: formData,
-		contentType: "multipart/form-data",
-	});
+	return updateListingFn({ data: formData }) as Promise<ProductResponse>;
 }
 
 //  Update Product Status
 export function updateProductStatus(id: string, isApproved: boolean) {
-	return apiFetch<UpdateProductStatusResult>(`/api/products/pending/${id}`, {
-		method: "PUT",
-		body: JSON.stringify({ isApproved }),
-	});
+	return moderateListingFn({
+		data: {
+			listingId: id,
+			decision: isApproved ? "APPROVE" : "DECLINE",
+		},
+	}) as Promise<UpdateProductStatusResult>;
 }
 
 // Delete Product
 export function deleteProduct(id: string) {
-	return apiFetch<ProductResponse>(`/api/products/${id}`, {
-		method: "DELETE",
-	});
+	return deleteListingFn({
+		data: { listingId: id },
+	}) as Promise<DeleteProductResponse>;
 }

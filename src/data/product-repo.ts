@@ -5,6 +5,7 @@ import {
 	type ProductMoneySource,
 	toProductPriceRangePersistence,
 } from "@/domains/listings/application/product-money";
+import type { ListingStatus } from "@/domains/listings/domain/listing";
 import { logger } from "@/lib/logger";
 import type { GetProductQuery } from "@/lib/zod/product-validation";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
@@ -12,7 +13,7 @@ import { createNotification } from "./notification-repo";
 
 type CreateProductRepoInput = Omit<
 	Product,
-	"id" | "createdAt" | "updatedAt" | "isApproved" | "images"
+	"id" | "createdAt" | "updatedAt" | "isApproved" | "listingStatus" | "images"
 > & {
 	images: Prisma.InputJsonValue;
 };
@@ -29,6 +30,7 @@ export const createProduct = async (product: CreateProductRepoInput) => {
 			data: {
 				...product,
 				isApproved: false,
+				listingStatus: "PENDING",
 			},
 		});
 
@@ -54,6 +56,7 @@ const baseProductQuery = {
 	currencyCode: true,
 	stock: true,
 	isApproved: true,
+	listingStatus: true,
 	createdAt: true,
 	updatedAt: true,
 	seller: {
@@ -129,7 +132,7 @@ export const getApprovedProducts = async ({
 			priceMaxCents,
 		});
 		const whereClause: Prisma.ProductWhereInput = {
-			isApproved: true,
+			listingStatus: "APPROVED",
 			...(category && { category: category as ProductCategory }),
 			...(condition && { condition: condition as ProductCondition }),
 			...(brand && { brand: { contains: brand, mode: "insensitive" } }),
@@ -192,7 +195,7 @@ export const getApprovedProducts = async ({
 export const getPendingApprovalProducts = async () => {
 	try {
 		const products = await prisma.product.findMany({
-			where: { isApproved: false },
+			where: { listingStatus: "PENDING" },
 			orderBy: { createdAt: "desc" },
 			select: baseProductQuery,
 		});
@@ -209,7 +212,7 @@ export const getProductCountByCategory = async () => {
 		const groupedProducts = await prisma.product.groupBy({
 			by: ["category"],
 			where: {
-				isApproved: true,
+				listingStatus: "APPROVED",
 			},
 			_count: {
 				category: true,
@@ -230,7 +233,7 @@ export const getProductCountByStatus = async (isApproved: boolean) => {
 	try {
 		const productCount = await prisma.product.count({
 			where: {
-				isApproved,
+				listingStatus: isApproved ? "APPROVED" : "PENDING",
 			},
 		});
 
@@ -244,7 +247,7 @@ export const getProductCountByStatus = async (isApproved: boolean) => {
 export const getRecentProducts = async (limit: number = 8) => {
 	try {
 		const products = await prisma.product.findMany({
-			where: { isApproved: true },
+			where: { listingStatus: "APPROVED" },
 			orderBy: { updatedAt: "desc" },
 			select: baseProductQuery,
 			take: limit,
@@ -300,43 +303,30 @@ export const updateProductStatus = async (
 	status: boolean,
 ) => {
 	try {
-		if (!status) {
-			await prisma.product.delete({
-				where: { id },
-			});
-
-			await createNotification({
-				userId: sellerId,
-				message: `Your product ${productName} has been declined by the admin & removed from RiffMarket`,
-				isRead: false,
-			});
-
-			return {
-				id,
-				name: productName,
-				isApproved: false,
-			};
-		}
-
-		const approvedProduct = await prisma.product.update({
+		const listingStatus: ListingStatus = status ? "APPROVED" : "DECLINED";
+		const updatedProduct = await prisma.product.update({
 			where: { id },
 			data: {
 				isApproved: status,
+				listingStatus,
 			},
 			select: {
 				id: true,
 				name: true,
 				isApproved: true,
+				listingStatus: true,
 			},
 		});
 
 		await createNotification({
 			userId: sellerId,
-			message: `Great News! Your product ${productName} has been approved and live at the RiffMarket shop`,
+			message: status
+				? `Great News! Your product ${productName} has been approved and live at the RiffMarket shop`
+				: `Your product ${productName} has been declined by the admin`,
 			isRead: false,
 		});
 
-		return approvedProduct;
+		return updatedProduct;
 	} catch (err) {
 		logger.error("Error at updateProductStatus", err);
 		throw err;

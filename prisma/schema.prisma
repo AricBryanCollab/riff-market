@@ -71,6 +71,13 @@ enum SellerOrderStatus {
   CANCELED
 }
 
+enum ListingStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  WITHDRAWN
+}
+
 enum ChatRole {
   USER
   ASSISTANT
@@ -253,6 +260,7 @@ model Product {
   currencyCode String @default("USD")
   stock       Int
   isApproved Boolean
+  listingStatus ListingStatus @default(PENDING)
   favoritedBy Favorite[]
 
   seller User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
@@ -265,6 +273,7 @@ model Product {
   @@index([sellerId])
   @@index([category])
   @@index([isApproved])
+  @@index([listingStatus])
 }
 
 model ChatBotSession {

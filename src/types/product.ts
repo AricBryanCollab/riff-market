@@ -1,5 +1,11 @@
 import type { ProductCategory, ProductCondition } from "@/types/enum";
 
+export type ProductListingStatus =
+	| "PENDING"
+	| "APPROVED"
+	| "DECLINED"
+	| "WITHDRAWN";
+
 interface MutateBaseProduct {
 	name: string;
 	category: ProductCategory;
@@ -46,6 +52,7 @@ export interface BaseProduct {
 	currencyCode?: string;
 	stock: number;
 	isApproved: boolean;
+	listingStatus?: ProductListingStatus;
 	createdAt?: string;
 	updatedAt?: string;
 	seller: SellerDetails;
@@ -65,6 +72,7 @@ export interface MutateProductResponse {
 	currencyCode?: string;
 	stock: number;
 	isApproved: boolean;
+	listingStatus?: ProductListingStatus;
 	createdAt?: string;
 	updatedAt?: string;
 }
@@ -95,6 +103,15 @@ export interface ProductResponse {
 	product: MutateProductResponse;
 }
 
+export interface DeleteProductResponse {
+	message: string;
+	product: {
+		listingId: string;
+		mode: "DELETED" | "WITHDRAWN";
+		message: string;
+	};
+}
+
 export interface UpdateProductStatusRequest {
 	id: string;
 	isApproved: boolean;
@@ -104,6 +121,8 @@ export interface UpdateProductStatusResult {
 	id: string;
 	name: string;
 	isApproved: boolean;
+	status?: ProductListingStatus;
+	listingStatus?: ProductListingStatus;
 }
 
 export interface CategoryMeta {

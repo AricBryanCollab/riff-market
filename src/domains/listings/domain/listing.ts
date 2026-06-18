@@ -1,3 +1,9 @@
+import type { Actor } from "@/domains/shared/domain/actor";
+import {
+	createDomainEvent,
+	type DomainEvent,
+	type RecordsDomainEvents,
+} from "@/domains/shared/domain/domain-event";
 import type { Money } from "@/domains/shared/domain/money";
 
 export const listingStatuses = [
@@ -43,6 +49,27 @@ export type ListingPurchaseErrorCode =
 	| "LISTING_INSUFFICIENT_STOCK"
 	| "LISTING_INVALID_QUANTITY";
 
+export type ListingLifecycleErrorCode =
+	| "LISTING_ALREADY_APPROVED"
+	| "LISTING_ALREADY_DECLINED"
+	| "LISTING_ALREADY_WITHDRAWN"
+	| "LISTING_WITHDRAWN_CANNOT_BE_APPROVED"
+	| "LISTING_WITHDRAWN_CANNOT_BE_DECLINED";
+
+export type ListingLifecycleEvent =
+	| DomainEvent<
+			"ListingApproved",
+			{ readonly listingId: string; readonly sellerId: string }
+	  >
+	| DomainEvent<
+			"ListingDeclined",
+			{ readonly listingId: string; readonly sellerId: string }
+	  >
+	| DomainEvent<
+			"ListingWithdrawn",
+			{ readonly listingId: string; readonly sellerId: string }
+	  >;
+
 export class ListingPurchaseError extends Error {
 	readonly code: ListingPurchaseErrorCode;
 
@@ -53,7 +80,17 @@ export class ListingPurchaseError extends Error {
 	}
 }
 
-export class Listing {
+export class ListingLifecycleError extends Error {
+	readonly code: ListingLifecycleErrorCode;
+
+	constructor(code: ListingLifecycleErrorCode, message: string) {
+		super(message);
+		this.name = "ListingLifecycleError";
+		this.code = code;
+	}
+}
+
+export class Listing implements RecordsDomainEvents {
 	readonly id: string;
 	readonly sellerId: string;
 	readonly sellerDisplayName: string;
@@ -64,9 +101,10 @@ export class Listing {
 	readonly condition: string;
 	readonly primaryImageUrl: string;
 	readonly price: Money;
-	readonly status: ListingStatus;
 
 	private availableStock: number;
+	private currentStatus: ListingStatus;
+	private domainEvents: ListingLifecycleEvent[] = [];
 
 	private constructor(snapshot: ListingSnapshot) {
 		assertPresent(snapshot.id, "Listing ID");
@@ -91,7 +129,7 @@ export class Listing {
 		this.primaryImageUrl = snapshot.primaryImageUrl;
 		this.price = snapshot.price;
 		this.availableStock = snapshot.stock;
-		this.status = snapshot.status;
+		this.currentStatus = snapshot.status;
 	}
 
 	static reconstitute(snapshot: ListingSnapshot): Listing {
@@ -102,14 +140,74 @@ export class Listing {
 		return this.availableStock;
 	}
 
+	get status() {
+		return this.currentStatus;
+	}
+
 	isOrderable() {
-		return this.status === "APPROVED" && this.availableStock > 0;
+		return this.currentStatus === "APPROVED" && this.availableStock > 0;
+	}
+
+	approve(actor: Actor) {
+		if (this.currentStatus === "APPROVED") {
+			throw new ListingLifecycleError(
+				"LISTING_ALREADY_APPROVED",
+				"Listing is already approved",
+			);
+		}
+
+		if (this.currentStatus === "WITHDRAWN") {
+			throw new ListingLifecycleError(
+				"LISTING_WITHDRAWN_CANNOT_BE_APPROVED",
+				"Withdrawn listings cannot be approved",
+			);
+		}
+
+		this.currentStatus = "APPROVED";
+		this.recordLifecycleEvent("ListingApproved", actor);
+	}
+
+	decline(actor: Actor) {
+		if (this.currentStatus === "DECLINED") {
+			throw new ListingLifecycleError(
+				"LISTING_ALREADY_DECLINED",
+				"Listing is already declined",
+			);
+		}
+
+		if (this.currentStatus === "WITHDRAWN") {
+			throw new ListingLifecycleError(
+				"LISTING_WITHDRAWN_CANNOT_BE_DECLINED",
+				"Withdrawn listings cannot be declined",
+			);
+		}
+
+		this.currentStatus = "DECLINED";
+		this.recordLifecycleEvent("ListingDeclined", actor);
+	}
+
+	withdraw(actor: Actor) {
+		if (this.currentStatus === "WITHDRAWN") {
+			throw new ListingLifecycleError(
+				"LISTING_ALREADY_WITHDRAWN",
+				"Listing is already withdrawn",
+			);
+		}
+
+		this.currentStatus = "WITHDRAWN";
+		this.recordLifecycleEvent("ListingWithdrawn", actor);
+	}
+
+	pullDomainEvents(): ListingLifecycleEvent[] {
+		const events = this.domainEvents;
+		this.domainEvents = [];
+		return events;
 	}
 
 	reserveForPurchase(quantity: number): ReservedListingItemSnapshot {
 		assertPositiveQuantity(quantity);
 
-		if (this.status !== "APPROVED") {
+		if (this.currentStatus !== "APPROVED") {
 			throw new ListingPurchaseError(
 				"LISTING_NOT_ORDERABLE",
 				"Listing must be approved before purchase",
@@ -138,6 +236,23 @@ export class Listing {
 			unitPrice: this.price,
 			quantity,
 		};
+	}
+
+	private recordLifecycleEvent(
+		eventName: ListingLifecycleEvent["eventName"],
+		actor: Actor,
+	) {
+		this.domainEvents.push(
+			createDomainEvent({
+				eventName,
+				aggregateId: this.id,
+				payload: {
+					listingId: this.id,
+					sellerId: this.sellerId,
+				},
+				metadata: { actor },
+			}) as ListingLifecycleEvent,
+		);
 	}
 }
 

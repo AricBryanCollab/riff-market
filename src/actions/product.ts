@@ -1,4 +1,7 @@
-import type { Prisma } from "generated/prisma/client";
+import type {
+	Prisma,
+	ListingStatus as ProductListingStatus,
+} from "generated/prisma/client";
 import {
 	createProduct,
 	deleteProductById,
@@ -230,6 +233,8 @@ export async function updateProductService(
 	const data = parsed.data;
 	const priceData =
 		data.price !== undefined ? toProductMoneyPersistence(data.price) : {};
+	const listingStatus: ProductListingStatus =
+		role === "ADMIN" ? "APPROVED" : "PENDING";
 
 	const updateData = {
 		...(data.name && { name: data.name }),
@@ -240,6 +245,7 @@ export async function updateProductService(
 		...priceData,
 		...(data.stock !== undefined && { stock: Number(data.stock) }),
 		isApproved: role === "ADMIN",
+		listingStatus,
 	};
 
 	let updatedProduct: ProductUpdateResult;

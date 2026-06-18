@@ -453,12 +453,15 @@ Work:
   - approved listing search
   - pending listing moderation queue
   - seller listings
+- Remove remaining listing/product read dependence on `src/actions/product.ts`; Slice 4 is not complete while listing/product read routes or query wrappers still call the action layer.
 - Keep remaining product API routes as compatibility until consumers are gone.
 
 Acceptance criteria:
 
 - Shop, home, product detail, seller listing, pending approval, and cart details still work.
 - Client-facing DTOs no longer expose Prisma shape directly.
+- Listing/product reads are served through listing query use cases/read models rather than `src/actions/product.ts`.
+- `src/actions/product.ts` is deleted or no longer contains listing/product behavior by the end of Slice 4.
 
 Tests:
 

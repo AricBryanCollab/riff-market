@@ -38,7 +38,6 @@ import { Route as ApiNotificationsIdRouteImport } from './routes/api/notificatio
 import { Route as ApiAuthSignupRouteImport } from './routes/api/auth.signup'
 import { Route as ApiAuthSignoutRouteImport } from './routes/api/auth.signout'
 import { Route as ApiAuthSigninRouteImport } from './routes/api/auth.signin'
-import { Route as ApiProductsPendingIdRouteImport } from './routes/api/products.pending.$id'
 import { Route as ApiNotificationsUnreadCountRouteImport } from './routes/api/notifications.unread.count'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
@@ -186,11 +185,6 @@ const ApiAuthSigninRoute = ApiAuthSigninRouteImport.update({
   path: '/api/auth/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiProductsPendingIdRoute = ApiProductsPendingIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiProductsPendingRoute,
-} as any)
 const ApiNotificationsUnreadCountRoute =
   ApiNotificationsUnreadCountRouteImport.update({
     id: '/unread/count',
@@ -224,12 +218,11 @@ export interface FileRoutesByFullPath {
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/cart-details': typeof ApiProductsCartDetailsRoute
   '/api/products/count': typeof ApiProductsCountRoute
-  '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
+  '/api/products/pending': typeof ApiProductsPendingRoute
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
-  '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -256,12 +249,11 @@ export interface FileRoutesByTo {
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/cart-details': typeof ApiProductsCartDetailsRoute
   '/api/products/count': typeof ApiProductsCountRoute
-  '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
+  '/api/products/pending': typeof ApiProductsPendingRoute
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
-  '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -290,12 +282,11 @@ export interface FileRoutesById {
   '/api/products/$id': typeof ApiProductsIdRoute
   '/api/products/cart-details': typeof ApiProductsCartDetailsRoute
   '/api/products/count': typeof ApiProductsCountRoute
-  '/api/products/pending': typeof ApiProductsPendingRouteWithChildren
+  '/api/products/pending': typeof ApiProductsPendingRoute
   '/api/products/recent': typeof ApiProductsRecentRoute
   '/api/products/seller': typeof ApiProductsSellerRoute
   '/product/edit/$id': typeof ProductEditIdRoute
   '/api/notifications/unread/count': typeof ApiNotificationsUnreadCountRoute
-  '/api/products/pending/$id': typeof ApiProductsPendingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -330,7 +321,6 @@ export interface FileRouteTypes {
     | '/api/products/seller'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
-    | '/api/products/pending/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -362,7 +352,6 @@ export interface FileRouteTypes {
     | '/api/products/seller'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
-    | '/api/products/pending/$id'
   id:
     | '__root__'
     | '/'
@@ -395,7 +384,6 @@ export interface FileRouteTypes {
     | '/api/products/seller'
     | '/product/edit/$id'
     | '/api/notifications/unread/count'
-    | '/api/products/pending/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -626,13 +614,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSigninRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/products/pending/$id': {
-      id: '/api/products/pending/$id'
-      path: '/$id'
-      fullPath: '/api/products/pending/$id'
-      preLoaderRoute: typeof ApiProductsPendingIdRouteImport
-      parentRoute: typeof ApiProductsPendingRoute
-    }
     '/api/notifications/unread/count': {
       id: '/api/notifications/unread/count'
       path: '/unread/count'
@@ -670,22 +651,11 @@ const ApiNotificationsRouteChildren: ApiNotificationsRouteChildren = {
 const ApiNotificationsRouteWithChildren =
   ApiNotificationsRoute._addFileChildren(ApiNotificationsRouteChildren)
 
-interface ApiProductsPendingRouteChildren {
-  ApiProductsPendingIdRoute: typeof ApiProductsPendingIdRoute
-}
-
-const ApiProductsPendingRouteChildren: ApiProductsPendingRouteChildren = {
-  ApiProductsPendingIdRoute: ApiProductsPendingIdRoute,
-}
-
-const ApiProductsPendingRouteWithChildren =
-  ApiProductsPendingRoute._addFileChildren(ApiProductsPendingRouteChildren)
-
 interface ApiProductsRouteChildren {
   ApiProductsIdRoute: typeof ApiProductsIdRoute
   ApiProductsCartDetailsRoute: typeof ApiProductsCartDetailsRoute
   ApiProductsCountRoute: typeof ApiProductsCountRoute
-  ApiProductsPendingRoute: typeof ApiProductsPendingRouteWithChildren
+  ApiProductsPendingRoute: typeof ApiProductsPendingRoute
   ApiProductsRecentRoute: typeof ApiProductsRecentRoute
   ApiProductsSellerRoute: typeof ApiProductsSellerRoute
 }
@@ -694,7 +664,7 @@ const ApiProductsRouteChildren: ApiProductsRouteChildren = {
   ApiProductsIdRoute: ApiProductsIdRoute,
   ApiProductsCartDetailsRoute: ApiProductsCartDetailsRoute,
   ApiProductsCountRoute: ApiProductsCountRoute,
-  ApiProductsPendingRoute: ApiProductsPendingRouteWithChildren,
+  ApiProductsPendingRoute: ApiProductsPendingRoute,
   ApiProductsRecentRoute: ApiProductsRecentRoute,
   ApiProductsSellerRoute: ApiProductsSellerRoute,
 }

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { Money } from "@/domains/shared/domain/money";
-import { Listing, ListingPurchaseError, type ListingSnapshot } from "./listing";
+import {
+	Listing,
+	ListingLifecycleError,
+	ListingPurchaseError,
+	type ListingSnapshot,
+} from "./listing";
 
 function makeListing(overrides: Partial<ListingSnapshot> = {}) {
 	return Listing.reconstitute({
@@ -81,5 +86,103 @@ describe("Listing purchase behavior", () => {
 			),
 		);
 		expect(listing.stock).toBe(3);
+	});
+});
+
+describe("Listing lifecycle behavior", () => {
+	const admin = { id: "admin-1", role: "ADMIN" } as const;
+	const seller = { id: "seller-1", role: "SELLER" } as const;
+
+	it("approves a pending listing and records a lifecycle event", () => {
+		const listing = makeListing({ status: "PENDING" });
+
+		listing.approve(admin);
+
+		expect(listing.status).toBe("APPROVED");
+		expect(listing.pullDomainEvents()).toMatchObject([
+			{
+				eventName: "ListingApproved",
+				aggregateId: "listing-1",
+				payload: {
+					listingId: "listing-1",
+					sellerId: "seller-1",
+				},
+				metadata: { actor: admin },
+			},
+		]);
+		expect(listing.pullDomainEvents()).toEqual([]);
+	});
+
+	it("declines a pending listing without deleting the aggregate", () => {
+		const listing = makeListing({ status: "PENDING" });
+
+		listing.decline(admin);
+
+		expect(listing.status).toBe("DECLINED");
+		expect(listing.id).toBe("listing-1");
+		expect(listing.pullDomainEvents()).toMatchObject([
+			{
+				eventName: "ListingDeclined",
+				aggregateId: "listing-1",
+				payload: {
+					listingId: "listing-1",
+					sellerId: "seller-1",
+				},
+				metadata: { actor: admin },
+			},
+		]);
+	});
+
+	it("withdraws an active listing", () => {
+		const listing = makeListing({ status: "APPROVED" });
+
+		listing.withdraw(seller);
+
+		expect(listing.status).toBe("WITHDRAWN");
+		expect(listing.pullDomainEvents()).toMatchObject([
+			{
+				eventName: "ListingWithdrawn",
+				metadata: { actor: seller },
+			},
+		]);
+	});
+
+	it("rejects duplicate lifecycle transitions", () => {
+		expect(() => makeListing({ status: "APPROVED" }).approve(admin)).toThrow(
+			new ListingLifecycleError(
+				"LISTING_ALREADY_APPROVED",
+				"Listing is already approved",
+			),
+		);
+		expect(() => makeListing({ status: "DECLINED" }).decline(admin)).toThrow(
+			new ListingLifecycleError(
+				"LISTING_ALREADY_DECLINED",
+				"Listing is already declined",
+			),
+		);
+		expect(() => makeListing({ status: "WITHDRAWN" }).withdraw(seller)).toThrow(
+			new ListingLifecycleError(
+				"LISTING_ALREADY_WITHDRAWN",
+				"Listing is already withdrawn",
+			),
+		);
+	});
+
+	it("does not allow withdrawn listings back into moderation", () => {
+		const listing = makeListing({ status: "WITHDRAWN" });
+
+		expect(() => listing.approve(admin)).toThrow(
+			new ListingLifecycleError(
+				"LISTING_WITHDRAWN_CANNOT_BE_APPROVED",
+				"Withdrawn listings cannot be approved",
+			),
+		);
+		expect(() => listing.decline(admin)).toThrow(
+			new ListingLifecycleError(
+				"LISTING_WITHDRAWN_CANNOT_BE_DECLINED",
+				"Withdrawn listings cannot be declined",
+			),
+		);
+		expect(listing.status).toBe("WITHDRAWN");
 	});
 });

@@ -1,12 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-	createProductService,
-	getApprovedProductsService,
-} from "@/actions/product";
+import { getApprovedProductsService } from "@/actions/product";
 import { logger } from "@/lib/logger";
-import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
-import type { ProductCategory, ProductCondition } from "@/types/enum";
-import { extractFormData } from "@/utils/extract-form-data";
+import { requestLoggerMiddleware } from "@/middleware";
 
 export const Route = createFileRoute("/api/products")({
 	server: {
@@ -44,94 +39,6 @@ export const Route = createFileRoute("/api/products")({
 							return new Response(
 								JSON.stringify({
 									message: "Failed to get all approved products",
-								}),
-								{ status: 500 },
-							);
-						}
-					},
-				},
-				POST: {
-					middleware: [authMiddleware],
-					handler: async ({ request, context }) => {
-						try {
-							const sellerId = context.id;
-							const authRole = context.role;
-							const formData = await request.formData();
-
-							const {
-								name,
-								category,
-								condition,
-								brand,
-								model,
-								description,
-								price,
-								stock,
-							} = extractFormData<{
-								name: string;
-								category: ProductCategory;
-								condition: ProductCondition;
-								brand: string;
-								model: string;
-								description: string;
-								price: string;
-								stock: string;
-							}>(formData, [
-								"name",
-								"category",
-								"condition",
-								"brand",
-								"model",
-								"description",
-								"price",
-								"stock",
-							]);
-
-							const images = formData.getAll("image") as File[];
-
-							const rawData = {
-								name,
-								category,
-								condition,
-								brand,
-								model,
-								description,
-								price,
-								stock: Number(stock),
-								images,
-							};
-
-							const newProduct = await createProductService(
-								sellerId,
-								authRole,
-								rawData,
-							);
-
-							if ("error" in newProduct) {
-								return new Response(
-									JSON.stringify({
-										message: newProduct.error,
-										details: newProduct.details,
-									}),
-									{ status: 400 },
-								);
-							}
-
-							return new Response(
-								JSON.stringify({
-									product: newProduct,
-									message: "New product has been added",
-								}),
-								{ status: 201 },
-							);
-						} catch (error) {
-							logger.error("Failed to create product", error);
-							return new Response(
-								JSON.stringify({
-									message:
-										error instanceof Error
-											? error.message
-											: "Failed to create the product",
 								}),
 								{ status: 500 },
 							);

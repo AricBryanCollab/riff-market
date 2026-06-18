@@ -28,8 +28,143 @@ Clean slate started: 2026-06-11
 - Slice `2` seller-order status lifecycle and target status update path started on 2026-06-12.
 - Slice `2` target order detail reads for `/api/orders/$id` GET added on 2026-06-12.
 - Slice `2` active order read/detail/status delivery moved to TanStack server functions on 2026-06-12.
+- Slice `2` active order server-function flow browser smoke completed on 2026-06-16.
+- Slice `3` listing lifecycle started on 2026-06-16 with listing-status bridging and server-function moderation.
+- Slice `3` listing create/update/delete command migration to server functions added on 2026-06-16.
 
 ## Latest Session Notes
+
+- Browser-smoked the active order server-function flow with local seeded customer/seller data:
+  - customer settings purchase history loaded through `listOrdersForCurrentUserFn`
+  - seller settings sales dashboard loaded through `listOrdersForCurrentUserFn`
+  - seller moved `NEW -> PROCESSING`
+  - seller was blocked from `PROCESSING -> SHIPPED` without a tracking number
+  - seller moved `PROCESSING -> SHIPPED` after entering a tracking number
+  - seller moved `SHIPPED -> DELIVERED`
+  - no legacy `/api/orders` requests were observed
+- Reran the gated local Postgres DB suite after the order route/action cleanup; it passed.
+- Started Slice `3` listing lifecycle with a narrow moderation/status bridge rather than a full Prisma table rename:
+  - added `ListingStatus` to `Product` as a transitional status column
+  - backfilled `listingStatus` from `isApproved`
+  - expanded the `Listing` aggregate with moderation and withdrawal lifecycle behavior
+  - added `ModerateListing` application use case with explicit `Actor` authorization
+  - added Prisma moderation repository/notifier infrastructure
+  - added `moderateListingFn` server-function delivery
+  - moved admin approve/decline mutation callers from `/api/products/pending/$id` to `moderateListingFn`
+  - deleted the legacy `/api/products/pending/$id` route
+  - changed decline behavior to mark listings `DECLINED` and notify the seller instead of deleting the row
+  - switched pending/approved product queries to `listingStatus` while keeping `isApproved` as compatibility state
+- Browser-smoked admin listing moderation with local seeded admin/seller/listings:
+  - approve command returned 200 through `moderateListingFn`
+  - decline command returned 200 through `moderateListingFn`
+  - no legacy `/api/products/pending` request was observed
+  - approved listing ended as `listingStatus = APPROVED`, `isApproved = true`
+  - declined listing ended as `listingStatus = DECLINED`, `isApproved = false`
+  - seller notifications were created for both moderation outcomes
+- Continued Slice `3` by moving active listing create/update/delete command delivery to TanStack server functions:
+  - added `CreateListing`, `UpdateListing`, and `RemoveListing` application use cases with explicit `Actor` authorization
+  - added an image-manager port so upload/compression/cleanup stays out of domain code
+  - moved the Cloudinary image asset helper into listings infrastructure with an action-layer compatibility re-export
+  - added `PrismaListingCommandRepository`
+  - added `createListingFn`, `updateListingFn`, and `deleteListingFn`
+  - changed React Query product command helpers to call listing server functions instead of `/api/products` command routes
+  - removed POST from `/api/products`
+  - removed PUT/DELETE from `/api/products/$id`
+  - deleted the stale `/api/products/$id` command-route test
+  - implemented safe removal semantics: unreferenced listings hard-delete and clean images; referenced listings become `WITHDRAWN` and keep images
+- Added vertical listing service Prisma integration coverage:
+  - starts at the delivery-facing listing service boundary
+  - exercises service mapping, application use cases, Prisma infrastructure, and real local DB persistence
+  - injects real Prisma repositories plus a fake image manager to avoid Cloudinary/network calls
+  - covers create, seller update, admin update, moderation notifications, unreferenced hard delete, referenced `WITHDRAWN`, and unauthorized seller mutation
+- Updated `bun run test:db` to run ordering and listing Prisma integration files serially with `--no-file-parallelism`, because both files share and clean the same local database.
+
+## Files Changed In Latest Session
+
+- `prisma/schema.prisma`
+- `prisma/migrations/20260616150000_add_listing_status_to_product/migration.sql`
+- `src/actions/product-image-assets.ts`
+- `src/actions/product.ts`
+- `src/data/product-repo.ts`
+- `src/domains/listings/domain/listing.ts`
+- `src/domains/listings/domain/listing.test.ts`
+- `src/domains/listings/application/manage-listing.ts`
+- `src/domains/listings/application/manage-listing.test.ts`
+- `src/domains/listings/application/moderate-listing.ts`
+- `src/domains/listings/application/moderate-listing.test.ts`
+- `src/domains/listings/infrastructure/listing-image-assets.ts`
+- `src/domains/listings/infrastructure/prisma-listing-commands.ts`
+- `src/domains/listings/infrastructure/prisma-listing-moderation.ts`
+- `src/server/listing-service.ts`
+- `src/server/listing-service.prisma.test.ts`
+- `src/server/listing.functions.ts`
+- `src/lib/tanstack-query/product-queries.ts`
+- `src/types/product.ts`
+- `package.json`
+- `src/routeTree.gen.ts`
+- `src/routes/api/products.ts`
+- `src/routes/api/products.$id.ts`
+- deleted `src/routes/api/products.pending.$id.ts`
+- deleted `src/test/api-products-id-route.test.ts`
+- `ddd/progress.md`
+- `ddd/next-session.md`
+
+## Tests And Checks In Latest Session
+
+- Browser smoke for active order server-function reads/status commands passed with no legacy `/api/orders` requests observed.
+- `bun run test:db` passed after the order route/action cleanup.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma migrate deploy` applied the listing-status migration.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma generate` passed.
+- `bun run test:unit -- src/domains/listings/domain/listing.test.ts src/domains/listings/application/moderate-listing.test.ts src/actions/product.test.ts` passed: 75 tests.
+- `bun run typecheck` passed.
+- `env DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma validate` passed.
+- `bunx biome check src/actions/product.ts src/data/product-repo.ts src/domains/listings/domain/listing.ts src/domains/listings/domain/listing.test.ts src/domains/listings/application/moderate-listing.ts src/domains/listings/application/moderate-listing.test.ts src/domains/listings/infrastructure/prisma-listing-moderation.ts src/lib/tanstack-query/product-queries.ts src/server/listing-service.ts src/server/listing.functions.ts src/types/product.ts src/routeTree.gen.ts` passed.
+- `bun run test:unit` passed: 21 files passed, 1 DB integration file skipped by default; 223 tests passed, 7 skipped.
+- `bun run test:db` passed after the listing-status migration.
+- `bun run build` passed with the existing large client chunk warning.
+- Browser smoke for admin listing approval/decline through `moderateListingFn` passed with no legacy `/api/products/pending` requests observed.
+- `git diff --check` passed.
+- `bun run docs:check` passed.
+- `bun run test:unit -- src/domains/listings/application/manage-listing.test.ts src/domains/listings/application/moderate-listing.test.ts src/domains/listings/domain/listing.test.ts src/actions/product.test.ts` passed: 85 tests.
+- `bun run typecheck` passed after listing command migration.
+- `bunx biome check src/domains/listings/application/manage-listing.ts src/domains/listings/application/manage-listing.test.ts src/domains/listings/infrastructure/prisma-listing-commands.ts src/domains/listings/infrastructure/listing-image-assets.ts src/actions/product-image-assets.ts src/server/listing-service.ts src/server/listing.functions.ts src/lib/tanstack-query/product-queries.ts src/routes/api/products.ts 'src/routes/api/products.$id.ts' src/types/product.ts` passed after formatting.
+- `bun run test:unit` passed after listing command migration: 21 files passed, 1 DB integration file skipped by default; 231 tests passed, 7 skipped.
+- `bun run test:db` passed with sandbox escalation for localhost Postgres after listing command migration.
+- `bun run build` passed after listing command migration with the existing large client chunk warning.
+- `bun run docs:check` passed after listing command migration.
+- `git diff --check` passed after listing command migration.
+- `bun run test:unit -- src/server/listing-service.prisma.test.ts` skipped cleanly without `RUN_DB_TESTS=1`.
+- `bun run test:db` passed after adding listing service integration coverage: 2 files, 14 DB tests.
+- `bun run test:unit` passed after adding listing service integration coverage: 21 files passed, 2 DB integration files skipped by default; 231 tests passed, 14 skipped.
+- `bun run typecheck` passed after adding listing service integration coverage.
+- `bunx biome check src/server/listing-service.ts src/server/listing-service.prisma.test.ts package.json` passed.
+- `git diff --check` passed after adding listing service integration coverage.
+
+## Decisions In Latest Session
+
+- Use `Product.listingStatus` as the Slice `3` bridge toward listing lifecycle semantics while leaving the full `Product` -> `Listing` Prisma rename for a planned schema slice.
+- Treat admin listing moderation as the first migrated listing command because it has a narrow surface and directly exercises the new lifecycle status.
+- Delete the old moderation API route once the admin caller moved to `moderateListingFn`; do not keep compatibility API shells for migrated commands.
+- Delete product API command handlers once create/update/delete callers moved to `createListingFn`, `updateListingFn`, and `deleteListingFn`; keep read API routes until Slice `4`.
+- Keep `isApproved` as dual-written compatibility state until old consumers are drained.
+- Interpret legacy status count helpers as approved-vs-pending only; declined rows no longer count as pending.
+- Use `WITHDRAWN` instead of hard delete when a listing has legacy order items, target seller-order item snapshots, reviews, or favorites.
+- Leave broad product/listing read APIs in place until Slice `4` migrates read models.
+- Make Slice `4` explicitly responsible for draining listing/product read paths from `src/actions/product.ts`; Slice `4` is not complete while listing/product reads still use the action layer.
+- Use vertical service-boundary Prisma integration tests for migrated listing commands where persistence semantics matter; keep Cloudinary behind an injectable fake image manager in those tests.
+
+## Risks / Follow-Ups From Latest Session
+
+- Seller listing create/update/delete server-function flow still needs browser smoke. Image upload paths may require real Cloudinary configuration; delete/withdraw can be smoked with seeded local data.
+- Legacy product action command helpers and repository command helpers still exist as unused compatibility/dead code for their old tests; remove or relocate them after browser smoke confirms the server-function command path.
+- Product/listing reads still use product repository/API vocabulary; Slice `4` should move search/details/seller/pending reads to listing read models.
+- The full Prisma persistence vocabulary rename from `Product` to `Listing` remains pending.
+- Existing misleading request logging remains: successful server-function returns that are not `Response` objects can be logged as status `500`.
+- Browser smoke observed a non-fatal moderation success navigation warning from `navigate({ from: "/shop" })`; track or fix with the existing router-warning follow-ups.
+- Smoke seed rows remain in local development data.
+- `ddd/` files remain temporary worktree handoff docs and should be removed before opening a PR.
+
+## Previous Slice 2 Server-Function Order Session Notes
 
 - Committed the Slice `2` seller-order status lifecycle migration as `0700fcb` with message `feat: add seller order status lifecycle`.
 - Migrated target order detail reads into the ordering read-model layer:
@@ -59,7 +194,7 @@ Clean slate started: 2026-06-11
 - Regenerated `src/routeTree.gen.ts` after deleting the order API routes.
 - Added focused server-service tests for list reads, detail reads, hidden unauthorized detail reads, tracking-number validation, and seller status command execution.
 
-## Files Changed In Latest Session
+## Files Changed In Previous Slice 2 Server-Function Order Session
 
 - `src/domains/ordering/application/order-read-models.ts`
 - `src/domains/ordering/application/order-read-models.test.ts`
@@ -85,7 +220,7 @@ Clean slate started: 2026-06-11
 - `ddd/progress.md`
 - `ddd/next-session.md`
 
-## Tests And Checks In Latest Session
+## Tests And Checks In Previous Slice 2 Server-Function Order Session
 
 - `bun run test:unit -- src/server/order-service.test.ts src/server/place-purchase-service.test.ts src/domains/ordering/application/change-seller-order-status.test.ts src/actions/order.test.ts` passed before deleting the legacy action layer: 4 files, 20 tests.
 - `bun run test:unit -- src/server/order-service.test.ts src/server/place-purchase-service.test.ts src/domains/ordering/application/order-read-models.test.ts src/domains/ordering/application/change-seller-order-status.test.ts src/domains/ordering/application/place-purchase.prisma.test.ts` passed after deleting the order API/action/repo layer: 4 files passed, 1 DB integration file skipped by default; 37 tests passed, 7 skipped.
@@ -95,7 +230,7 @@ Clean slate started: 2026-06-11
 - `bun run docs:check` passed.
 - `bun run build` passed with the existing large client chunk warning.
 
-## Decisions In Latest Session
+## Decisions In Previous Slice 2 Server-Function Order Session
 
 - Interpret detail IDs by actor role:
   - customer: `Purchase.id`
@@ -107,7 +242,7 @@ Clean slate started: 2026-06-11
 - Delete `src/actions/order.ts` and `src/data/order.repo.ts` rather than keeping dead fake-order compatibility code.
 - Keep the UI display field name `trackingNumber` as a temporary `OrderResponse` compatibility field, but seller `SHIPPED` commands now require an actual seller tracking number.
 
-## Risks / Follow-Ups From Latest Session
+## Risks / Follow-Ups From Previous Slice 2 Server-Function Order Session
 
 - No browser smoke was run yet for the new seller status controls or server-function order reads.
 - Local browser smoke was attempted, but `bun run dev` failed on an internal framework port and `vite preview` kept scanning occupied ports; no dev/preview server was left running.
