@@ -109,14 +109,7 @@ export const getProductsByIdsQuerySchema = z.object({
 
 export const updateProductSchema = createProductSchema.partial();
 
-export const updateProductStatusSchema = z.object({
-	isApproved: z.boolean(),
-});
-
 export type CreateProductInput = z.input<typeof createProductSchema>;
 export type GetProductQuery = z.infer<typeof getProductQuerySchema>;
 export type GetProductsByIdsQuery = z.infer<typeof getProductsByIdsQuerySchema>;
 export type UpdateProductInput = z.input<typeof updateProductSchema>;
-export type UpdateProductStatusInput = z.infer<
-	typeof updateProductStatusSchema
->;

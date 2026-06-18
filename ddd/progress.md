@@ -31,8 +31,170 @@ Clean slate started: 2026-06-11
 - Slice `2` active order server-function flow browser smoke completed on 2026-06-16.
 - Slice `3` listing lifecycle started on 2026-06-16 with listing-status bridging and server-function moderation.
 - Slice `3` listing create/update/delete command migration to server functions added on 2026-06-16.
+- Slice `3` browser smoke for migrated listing update/delete/withdraw/moderation command delivery completed on 2026-06-18.
+- Slice `3` legacy product command action/repository cleanup completed on 2026-06-18.
+- Slice `3` product read/test hardening completed on 2026-06-18.
 
 ## Latest Session Notes
+
+- Fixed the product detail not-found rendering gap:
+  - `/api/products/$id` now returns HTTP `404` for missing/deleted product reads instead of a successful error payload.
+  - public product detail now shows the existing "Product not found" state for non-`APPROVED` lifecycle statuses, preserving edit/API compatibility for seller/admin flows.
+  - added `src/server/product-read-service.ts` and focused response tests for the HTTP boundary.
+- Added DB-backed product read behavior coverage:
+  - approved listing reads include only `listingStatus = APPROVED`
+  - pending moderation reads and pending counts exclude `DECLINED` and `WITHDRAWN`
+  - cent-based price filters still include legacy Float fallback rows
+  - recent products include only approved listings
+- Replaced dead image-helper test coverage with production image-manager port coverage:
+  - removed unused create/replace/delete image helper exports from `src/domains/listings/infrastructure/listing-image-assets.ts`
+  - `listing-image-assets.test.ts` now targets `CloudinaryListingImageManager`, bounded upload concurrency, failed-upload cleanup, and best-effort cleanup behavior.
+
+## Files Changed In Latest Session
+
+- `package.json`
+- `src/server/product-read-service.ts`
+- `src/server/product-read-service.test.ts`
+- `src/routes/api/products.$id.ts`
+- `src/routes/product/$id.tsx`
+- `src/data/product-repo.prisma.test.ts`
+- `src/domains/listings/infrastructure/listing-image-assets.ts`
+- `src/domains/listings/infrastructure/listing-image-assets.test.ts`
+- `ddd/progress.md`
+- `ddd/next-session.md`
+
+## Tests And Checks In Latest Session
+
+- Focused unit tests passed with bundled Node: 15 tests passed and 4 gated DB tests skipped across `src/server/product-read-service.test.ts`, `src/actions/product.test.ts`, `src/domains/listings/infrastructure/listing-image-assets.test.ts`, and `src/data/product-repo.prisma.test.ts`.
+- `bun run typecheck` passed with bundled Node.
+- Touched-file `bunx biome check` passed.
+- Full `bun run test:unit` passed with bundled Node: 23 files passed, 3 gated DB files skipped; 190 tests passed, 18 skipped.
+- Sandboxed `bun run test:db` failed on Prisma cleanup because local Postgres access was blocked by sandboxing; unsandboxed rerun with approval passed: 18 DB tests passed.
+
+## Decisions In Latest Session
+
+- Keep `/api/products/$id` as a temporary read compatibility route for Slice `4`, but return proper HTTP status for missing product reads.
+- Keep product detail lifecycle visibility in the public route component so seller/admin edit reads can still use the shared product detail API during the migration.
+- Treat product read behavior coverage as DB-backed integration coverage at the current compatibility repository boundary until Slice `4` introduces listing query use cases/read models.
+- Do not keep dead image persistence helper exports just to preserve tests; image storage behavior is covered through the `ListingImageManagerPort` implementation.
+
+## Risks / Follow-Ups From Latest Session
+
+- Product/listing reads still use product action/repository/API vocabulary; Slice `4` should move search/details/seller/pending reads to listing read models.
+- Create listing through `createListingFn` still needs browser smoke in an environment with real Cloudinary config.
+- Fix or track the non-fatal moderation success navigation warning from `navigate({ from: "/shop" })`.
+- Existing misleading request logging remains: successful server-function returns that are not `Response` objects can be logged as status `500`.
+- Smoke seed rows remain in local development data.
+- `ddd/` files remain temporary worktree handoff docs and should be removed before opening a PR.
+
+## Previous Slice 3 Product Command Cleanup Session Notes
+
+- Continued Slice `3` cleanup after migrated listing command browser smoke:
+  - removed dead legacy product command service exports from `src/actions/product.ts`
+  - removed dead product command repository helpers from `src/data/product-repo.ts`
+  - removed the obsolete product status update schema/type from `src/lib/zod/product-validation.ts`
+  - deleted the unused `src/actions/product-image-assets.ts` compatibility re-export
+  - replaced `src/actions/product.test.ts` with read-service compatibility coverage only
+  - added `src/domains/listings/infrastructure/listing-image-assets.test.ts` for upload bounded-concurrency and image cleanup behavior that belongs with listing infrastructure
+- Preserved temporary product/listing read compatibility:
+  - current product read API routes still use `src/actions/product.ts` or existing read repository helpers
+  - active create/update/delete/moderate client command wrappers still call listing server functions from `src/lib/tanstack-query/product-queries.ts`
+- Left `src/actions/product.ts` as a temporary read compatibility layer until Slice `4`; it no longer contains listing/product command behavior.
+
+## Files Changed In Previous Slice 3 Product Command Cleanup Session
+
+- `src/actions/product.ts`
+- `src/actions/product.test.ts`
+- `src/data/product-repo.ts`
+- `src/lib/zod/product-validation.ts`
+- `src/domains/listings/infrastructure/listing-image-assets.test.ts`
+- deleted `src/actions/product-image-assets.ts`
+- `ddd/progress.md`
+- `ddd/next-session.md`
+
+## Tests And Checks In Previous Slice 3 Product Command Cleanup Session
+
+- `bun run test:unit -- src/actions/product.test.ts src/domains/listings/infrastructure/listing-image-assets.test.ts src/domains/listings/application/manage-listing.test.ts src/domains/listings/application/moderate-listing.test.ts src/domains/listings/domain/listing.test.ts src/server/listing-service.prisma.test.ts` passed with bundled Node: 46 tests passed, 7 DB tests skipped.
+- `bun run typecheck` passed with bundled Node.
+- Touched-file `bunx biome check` passed after formatting the rewritten tests.
+- `bun run docs:check` passed after this handoff update.
+- Sandboxed `bun run test:db` failed on the first Prisma cleanup call because local Postgres access was blocked by sandboxing; rerunning unsandboxed with approval passed: 14 DB tests passed.
+- Full `bun run test:unit` passed with bundled Node: 22 files passed, 2 DB integration files skipped; 192 tests passed, 14 skipped.
+- `git diff --check` passed.
+
+## Decisions In Previous Slice 3 Product Command Cleanup Session
+
+- Treat Slice `3` product command cleanup as complete for the old action/repository command helpers.
+- Keep `src/actions/product.ts` only as temporary read compatibility until Slice `4` drains listing/product reads into listing query use cases/read models.
+- Keep image upload/compression/cleanup behavior behind listing infrastructure and cover those helpers in `src/domains/listings/infrastructure/listing-image-assets.test.ts`.
+- Do not reintroduce old product action command services, product command repository helpers, `/api/products` POST, `/api/products/$id` PUT/DELETE, or `/api/products/pending/$id`.
+
+## Risks / Follow-Ups From Previous Slice 3 Product Command Cleanup Session
+
+- Product/listing reads still use product action/repository/API vocabulary; Slice `4` should move search/details/seller/pending reads to listing read models.
+- Create listing through `createListingFn` still needs browser smoke in an environment with real Cloudinary config.
+- Fix or track the non-fatal moderation success navigation warning from `navigate({ from: "/shop" })`.
+- Existing misleading request logging remains: successful server-function returns that are not `Response` objects can be logged as status `500`.
+- Smoke seed rows remain in local development data.
+- `ddd/` files remain temporary worktree handoff docs and should be removed before opening a PR.
+
+## Previous Slice 3 Browser Smoke Session Notes
+
+- Browser-smoked migrated listing command delivery in the Codex Desktop in-app browser against local Postgres:
+  - seller login worked with seeded smoke seller data
+  - seller update submitted through `updateListingFn` and changed the seeded listing name
+  - seller delete of an unreferenced seeded listing submitted through `deleteListingFn` and hard-deleted the row
+  - seller delete of a referenced seeded listing submitted through `deleteListingFn` and changed the row to `WITHDRAWN`
+  - admin login worked with seeded smoke admin data
+  - admin approval submitted through `moderateListingFn` and changed the pending row to `APPROVED`
+  - server logs showed migrated listing command POSTs under `/_serverFn/...listing.functions...`
+  - no legacy product command route POST/PUT/DELETE was observed during the command actions
+- Post-smoke DB verification confirmed:
+  - updated listing: `name = "Smoke Updated Listing Via Browser"`, `listingStatus = PENDING`, `isApproved = false`
+  - unreferenced delete listing no longer exists
+  - referenced listing: `listingStatus = WITHDRAWN`, `isApproved = false`
+  - moderated listing: `listingStatus = APPROVED`, `isApproved = true`
+  - seller approval notification was created
+- Create-listing browser smoke was not completed because this local environment has only `DATABASE_URL`; no real Cloudinary upload configuration is available. The dev server used dummy Cloudinary env values so non-upload command modules could load.
+- Browser smoke surfaced or reconfirmed these non-fatal issues:
+  - after delete/withdraw, the product detail route logs `TypeError: Cannot read properties of undefined (reading '0')` from `src/routes/product/$id.tsx`
+  - moderation success still logs `Could not find match for from: /shop`
+  - request logging still marks successful server-function returns as status `500`
+- Temporary ignored smoke helper/data used:
+  - `tmp/ddd-browser-smoke.ts`
+  - local smoke users/listings with `smoke-*-ddd-browser` IDs remain in local development data
+
+## Files Changed In Previous Slice 3 Browser Smoke Session
+
+- `ddd/progress.md`
+- `ddd/next-session.md`
+
+## Tests And Checks In Previous Slice 3 Browser Smoke Session
+
+- Codex Desktop in-app browser smoke passed for listing update, unreferenced delete, referenced withdraw, and admin approve command delivery.
+- `PATH=/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH bun run test:unit -- src/domains/listings/application/manage-listing.test.ts src/domains/listings/application/moderate-listing.test.ts src/domains/listings/domain/listing.test.ts src/server/listing-service.prisma.test.ts` passed: 29 tests passed, 7 DB tests skipped.
+- `bun run typecheck` passed before the browser smoke.
+- `PATH=/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH bunx prisma migrate status` passed with local Postgres: database schema is up to date.
+- `PATH=/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH bun --bun tmp/ddd-browser-smoke.ts verify` passed and confirmed expected DB state.
+
+## Decisions In Previous Slice 3 Browser Smoke Session
+
+- Treat the migrated listing command delivery as browser-smoked for non-upload command paths.
+- Keep successful create-listing browser smoke blocked until real Cloudinary upload configuration is available.
+- Do not start Slice `4` yet; the next implementation move remains Slice `3` cleanup of dead legacy product command helpers/tests, while preserving read compatibility.
+
+## Risks / Follow-Ups From Previous Slice 3 Browser Smoke Session
+
+- Create listing through `createListingFn` still needs browser smoke in an environment with real Cloudinary config.
+- Legacy product action command helpers and repository command helpers still exist as unused compatibility/dead code for their old tests; remove or relocate them next.
+- Product/listing reads still use product repository/API vocabulary; Slice `4` should move search/details/seller/pending reads to listing read models.
+- Fix or track the post-delete product detail error from `src/routes/product/$id.tsx`.
+- Fix or track the non-fatal moderation success navigation warning from `navigate({ from: "/shop" })`.
+- Existing misleading request logging remains: successful server-function returns that are not `Response` objects can be logged as status `500`.
+- Smoke seed rows remain in local development data.
+- `ddd/` files remain temporary worktree handoff docs and should be removed before opening a PR.
+
+## Previous Slice 3 Command Migration Session Notes
 
 - Browser-smoked the active order server-function flow with local seeded customer/seller data:
   - customer settings purchase history loaded through `listOrdersForCurrentUserFn`

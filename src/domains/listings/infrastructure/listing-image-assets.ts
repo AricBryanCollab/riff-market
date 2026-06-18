@@ -1,4 +1,3 @@
-import type { Prisma } from "generated/prisma/client";
 import type { ListingImageManagerPort } from "@/domains/listings/application/manage-listing";
 import { env } from "@/env";
 import type { CloudinaryUploadResult } from "@/types/cloudinary";
@@ -6,7 +5,6 @@ import type { ImageAssetRef } from "@/types/image-asset";
 import { unsignedUploadImage } from "@/utils/cloudinary";
 import { tryDeleteCloudinaryImageAssets } from "@/utils/cloudinary-assets";
 import { compressImage } from "@/utils/compress-image";
-import { toImageAssetRefs } from "@/utils/image-asset-ref";
 
 const MAX_PRODUCT_IMAGE_UPLOADS = 3;
 const productImageOptions = {
@@ -105,7 +103,7 @@ async function cleanupUploadedProductImages(images: ImageAssetRef[]) {
 	await tryDeleteCloudinaryImageAssets(images);
 }
 
-export async function uploadProductImages(
+async function uploadProductImages(
 	imageFiles: File[],
 ): Promise<ImageAssetRef[]> {
 	const uploadedImages: ImageAssetRef[] = [];
@@ -124,23 +122,8 @@ export async function uploadProductImages(
 		return images;
 	} catch (error) {
 		await cleanupUploadedProductImages(uploadedImages);
-		throw new ProductImageUploadError(error);
+		throw error;
 	}
-}
-
-export class ProductImageUploadError extends Error {
-	constructor(error: unknown) {
-		super(
-			error instanceof Error ? error.message : "Unknown image upload error",
-		);
-		this.name = "ProductImageUploadError";
-	}
-}
-
-export function isProductImageUploadError(
-	error: unknown,
-): error is ProductImageUploadError {
-	return error instanceof ProductImageUploadError;
 }
 
 async function cleanupProductImagesBestEffort(images: ImageAssetRef[]) {
@@ -149,81 +132,6 @@ async function cleanupProductImagesBestEffort(images: ImageAssetRef[]) {
 	}
 
 	await tryDeleteCloudinaryImageAssets(images);
-}
-
-interface CreateProductWithImagesOptions<TProduct> {
-	imageFiles: File[];
-	persistProduct: (images: ImageAssetRef[]) => Promise<TProduct>;
-}
-
-export async function createProductWithImages<TProduct>({
-	imageFiles,
-	persistProduct,
-}: CreateProductWithImagesOptions<TProduct>): Promise<TProduct> {
-	const uploadedImages = await uploadProductImages(imageFiles);
-
-	try {
-		return await persistProduct(uploadedImages);
-	} catch (error) {
-		await cleanupUploadedProductImages(uploadedImages);
-		throw error;
-	}
-}
-
-interface ReplaceProductImagesOptions<TProduct> {
-	currentImagesValue: Prisma.JsonValue | null | undefined;
-	imageFiles: File[];
-	persistProductImages: (
-		images: ImageAssetRef[],
-	) => Promise<TProduct | null | undefined>;
-}
-
-export async function replaceProductImages<TProduct>({
-	currentImagesValue,
-	imageFiles,
-	persistProductImages,
-}: ReplaceProductImagesOptions<TProduct>): Promise<
-	TProduct | null | undefined
-> {
-	const currentImages = toImageAssetRefs(currentImagesValue);
-	const uploadedImages = await uploadProductImages(imageFiles);
-
-	try {
-		const product = await persistProductImages(uploadedImages);
-
-		if (!product) {
-			await cleanupUploadedProductImages(uploadedImages);
-			return product;
-		}
-
-		await cleanupProductImagesBestEffort(currentImages);
-		return product;
-	} catch (error) {
-		await cleanupUploadedProductImages(uploadedImages);
-		throw error;
-	}
-}
-
-interface DeleteProductWithImagesOptions<TDeletedProduct> {
-	currentImagesValue: Prisma.JsonValue | null | undefined;
-	deleteProduct: () => Promise<TDeletedProduct | null | undefined>;
-}
-
-export async function deleteProductWithImages<TDeletedProduct>({
-	currentImagesValue,
-	deleteProduct,
-}: DeleteProductWithImagesOptions<TDeletedProduct>): Promise<
-	TDeletedProduct | null | undefined
-> {
-	const currentImages = toImageAssetRefs(currentImagesValue);
-	const deletedProduct = await deleteProduct();
-
-	if (!deletedProduct) {
-		return deletedProduct;
-	}
-
-	await cleanupProductImagesBestEffort(currentImages);
-	return deletedProduct;
 }
 
 export class CloudinaryListingImageManager implements ListingImageManagerPort {

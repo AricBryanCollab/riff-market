@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getProductByIdService } from "@/actions/product";
 import { logger } from "@/lib/logger";
 import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
+import { getProductByIdResponse } from "@/server/product-read-service";
 
 export const Route = createFileRoute("/api/products/$id")({
 	server: {
@@ -13,10 +13,7 @@ export const Route = createFileRoute("/api/products/$id")({
 					handler: async ({ params }) => {
 						try {
 							const { id } = params;
-
-							const product = await getProductByIdService(id);
-
-							return new Response(JSON.stringify(product), { status: 200 });
+							return await getProductByIdResponse(id);
 						} catch (error) {
 							logger.error("Failed to get product by ID", error);
 							return new Response(

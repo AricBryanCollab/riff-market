@@ -1,91 +1,30 @@
-import {
-	afterEach,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	type Mock,
-	vi,
-} from "vitest";
+import { afterEach, describe, expect, it, type Mock, vi } from "vitest";
 
-import type {
-	CreateProductInput,
-	UpdateProductInput,
-} from "@/lib/zod/product-validation";
+const { productRepoMock } = vi.hoisted(() => {
+	const productRepoMock = {
+		getApprovedProducts: vi.fn(),
+		getProductById: vi.fn(),
+		getProductCountByCategory: vi.fn(),
+		getProductCountByStatus: vi.fn(),
+		getProductsByIds: vi.fn(),
+		getProductsBySellerId: vi.fn(),
+		getRecentProducts: vi.fn(),
+	} as const;
 
-const { productRepoMock, cloudinaryMock, compressImageMock } = vi.hoisted(
-	() => {
-		const productRepoMock = {
-			createProduct: vi.fn(),
-			deleteProductById: vi.fn(),
-			getApprovedProducts: vi.fn(),
-			getPendingApprovalProducts: vi.fn(),
-			getProductById: vi.fn(),
-			getProductCountByCategory: vi.fn(),
-			getProductCountByStatus: vi.fn(),
-			getProductsByIds: vi.fn(),
-			getProductsBySellerId: vi.fn(),
-			getRecentProducts: vi.fn(),
-			updateProductById: vi.fn(),
-			updateProductStatus: vi.fn(),
-		} as const;
-
-		const cloudinaryMock = {
-			deleteImage: vi.fn(),
-			unsignedUploadImage: vi.fn(),
-		} as const;
-
-		const compressImageMock = vi.fn();
-
-		return {
-			productRepoMock,
-			cloudinaryMock,
-			compressImageMock,
-		};
-	},
-);
-
-vi.mock("@/env", () => ({
-	env: {
-		CLOUDINARY_UPLOAD_PRESET: "test-preset",
-	},
-}));
+	return { productRepoMock };
+});
 
 vi.mock("@/data/product-repo", () => productRepoMock);
-vi.mock("@/utils/cloudinary", () => cloudinaryMock);
-vi.mock("@/utils/compress-image", () => ({
-	compressImage: compressImageMock,
-}));
 
 import {
-	createProductService,
-	deleteProductService,
 	getApprovedProductsService,
-	getPendingProductsService,
 	getProductByIdService,
 	getProductCountByCategoryService,
 	getProductCountByStatusService,
 	getProductsByIdsService,
 	getProductsBySellerService,
 	getRecentProductsService,
-	updateProductService,
-	updateProductStatusService,
 } from "./product";
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function makeImage(name: string) {
-	return new File([`bytes-${name}`], name, {
-		type: "image/jpeg",
-	});
-}
-
-function makeUploadResult(filename: string) {
-	return {
-		secure_url: `https://cdn.example.com/${filename}`,
-		public_id: filename.split(".")[0],
-	};
-}
 
 function makeImageAssetRef(url: string) {
 	return {
@@ -98,42 +37,7 @@ function makeImageAssetRef(url: string) {
 	};
 }
 
-function withImageRefs<T extends { images: string[] }>(product: T) {
-	return {
-		...product,
-		images: product.images.map(makeImageAssetRef),
-	};
-}
-
-function createValidPayload(images: File[]): CreateProductInput {
-	return {
-		name: "Telecaster",
-		category: "ELECTRIC",
-		condition: "NEW",
-		brand: "Fender",
-		model: "American Standard",
-		description: "A test guitar",
-		price: 199,
-		stock: 2,
-		images,
-	};
-}
-
-function withCompressedImage(): Promise<{
-	buffer: Buffer;
-	originalSize: number;
-	compressedSize: number;
-	mime: string;
-}> {
-	return Promise.resolve({
-		buffer: Buffer.from("compressed"),
-		originalSize: 10,
-		compressedSize: 8,
-		mime: "image/jpeg",
-	});
-}
-
-function makeExistingProduct() {
+function makeProduct(overrides: Record<string, unknown> = {}) {
 	return {
 		id: "prod-1",
 		sellerId: "seller-1",
@@ -141,365 +45,29 @@ function makeExistingProduct() {
 		category: "ELECTRIC",
 		condition: "NEW",
 		brand: "Fender",
-		model: "Player",
-		description: "Great guitar",
-		images: ["https://cdn.example.com/old.jpg"],
-		price: 200,
-		stock: 5,
-		isApproved: false,
-		createdAt: new Date(),
-		updatedAt: new Date(),
+		model: "American Standard",
+		description: "A test guitar",
+		images: [makeImageAssetRef("https://cdn.example.com/telecaster.jpg")],
+		price: 400,
+		priceCents: 40000,
+		currencyCode: "USD",
+		stock: 2,
+		isApproved: true,
+		listingStatus: "APPROVED",
+		createdAt: new Date("2026-06-18T00:00:00.000Z"),
+		updatedAt: new Date("2026-06-18T00:00:00.000Z"),
 		seller: {
 			firstName: "A",
 			lastName: "Seller",
 			email: "seller@example.com",
 		},
+		...overrides,
 	};
 }
 
-describe("product actions", () => {
-	beforeEach(() => {
-		(cloudinaryMock.deleteImage as Mock).mockResolvedValue(undefined);
-	});
-
+describe("product read actions", () => {
 	afterEach(() => {
 		vi.clearAllMocks();
-	});
-
-	it("uploads new-product images using bounded parallelism", async () => {
-		const files = [
-			makeImage("img-1.jpg"),
-			makeImage("img-2.jpg"),
-			makeImage("img-3.jpg"),
-			makeImage("img-4.jpg"),
-			makeImage("img-5.jpg"),
-		];
-
-		(compressImageMock as Mock).mockImplementation(withCompressedImage);
-
-		let activeUploads = 0;
-		let maxActiveUploads = 0;
-
-		(cloudinaryMock.unsignedUploadImage as Mock).mockImplementation(
-			async () => {
-				activeUploads += 1;
-				maxActiveUploads = Math.max(maxActiveUploads, activeUploads);
-				await sleep(15);
-				activeUploads -= 1;
-
-				return {
-					secure_url: `https://cdn.example.com/${Date.now()}.jpg`,
-					public_id: "uploaded-image",
-				};
-			},
-		);
-
-		(productRepoMock.createProduct as Mock).mockResolvedValue({
-			id: "new-product",
-			images: [],
-		});
-
-		const payload = createValidPayload(files);
-		const result = await createProductService("seller-1", "SELLER", payload);
-
-		expect(result).toEqual({
-			id: "new-product",
-			images: [],
-		});
-		expect(cloudinaryMock.unsignedUploadImage).toHaveBeenCalledTimes(
-			files.length,
-		);
-		expect(maxActiveUploads).toBeLessThanOrEqual(3);
-		expect(maxActiveUploads).toBeGreaterThan(1);
-	});
-
-	it("dual-writes product price as decimal dollars and integer cents on create", async () => {
-		const files = [makeImage("img-1.jpg")];
-
-		(compressImageMock as Mock).mockImplementation(withCompressedImage);
-		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
-			secure_url: "https://cdn.example.com/img-1.jpg",
-			public_id: "img-1",
-		});
-		(productRepoMock.createProduct as Mock).mockResolvedValue({
-			id: "new-product",
-			images: [],
-		});
-
-		const payload = {
-			...createValidPayload(files),
-			price: "199.95",
-		} as CreateProductInput;
-
-		await createProductService("seller-1", "SELLER", payload);
-
-		expect(productRepoMock.createProduct).toHaveBeenCalledWith(
-			expect.objectContaining({
-				price: 199.95,
-				priceCents: 19995,
-				currencyCode: "USD",
-			}),
-		);
-	});
-
-	it("cleans up already uploaded images when create upload fails", async () => {
-		const files = [
-			makeImage("img-1.jpg"),
-			makeImage("img-2.jpg"),
-			makeImage("img-3.jpg"),
-		];
-
-		(compressImageMock as Mock).mockImplementation(withCompressedImage);
-
-		(cloudinaryMock.unsignedUploadImage as Mock).mockImplementation(
-			async ({ filename }) => {
-				if (filename === "img-2.jpg") {
-					await sleep(20);
-					throw new Error("upload failed");
-				}
-
-				if (filename === "img-3.jpg") {
-					await sleep(30);
-				}
-
-				await sleep(1);
-				return makeUploadResult(filename);
-			},
-		);
-
-		const payload = createValidPayload(files);
-		const result = await createProductService("seller-1", "SELLER", payload);
-
-		expect(result).toMatchObject({
-			error: "Failed to upload images",
-			details: "upload failed",
-		});
-		expect(productRepoMock.createProduct).not.toHaveBeenCalled();
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("img-1");
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("img-3");
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledTimes(2);
-	});
-
-	it("returns upload error if cleanup fails on create", async () => {
-		const files = [makeImage("img-1.jpg"), makeImage("img-2.jpg")];
-
-		(compressImageMock as Mock).mockImplementation(withCompressedImage);
-
-		(cloudinaryMock.unsignedUploadImage as Mock).mockImplementation(
-			async ({ filename }) => {
-				if (filename === "img-2.jpg") {
-					await sleep(8);
-					throw new Error("upload failed");
-				}
-
-				await sleep(1);
-				return makeUploadResult(filename);
-			},
-		);
-
-		(cloudinaryMock.deleteImage as Mock).mockRejectedValue(
-			new Error("delete failed"),
-		);
-
-		const payload = createValidPayload(files);
-		const result = await createProductService("seller-1", "SELLER", payload);
-
-		expect(result).toMatchObject({
-			error: "Failed to upload images",
-			details: "upload failed",
-		});
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledTimes(1);
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("img-1");
-	});
-
-	it("rejects create when role is not authorized", async () => {
-		const payload = createValidPayload([makeImage("img-1.jpg")]);
-
-		const result = await createProductService("seller-1", "CUSTOMER", payload);
-
-		expect(result).toMatchObject({
-			error: "Unauthorized, user must be a seller",
-		});
-		expect(productRepoMock.createProduct).not.toHaveBeenCalled();
-		expect(cloudinaryMock.unsignedUploadImage).not.toHaveBeenCalled();
-	});
-
-	it("rejects invalid create payload before uploading", async () => {
-		const payload = createValidPayload([]);
-
-		const result = await createProductService("seller-1", "SELLER", payload);
-
-		expect(result).toMatchObject({
-			error: "Invalid data to create product",
-		});
-		expect(productRepoMock.createProduct).not.toHaveBeenCalled();
-		expect(compressImageMock as Mock).not.toHaveBeenCalled();
-		expect(cloudinaryMock.unsignedUploadImage as Mock).not.toHaveBeenCalled();
-	});
-
-	it("propagates repository failures for create", async () => {
-		const files = [makeImage("img-1.jpg")];
-
-		(compressImageMock as Mock).mockImplementation(withCompressedImage);
-		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
-			secure_url: "https://cdn.example.com/img-1.jpg",
-			public_id: "img-1",
-		});
-		(productRepoMock.createProduct as Mock).mockRejectedValue(
-			new Error("create failed"),
-		);
-
-		const payload = createValidPayload(files);
-
-		await expect(
-			createProductService("seller-1", "SELLER", payload),
-		).rejects.toThrow("create failed");
-		expect(productRepoMock.createProduct).toHaveBeenCalledWith(
-			expect.objectContaining({
-				sellerId: "seller-1",
-				images: [
-					{
-						url: "https://cdn.example.com/img-1.jpg",
-						publicId: "img-1",
-					},
-				],
-			}),
-		);
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("img-1");
-	});
-
-	it("updates images for existing products through same upload pipeline", async () => {
-		const existingProduct = {
-			id: "prod-1",
-			sellerId: "seller-1",
-			name: "Telecaster",
-			category: "ELECTRIC",
-			condition: "NEW",
-			brand: "Fender",
-			model: "Player",
-			description: "Great guitar",
-			images: ["https://cdn.example.com/old.jpg"],
-			price: 200,
-			stock: 5,
-			isApproved: false,
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			seller: {
-				firstName: "A",
-				lastName: "Seller",
-				email: "seller@example.com",
-			},
-		};
-
-		(productRepoMock.getProductById as Mock).mockResolvedValue(
-			withImageRefs(existingProduct),
-		);
-		(productRepoMock.updateProductById as Mock).mockResolvedValue({
-			id: "prod-1",
-			sellerId: "seller-1",
-			name: "Telecaster",
-			category: "ELECTRIC",
-			condition: "NEW",
-			brand: "Fender",
-			model: "Player",
-			description: "Great guitar",
-			images: [makeImageAssetRef("https://cdn.example.com/new.jpg")],
-			price: 200,
-			stock: 5,
-			isApproved: false,
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			seller: existingProduct.seller,
-		});
-		(compressImageMock as Mock).mockImplementation(withCompressedImage);
-		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
-			secure_url: "https://cdn.example.com/new.jpg",
-			public_id: "new",
-		});
-
-		const result = await updateProductService("prod-1", "seller-1", "SELLER", {
-			images: [makeImage("img-new.jpg")],
-		} as UpdateProductInput);
-
-		expect(result).toMatchObject({ id: "prod-1" });
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old");
-		expect(productRepoMock.updateProductById).toHaveBeenCalledWith(
-			"prod-1",
-			expect.objectContaining({
-				images: [
-					{
-						url: "https://cdn.example.com/new.jpg",
-						publicId: "new",
-					},
-				],
-				isApproved: false,
-			}),
-		);
-		expect(
-			(productRepoMock.updateProductById as Mock).mock.invocationCallOrder[0],
-		).toBeLessThan(
-			(cloudinaryMock.deleteImage as Mock).mock.invocationCallOrder[0],
-		);
-	});
-
-	it("cleans up uploaded replacement images when product update fails", async () => {
-		const existingProduct = makeExistingProduct();
-
-		(productRepoMock.getProductById as Mock).mockResolvedValue(
-			withImageRefs(existingProduct),
-		);
-		(compressImageMock as Mock).mockImplementation(withCompressedImage);
-		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
-			secure_url: "https://cdn.example.com/new.jpg",
-			public_id: "new",
-		});
-		(productRepoMock.updateProductById as Mock).mockRejectedValue(
-			new Error("update failed"),
-		);
-
-		await expect(
-			updateProductService("prod-1", "seller-1", "SELLER", {
-				images: [makeImage("img-new.jpg")],
-			} as UpdateProductInput),
-		).rejects.toThrow("update failed");
-
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("new");
-		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalledWith("old");
-	});
-
-	it("cleans up uploaded replacement images when update does not persist", async () => {
-		const existingProduct = makeExistingProduct();
-
-		(productRepoMock.getProductById as Mock).mockResolvedValue(
-			withImageRefs(existingProduct),
-		);
-		(compressImageMock as Mock).mockImplementation(withCompressedImage);
-		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
-			secure_url: "https://cdn.example.com/new.jpg",
-			public_id: "new",
-		});
-		(productRepoMock.updateProductById as Mock).mockResolvedValue(null);
-
-		const result = await updateProductService("prod-1", "seller-1", "SELLER", {
-			images: [makeImage("img-new.jpg")],
-		} as UpdateProductInput);
-
-		expect(result).toMatchObject({ error: "Failed to update the product" });
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("new");
-		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalledWith("old");
-	});
-
-	it("does not process uploads when update target does not exist", async () => {
-		(productRepoMock.getProductById as Mock).mockResolvedValue(null);
-
-		const result = await updateProductService("missing", "seller-1", "SELLER", {
-			name: "New name",
-		} as UpdateProductInput);
-
-		expect(result).toMatchObject({ error: "Product not found" });
-		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
-		expect(compressImageMock as Mock).not.toHaveBeenCalled();
-		expect(cloudinaryMock.unsignedUploadImage as Mock).not.toHaveBeenCalled();
 	});
 
 	it("returns product not found when reading by id and product missing", async () => {
@@ -510,29 +78,6 @@ describe("product actions", () => {
 		expect(result).toMatchObject({
 			error: "Product not found",
 		});
-	});
-
-	it("returns product when reading by id succeeds", async () => {
-		const expectedProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(
-			withImageRefs(expectedProduct),
-		);
-
-		const result = await getProductByIdService("prod-1");
-
-		expect(result).toEqual(expectedProduct);
-		expect(productRepoMock.getProductById).toHaveBeenCalledWith("prod-1");
-	});
-
-	it("propagates repository failures for getProductById", async () => {
-		(productRepoMock.getProductById as Mock).mockRejectedValue(
-			new Error("failed to load product"),
-		);
-
-		await expect(getProductByIdService("prod-1")).rejects.toThrow(
-			"failed to load product",
-		);
-		expect(productRepoMock.getProductById).toHaveBeenCalledWith("prod-1");
 	});
 
 	it("enforces customer-only access when fetching products by ids", async () => {
@@ -546,7 +91,7 @@ describe("product actions", () => {
 		expect(productRepoMock.getProductsByIds).not.toHaveBeenCalled();
 	});
 
-	it("validates query schema for products-by-ids", async () => {
+	it("validates product id batch queries", async () => {
 		const result = await getProductsByIdsService("CUSTOMER", { ids: [] });
 
 		expect(result).toMatchObject({
@@ -556,50 +101,20 @@ describe("product actions", () => {
 		expect(productRepoMock.getProductsByIds).not.toHaveBeenCalled();
 	});
 
-	it("propagates repository failures for products-by-ids", async () => {
-		(productRepoMock.getProductsByIds as Mock).mockRejectedValue(
-			new Error("failed to fetch products by ids"),
-		);
-
-		await expect(
-			getProductsByIdsService("CUSTOMER", { ids: ["prod-1"] }),
-		).rejects.toThrow("failed to fetch products by ids");
-	});
-
-	it("returns products for customer id lookup with deduped ids", async () => {
-		const products = [
-			{
-				id: "prod-1",
-				name: "Telecaster",
-				sellerId: "seller-1",
-				category: "ELECTRIC",
-				condition: "NEW",
-				brand: "Fender",
-				model: "American Standard",
-				description: "A test guitar",
-				images: ["https://cdn.example.com/telecaster.jpg"],
-				price: 400,
-				stock: 2,
-				isApproved: true,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				seller: {
-					firstName: "A",
-					lastName: "Seller",
-					email: "seller@example.com",
-				},
-			},
-		];
-
-		(productRepoMock.getProductsByIds as Mock).mockResolvedValue(
-			products.map(withImageRefs),
-		);
+	it("dedupes product id batch queries and returns image URLs", async () => {
+		const product = makeProduct();
+		(productRepoMock.getProductsByIds as Mock).mockResolvedValue([product]);
 
 		const result = await getProductsByIdsService("CUSTOMER", {
 			ids: ["prod-1", "prod-1", "prod-2"],
 		});
 
-		expect(result).toEqual(products);
+		expect(result).toEqual([
+			{
+				...product,
+				images: ["https://cdn.example.com/telecaster.jpg"],
+			},
+		]);
 		expect(productRepoMock.getProductsByIds).toHaveBeenCalledWith([
 			"prod-1",
 			"prod-2",
@@ -615,67 +130,27 @@ describe("product actions", () => {
 		expect(productRepoMock.getProductsBySellerId).not.toHaveBeenCalled();
 	});
 
-	it("returns products for seller on valid seller query", async () => {
-		const products = [
-			{
-				id: "prod-1",
-				name: "Telecaster",
-				sellerId: "seller-1",
-				category: "ELECTRIC",
-				condition: "NEW",
-				brand: "Fender",
-				model: "American Standard",
-				description: "A test guitar",
-				images: ["https://cdn.example.com/telecaster.jpg"],
-				price: 500,
-				stock: 3,
-				isApproved: true,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				seller: {
-					firstName: "A",
-					lastName: "Seller",
-					email: "seller@example.com",
-				},
-			},
-		];
-
-		(productRepoMock.getProductsBySellerId as Mock).mockResolvedValue(
-			products.map(withImageRefs),
-		);
+	it("returns seller products with image URLs", async () => {
+		const product = makeProduct();
+		(productRepoMock.getProductsBySellerId as Mock).mockResolvedValue([
+			product,
+		]);
 
 		const result = await getProductsBySellerService("seller-1", "SELLER");
 
-		expect(result).toEqual(products);
+		expect(result).toEqual([
+			{
+				...product,
+				images: ["https://cdn.example.com/telecaster.jpg"],
+			},
+		]);
 		expect(productRepoMock.getProductsBySellerId).toHaveBeenCalledWith(
 			"seller-1",
 		);
 	});
 
-	it("requires seller id for seller products lookup", async () => {
-		const result = await getProductsBySellerService("", "SELLER");
-
-		expect(result).toMatchObject({
-			error: "Unauthorized, user must be a seller",
-		});
-		expect(productRepoMock.getProductsBySellerId).not.toHaveBeenCalled();
-	});
-
-	it("propagates repository failures for seller products lookup", async () => {
-		(productRepoMock.getProductsBySellerId as Mock).mockRejectedValue(
-			new Error("failed to fetch seller products"),
-		);
-
-		await expect(
-			getProductsBySellerService("seller-1", "SELLER"),
-		).rejects.toThrow("failed to fetch seller products");
-	});
-
-	it("validates approved products query schema", async () => {
-		const result = await getApprovedProductsService({
-			limit: "0",
-			offset: "0",
-		});
+	it("validates approved product query params", async () => {
+		const result = await getApprovedProductsService({ limit: "0" });
 
 		expect(result).toMatchObject({
 			error: "Invalid product queries",
@@ -684,697 +159,71 @@ describe("product actions", () => {
 		expect(productRepoMock.getApprovedProducts).not.toHaveBeenCalled();
 	});
 
-	it("returns approved products for valid query", async () => {
-		const products = [
-			{
-				id: "prod-2",
-				name: "P-90",
-				sellerId: "seller-2",
-				category: "ACCESSORY",
-				condition: "NEW",
-				brand: "Gibson",
-				model: "Les Paul",
-				description: "Pickup cover",
-				images: ["https://cdn.example.com/pickup.jpg"],
-				price: 75,
-				stock: 12,
-				isApproved: true,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				seller: {
-					firstName: "B",
-					lastName: "Maker",
-					email: "maker@example.com",
-				},
-			},
-		];
-
-		(productRepoMock.getApprovedProducts as Mock).mockResolvedValue(
-			products.map(withImageRefs),
-		);
+	it("parses approved product query params and returns image URLs", async () => {
+		const product = makeProduct();
+		(productRepoMock.getApprovedProducts as Mock).mockResolvedValue([product]);
 
 		const result = await getApprovedProductsService({
 			limit: "5",
-			offset: "2",
-			random: "false",
-			category: "ACCESSORY",
-			condition: "NEW",
-			brand: "Gibson",
-			search: "pickup",
-			priceMin: "50",
-			priceMax: "150",
+			offset: "10",
+			random: "true",
+			category: "ELECTRIC",
+			condition: "USED",
+			brand: "Fender",
+			search: "tele",
+			priceMin: "199.95",
+			priceMax: "500",
 		});
 
-		expect(result).toEqual(products);
+		expect(result).toEqual([
+			{
+				...product,
+				images: ["https://cdn.example.com/telecaster.jpg"],
+			},
+		]);
 		expect(productRepoMock.getApprovedProducts).toHaveBeenCalledWith({
 			limit: 5,
-			offset: 2,
-			random: false,
-			category: "ACCESSORY",
-			condition: "NEW",
-			brand: "Gibson",
-			search: "pickup",
-			priceMinCents: 5000,
-			priceMaxCents: 15000,
+			offset: 10,
+			random: true,
+			category: "ELECTRIC",
+			condition: "USED",
+			brand: "Fender",
+			search: "tele",
+			priceMinCents: 19995,
+			priceMaxCents: 50000,
 		});
 	});
 
-	it("returns pending products for catalog review", async () => {
-		const products = [
+	it("returns product counts", async () => {
+		(productRepoMock.getProductCountByCategory as Mock).mockResolvedValue([
+			{ category: "ELECTRIC", count: 2 },
+		]);
+		(productRepoMock.getProductCountByStatus as Mock).mockResolvedValueOnce(3);
+		(productRepoMock.getProductCountByStatus as Mock).mockResolvedValueOnce(4);
+
+		await expect(getProductCountByCategoryService()).resolves.toEqual([
+			{ category: "ELECTRIC", count: 2 },
+		]);
+		await expect(getProductCountByStatusService(true)).resolves.toEqual({
+			approvedProductCount: 3,
+		});
+		await expect(getProductCountByStatusService(false)).resolves.toEqual({
+			pendingProductCount: 4,
+		});
+	});
+
+	it("returns recent products with image URLs", async () => {
+		const product = makeProduct();
+		(productRepoMock.getRecentProducts as Mock).mockResolvedValue([product]);
+
+		const result = await getRecentProductsService();
+
+		expect(result).toEqual([
 			{
-				id: "prod-pending",
-				name: "Vintage Amp",
-				sellerId: "seller-3",
-				category: "ELECTRIC",
-				condition: "USED",
-				brand: "Fender",
-				model: "Twin Reverb",
-				description: "Needs setup",
-				images: ["https://cdn.example.com/amp.jpg"],
-				price: 450,
-				stock: 1,
-				isApproved: false,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				seller: {
-					firstName: "C",
-					lastName: "Collector",
-					email: "collector@example.com",
-				},
+				...product,
+				images: ["https://cdn.example.com/telecaster.jpg"],
 			},
-		];
-
-		(productRepoMock.getPendingApprovalProducts as Mock).mockResolvedValue(
-			products.map(withImageRefs),
-		);
-
-		const result = await getPendingProductsService();
-
-		expect(result).toEqual(products);
-		expect(productRepoMock.getPendingApprovalProducts).toHaveBeenCalledTimes(1);
-	});
-
-	it("propagates repository failures for pending products", async () => {
-		(productRepoMock.getPendingApprovalProducts as Mock).mockRejectedValue(
-			new Error("failed to fetch pending products"),
-		);
-
-		await expect(getPendingProductsService()).rejects.toThrow(
-			"failed to fetch pending products",
-		);
-	});
-
-	it("returns product counts by category", async () => {
-		const counts = [
-			{ category: "ELECTRIC", count: 3 },
-			{ category: "ACCESSORY", count: 2 },
-		];
-
-		(productRepoMock.getProductCountByCategory as Mock).mockResolvedValue(
-			counts,
-		);
-
-		const result = await getProductCountByCategoryService();
-
-		expect(result).toEqual(counts);
-		expect(productRepoMock.getProductCountByCategory).toHaveBeenCalledTimes(1);
-	});
-
-	it("propagates repository failures for product counts by category", async () => {
-		(productRepoMock.getProductCountByCategory as Mock).mockRejectedValue(
-			new Error("failed to fetch category counts"),
-		);
-
-		await expect(getProductCountByCategoryService()).rejects.toThrow(
-			"failed to fetch category counts",
-		);
-	});
-
-	it("returns status count shape for approved and pending products", async () => {
-		(productRepoMock.getProductCountByStatus as Mock)
-			.mockResolvedValueOnce(12)
-			.mockResolvedValueOnce(4);
-
-		const approvedCounts = await getProductCountByStatusService(true);
-		const pendingCounts = await getProductCountByStatusService(false);
-
-		expect(approvedCounts).toEqual({ approvedProductCount: 12 });
-		expect(pendingCounts).toEqual({ pendingProductCount: 4 });
-		expect(productRepoMock.getProductCountByStatus).toHaveBeenNthCalledWith(
-			1,
-			true,
-		);
-		expect(productRepoMock.getProductCountByStatus).toHaveBeenNthCalledWith(
-			2,
-			false,
-		);
-	});
-
-	it("returns recent products with explicit and default limits", async () => {
-		const recentProducts = [
-			{
-				id: "prod-recent",
-				name: "Recent Pick",
-				sellerId: "seller-4",
-				category: "ACOUSTIC",
-				condition: "NEW",
-				brand: "Yamaha",
-				model: "FG800",
-				description: "Great recent listing",
-				images: ["https://cdn.example.com/recent.jpg"],
-				price: 1200,
-				stock: 1,
-				isApproved: true,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				seller: {
-					firstName: "D",
-					lastName: "Recency",
-					email: "recency@example.com",
-				},
-			},
-		];
-
-		(productRepoMock.getRecentProducts as Mock).mockResolvedValue(
-			recentProducts.map(withImageRefs),
-		);
-
-		const limitedResult = await getRecentProductsService(4);
-		const defaultResult = await getRecentProductsService();
-
-		expect(limitedResult).toEqual(recentProducts);
-		expect(defaultResult).toEqual(recentProducts);
-		expect(productRepoMock.getRecentProducts).toHaveBeenNthCalledWith(1, 4);
-		expect(productRepoMock.getRecentProducts).toHaveBeenNthCalledWith(2, 8);
-	});
-
-	it("propagates repository failures for recent products", async () => {
-		(productRepoMock.getRecentProducts as Mock).mockRejectedValue(
-			new Error("failed to fetch recent products"),
-		);
-
-		await expect(getRecentProductsService()).rejects.toThrow(
-			"failed to fetch recent products",
-		);
-	});
-
-	it("requires authenticated seller for update", async () => {
-		const result = await updateProductService("prod-1", "", "SELLER", {
-			name: "New name",
-		} as UpdateProductInput);
-
-		expect(result).toMatchObject({
-			error: "User is unauthorized",
-		});
-		expect(productRepoMock.getProductById).not.toHaveBeenCalled();
-		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
-	});
-
-	it("blocks update when actor role is not allowed", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const result = await updateProductService(
-			"prod-1",
-			"customer-1",
-			"CUSTOMER",
-			{
-				name: "Blocked update",
-			} as UpdateProductInput,
-		);
-
-		expect(result).toMatchObject({
-			error: "Unauthorized, user cannot modify this product",
-		});
-		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
-	});
-
-	it("blocks update when seller does not own the product", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const result = await updateProductService("prod-1", "seller-2", "SELLER", {
-			name: "Blocked update",
-		} as UpdateProductInput);
-
-		expect(result).toMatchObject({
-			error: "Unauthorized, user cannot modify this product",
-		});
-		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
-	});
-
-	it("keeps existing images when update payload does not include images", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const updatedProduct = {
-			...existingProduct,
-			name: "Name only update",
-		};
-		(productRepoMock.updateProductById as Mock).mockResolvedValue(
-			updatedProduct,
-		);
-
-		const result = await updateProductService("prod-1", "seller-1", "SELLER", {
-			name: "Name only update",
-		} as UpdateProductInput);
-
-		expect(result).toMatchObject({ name: "Name only update" });
-		expect(productRepoMock.updateProductById).toHaveBeenCalledWith(
-			"prod-1",
-			expect.objectContaining({
-				name: "Name only update",
-				isApproved: false,
-			}),
-		);
-		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
-	});
-
-	it("dual-writes product price as decimal dollars and integer cents on update", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const updatedProduct = {
-			...existingProduct,
-			price: 49.9,
-			priceCents: 4990,
-			currencyCode: "USD",
-		};
-		(productRepoMock.updateProductById as Mock).mockResolvedValue(
-			updatedProduct,
-		);
-
-		await updateProductService("prod-1", "seller-1", "SELLER", {
-			price: "49.90",
-		} as UpdateProductInput);
-
-		expect(productRepoMock.updateProductById).toHaveBeenCalledWith(
-			"prod-1",
-			expect.objectContaining({
-				price: 49.9,
-				priceCents: 4990,
-				currencyCode: "USD",
-			}),
-		);
-	});
-
-	it("validates update payload before saving", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const result = await updateProductService("prod-1", "seller-1", "SELLER", {
-			price: -1,
-		} as UpdateProductInput);
-
-		expect(result).toMatchObject({
-			error: "Invalid data to update product",
-		});
-		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
-		expect(cloudinaryMock.unsignedUploadImage).not.toHaveBeenCalled();
-	});
-
-	it("rejects update prices with more than two decimal places", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const result = await updateProductService("prod-1", "seller-1", "SELLER", {
-			price: "49.999",
-		} as UpdateProductInput);
-
-		expect(result).toMatchObject({
-			error: "Invalid data to update product",
-		});
-		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
-	});
-
-	it("auto-approves on update when actor is admin", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const updatedProduct = {
-			...existingProduct,
-			name: "Admin approved",
-			isApproved: true,
-		};
-		(productRepoMock.updateProductById as Mock).mockResolvedValue(
-			updatedProduct,
-		);
-
-		const result = await updateProductService("prod-1", "seller-1", "ADMIN", {
-			name: "Admin approved",
-		} as UpdateProductInput);
-
-		expect(result).toMatchObject({
-			name: "Admin approved",
-			isApproved: true,
-		});
-		expect(productRepoMock.updateProductById).toHaveBeenCalledWith(
-			"prod-1",
-			expect.objectContaining({
-				name: "Admin approved",
-				isApproved: true,
-			}),
-		);
-	});
-
-	it("returns failure when repository does not update product", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		(productRepoMock.updateProductById as Mock).mockResolvedValue(null);
-
-		const result = await updateProductService("prod-1", "seller-1", "SELLER", {
-			name: "No-op update",
-		} as UpdateProductInput);
-
-		expect(result).toMatchObject({ error: "Failed to update the product" });
-		expect(productRepoMock.updateProductById).toHaveBeenCalledWith(
-			"prod-1",
-			expect.objectContaining({
-				name: "No-op update",
-				isApproved: false,
-			}),
-		);
-	});
-
-	it("updates product status on valid approval payload", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const approvedProduct = {
-			id: "prod-1",
-			name: "Telecaster",
-			isApproved: true,
-		};
-
-		(productRepoMock.updateProductStatus as Mock).mockResolvedValue(
-			approvedProduct,
-		);
-
-		const result = await updateProductStatusService("prod-1", {
-			isApproved: true,
-		});
-
-		expect(result).toMatchObject(approvedProduct);
-		expect(productRepoMock.updateProductStatus).toHaveBeenCalledWith(
-			"prod-1",
-			existingProduct.sellerId,
-			existingProduct.name,
-			true,
-		);
-	});
-
-	it("deletes product on valid rejection payload", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const declinedProduct = {
-			id: "prod-1",
-			name: "Telecaster",
-			isApproved: false,
-		};
-
-		(productRepoMock.updateProductStatus as Mock).mockResolvedValue(
-			declinedProduct,
-		);
-
-		const result = await updateProductStatusService("prod-1", {
-			isApproved: false,
-		});
-
-		expect(result).toMatchObject(declinedProduct);
-		expect(productRepoMock.updateProductStatus).toHaveBeenCalledWith(
-			"prod-1",
-			existingProduct.sellerId,
-			existingProduct.name,
-			false,
-		);
-	});
-
-	it("propagates repository failures on status update", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		(productRepoMock.updateProductStatus as Mock).mockRejectedValue(
-			new Error("repo failure"),
-		);
-
-		await expect(
-			updateProductStatusService("prod-1", {
-				isApproved: true,
-			}),
-		).rejects.toThrow("repo failure");
-	});
-
-	it("returns failure when product status update does not persist", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-		(productRepoMock.updateProductStatus as Mock).mockResolvedValue(null);
-
-		const result = await updateProductStatusService("prod-1", {
-			isApproved: true,
-		});
-
-		expect(result).toMatchObject({
-			error: "Failed to update the product status",
-		});
-		expect(productRepoMock.updateProductStatus).toHaveBeenCalledWith(
-			"prod-1",
-			existingProduct.sellerId,
-			existingProduct.name,
-			true,
-		);
-	});
-
-	it("validates product status payload schema", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const result = await updateProductStatusService("prod-1", {
-			isApproved: "yes" as unknown as boolean,
-		});
-
-		expect(result).toMatchObject({
-			error: "Invalid data for update product status",
-			details: expect.any(Object),
-		});
-		expect(productRepoMock.updateProductStatus).not.toHaveBeenCalled();
-	});
-
-	it("returns unauthorized for delete when user is missing", async () => {
-		const result = await deleteProductService("prod-1", "", "SELLER");
-
-		expect(result).toMatchObject({
-			error: "User is unauthorized",
-		});
-		expect(productRepoMock.getProductById).not.toHaveBeenCalled();
-		expect(productRepoMock.deleteProductById).not.toHaveBeenCalled();
-	});
-
-	it("blocks delete when actor role is not allowed", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const result = await deleteProductService(
-			"prod-1",
-			"customer-1",
-			"CUSTOMER",
-		);
-
-		expect(result).toMatchObject({
-			error: "Unauthorized, user cannot modify this product",
-		});
-		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
-		expect(productRepoMock.deleteProductById).not.toHaveBeenCalled();
-	});
-
-	it("blocks delete when seller does not own the product", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-
-		const result = await deleteProductService("prod-1", "seller-2", "SELLER");
-
-		expect(result).toMatchObject({
-			error: "Unauthorized, user cannot modify this product",
-		});
-		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
-		expect(productRepoMock.deleteProductById).not.toHaveBeenCalled();
-	});
-
-	it("returns product missing when deleting or updating status", async () => {
-		(productRepoMock.getProductById as Mock).mockResolvedValue(null);
-
-		const updateStatusResult = await updateProductStatusService("prod-1", {
-			isApproved: true,
-		});
-		const deleteResult = await deleteProductService(
-			"prod-1",
-			"seller-1",
-			"SELLER",
-		);
-
-		expect(updateStatusResult).toMatchObject({
-			error: "Product not found",
-		});
-		expect(deleteResult).toMatchObject({
-			error: "Product not found",
-		});
-		expect(productRepoMock.updateProductStatus).not.toHaveBeenCalled();
-		expect(productRepoMock.deleteProductById).not.toHaveBeenCalled();
-	});
-
-	it("deletes product and images successfully", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(
-			withImageRefs(existingProduct),
-		);
-		(productRepoMock.deleteProductById as Mock).mockResolvedValue({
-			id: "prod-1",
-		});
-
-		const result = await deleteProductService("prod-1", "seller-1", "SELLER");
-
-		expect(result).toEqual({ message: "Product deleted successfully" });
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old");
-		expect(productRepoMock.deleteProductById).toHaveBeenCalledWith("prod-1");
-		expect(
-			(productRepoMock.deleteProductById as Mock).mock.invocationCallOrder[0],
-		).toBeLessThan(
-			(cloudinaryMock.deleteImage as Mock).mock.invocationCallOrder[0],
-		);
-	});
-
-	it("deletes all attached images during product delete", async () => {
-		const existingProduct = {
-			...makeExistingProduct(),
-			images: [
-				"https://cdn.example.com/old1.jpg",
-				"https://cdn.example.com/old2.jpg",
-			],
-		};
-		(productRepoMock.getProductById as Mock).mockResolvedValue(
-			withImageRefs(existingProduct),
-		);
-		(productRepoMock.deleteProductById as Mock).mockResolvedValue({
-			id: "prod-1",
-		});
-
-		const result = await deleteProductService("prod-1", "seller-1", "SELLER");
-
-		expect(result).toEqual({ message: "Product deleted successfully" });
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old1");
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old2");
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledTimes(2);
-	});
-
-	it("deletes the product when best-effort image cleanup fails", async () => {
-		const existingProduct = {
-			...makeExistingProduct(),
-			images: [
-				"https://cdn.example.com/old1.jpg",
-				"https://cdn.example.com/old2.jpg",
-			],
-		};
-		(productRepoMock.getProductById as Mock).mockResolvedValue(
-			withImageRefs(existingProduct),
-		);
-		(productRepoMock.deleteProductById as Mock).mockResolvedValue({
-			id: "prod-1",
-		});
-		(cloudinaryMock.deleteImage as Mock).mockImplementation((id: string) => {
-			if (id === "old2") {
-				return Promise.reject(new Error("cleanup failed"));
-			}
-
-			return Promise.resolve(undefined);
-		});
-
-		const result = await deleteProductService("prod-1", "seller-1", "SELLER");
-
-		expect(result).toEqual({ message: "Product deleted successfully" });
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old1");
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old2");
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledTimes(2);
-		expect(productRepoMock.deleteProductById).toHaveBeenCalledWith("prod-1");
-		expect(
-			(productRepoMock.deleteProductById as Mock).mock.invocationCallOrder[0],
-		).toBeLessThan(
-			(cloudinaryMock.deleteImage as Mock).mock.invocationCallOrder[0],
-		);
-	});
-
-	it("returns failure when product deletion does not persist", async () => {
-		const existingProduct = {
-			...makeExistingProduct(),
-			images: [],
-		};
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-		(productRepoMock.deleteProductById as Mock).mockResolvedValue(null);
-
-		const result = await deleteProductService("prod-1", "seller-1", "SELLER");
-
-		expect(result).toMatchObject({
-			error: "Failed to delete the product",
-		});
-		expect(productRepoMock.deleteProductById).toHaveBeenCalledWith("prod-1");
-	});
-
-	it("does not attempt image cleanup when deleting product without images", async () => {
-		const existingProduct = {
-			...makeExistingProduct(),
-			images: [],
-		};
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-		(productRepoMock.deleteProductById as Mock).mockResolvedValue({
-			id: "prod-1",
-		});
-
-		const result = await deleteProductService("prod-1", "seller-1", "SELLER");
-
-		expect(result).toEqual({ message: "Product deleted successfully" });
-		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
-		expect(productRepoMock.deleteProductById).toHaveBeenCalledWith("prod-1");
-	});
-
-	it("returns upload error when updating images fails", async () => {
-		const existingProduct = makeExistingProduct();
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-		(compressImageMock as Mock).mockImplementation(withCompressedImage);
-
-		(cloudinaryMock.unsignedUploadImage as Mock).mockImplementation(
-			async ({ filename }) => {
-				if (filename === "img-2.jpg") {
-					throw new Error("update upload failed");
-				}
-
-				return makeUploadResult(filename);
-			},
-		);
-
-		const result = await updateProductService("prod-1", "seller-1", "SELLER", {
-			images: [makeImage("img-1.jpg"), makeImage("img-2.jpg")],
-		} as UpdateProductInput);
-
-		expect(result).toMatchObject({
-			error: "Failed to upload images",
-			details: "update upload failed",
-		});
-		expect(productRepoMock.updateProductById).not.toHaveBeenCalled();
-	});
-
-	it("propagates repository failures when deleting product record fails", async () => {
-		const existingProduct = {
-			...makeExistingProduct(),
-			images: [],
-		};
-		(productRepoMock.getProductById as Mock).mockResolvedValue(existingProduct);
-		(productRepoMock.deleteProductById as Mock).mockRejectedValue(
-			new Error("delete failed"),
-		);
-
-		await expect(
-			deleteProductService("prod-1", "seller-1", "SELLER"),
-		).rejects.toThrow("delete failed");
-		expect(productRepoMock.deleteProductById).toHaveBeenCalledWith("prod-1");
+		]);
+		expect(productRepoMock.getRecentProducts).toHaveBeenCalledWith(8);
 	});
 });

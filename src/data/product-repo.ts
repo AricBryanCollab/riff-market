@@ -1,45 +1,13 @@
-import type { Prisma, Product } from "generated/prisma/client";
+import type { Prisma } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
 import {
 	normalizeProductMoney,
 	type ProductMoneySource,
 	toProductPriceRangePersistence,
 } from "@/domains/listings/application/product-money";
-import type { ListingStatus } from "@/domains/listings/domain/listing";
 import { logger } from "@/lib/logger";
 import type { GetProductQuery } from "@/lib/zod/product-validation";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
-import { createNotification } from "./notification-repo";
-
-type CreateProductRepoInput = Omit<
-	Product,
-	"id" | "createdAt" | "updatedAt" | "isApproved" | "listingStatus" | "images"
-> & {
-	images: Prisma.InputJsonValue;
-};
-
-type UpdateProductRepoInput = Partial<
-	Omit<Product, "id" | "sellerId" | "createdAt" | "updatedAt" | "images"> & {
-		images: Prisma.InputJsonValue;
-	}
->;
-
-export const createProduct = async (product: CreateProductRepoInput) => {
-	try {
-		const createdProduct = await prisma.product.create({
-			data: {
-				...product,
-				isApproved: false,
-				listingStatus: "PENDING",
-			},
-		});
-
-		return normalizeProductMoney(createdProduct);
-	} catch (err) {
-		logger.error("Error at createProduct", err);
-		throw err;
-	}
-};
 
 const baseProductQuery = {
 	id: true,
@@ -263,83 +231,3 @@ export const getRecentProducts = async (limit: number = 8) => {
 function normalizeProductsMoney<T extends ProductMoneySource>(products: T[]) {
 	return products.map(normalizeProductMoney);
 }
-
-export const updateProductById = async (
-	id: string,
-	product: UpdateProductRepoInput,
-) => {
-	try {
-		const { images, ...productWithoutImages } = product;
-		const updateData = {
-			...productWithoutImages,
-			...(images ? { images } : {}),
-		};
-
-		const updatedProduct = await prisma.product.update({
-			where: { id },
-			data: updateData,
-			include: {
-				seller: {
-					select: {
-						firstName: true,
-						lastName: true,
-						email: true,
-					},
-				},
-			},
-		});
-
-		return normalizeProductMoney(updatedProduct);
-	} catch (err) {
-		logger.error("Error at updateProductById", err);
-		throw err;
-	}
-};
-
-export const updateProductStatus = async (
-	id: string,
-	sellerId: string,
-	productName: string,
-	status: boolean,
-) => {
-	try {
-		const listingStatus: ListingStatus = status ? "APPROVED" : "DECLINED";
-		const updatedProduct = await prisma.product.update({
-			where: { id },
-			data: {
-				isApproved: status,
-				listingStatus,
-			},
-			select: {
-				id: true,
-				name: true,
-				isApproved: true,
-				listingStatus: true,
-			},
-		});
-
-		await createNotification({
-			userId: sellerId,
-			message: status
-				? `Great News! Your product ${productName} has been approved and live at the RiffMarket shop`
-				: `Your product ${productName} has been declined by the admin`,
-			isRead: false,
-		});
-
-		return updatedProduct;
-	} catch (err) {
-		logger.error("Error at updateProductStatus", err);
-		throw err;
-	}
-};
-
-export const deleteProductById = async (id: string) => {
-	try {
-		return await prisma.product.delete({
-			where: { id },
-		});
-	} catch (err) {
-		logger.error("Error at deleteProductById", err);
-		throw err;
-	}
-};

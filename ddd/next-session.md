@@ -19,19 +19,19 @@ Do not rely on any manually maintained current-state file. The repo is the curre
 
 ## Recommended Next Task
 
-Continue Slice `3`: smoke and clean up the migrated listing lifecycle command path.
+Start Slice `4` listing query/read-model migration.
 
 Exact next task:
 
-- Browser-smoke migrated listing commands:
-  - seller create listing through `createListingFn` if real Cloudinary config is available
-  - seller update listing through `updateListingFn` if real Cloudinary config is available
-  - seller delete an unreferenced seeded listing through `deleteListingFn`
-  - seller remove a referenced seeded listing and verify it becomes `WITHDRAWN`
-  - admin moderation still works through `moderateListingFn`
-- Confirm no command requests hit `/api/products` POST, `/api/products/$id` PUT, `/api/products/$id` DELETE, or `/api/products/pending/$id`.
-- If smoke passes, remove or relocate unused legacy product action command helpers/tests that now duplicate the listing application command path.
+- Begin with listing detail and approved listing search before lower-value count/recent reads.
+- Move product/listing reads toward listing query use cases/read DTOs under `src/domains/listings`.
+- Keep product API routes as compatibility shells only until consumers move.
+- Preserve the fixed product detail UX: deleted/missing product detail reads return HTTP `404`, and public product detail hides non-`APPROVED` listing statuses with the existing "Product not found" state.
+- Preserve temporary product/listing read compatibility until each read route/caller is migrated to listing read models.
+- Keep `src/actions/product.ts` read-only and temporary; do not add command behavior back to it.
+- Do not remove product read repository helpers yet unless the corresponding read route/caller is migrated to listing read models.
 - Keep vertical command coverage at `src/server/listing-service.prisma.test.ts`; it intentionally starts at the delivery-facing service boundary and exercises application use cases plus real Prisma infrastructure with a fake image manager.
+- Re-run focused read/route tests, typecheck, touched-file Biome, docs check, and the gated DB suite if local Postgres is available.
 - Keep these active listing command server functions:
   - `createListingFn`
   - `updateListingFn`
@@ -42,7 +42,9 @@ Exact next task:
   - referenced listings become `WITHDRAWN`
   - declined listings remain `DECLINED` and do not reappear in pending moderation
 - Preserve image upload/compression/cleanup behavior behind application/infrastructure ports; do not put Cloudinary/FormData concerns in domain code.
-- Browser-smoke seller create/update/delete or withdraw flows and admin moderation after the command migration.
+- Browser smoke completed for seller update, unreferenced delete, referenced withdraw, and admin approve after the command migration.
+- Create-listing browser smoke remains blocked until real Cloudinary upload configuration is available.
+- Legacy product command action/repository helpers have been removed; do not reintroduce them.
 - Keep product/listing read APIs as temporary compatibility until Slice `4` read models unless command migration reveals a direct contradiction.
 - Slice `4` is not complete while listing/product read routes or query wrappers still call `src/actions/product.ts`; listing/product reads must move to listing query use cases/read models.
 - Active order delivery is now server functions only for migrated flows:
@@ -77,9 +79,15 @@ Useful first inspection targets:
 - `src/server/listing-service.prisma.test.ts`
 - `src/lib/tanstack-query/product-queries.ts`
 - `src/actions/product.ts`
+- `src/actions/product.test.ts`
 - `src/data/product-repo.ts`
 - `src/types/product.ts`
 - `src/routes/api/products.$id.ts`
+- `src/routes/product/$id.tsx`
+- `src/server/product-read-service.ts`
+- `src/server/product-read-service.test.ts`
+- `src/data/product-repo.prisma.test.ts`
+- `src/domains/listings/infrastructure/listing-image-assets.test.ts`
 - `src/routes/settings/-components/settings-products-section.tsx`
 - `src/domains/ordering/domain/purchase.ts`
 - `src/domains/ordering/domain/seller-order.ts`
@@ -120,6 +128,27 @@ Useful first inspection targets:
 
 ## Current Repo State From Latest Completed Session
 
+- Latest implementation session completed on 2026-06-18:
+  - work completed: Slice `3` product read/test hardening completed; `/api/products/$id` now returns HTTP `404` for missing/deleted product reads; public product detail hides non-`APPROVED` lifecycle statuses with the existing "Product not found" state; added behavior-level product read Prisma coverage for approved/pending/recent/price-filter semantics; replaced dead image-helper tests with `CloudinaryListingImageManager` port tests; removed unused image persistence helper exports
+  - files changed: `package.json`, `src/server/product-read-service.ts`, `src/server/product-read-service.test.ts`, `src/routes/api/products.$id.ts`, `src/routes/product/$id.tsx`, `src/data/product-repo.prisma.test.ts`, `src/domains/listings/infrastructure/listing-image-assets.ts`, `src/domains/listings/infrastructure/listing-image-assets.test.ts`, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: focused unit tests passed with bundled Node; `bun run typecheck` passed; touched-file Biome passed; full `bun run test:unit` passed with 190 tests and 18 gated DB tests skipped; sandboxed `bun run test:db` failed on local Postgres access but unsandboxed rerun with approval passed 18 DB tests
+  - decisions made: keep `/api/products/$id` as temporary read compatibility but return proper HTTP status for missing reads; keep public lifecycle visibility in the product detail component so seller/admin edit reads can still use the shared API; keep product read behavior tests at the current Prisma repository boundary until Slice `4` query use cases exist; do not keep dead image helper exports just for tests
+  - blockers or risks: product/listing reads still use product action/repository/API vocabulary and must move in Slice `4`; create-listing browser smoke still needs real Cloudinary config; moderation navigation warning and request logging issue remain; local smoke seed rows remain
+  - exact next recommended task: begin Slice `4` listing query/read-model migration starting with listing detail and approved listing search
+- Latest implementation session completed on 2026-06-18:
+  - work completed: Slice `3` legacy product command cleanup completed; removed dead product command service exports from `src/actions/product.ts`; removed dead product command repository helpers from `src/data/product-repo.ts`; removed obsolete product status update schema/type from `src/lib/zod/product-validation.ts`; deleted unused `src/actions/product-image-assets.ts`; replaced product action tests with read-service compatibility coverage; added listing image asset infrastructure tests for bounded upload concurrency and cleanup behavior
+  - files changed: `src/actions/product.ts`, `src/actions/product.test.ts`, `src/data/product-repo.ts`, `src/lib/zod/product-validation.ts`, `src/domains/listings/infrastructure/listing-image-assets.test.ts`, deleted `src/actions/product-image-assets.ts`, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: focused product/listing tests passed with bundled Node: 46 tests passed and 7 DB tests skipped; `bun run typecheck` passed; touched-file Biome passed; `bun run docs:check` passed after handoff update; sandboxed `bun run test:db` failed on local Postgres access but unsandboxed rerun with approval passed 14 DB tests; full `bun run test:unit` passed with 192 tests and 14 DB tests skipped; `git diff --check` passed
+  - decisions made: old product command action/repository path is drained for Slice `3`; `src/actions/product.ts` remains temporary read compatibility only; image helper coverage belongs with listing infrastructure; do not reintroduce product command service/repo helpers or product command API handlers
+  - blockers or risks: product/listing reads still use product vocabulary and must move in Slice `4`; create-listing browser smoke still needs real Cloudinary config; product detail route still throws after delete/withdraw not-found reads; moderation navigation warning and request logging issue remain; local smoke seed rows remain
+  - exact next recommended task: fix or track the product detail not-found rendering error, then begin Slice `4` listing query/read-model migration starting with listing detail and approved listing search
+- Latest implementation session completed on 2026-06-18:
+  - work completed: Codex Desktop in-app browser smoke for migrated listing command delivery; seller update submitted through `updateListingFn`; seller unreferenced delete submitted through `deleteListingFn` and hard-deleted the row; seller referenced delete submitted through `deleteListingFn` and changed the row to `WITHDRAWN`; admin approve submitted through `moderateListingFn`; post-smoke DB verification confirmed expected listing states and seller notification; server logs showed listing command POSTs under `/_serverFn/...listing.functions...`; no legacy product command POST/PUT/DELETE was observed
+  - files changed: `ddd/progress.md`, `ddd/next-session.md`; temporary ignored helper `tmp/ddd-browser-smoke.ts`
+  - tests/checks run: focused listing command/domain/moderation tests passed with bundled Node, with DB tests skipped by default; `bun run typecheck` passed before smoke; Prisma migrate status passed against local Postgres; browser smoke passed for update/delete/withdraw/moderation; post-smoke DB verify script passed
+  - decisions made: consider non-upload listing command delivery browser-smoked; keep create-listing browser smoke blocked until real Cloudinary config exists; keep product/listing reads as temporary compatibility until Slice `4`; next work remains Slice `3` cleanup, not Slice `4`
+  - blockers or risks: create listing through `createListingFn` still needs real Cloudinary config; old product action/repository command helpers and old tests remain; post-delete/withdraw product detail route logs `TypeError: Cannot read properties of undefined (reading '0')`; moderation success still logs `Could not find match for from: /shop`; server-function request logging still misreports successful non-`Response` returns as status `500`; local smoke seed rows remain
+  - exact next recommended task: delete or relocate dead legacy product command helpers/tests while preserving read compatibility, then run focused listing tests/typecheck/Biome/docs check and gated DB tests if local Postgres is available
 - Latest implementation session completed on 2026-06-16:
   - work completed: active order server-function flow browser-smoked successfully; gated DB suite rerun; Slice `3` listing lifecycle started with `Product.listingStatus` bridge, `ModerateListing`, `CreateListing`, `UpdateListing`, and `RemoveListing` use cases; Prisma moderation and command repositories added; listing create/update/delete/moderate command callers moved to server functions; old moderation API route deleted; product API command handlers removed; decline marks `DECLINED`; referenced listing removal marks `WITHDRAWN`; listing service now supports dependency injection for real Prisma repositories plus fake image manager tests
   - files changed: `prisma/schema.prisma`, new listing-status migration, listing aggregate/tests, new `moderate-listing` and `manage-listing` use cases/tests, new Prisma moderation and command adapters, moved listing image asset infrastructure, new listing server service/functions, new listing service Prisma integration test, product query command callers, product repo/action status bridge updates, product types, product API read-only route changes, DB test script, route tree, `ddd/progress.md`, `ddd/next-session.md`; deleted `src/routes/api/products.pending.$id.ts` and stale product command-route test

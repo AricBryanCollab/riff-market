@@ -15,6 +15,7 @@ import ReviewSection from "@/components/review-section";
 import SectionContainer from "@/components/section-container";
 import { productCategoryOptions } from "@/constants/select-options";
 import { productbyIdQueryOpt } from "@/hooks/use-get-products";
+import type { BaseProduct } from "@/types/product";
 
 export const Route = createFileRoute("/product/$id")({
 	beforeLoad: async ({ context, params }) => {
@@ -47,7 +48,7 @@ function RouteComponent() {
 		return <ProductDetailsLoadingState />;
 	}
 
-	if (isError || !product) {
+	if (isError || !product || !isPublicProductVisible(product)) {
 		return (
 			<div className="flex flex-col justify-center items-center min-h-screen">
 				<p className="text-lg text-gray-500">Product not found</p>
@@ -202,4 +203,10 @@ function RouteComponent() {
 			</div>
 		</SectionContainer>
 	);
+}
+
+function isPublicProductVisible(product: BaseProduct) {
+	return product.listingStatus === undefined
+		? product.isApproved
+		: product.listingStatus === "APPROVED";
 }
