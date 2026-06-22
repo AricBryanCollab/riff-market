@@ -1,5 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "generated/prisma/client";
+import { type ListingStatus, PrismaClient } from "generated/prisma/client";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ChangeSellerOrderStatus } from "@/domains/ordering/application/change-seller-order-status";
 import {
@@ -156,6 +156,73 @@ describeDb("PlacePurchase Prisma integration", () => {
 				},
 			}),
 		).toBe(2);
+	});
+
+	it("allows approved listings even when legacy isApproved is stale", async () => {
+		await seedUsers(db);
+		await seedProduct(db, {
+			id: "listing-approved-status",
+			sellerId: "seller-1",
+			priceCents: 125_00,
+			stock: 1,
+			listingStatus: "APPROVED",
+			isApproved: false,
+		});
+		const useCase = createUseCase(db, new SequentialPurchaseNumberGenerator());
+
+		const result = await useCase.execute(
+			{ id: "customer-1", role: "CUSTOMER" },
+			{
+				items: [{ listingId: "listing-approved-status", quantity: 1 }],
+				buyerName: "Pat Buyer",
+				buyerEmail: "pat@example.com",
+				buyerPhone: null,
+				shippingAddress: "123 Market St",
+			},
+		);
+
+		expect(result).toEqual({
+			ok: true,
+			value: expect.objectContaining({
+				purchaseNumber: "RM-1",
+			}),
+		});
+		expect(await productStock(db, "listing-approved-status")).toBe(0);
+		expect(await db.purchase.count()).toBe(1);
+	});
+
+	it("rejects withdrawn listings even when legacy isApproved is stale", async () => {
+		await seedUsers(db);
+		await seedProduct(db, {
+			id: "listing-withdrawn-status",
+			sellerId: "seller-1",
+			priceCents: 125_00,
+			stock: 1,
+			listingStatus: "WITHDRAWN",
+			isApproved: true,
+		});
+		const useCase = createUseCase(db, new SequentialPurchaseNumberGenerator());
+
+		const result = await useCase.execute(
+			{ id: "customer-1", role: "CUSTOMER" },
+			{
+				items: [{ listingId: "listing-withdrawn-status", quantity: 1 }],
+				buyerName: "Pat Buyer",
+				buyerEmail: "pat@example.com",
+				buyerPhone: null,
+				shippingAddress: "123 Market St",
+			},
+		);
+
+		expect(result).toEqual({
+			ok: false,
+			error: expect.objectContaining({
+				code: "PLACE_PURCHASE_LISTING_NOT_ORDERABLE",
+			}),
+		});
+		expect(await productStock(db, "listing-withdrawn-status")).toBe(1);
+		expect(await db.purchase.count()).toBe(0);
+		expect(await db.sellerOrder.count()).toBe(0);
 	});
 
 	it("serves buyer history and seller dashboard reads from target models", async () => {
@@ -705,12 +772,16 @@ async function seedProduct(
 		name = "Telecaster",
 		priceCents,
 		stock,
+		listingStatus = "APPROVED",
+		isApproved = true,
 	}: {
 		id: string;
 		sellerId: string;
 		name?: string;
 		priceCents: number;
 		stock: number;
+		listingStatus?: ListingStatus;
+		isApproved?: boolean;
 	},
 ) {
 	await db.product.create({
@@ -733,7 +804,8 @@ async function seedProduct(
 			priceCents,
 			currencyCode: "USD",
 			stock,
-			isApproved: true,
+			isApproved,
+			listingStatus,
 		},
 	});
 }

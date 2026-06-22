@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPendingApprovalProducts } from "@/data/product-repo";
 import { logger } from "@/lib/logger";
 import { requestLoggerMiddleware, roleMiddleware } from "@/middleware";
+import { getPendingModerationListingsForProductApi } from "@/server/listing-read-service";
 
 export const Route = createFileRoute("/api/products/pending")({
 	server: {
@@ -12,7 +12,8 @@ export const Route = createFileRoute("/api/products/pending")({
 					middleware: [roleMiddleware(["ADMIN"])],
 					handler: async () => {
 						try {
-							const products = await getPendingApprovalProducts();
+							const products =
+								await getPendingModerationListingsForProductApi();
 
 							return new Response(JSON.stringify(products), { status: 200 });
 						} catch (error) {

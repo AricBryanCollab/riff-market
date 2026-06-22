@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getProductsBySellerService } from "@/actions/product";
 import { logger } from "@/lib/logger";
 import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
+import { getSellerListingsForProductApi } from "@/server/listing-read-service";
 
 export const Route = createFileRoute("/api/products/seller")({
 	server: {
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/api/products/seller")({
 					middleware: [authMiddleware],
 					handler: async ({ context }) => {
 						try {
-							const products = await getProductsBySellerService(
+							const products = await getSellerListingsForProductApi(
 								context.id,
 								context.role,
 							);

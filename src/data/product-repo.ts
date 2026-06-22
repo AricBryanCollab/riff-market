@@ -1,13 +1,9 @@
-import type { Prisma } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
 import {
 	normalizeProductMoney,
 	type ProductMoneySource,
-	toProductPriceRangePersistence,
 } from "@/domains/listings/application/product-money";
 import { logger } from "@/lib/logger";
-import type { GetProductQuery } from "@/lib/zod/product-validation";
-import type { ProductCategory, ProductCondition } from "@/types/enum";
 
 const baseProductQuery = {
 	id: true,
@@ -36,20 +32,6 @@ const baseProductQuery = {
 	},
 };
 
-export const getProductById = async (id: string) => {
-	try {
-		const product = await prisma.product.findFirst({
-			where: { id },
-			select: baseProductQuery,
-		});
-
-		return product ? normalizeProductMoney(product) : product;
-	} catch (err) {
-		logger.error("Error at getProductById", err);
-		throw err;
-	}
-};
-
 export const getProductsByIds = async (productIds: string[]) => {
 	try {
 		const products = await prisma.product.findMany({
@@ -64,113 +46,6 @@ export const getProductsByIds = async (productIds: string[]) => {
 		return normalizeProductsMoney(products);
 	} catch (err) {
 		logger.error("Error at findProductsByIds:", err);
-		throw err;
-	}
-};
-
-export const getProductsBySellerId = async (sellerId: string) => {
-	try {
-		const products = await prisma.product.findMany({
-			where: { sellerId },
-			orderBy: { createdAt: "desc" },
-			select: baseProductQuery,
-		});
-
-		return normalizeProductsMoney(products);
-	} catch (err) {
-		logger.error("Error at getProductsBySellerId", err);
-		throw err;
-	}
-};
-
-export const getApprovedProducts = async ({
-	limit = 12,
-	offset = 0,
-	random = false,
-	category,
-	condition,
-	brand,
-	search,
-	priceMinCents,
-	priceMaxCents,
-}: GetProductQuery) => {
-	try {
-		const priceRange = toProductPriceRangePersistence({
-			priceMinCents,
-			priceMaxCents,
-		});
-		const whereClause: Prisma.ProductWhereInput = {
-			listingStatus: "APPROVED",
-			...(category && { category: category as ProductCategory }),
-			...(condition && { condition: condition as ProductCondition }),
-			...(brand && { brand: { contains: brand, mode: "insensitive" } }),
-			...(search && {
-				OR: [
-					{ name: { contains: search, mode: "insensitive" } },
-					{ description: { contains: search, mode: "insensitive" } },
-					{ brand: { contains: search, mode: "insensitive" } },
-					{ model: { contains: search, mode: "insensitive" } },
-				],
-			}),
-			...(priceRange && {
-				AND: [
-					{
-						OR: [
-							{ priceCents: priceRange.priceCents },
-							{
-								priceCents: null,
-								price: priceRange.legacyPrice,
-							},
-						],
-					},
-				],
-			}),
-		};
-
-		if (random) {
-			const total = await prisma.product.count({
-				where: whereClause,
-			});
-
-			const randomSkip =
-				total > limit ? Math.floor(Math.random() * (total - limit)) : 0;
-
-			const products = await prisma.product.findMany({
-				where: whereClause,
-				select: baseProductQuery,
-				take: limit,
-				skip: randomSkip,
-			});
-
-			return normalizeProductsMoney(products);
-		}
-
-		const products = await prisma.product.findMany({
-			where: whereClause,
-			orderBy: { createdAt: "desc" },
-			select: baseProductQuery,
-			take: limit,
-			skip: offset,
-		});
-
-		return normalizeProductsMoney(products);
-	} catch (err) {
-		logger.error("Error at getApprovedProducts", err);
-		throw err;
-	}
-};
-
-export const getPendingApprovalProducts = async () => {
-	try {
-		const products = await prisma.product.findMany({
-			where: { listingStatus: "PENDING" },
-			orderBy: { createdAt: "desc" },
-			select: baseProductQuery,
-		});
-
-		return normalizeProductsMoney(products);
-	} catch (err) {
-		logger.error("Error at getPendingApprovalProducts", err);
 		throw err;
 	}
 };

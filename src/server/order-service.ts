@@ -119,12 +119,13 @@ export async function listOrdersForCurrentUser(
 	readModels?: OrderReadModels,
 ): Promise<OrderingOrderReadModel[]> {
 	const actor = toActor(user);
-	const orderReadModels = readModels ?? (await createDefaultOrderReadModels());
+	const orderReadModels = readModels ?? (await createPrismaOrderReadModels());
 
 	if (actor.role === "CUSTOMER") {
-		const result = await new ListBuyerPurchaseHistory(orderReadModels).execute(
-			actor,
+		const listBuyerPurchaseHistory = new ListBuyerPurchaseHistory(
+			orderReadModels,
 		);
+		const result = await listBuyerPurchaseHistory.execute(actor);
 
 		if (!result.ok) {
 			throw toOrderRequestError(result.error);
@@ -134,9 +135,10 @@ export async function listOrdersForCurrentUser(
 	}
 
 	if (actor.role === "SELLER" || actor.role === "ADMIN") {
-		const result = await new ListSellerOrderDashboard(orderReadModels).execute(
-			actor,
+		const listSellerOrderDashboard = new ListSellerOrderDashboard(
+			orderReadModels,
 		);
+		const result = await listSellerOrderDashboard.execute(actor);
 
 		if (!result.ok) {
 			throw toOrderRequestError(result.error);
@@ -158,11 +160,10 @@ export async function getOrderDetailForCurrentUser(
 	input: OrderDetailInput,
 	readModels?: OrderReadModels,
 ): Promise<OrderingOrderReadModel> {
-	const orderReadModels = readModels ?? (await createDefaultOrderReadModels());
-	const result = await new GetOrderDetail(orderReadModels).execute(
-		toActor(user),
-		input.orderId,
-	);
+	const orderReadModels = readModels ?? (await createPrismaOrderReadModels());
+	const actor = toActor(user);
+	const getOrderDetail = new GetOrderDetail(orderReadModels);
+	const result = await getOrderDetail.execute(actor, input.orderId);
 
 	if (!result.ok) {
 		throw toOrderRequestError(result.error);
@@ -177,15 +178,15 @@ export async function changeSellerOrderStatusForCurrentUser(
 	repository?: SellerOrderStatusRepositoryPort,
 ): Promise<SellerOrderStatusChangeResponse> {
 	const sellerOrders =
-		repository ?? (await createDefaultSellerOrderStatusRepository());
-	const result = await new ChangeSellerOrderStatus(sellerOrders).execute(
-		toActor(user),
-		{
-			sellerOrderId: input.sellerOrderId,
-			status: input.status,
-			trackingNumber: input.trackingNumber,
-		},
-	);
+		repository ?? (await createPrismaSellerOrderStatusRepository());
+	const actor = toActor(user);
+	const command = {
+		sellerOrderId: input.sellerOrderId,
+		status: input.status,
+		trackingNumber: input.trackingNumber,
+	};
+	const changeSellerOrderStatus = new ChangeSellerOrderStatus(sellerOrders);
+	const result = await changeSellerOrderStatus.execute(actor, command);
 
 	if (!result.ok) {
 		throw toOrderRequestError(result.error);
@@ -201,7 +202,7 @@ function toActor(user: ServerUserContext): Actor {
 	};
 }
 
-async function createDefaultOrderReadModels(): Promise<OrderReadModels> {
+async function createPrismaOrderReadModels(): Promise<OrderReadModels> {
 	const [{ prisma }, { PrismaOrderReadModels }] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/ordering/infrastructure/prisma-order-read-models"),
@@ -210,7 +211,7 @@ async function createDefaultOrderReadModels(): Promise<OrderReadModels> {
 	return new PrismaOrderReadModels(prisma);
 }
 
-async function createDefaultSellerOrderStatusRepository(): Promise<SellerOrderStatusRepositoryPort> {
+async function createPrismaSellerOrderStatusRepository(): Promise<SellerOrderStatusRepositoryPort> {
 	const [{ prisma }, { PrismaSellerOrderStatusRepository }] = await Promise.all(
 		[
 			import("@/data/connect-db"),

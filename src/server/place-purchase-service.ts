@@ -66,12 +66,10 @@ export async function placePurchaseForCurrentUser(
 	input: PlacePurchaseInput,
 	executor?: PlacePurchaseExecutor,
 ): Promise<PlacePurchaseResponse> {
-	const placePurchase =
-		executor ?? (await createDefaultPlacePurchaseExecutor());
-	const result = await placePurchase.execute(
-		toActor(user),
-		toCommand(user, input),
-	);
+	const placePurchase = executor ?? (await createPrismaPlacePurchaseExecutor());
+	const actor = toActor(user);
+	const command = toCommand(user, input);
+	const result = await placePurchase.execute(actor, command);
 
 	if (!result.ok) {
 		throw toRequestError(result.error);
@@ -80,7 +78,7 @@ export async function placePurchaseForCurrentUser(
 	return toResponse(result.value);
 }
 
-async function createDefaultPlacePurchaseExecutor() {
+async function createPrismaPlacePurchaseExecutor() {
 	const [{ prisma }, { createPrismaPlacePurchase }] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/ordering/infrastructure/prisma-place-purchase"),

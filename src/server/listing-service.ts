@@ -211,11 +211,14 @@ export async function createListingForCurrentUser(
 	dependencies?: ListingCommandServiceDependencies,
 ): Promise<ListingMutationResponse> {
 	const commandDependencies =
-		dependencies ?? (await createDefaultListingCommandDependencies());
-	const result = await new CreateListing(
+		dependencies ?? (await createListingCommandInfrastructure());
+	const actor = toActor(user);
+	const command = toCreateListingCommand(input);
+	const createListing = new CreateListing(
 		commandDependencies.repository,
 		commandDependencies.imageManager,
-	).execute(toActor(user), toCreateListingCommand(input));
+	);
+	const result = await createListing.execute(actor, command);
 
 	if (!result.ok) {
 		throw toListingCommandRequestError(result.error);
@@ -230,11 +233,14 @@ export async function updateListingForCurrentUser(
 	dependencies?: ListingCommandServiceDependencies,
 ): Promise<ListingMutationResponse> {
 	const commandDependencies =
-		dependencies ?? (await createDefaultListingCommandDependencies());
-	const result = await new UpdateListing(
+		dependencies ?? (await createListingCommandInfrastructure());
+	const actor = toActor(user);
+	const command = toUpdateListingCommand(input);
+	const updateListing = new UpdateListing(
 		commandDependencies.repository,
 		commandDependencies.imageManager,
-	).execute(toActor(user), toUpdateListingCommand(input));
+	);
+	const result = await updateListing.execute(actor, command);
 
 	if (!result.ok) {
 		throw toListingCommandRequestError(result.error);
@@ -249,11 +255,14 @@ export async function removeListingForCurrentUser(
 	dependencies?: ListingCommandServiceDependencies,
 ): Promise<RemoveListingResponse> {
 	const commandDependencies =
-		dependencies ?? (await createDefaultListingCommandDependencies());
-	const result = await new RemoveListing(
+		dependencies ?? (await createListingCommandInfrastructure());
+	const actor = toActor(user);
+	const command = toRemoveListingCommand(input);
+	const removeListing = new RemoveListing(
 		commandDependencies.repository,
 		commandDependencies.imageManager,
-	).execute(toActor(user), toRemoveListingCommand(input));
+	);
+	const result = await removeListing.execute(actor, command);
 
 	if (!result.ok) {
 		throw toListingCommandRequestError(result.error);
@@ -271,11 +280,14 @@ export async function moderateListingForCurrentUser(
 	dependencies?: ListingModerationServiceDependencies,
 ): Promise<ListingModerationResult> {
 	const moderationDependencies =
-		dependencies ?? (await createDefaultListingModerationDependencies());
-	const result = await new ModerateListing(
+		dependencies ?? (await createPrismaListingModerationDependencies());
+	const actor = toActor(user);
+	const command = toCommand(input);
+	const moderateListing = new ModerateListing(
 		moderationDependencies.repository,
 		moderationDependencies.notifier,
-	).execute(toActor(user), toCommand(input));
+	);
+	const result = await moderateListing.execute(actor, command);
 
 	if (!result.ok) {
 		throw toListingRequestError(result.error);
@@ -284,7 +296,7 @@ export async function moderateListingForCurrentUser(
 	return result.value;
 }
 
-async function createDefaultListingCommandDependencies(): Promise<ListingCommandServiceDependencies> {
+async function createListingCommandInfrastructure(): Promise<ListingCommandServiceDependencies> {
 	const [{ prisma }, commands, images] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/listings/infrastructure/prisma-listing-commands"),
@@ -297,7 +309,7 @@ async function createDefaultListingCommandDependencies(): Promise<ListingCommand
 	};
 }
 
-async function createDefaultListingModerationDependencies(): Promise<ListingModerationServiceDependencies> {
+async function createPrismaListingModerationDependencies(): Promise<ListingModerationServiceDependencies> {
 	const [{ prisma }, moderation] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/listings/infrastructure/prisma-listing-moderation"),

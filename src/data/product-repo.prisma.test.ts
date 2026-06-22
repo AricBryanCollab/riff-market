@@ -46,56 +46,7 @@ describeDb("product read repository Prisma integration", () => {
 		await connectDb?.prisma.$disconnect();
 	});
 
-	it("searches only approved listings through the read interface", async () => {
-		await seedProduct(db, {
-			id: "approved-1",
-			name: "Approved Telecaster",
-			listingStatus: "APPROVED",
-			isApproved: true,
-			createdAt: new Date("2026-06-18T03:00:00.000Z"),
-		});
-		await seedProduct(db, {
-			id: "approved-status-only",
-			name: "Approved Status Only",
-			listingStatus: "APPROVED",
-			isApproved: false,
-			createdAt: new Date("2026-06-18T02:00:00.000Z"),
-		});
-		await seedProduct(db, {
-			id: "legacy-flag-only",
-			name: "Legacy Flag Only",
-			listingStatus: "WITHDRAWN",
-			isApproved: true,
-			createdAt: new Date("2026-06-18T01:00:00.000Z"),
-		});
-		await seedProduct(db, {
-			id: "declined-1",
-			name: "Declined Listing",
-			listingStatus: "DECLINED",
-			isApproved: false,
-		});
-		await seedProduct(db, {
-			id: "pending-1",
-			name: "Pending Listing",
-			listingStatus: "PENDING",
-			isApproved: false,
-		});
-
-		const products = await productRepo.getApprovedProducts({
-			limit: 10,
-			offset: 0,
-			random: false,
-			priceMinCents: undefined,
-			priceMaxCents: undefined,
-		});
-
-		expect(products.map((product) => product.id)).toEqual([
-			"approved-1",
-			"approved-status-only",
-		]);
-	});
-
-	it("keeps declined and withdrawn listings out of pending moderation reads and counts", async () => {
+	it("keeps declined and withdrawn listings out of status counts", async () => {
 		await seedProduct(db, {
 			id: "pending-1",
 			name: "Pending Listing",
@@ -121,51 +72,8 @@ describeDb("product read repository Prisma integration", () => {
 			isApproved: true,
 		});
 
-		const pending = await productRepo.getPendingApprovalProducts();
-
-		expect(pending.map((product) => product.id)).toEqual(["pending-1"]);
 		await expect(productRepo.getProductCountByStatus(false)).resolves.toBe(1);
 		await expect(productRepo.getProductCountByStatus(true)).resolves.toBe(1);
-	});
-
-	it("applies cent-based price filters with legacy float fallback for approved listings", async () => {
-		await seedProduct(db, {
-			id: "cent-priced",
-			name: "Cent Priced",
-			listingStatus: "APPROVED",
-			isApproved: true,
-			price: 199.95,
-			priceCents: 19995,
-		});
-		await seedProduct(db, {
-			id: "legacy-priced",
-			name: "Legacy Priced",
-			listingStatus: "APPROVED",
-			isApproved: true,
-			price: 199.95,
-			priceCents: null,
-		});
-		await seedProduct(db, {
-			id: "outside-range",
-			name: "Outside Range",
-			listingStatus: "APPROVED",
-			isApproved: true,
-			price: 350,
-			priceCents: 35000,
-		});
-
-		const products = await productRepo.getApprovedProducts({
-			limit: 10,
-			offset: 0,
-			random: false,
-			priceMinCents: 19995,
-			priceMaxCents: 19995,
-		});
-
-		expect(products.map((product) => product.id).sort()).toEqual([
-			"cent-priced",
-			"legacy-priced",
-		]);
 	});
 
 	it("returns recent products from approved listings only", async () => {

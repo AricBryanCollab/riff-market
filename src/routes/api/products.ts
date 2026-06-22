@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getApprovedProductsService } from "@/actions/product";
 import { logger } from "@/lib/logger";
 import { requestLoggerMiddleware } from "@/middleware";
+import { getApprovedListingsForProductApi } from "@/server/listing-read-service";
 
 export const Route = createFileRoute("/api/products")({
 	server: {
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/products")({
 								priceMax: url.searchParams.get("priceMax"),
 							};
 
-							const products = await getApprovedProductsService(rawQuery);
+							const products = await getApprovedListingsForProductApi(rawQuery);
 
 							if ("error" in products) {
 								return new Response(JSON.stringify(products), {

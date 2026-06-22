@@ -3,6 +3,7 @@ import type { Prisma } from "generated/prisma/client";
 import {
 	Listing,
 	ListingPurchaseError,
+	type ListingStatus,
 } from "@/domains/listings/domain/listing";
 import { Money } from "@/domains/shared/domain/money";
 import { err, ok } from "@/domains/shared/domain/result";
@@ -27,7 +28,7 @@ type ProductForPurchase = {
 	readonly priceCents: number | null;
 	readonly currencyCode: string;
 	readonly stock: number;
-	readonly isApproved: boolean;
+	readonly listingStatus: ListingStatus;
 	readonly seller: {
 		readonly firstName: string;
 		readonly lastName: string;
@@ -60,7 +61,7 @@ export class PrismaListingsForPurchase
 				priceCents: true,
 				currencyCode: true,
 				stock: true,
-				isApproved: true,
+				listingStatus: true,
 				seller: {
 					select: {
 						firstName: true,
@@ -104,7 +105,7 @@ export class PrismaListingsForPurchase
 			const updateResult = await context.product.updateMany({
 				where: {
 					id: requestedItem.listingId,
-					isApproved: true,
+					listingStatus: "APPROVED",
 					stock: {
 						gte: requestedItem.quantity,
 					},
@@ -214,7 +215,7 @@ function toListing(product: ProductForPurchase) {
 			primaryImageUrl,
 			price: Money.fromCents(product.priceCents, product.currencyCode),
 			stock: product.stock,
-			status: product.isApproved ? "APPROVED" : "PENDING",
+			status: product.listingStatus,
 		}),
 	);
 }
