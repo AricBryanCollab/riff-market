@@ -324,6 +324,124 @@ describeDb("Prisma listing read models", () => {
 			images: ["https://cdn.example.com/pending-newer.jpg"],
 		});
 	});
+
+	it("counts listings from listing status instead of legacy approval flags", async () => {
+		await seedProduct(db, {
+			id: "approved-electric",
+			name: "Approved Electric",
+			listingStatus: "APPROVED",
+			isApproved: true,
+			category: "ELECTRIC",
+		});
+		await seedProduct(db, {
+			id: "approved-acoustic-status-only",
+			name: "Approved Acoustic Status Only",
+			listingStatus: "APPROVED",
+			isApproved: false,
+			category: "ACOUSTIC",
+		});
+		await seedProduct(db, {
+			id: "pending-keyboard",
+			name: "Pending Keyboard",
+			listingStatus: "PENDING",
+			isApproved: false,
+			category: "KEYBOARD",
+		});
+		await seedProduct(db, {
+			id: "withdrawn-legacy-approved",
+			name: "Withdrawn Legacy Approved",
+			listingStatus: "WITHDRAWN",
+			isApproved: true,
+			category: "ELECTRIC",
+		});
+
+		const categoryCounts = await readModels.countApprovedByCategory();
+
+		expect(
+			[...categoryCounts].sort((a, b) => a.category.localeCompare(b.category)),
+		).toEqual([
+			{ category: "ACOUSTIC", count: 1 },
+			{ category: "ELECTRIC", count: 1 },
+		]);
+		await expect(readModels.countByStatus("APPROVED")).resolves.toBe(2);
+		await expect(readModels.countByStatus("PENDING")).resolves.toBe(1);
+	});
+
+	it("returns recent approved listings by latest update", async () => {
+		await seedProduct(db, {
+			id: "approved-newer",
+			name: "Approved Newer",
+			listingStatus: "APPROVED",
+			isApproved: true,
+			updatedAt: new Date("2026-06-18T03:00:00.000Z"),
+		});
+		await seedProduct(db, {
+			id: "withdrawn-latest",
+			name: "Withdrawn Latest",
+			listingStatus: "WITHDRAWN",
+			isApproved: true,
+			updatedAt: new Date("2026-06-18T04:00:00.000Z"),
+		});
+		await seedProduct(db, {
+			id: "approved-older",
+			name: "Approved Older",
+			listingStatus: "APPROVED",
+			isApproved: true,
+			updatedAt: new Date("2026-06-18T02:00:00.000Z"),
+		});
+
+		const listings = await readModels.listRecentApproved(8);
+
+		expect(listings.map((listing) => listing.id)).toEqual([
+			"approved-newer",
+			"approved-older",
+		]);
+		expect(listings[0]).toMatchObject({
+			id: "approved-newer",
+			images: ["https://cdn.example.com/approved-newer.jpg"],
+		});
+	});
+
+	it("returns cart listings for requested ids with image URLs", async () => {
+		await seedProduct(db, {
+			id: "cart-approved",
+			name: "Cart Approved",
+			listingStatus: "APPROVED",
+			isApproved: true,
+		});
+		await seedProduct(db, {
+			id: "cart-pending",
+			name: "Cart Pending",
+			listingStatus: "PENDING",
+			isApproved: false,
+		});
+		await seedProduct(db, {
+			id: "cart-unrequested",
+			name: "Cart Unrequested",
+			listingStatus: "APPROVED",
+			isApproved: true,
+		});
+
+		const listings = await readModels.findByIds([
+			"cart-approved",
+			"cart-pending",
+		]);
+
+		expect(
+			[...listings].sort((a, b) => a.id.localeCompare(b.id)),
+		).toMatchObject([
+			{
+				id: "cart-approved",
+				images: ["https://cdn.example.com/cart-approved.jpg"],
+				seller: { email: "seller@example.com" },
+			},
+			{
+				id: "cart-pending",
+				images: ["https://cdn.example.com/cart-pending.jpg"],
+				seller: { email: "seller@example.com" },
+			},
+		]);
+	});
 });
 
 async function seedSeller(db: PrismaClient) {

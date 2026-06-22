@@ -7,6 +7,10 @@ export type ListingReadStatus =
 	| "APPROVED"
 	| "DECLINED"
 	| "WITHDRAWN";
+export type ListingCountStatus = Extract<
+	ListingReadStatus,
+	"APPROVED" | "PENDING"
+>;
 
 export type ListingReadCategory = ProductCategory;
 export type ListingReadCondition = ProductCondition;
@@ -33,6 +37,11 @@ export type ListingReadModel = {
 		readonly lastName: string;
 		readonly email: string;
 	};
+};
+
+export type ListingCategoryCount = {
+	readonly category: ListingReadCategory;
+	readonly count: number;
 };
 
 const listingCategorySchema = z.enum([
@@ -96,4 +105,15 @@ export const approvedListingProductApiQuerySchema = z
 
 export type ApprovedListingProductApiQuery = z.infer<
 	typeof approvedListingProductApiQuerySchema
+>;
+
+export const listingCartDetailsProductApiQuerySchema = z.object({
+	ids: z
+		.array(z.string().trim().min(1, "Product ID is required"))
+		.min(1, "At least one product ID is required")
+		.max(100, "Maximum 100 product IDs are allowed"),
+});
+
+export type ListingCartDetailsProductApiQuery = z.infer<
+	typeof listingCartDetailsProductApiQuerySchema
 >;

@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-	getProductCountByCategoryService,
-	getProductCountByStatusService,
-} from "@/actions/product";
 import { logger } from "@/lib/logger";
 import { requestLoggerMiddleware } from "@/middleware";
+import {
+	getListingCategoryCountsForProductApi,
+	getListingStatusCountForProductApi,
+} from "@/server/listing-read-service";
 
 export const Route = createFileRoute("/api/products/count")({
 	server: {
@@ -21,14 +21,15 @@ export const Route = createFileRoute("/api/products/count")({
 							if (status) {
 								const isApproved = status === "approved";
 								const productCounts =
-									await getProductCountByStatusService(isApproved);
+									await getListingStatusCountForProductApi(isApproved);
 								return new Response(JSON.stringify(productCounts), {
 									status: 200,
 								});
 							}
 
 							// Count By Product Category
-							const productCounts = await getProductCountByCategoryService();
+							const productCounts =
+								await getListingCategoryCountsForProductApi();
 							return new Response(JSON.stringify(productCounts), {
 								status: 200,
 							});

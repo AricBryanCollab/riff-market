@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getRecentProductsService } from "@/actions/product";
 import { logger } from "@/lib/logger";
 import { requestLoggerMiddleware } from "@/middleware";
+import { getRecentListingsForProductApi } from "@/server/listing-read-service";
 
 export const Route = createFileRoute("/api/products/recent")({
 	server: {
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/products/recent")({
 				GET: {
 					handler: async () => {
 						try {
-							const recentProducts = await getRecentProductsService();
+							const recentProducts = await getRecentListingsForProductApi();
 							return new Response(JSON.stringify(recentProducts), {
 								status: 200,
 							});

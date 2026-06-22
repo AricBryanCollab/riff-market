@@ -1,6 +1,5 @@
 import { z } from "zod";
 import {
-	parseOptionalProductPriceInputToCents,
 	parseProductPriceInputToCents,
 	priceCentsToDecimalPrice,
 } from "@/domains/listings/application/product-money";
@@ -24,16 +23,6 @@ const productPriceSchema = z
 	.transform((value, ctx) =>
 		parseWithProductPriceIssue(ctx, () =>
 			priceCentsToDecimalPrice(parseProductPriceInputToCents(value)),
-		),
-	);
-
-const optionalPriceCentsSchema = z
-	.string()
-	.nullable()
-	.optional()
-	.transform((value, ctx) =>
-		parseWithProductPriceIssue(ctx, () =>
-			parseOptionalProductPriceInputToCents(value),
 		),
 	);
 
@@ -68,48 +57,7 @@ export const createProductSchema = z.object({
 	stock: z.number().int().min(0, "Stock must be at least 0"),
 });
 
-export const getProductQuerySchema = z
-	.object({
-		limit: z
-			.string()
-			.nullable()
-			.transform((v) => (v ? Number(v) : 12))
-			.pipe(z.number().min(1).max(100)),
-
-		offset: z
-			.string()
-			.nullable()
-			.transform((v) => (v ? Number(v) : 0))
-			.pipe(z.number().min(0)),
-
-		random: z
-			.string()
-			.nullable()
-			.transform((v) => v === "true"),
-
-		category: z.string().nullable().optional(),
-		condition: z.string().nullable().optional(),
-		brand: z.string().nullable().optional(),
-		search: z.string().nullable().optional(),
-		priceMin: optionalPriceCentsSchema,
-		priceMax: optionalPriceCentsSchema,
-	})
-	.transform(({ priceMin, priceMax, ...query }) => ({
-		...query,
-		priceMinCents: priceMin,
-		priceMaxCents: priceMax,
-	}));
-
-export const getProductsByIdsQuerySchema = z.object({
-	ids: z
-		.array(z.string().trim().min(1, "Product ID is required"))
-		.min(1, "At least one product ID is required")
-		.max(100, "Maximum 100 product IDs are allowed"),
-});
-
 export const updateProductSchema = createProductSchema.partial();
 
 export type CreateProductInput = z.input<typeof createProductSchema>;
-export type GetProductQuery = z.infer<typeof getProductQuerySchema>;
-export type GetProductsByIdsQuery = z.infer<typeof getProductsByIdsQuerySchema>;
 export type UpdateProductInput = z.input<typeof updateProductSchema>;

@@ -1,18 +1,27 @@
 import {
 	type ApprovedListingSearchPort,
 	type ApprovedListingSearchQuery,
+	type CartListingReadPort,
+	GetApprovedListingCategoryCounts,
+	GetCartListingDetails,
 	GetListingDetails,
+	GetListingStatusCount,
+	type ListingCountReadPort,
 	type ListingDetailReadPort,
 	ListPendingModerationListings,
+	ListRecentApprovedListings,
 	ListSellerListings,
 	type PendingModerationListingReadPort,
+	type RecentApprovedListingReadPort,
 	SearchApprovedListings,
 	type SellerListingReadPort,
 } from "@/domains/listings/application/listing-read-models";
 import {
 	approvedListingProductApiQuerySchema,
+	type ListingCategoryCount,
 	type ListingReadModel,
 	type ListingReadStatus,
+	listingCartDetailsProductApiQuerySchema,
 } from "@/domains/listings/dto/listing-read-model";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
 
@@ -20,7 +29,10 @@ export type ListingReadServiceDependencies = {
 	readonly listings: ListingDetailReadPort &
 		ApprovedListingSearchPort &
 		SellerListingReadPort &
-		PendingModerationListingReadPort;
+		PendingModerationListingReadPort &
+		ListingCountReadPort &
+		RecentApprovedListingReadPort &
+		CartListingReadPort;
 };
 
 type ProductApiReadError = {
@@ -48,6 +60,10 @@ type ProductApiListingReadModel = {
 	readonly updatedAt?: Date;
 	readonly seller: ListingReadModel["seller"];
 };
+
+type ProductApiListingCountByStatus =
+	| { readonly approvedProductCount: number }
+	| { readonly pendingProductCount: number };
 
 export async function getListingDetailsForProductApi(
 	listingId: string,
@@ -142,6 +158,95 @@ export async function getPendingModerationListingsForProductApi(
 		readDependencies.listings,
 	);
 	const result = await listPendingModerationListings.execute();
+
+	if (!result.ok) {
+		return { error: result.error.message };
+	}
+
+	return result.value.map(toProductApiListingReadModel);
+}
+
+export async function getListingCategoryCountsForProductApi(
+	dependencies?: ListingReadServiceDependencies,
+): Promise<ListingCategoryCount[] | ProductApiReadError> {
+	const readDependencies =
+		dependencies ?? (await createPrismaListingReadDependencies());
+	const getApprovedListingCategoryCounts = new GetApprovedListingCategoryCounts(
+		readDependencies.listings,
+	);
+	const result = await getApprovedListingCategoryCounts.execute();
+
+	if (!result.ok) {
+		return { error: result.error.message };
+	}
+
+	return result.value;
+}
+
+export async function getListingStatusCountForProductApi(
+	isApproved: boolean,
+	dependencies?: ListingReadServiceDependencies,
+): Promise<ProductApiListingCountByStatus | ProductApiReadError> {
+	const readDependencies =
+		dependencies ?? (await createPrismaListingReadDependencies());
+	const getListingStatusCount = new GetListingStatusCount(
+		readDependencies.listings,
+	);
+	const status = isApproved ? "APPROVED" : "PENDING";
+	const result = await getListingStatusCount.execute(status);
+
+	if (!result.ok) {
+		return { error: result.error.message };
+	}
+
+	return isApproved
+		? { approvedProductCount: result.value }
+		: { pendingProductCount: result.value };
+}
+
+export async function getRecentListingsForProductApi(
+	limit: number = 8,
+	dependencies?: ListingReadServiceDependencies,
+): Promise<ProductApiListingReadModel[] | ProductApiReadError> {
+	const readDependencies =
+		dependencies ?? (await createPrismaListingReadDependencies());
+	const listRecentApprovedListings = new ListRecentApprovedListings(
+		readDependencies.listings,
+	);
+	const result = await listRecentApprovedListings.execute(limit);
+
+	if (!result.ok) {
+		return { error: result.error.message };
+	}
+
+	return result.value.map(toProductApiListingReadModel);
+}
+
+export async function getCartListingsForProductApi(
+	role: string,
+	rawQuery: unknown,
+	dependencies?: ListingReadServiceDependencies,
+): Promise<ProductApiListingReadModel[] | ProductApiReadError> {
+	if (role !== "CUSTOMER") {
+		return { error: "Unauthorized, user must be a customer" };
+	}
+
+	const parsed = listingCartDetailsProductApiQuerySchema.safeParse(rawQuery);
+
+	if (!parsed.success) {
+		return {
+			error: "Invalid product IDs query",
+			details: parsed.error,
+		};
+	}
+
+	const readDependencies =
+		dependencies ?? (await createPrismaListingReadDependencies());
+	const uniqueIds = Array.from(new Set(parsed.data.ids));
+	const getCartListingDetails = new GetCartListingDetails(
+		readDependencies.listings,
+	);
+	const result = await getCartListingDetails.execute(uniqueIds);
 
 	if (!result.ok) {
 		return { error: result.error.message };

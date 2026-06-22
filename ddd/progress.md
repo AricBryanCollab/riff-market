@@ -36,8 +36,27 @@ Clean slate started: 2026-06-11
 - Slice `3` product read/test hardening completed on 2026-06-18.
 - Slice `4` listing detail and approved listing search read-model migration started on 2026-06-18.
 - Slice `4` seller listings and pending moderation queue read migration added on 2026-06-22.
+- Slice `4` remaining count, recent, and cart-detail read migration added on 2026-06-22.
+- Slice `4` listing/product read source migration drained on 2026-06-22.
 
 ## Latest Session Notes
+
+- Continued Slice `4` listing query/read-model migration with TDD tracer bullets:
+  - added listing count, recent approved listing, and cart listing detail read use cases under `src/domains/listings/application`
+  - extended `PrismaListingReadModels` with count, recent approved, and cart detail reads
+  - moved `/api/products/count`, `/api/products/recent`, and `/api/products/cart-details` compatibility reads to `src/server/listing-read-service.ts`
+  - moved cart detail product API query parsing into the listings DTO layer
+  - deleted `src/actions/product.ts`, `src/actions/product.test.ts`, `src/actions/product.prisma.test.ts`, `src/data/product-repo.ts`, and `src/data/product-repo.prisma.test.ts`
+  - removed now-unused product read query schemas from `src/lib/zod/product-validation.ts`
+  - updated `package.json` DB test target to remove deleted product action/repository DB tests
+- Preserved compatibility behavior:
+  - `/api/products/count` still returns category counts or approved/pending count objects
+  - `/api/products/recent` still returns recent product-compatible rows
+  - `/api/products/cart-details` still enforces customer-only access and invalid ID query errors, while returning product-compatible rows for requested IDs
+- TDD test choices:
+  - added behavior-level Prisma tests for count, recent, and cart detail reads
+  - avoided new internal collaborator/call-count tests for these reads
+  - removed old product action/repository tests after the replacement listing read behavior was green
 
 - Continued Slice `4` listing query/read-model migration with TDD tracer bullets:
   - added `ListSellerListings` and `ListPendingModerationListings` use cases under `src/domains/listings/application`
@@ -100,11 +119,15 @@ Clean slate started: 2026-06-11
 - `src/routes/api/products.$id.ts`
 - `src/routes/api/products.seller.ts`
 - `src/routes/api/products.pending.ts`
-- `src/actions/product.ts`
-- `src/actions/product.test.ts`
-- `src/actions/product.prisma.test.ts`
-- `src/data/product-repo.ts`
-- `src/data/product-repo.prisma.test.ts`
+- `src/routes/api/products.count.ts`
+- `src/routes/api/products.recent.ts`
+- `src/routes/api/products.cart-details.ts`
+- deleted `src/actions/product.ts`
+- deleted `src/actions/product.test.ts`
+- deleted `src/actions/product.prisma.test.ts`
+- deleted `src/data/product-repo.ts`
+- deleted `src/data/product-repo.prisma.test.ts`
+- `src/lib/zod/product-validation.ts`
 - `src/domains/ordering/infrastructure/prisma-listings-for-purchase.ts`
 - `src/domains/ordering/application/place-purchase.prisma.test.ts`
 - `ddd/progress.md`
@@ -126,13 +149,22 @@ Clean slate started: 2026-06-11
   - `bun run test:unit -- src/server/listing-read-service.test.ts src/actions/product.test.ts`
   - `RUN_DB_TESTS=1 bun run test:unit -- --no-file-parallelism src/actions/product.prisma.test.ts src/data/product-repo.prisma.test.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts`
   - touched-file `bunx biome check`
+- Count/recent/cart read migration focused tests passed:
+  - `bun run typecheck`
+  - `bun run test:unit -- src/server/listing-read-service.test.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts` with DB test skipped by default
+  - `RUN_DB_TESTS=1 bun run test:unit -- --no-file-parallelism src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts` passed during TDD cycles with 9 DB tests
+  - final escalated DB rerun was blocked by the approval reviewer before execution
+  - touched-file `bunx biome check` passed
+  - `bun run docs:check` passed
+  - `git diff --check` passed
 
 ## Decisions In Latest Session
 
 - Keep `/api/products` and `/api/products/$id` as product-route compatibility shells while moving their read behavior to listing query use cases.
 - Keep client query wrapper names like `getApprovedProducts` for now because the UI still uses product route vocabulary; the important Slice `4` boundary is that routes no longer call `src/actions/product.ts`.
-- Keep `src/actions/product.ts` as a narrowed temporary compatibility layer for cart-details, counts, and recent reads only.
+- Delete `src/actions/product.ts` at the end of Slice `4`; all listing/product read routes now use listing read models.
 - Seller listings and pending moderation queue reads now belong to listing read models, not product actions/repositories.
+- Count, recent, and cart detail reads now belong to listing read models, not product actions/repositories.
 - Move active approved-search DB coverage from `src/data/product-repo.prisma.test.ts` to `PrismaListingReadModels`; the old product repository no longer owns approved search/detail reads.
 - Keep product-compatible response mapping in the server read service during the migration rather than letting product-shaped DTOs become the listings application contract.
 - Treat `listingStatus` as the orderability source of truth for both shop/search visibility and checkout reservation; `isApproved` remains compatibility output only where legacy product clients still expect it.
@@ -140,7 +172,7 @@ Clean slate started: 2026-06-11
 
 ## Risks / Follow-Ups From Latest Session
 
-- Remaining product/listing read routes still using `src/actions/product.ts`: cart details, counts, and recent reads.
+- No product/listing read routes should import `src/actions/product.ts`; the file has been deleted.
 - Product/listing DTO naming is still compatibility-heavy in client-facing types and hooks.
 - Create listing through `createListingFn` still needs browser smoke in an environment with real Cloudinary config.
 - Existing non-fatal moderation navigation warning and misleading server-function request logging remain.

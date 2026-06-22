@@ -1,4 +1,6 @@
 import type {
+	ListingCategoryCount,
+	ListingCountStatus,
 	ListingReadCategory,
 	ListingReadCondition,
 	ListingReadModel,
@@ -45,6 +47,19 @@ export interface SellerListingReadPort {
 
 export interface PendingModerationListingReadPort {
 	listPendingModeration(): Promise<ListingReadModel[]>;
+}
+
+export interface ListingCountReadPort {
+	countApprovedByCategory(): Promise<ListingCategoryCount[]>;
+	countByStatus(status: ListingCountStatus): Promise<number>;
+}
+
+export interface RecentApprovedListingReadPort {
+	listRecentApproved(limit: number): Promise<ListingReadModel[]>;
+}
+
+export interface CartListingReadPort {
+	findByIds(listingIds: string[]): Promise<ListingReadModel[]>;
 }
 
 export class GetListingDetails {
@@ -113,6 +128,44 @@ export class ListPendingModerationListings {
 
 	async execute(): Promise<Result<ListingReadModel[], ListingReadError>> {
 		return ok(await this.listings.listPendingModeration());
+	}
+}
+
+export class GetApprovedListingCategoryCounts {
+	constructor(private readonly listings: ListingCountReadPort) {}
+
+	async execute(): Promise<Result<ListingCategoryCount[], ListingReadError>> {
+		return ok(await this.listings.countApprovedByCategory());
+	}
+}
+
+export class GetListingStatusCount {
+	constructor(private readonly listings: ListingCountReadPort) {}
+
+	async execute(
+		status: ListingCountStatus,
+	): Promise<Result<number, ListingReadError>> {
+		return ok(await this.listings.countByStatus(status));
+	}
+}
+
+export class ListRecentApprovedListings {
+	constructor(private readonly listings: RecentApprovedListingReadPort) {}
+
+	async execute(
+		limit: number = 8,
+	): Promise<Result<ListingReadModel[], ListingReadError>> {
+		return ok(await this.listings.listRecentApproved(limit));
+	}
+}
+
+export class GetCartListingDetails {
+	constructor(private readonly listings: CartListingReadPort) {}
+
+	async execute(
+		listingIds: string[],
+	): Promise<Result<ListingReadModel[], ListingReadError>> {
+		return ok(await this.listings.findByIds(listingIds));
 	}
 }
 

@@ -19,27 +19,28 @@ Do not rely on any manually maintained current-state file. The repo is the curre
 
 ## Recommended Next Task
 
-Continue Slice `4` listing query/read-model migration.
+Verify Slice `4` listing query/read-model migration, then begin Slice `5` notifications if clean.
 
 Exact next task:
 
-- Listing detail and approved listing search have moved to listing read-model use cases; do not route them back through `src/actions/product.ts` or `src/data/product-repo.ts`.
+- Listing/product read routes have moved to listing read-model use cases; do not route them back through `src/actions/product.ts` or `src/data/product-repo.ts`.
 - Listing read query parsing now lives in the listings DTO layer, category/condition are typed before Prisma, and `/api/products` compatibility mapping is explicit in `src/server/listing-read-service.ts`.
 - Seller listings and pending moderation queue reads have moved to listing read-model use cases; do not route them back through `src/actions/product.ts` or `src/data/product-repo.ts`.
-- Move remaining lower-priority product/listing reads next:
-  - `src/routes/api/products.count.ts`
-  - `src/routes/api/products.recent.ts`
-  - `src/routes/api/products.cart-details.ts`
-  - `src/routes/settings/-components/settings-products-section.tsx`
-  - cart and home recent listing hooks
-- Prefer TDD tracer bullets through listing read use cases/service boundaries before deleting compatibility helpers.
+- Count, recent, and cart-detail reads have moved to listing read-model use cases; do not route them back through product actions/repositories.
+- `src/actions/product.ts` and `src/data/product-repo.ts` have been deleted; do not reintroduce listing/product behavior there.
+- Browser-smoke the read flows before starting Slice `5`:
+  - shop approved search/filter reads
+  - product detail not-found behavior for missing/non-`APPROVED` listings
+  - seller settings listings
+  - admin pending moderation queue
+  - home recent listings
+  - cart and checkout cart detail reads
+- If smoke is clean, start Slice `5` notifications from `ddd/migration-plan.md`.
 - Move product/listing reads toward listing query use cases/read DTOs under `src/domains/listings`.
 - Keep product API routes as compatibility shells only until consumers move.
 - Preserve the fixed product detail UX: deleted/missing and non-`APPROVED` product detail compatibility reads return HTTP `404` with the existing "Product not found" state.
 - Preserve checkout orderability semantics: `listingStatus = APPROVED` is authoritative for purchase reservation and guarded stock updates; do not use legacy `isApproved` as command authority.
-- Preserve temporary product/listing read compatibility until each read route/caller is migrated to listing read models.
-- Keep `src/actions/product.ts` read-only and temporary; do not add command behavior back to it.
-- Do not remove product read repository helpers yet unless the corresponding read route/caller is migrated to listing read models.
+- Preserve product/listing read compatibility at the route/client wrapper boundary until consumers move to listing vocabulary.
 - Keep vertical command coverage at `src/server/listing-service.prisma.test.ts`; it intentionally starts at the delivery-facing service boundary and exercises application use cases plus real Prisma infrastructure with a fake image manager.
 - Re-run focused read/route tests, typecheck, touched-file Biome, docs check, and the gated DB suite if local Postgres is available.
 - Keep these active listing command server functions:
@@ -56,8 +57,8 @@ Exact next task:
 - Create-listing browser smoke remains blocked until real Cloudinary upload configuration is available.
 - Legacy product command action/repository helpers have been removed; do not reintroduce them.
 - Legacy product detail/search action and repository helpers have been removed; do not reintroduce them.
-- Keep product/listing read APIs as temporary compatibility until Slice `4` read models unless command migration reveals a direct contradiction.
-- Slice `4` is not complete while listing/product read routes or query wrappers still call `src/actions/product.ts`; listing/product reads must move to listing query use cases/read models.
+- Keep product/listing read APIs as temporary compatibility while UI consumers still use product route vocabulary.
+- Slice `4` source migration is drained; remaining Slice `4` work is browser smoke and any fixes found there.
 - Active order delivery is now server functions only for migrated flows:
   - `listOrdersForCurrentUserFn`
   - `getOrderDetailFn`
@@ -68,7 +69,7 @@ Exact next task:
 - Admin moderation now goes through `moderateListingFn`; do not reintroduce `/api/products/pending/$id`.
 - `/api/products` is read-only; do not reintroduce POST.
 - `/api/products/$id` is read-only; do not reintroduce PUT/DELETE.
-- Keep old cart details reads and non-order legacy APIs as temporary compatibility only where callers still need them.
+- Keep product-route read URLs as temporary compatibility only where callers still need them.
 - End-state for listing/product actions: commands drained in Slice `3`, reads drained in Slice `4`; do not treat `src/actions/product.ts` as target architecture.
 - Preserve the existing checkout success/error UX and the smoked `usePlaceOrder` -> `createOrder` -> `placePurchaseFn` -> `PlacePurchase` delivery path.
 - Fix or track the non-fatal add-to-cart router warning from `src/components/product-actions.tsx` (`navigate({ from: "/cart" })`) before broad checkout polish.
@@ -89,9 +90,6 @@ Useful first inspection targets:
 - `src/server/listing-service.ts`
 - `src/server/listing-service.prisma.test.ts`
 - `src/lib/tanstack-query/product-queries.ts`
-- `src/actions/product.ts`
-- `src/actions/product.test.ts`
-- `src/data/product-repo.ts`
 - `src/types/product.ts`
 - `src/routes/api/products.$id.ts`
 - `src/routes/api/products.ts`
@@ -104,7 +102,6 @@ Useful first inspection targets:
 - `src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts`
 - `src/domains/ordering/infrastructure/prisma-listings-for-purchase.ts`
 - `src/domains/ordering/application/place-purchase.prisma.test.ts`
-- `src/data/product-repo.prisma.test.ts`
 - `src/domains/listings/infrastructure/listing-image-assets.test.ts`
 - `src/routes/settings/-components/settings-products-section.tsx`
 - `src/domains/ordering/domain/purchase.ts`
@@ -146,13 +143,13 @@ Useful first inspection targets:
 
 ## Current Repo State From Latest Completed Session
 
-- Latest implementation session completed on 2026-06-18:
-  - work completed: Slice `4` listing detail, approved listing search, seller listings, and pending moderation queue read-model migration; added listing read DTOs/use cases and `PrismaListingReadModels`; moved `/api/products/$id`, `/api/products`, `/api/products/seller`, and `/api/products/pending` compatibility routes to `src/server/listing-read-service.ts`; removed migrated detail/search/seller/pending helpers from `src/actions/product.ts` and `src/data/product-repo.ts`; deleted old `src/server/product-read-service.ts`; moved active DB coverage for approved search/detail/seller/pending behavior to listing infrastructure; tightened listing read query parsing/typing and explicit product API compatibility mapping; hardened product detail compatibility reads to return `404` for non-`APPROVED` statuses; changed checkout reservation to use `listingStatus = APPROVED` instead of legacy `isApproved`; reviewed remaining changed tests under TDD criteria and used behavior-level Prisma tests for seller/pending reads
-  - files changed: `package.json`, `src/domains/listings/application/listing-read-models.ts`, `src/domains/listings/dto/listing-read-model.ts`, `src/domains/listings/infrastructure/prisma-listing-read-models.ts`, `src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts`, `src/server/listing-read-service.ts`, `src/server/listing-read-service.test.ts`, deleted `src/server/product-read-service.ts`, deleted `src/server/product-read-service.test.ts`, `src/routes/api/products.ts`, `src/routes/api/products.$id.ts`, `src/routes/api/products.seller.ts`, `src/routes/api/products.pending.ts`, `src/actions/product.ts`, `src/actions/product.test.ts`, `src/actions/product.prisma.test.ts`, `src/data/product-repo.ts`, `src/data/product-repo.prisma.test.ts`, `src/domains/ordering/infrastructure/prisma-listings-for-purchase.ts`, `src/domains/ordering/application/place-purchase.prisma.test.ts`, `ddd/progress.md`, `ddd/next-session.md`, `plans/README.md`, `plans/001-tighten-listing-read-boundary.md`
-  - tests/checks run: focused listing read service tests passed with bundled Node; focused product action tests passed with bundled Node; `bun run typecheck` passed; touched-file Biome passed after safe fixes; focused Prisma integration tests passed with local DB access for `src/actions/product.prisma.test.ts`, `src/data/product-repo.prisma.test.ts`, and `src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts` with 10 DB tests passed
-  - decisions made: keep product API route URLs and client query wrapper names as compatibility while route handlers move to listing read use cases; keep `src/actions/product.ts` only for unmigrated cart-details, counts, and recent reads; make product detail compatibility reads public-facing and return `404` for non-`APPROVED` statuses while raw listing detail infrastructure can still load non-public rows for future seller/admin reads; keep product-compatible response mapping at the server read boundary instead of making product shape the listings application contract; treat `listingStatus` as checkout orderability authority and derive legacy `isApproved` only for compatibility output; use behavior-level Prisma tests for seller and pending listing reads rather than internal collaborator assertions
-  - blockers or risks: remaining product/listing reads still use product action/repository vocabulary for cart details, counts, and recent reads; create-listing browser smoke still needs real Cloudinary config; moderation navigation warning and request logging issue remain; local smoke seed rows remain
-  - exact next recommended task: continue Slice `4` by moving count, recent, and cart-detail reads to listing read models
+- Latest implementation session completed on 2026-06-22:
+  - work completed: Slice `4` listing/product read source migration drained; added listing read DTOs/use cases and `PrismaListingReadModels`; moved `/api/products/$id`, `/api/products`, `/api/products/seller`, `/api/products/pending`, `/api/products/count`, `/api/products/recent`, and `/api/products/cart-details` compatibility routes to `src/server/listing-read-service.ts`; deleted `src/actions/product.ts`, `src/data/product-repo.ts`, and their tests; moved active DB behavior coverage for detail/search/seller/pending/count/recent/cart reads to listing infrastructure; kept product-compatible response mapping at the server read boundary
+  - files changed: `package.json`, `src/domains/listings/application/listing-read-models.ts`, `src/domains/listings/dto/listing-read-model.ts`, `src/domains/listings/infrastructure/prisma-listing-read-models.ts`, `src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts`, `src/server/listing-read-service.ts`, `src/server/listing-read-service.test.ts`, deleted `src/server/product-read-service.ts`, deleted `src/server/product-read-service.test.ts`, deleted `src/actions/product.ts`, deleted `src/actions/product.test.ts`, deleted `src/actions/product.prisma.test.ts`, deleted `src/data/product-repo.ts`, deleted `src/data/product-repo.prisma.test.ts`, `src/lib/zod/product-validation.ts`, product API route files, ordering checkout files touched for `listingStatus` orderability, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: focused listing read service tests passed with bundled Node; `bun run typecheck` passed; listing read-model Prisma test passed with local DB access during TDD cycles through 9 DB tests; final DB rerun was blocked by the approval reviewer before execution; touched-file Biome passed; `bun run docs:check` passed; `git diff --check` passed
+  - decisions made: keep product API route URLs and client query wrapper names as compatibility while route handlers move to listing read use cases; delete `src/actions/product.ts` at the end of Slice `4`; keep product-compatible response mapping at the server read boundary instead of making product shape the listings application contract; treat `listingStatus` as checkout orderability authority and derive legacy `isApproved` only for compatibility output; use behavior-level Prisma tests for read behavior rather than internal collaborator assertions
+  - blockers or risks: browser smoke for the drained read routes remains; create-listing browser smoke still needs real Cloudinary config; moderation navigation warning and request logging issue remain; local smoke seed rows remain
+  - exact next recommended task: browser-smoke Slice `4` read flows, then start Slice `5` notifications if clean
 - Latest implementation session completed on 2026-06-18:
   - work completed: Slice `3` product read/test hardening completed; `/api/products/$id` now returns HTTP `404` for missing/deleted product reads; public product detail hides non-`APPROVED` lifecycle statuses with the existing "Product not found" state; added behavior-level product read Prisma coverage for approved/pending/recent/price-filter semantics; replaced dead image-helper tests with `CloudinaryListingImageManager` port tests; removed unused image persistence helper exports
   - files changed: `package.json`, `src/server/product-read-service.ts`, `src/server/product-read-service.test.ts`, `src/routes/api/products.$id.ts`, `src/routes/product/$id.tsx`, `src/data/product-repo.prisma.test.ts`, `src/domains/listings/infrastructure/listing-image-assets.ts`, `src/domains/listings/infrastructure/listing-image-assets.test.ts`, `ddd/progress.md`, `ddd/next-session.md`

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getProductsByIdsService } from "@/actions/product";
 import { logger } from "@/lib/logger";
 import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
+import { getCartListingsForProductApi } from "@/server/listing-read-service";
 
 export const Route = createFileRoute("/api/products/cart-details")({
 	server: {
@@ -12,7 +12,9 @@ export const Route = createFileRoute("/api/products/cart-details")({
 					const url = new URL(request.url);
 					const ids = url.searchParams.getAll("ids");
 
-					const products = await getProductsByIdsService(context.role, { ids });
+					const products = await getCartListingsForProductApi(context.role, {
+						ids,
+					});
 
 					if ("error" in products) {
 						return new Response(

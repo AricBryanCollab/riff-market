@@ -17,6 +17,10 @@ describe("listing read service", () => {
 				searchApproved: async () => [],
 				listForSeller: async () => [],
 				listPendingModeration: async () => [],
+				countApprovedByCategory: async () => [],
+				countByStatus: async () => 0,
+				listRecentApproved: async () => [],
+				findByIds: async () => [],
 			},
 		};
 
@@ -41,6 +45,10 @@ describe("listing read service", () => {
 				searchApproved: async () => [],
 				listForSeller: async () => [],
 				listPendingModeration: async () => [],
+				countApprovedByCategory: async () => [],
+				countByStatus: async () => 0,
+				listRecentApproved: async () => [],
+				findByIds: async () => [],
 			},
 		};
 
@@ -71,6 +79,10 @@ describe("listing read service", () => {
 				searchApproved: async () => [],
 				listForSeller: async () => [],
 				listPendingModeration: async () => [],
+				countApprovedByCategory: async () => [],
+				countByStatus: async () => 0,
+				listRecentApproved: async () => [],
+				findByIds: async () => [],
 			},
 		};
 
@@ -102,6 +114,10 @@ describe("listing read service", () => {
 				},
 				listForSeller: async () => [],
 				listPendingModeration: async () => [],
+				countApprovedByCategory: async () => [],
+				countByStatus: async () => 0,
+				listRecentApproved: async () => [],
+				findByIds: async () => [],
 			},
 		};
 
@@ -143,6 +159,10 @@ describe("listing read service", () => {
 				},
 				listForSeller: async () => [],
 				listPendingModeration: async () => [],
+				countApprovedByCategory: async () => [],
+				countByStatus: async () => 0,
+				listRecentApproved: async () => [],
+				findByIds: async () => [],
 			},
 		};
 
@@ -176,6 +196,10 @@ describe("listing read service", () => {
 				},
 				listForSeller: async () => [],
 				listPendingModeration: async () => [],
+				countApprovedByCategory: async () => [],
+				countByStatus: async () => 0,
+				listRecentApproved: async () => [],
+				findByIds: async () => [],
 			},
 		};
 

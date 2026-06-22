@@ -2,8 +2,11 @@ import type { Prisma, PrismaClient } from "generated/prisma/client";
 import type {
 	ApprovedListingSearchPort,
 	ApprovedListingSearchQuery,
+	CartListingReadPort,
+	ListingCountReadPort,
 	ListingDetailReadPort,
 	PendingModerationListingReadPort,
+	RecentApprovedListingReadPort,
 	SellerListingReadPort,
 } from "@/domains/listings/application/listing-read-models";
 import {
@@ -11,7 +14,11 @@ import {
 	type ProductMoneySource,
 	toProductPriceRangePersistence,
 } from "@/domains/listings/application/product-money";
-import type { ListingReadModel } from "@/domains/listings/dto/listing-read-model";
+import type {
+	ListingCategoryCount,
+	ListingCountStatus,
+	ListingReadModel,
+} from "@/domains/listings/dto/listing-read-model";
 import { toImageAssetUrls } from "@/utils/image-asset-ref";
 
 type ListingReadPrisma = Pick<PrismaClient, "product">;
@@ -51,7 +58,10 @@ export class PrismaListingReadModels
 		ListingDetailReadPort,
 		ApprovedListingSearchPort,
 		SellerListingReadPort,
-		PendingModerationListingReadPort
+		PendingModerationListingReadPort,
+		ListingCountReadPort,
+		RecentApprovedListingReadPort,
+		CartListingReadPort
 {
 	constructor(private readonly db: ListingReadPrisma) {}
 
@@ -117,6 +127,55 @@ export class PrismaListingReadModels
 			where: { listingStatus: "PENDING" },
 			orderBy: {
 				createdAt: "desc",
+			},
+			select: listingReadSelect,
+		});
+
+		return toListingReadModels(listings);
+	}
+
+	async countApprovedByCategory(): Promise<ListingCategoryCount[]> {
+		const groupedListings = await this.db.product.groupBy({
+			by: ["category"],
+			where: {
+				listingStatus: "APPROVED",
+			},
+			_count: {
+				category: true,
+			},
+		});
+
+		return groupedListings.map((listing) => ({
+			category: listing.category,
+			count: listing._count.category,
+		}));
+	}
+
+	async countByStatus(status: ListingCountStatus): Promise<number> {
+		return await this.db.product.count({
+			where: {
+				listingStatus: status,
+			},
+		});
+	}
+
+	async listRecentApproved(limit: number): Promise<ListingReadModel[]> {
+		const listings = await this.db.product.findMany({
+			where: { listingStatus: "APPROVED" },
+			orderBy: { updatedAt: "desc" },
+			select: listingReadSelect,
+			take: limit,
+		});
+
+		return toListingReadModels(listings);
+	}
+
+	async findByIds(listingIds: string[]): Promise<ListingReadModel[]> {
+		const listings = await this.db.product.findMany({
+			where: {
+				id: {
+					in: listingIds,
+				},
 			},
 			select: listingReadSelect,
 		});
