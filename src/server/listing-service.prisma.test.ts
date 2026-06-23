@@ -1,6 +1,5 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "generated/prisma/client";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import type { PrismaClient } from "generated/prisma/client";
+import { beforeEach, expect, it } from "vitest";
 import type { ListingImageManagerPort } from "@/domains/listings/application/manage-listing";
 import { PrismaListingCommandRepository } from "@/domains/listings/infrastructure/prisma-listing-commands";
 import {
@@ -17,33 +16,24 @@ import {
 	validateCreateListingFormData,
 	validateUpdateListingFormData,
 } from "@/server/listing-service";
+import {
+	describeDb,
+	seedMarketplaceUsers,
+	seedListing as seedProduct,
+	seedPurchaseWithSellerOrders,
+	setupPrismaTestDatabase,
+} from "@/test/prisma-test-support";
 import type { ImageAssetRef } from "@/types/image-asset";
-
-const databaseUrl = process.env.DATABASE_URL;
-const runDbTests = process.env.RUN_DB_TESTS === "1" && Boolean(databaseUrl);
-const describeDb = runDbTests ? describe : describe.skip;
 
 describeDb("listing service Prisma integration", () => {
 	let db: PrismaClient;
 	let imageManager: FakeListingImageManager;
-
-	beforeAll(() => {
-		db = new PrismaClient({
-			adapter: new PrismaPg({
-				connectionString: databaseUrl,
-			}),
-		});
-	});
+	const testDb = setupPrismaTestDatabase();
 
 	beforeEach(async () => {
-		await cleanDatabase(db);
-		await seedUsers(db);
+		db = testDb.client;
+		await seedMarketplaceUsers(db);
 		imageManager = new FakeListingImageManager();
-	});
-
-	afterAll(async () => {
-		await cleanDatabase(db);
-		await db.$disconnect();
 	});
 
 	it("creates seller listings through service, application, and Prisma infrastructure", async () => {
@@ -382,144 +372,29 @@ function imageFile(name: string) {
 	return new File([`bytes-${name}`], name, { type: "image/jpeg" });
 }
 
-async function seedUsers(db: PrismaClient) {
-	await db.user.createMany({
-		data: [
-			{
-				id: "customer-1",
-				email: "customer@example.com",
-				firstName: "Pat",
-				lastName: "Buyer",
-				password: "password",
-				role: "CUSTOMER",
-			},
-			{
-				id: "seller-1",
-				email: "seller-1@example.com",
-				firstName: "A",
-				lastName: "Seller",
-				password: "password",
-				role: "SELLER",
-			},
-			{
-				id: "seller-2",
-				email: "seller-2@example.com",
-				firstName: "B",
-				lastName: "Seller",
-				password: "password",
-				role: "SELLER",
-			},
-			{
-				id: "admin-1",
-				email: "admin@example.com",
-				firstName: "Admin",
-				lastName: "User",
-				password: "password",
-				role: "ADMIN",
-			},
-		],
-	});
-}
-
-async function seedProduct(
-	db: PrismaClient,
-	{
-		id,
-		sellerId,
-		name = "Telecaster",
-		isApproved,
-		listingStatus,
-	}: {
-		id: string;
-		sellerId: string;
-		name?: string;
-		isApproved: boolean;
-		listingStatus: "PENDING" | "APPROVED" | "DECLINED" | "WITHDRAWN";
-	},
-) {
-	await db.product.create({
-		data: {
-			id,
-			sellerId,
-			name,
-			category: "ELECTRIC",
-			condition: "USED",
-			brand: "Fender",
-			model: "American Standard",
-			images: [
-				{
-					url: `https://cdn.example.com/${id}.jpg`,
-					publicId: id,
-				},
-			],
-			description: "A test listing",
-			price: 199.95,
-			priceCents: 19995,
-			currencyCode: "USD",
-			stock: 2,
-			isApproved,
-			listingStatus,
-		},
-	});
-}
-
 async function seedSellerOrderItemReference(
 	db: PrismaClient,
 	listingId: string,
 ) {
-	await db.purchase.create({
-		data: {
-			id: "purchase-1",
-			customerId: "customer-1",
-			customerIdSnapshot: "customer-1",
-			purchaseNumber: "RM-REFERENCE-1",
-			totalAmountCents: 19995,
-			currencyCode: "USD",
-			buyerName: "Pat Buyer",
-			buyerEmail: "customer@example.com",
-			buyerPhone: null,
-			shippingAddress: "123 Market St",
-			sellerOrders: {
-				create: {
-					id: "seller-order-1",
-					sellerId: "seller-1",
-					sellerIdSnapshot: "seller-1",
-					subtotalCents: 19995,
-					currencyCode: "USD",
-					items: {
-						create: {
-							id: "seller-order-item-1",
-							listingId,
-							listingName: "Telecaster",
-							brand: "Fender",
-							model: "American Standard",
-							category: "ELECTRIC",
-							condition: "USED",
-							primaryImageUrl: `https://cdn.example.com/${listingId}.jpg`,
-							sellerId: "seller-1",
-							sellerDisplayName: "A Seller",
-							unitPriceCents: 19995,
-							quantity: 1,
-							subTotalCents: 19995,
-							currencyCode: "USD",
-						},
+	await seedPurchaseWithSellerOrders(db, {
+		id: "purchase-1",
+		purchaseNumber: "RM-REFERENCE-1",
+		totalAmountCents: 19995,
+		sellerOrders: [
+			{
+				id: "seller-order-1",
+				sellerId: "seller-1",
+				sellerIdSnapshot: "seller-1",
+				subtotalCents: 19995,
+				items: [
+					{
+						id: "seller-order-item-1",
+						listingId,
+						unitPriceCents: 19995,
+						quantity: 1,
 					},
-				},
+				],
 			},
-		},
+		],
 	});
-}
-
-async function cleanDatabase(db: PrismaClient) {
-	await db.notification.deleteMany();
-	await db.sellerOrderItem.deleteMany();
-	await db.sellerOrder.deleteMany();
-	await db.purchase.deleteMany();
-	await db.favorite.deleteMany();
-	await db.review.deleteMany();
-	await db.orderItem.deleteMany();
-	await db.order.deleteMany();
-	await db.product.deleteMany();
-	await db.userSettings.deleteMany();
-	await db.user.deleteMany();
 }

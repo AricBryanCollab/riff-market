@@ -1,6 +1,5 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { type ListingStatus, PrismaClient } from "generated/prisma/client";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import type { PrismaClient } from "generated/prisma/client";
+import { beforeEach, expect, it } from "vitest";
 import { ChangeSellerOrderStatus } from "@/domains/ordering/application/change-seller-order-status";
 import {
 	GetOrderDetail,
@@ -17,33 +16,24 @@ import { createPrismaPlacePurchase } from "@/domains/ordering/infrastructure/pri
 import { PrismaPurchasePlacedNotificationCreator } from "@/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator";
 import { PrismaSellerOrderStatusRepository } from "@/domains/ordering/infrastructure/prisma-seller-order-status-repository";
 import type { PrismaTransactionContext } from "@/domains/shared/infrastructure/prisma-unit-of-work";
-
-const databaseUrl = process.env.DATABASE_URL;
-const runDbTests = process.env.RUN_DB_TESTS === "1" && Boolean(databaseUrl);
-const describeDb = runDbTests ? describe : describe.skip;
+import {
+	describeDb,
+	productStock,
+	seedMarketplaceUsers,
+	seedProduct,
+	setupPrismaTestDatabase,
+} from "@/test/prisma-test-support";
 
 describeDb("PlacePurchase Prisma integration", () => {
 	let db: PrismaClient;
+	const testDb = setupPrismaTestDatabase();
 
-	beforeAll(() => {
-		db = new PrismaClient({
-			adapter: new PrismaPg({
-				connectionString: databaseUrl,
-			}),
-		});
-	});
-
-	beforeEach(async () => {
-		await cleanDatabase(db);
-	});
-
-	afterAll(async () => {
-		await cleanDatabase(db);
-		await db.$disconnect();
+	beforeEach(() => {
+		db = testDb.client;
 	});
 
 	it("persists purchase placement, seller orders, notifications, and guarded stock reduction", async () => {
-		await seedUsers(db);
+		await seedMarketplaceUsers(db);
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
@@ -159,7 +149,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 	});
 
 	it("allows approved listings even when legacy isApproved is stale", async () => {
-		await seedUsers(db);
+		await seedMarketplaceUsers(db);
 		await seedProduct(db, {
 			id: "listing-approved-status",
 			sellerId: "seller-1",
@@ -192,7 +182,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 	});
 
 	it("rejects withdrawn listings even when legacy isApproved is stale", async () => {
-		await seedUsers(db);
+		await seedMarketplaceUsers(db);
 		await seedProduct(db, {
 			id: "listing-withdrawn-status",
 			sellerId: "seller-1",
@@ -226,7 +216,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 	});
 
 	it("serves buyer history and seller dashboard reads from target models", async () => {
-		await seedUsers(db);
+		await seedMarketplaceUsers(db);
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
@@ -416,7 +406,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 	});
 
 	it("updates seller order status through the target repository", async () => {
-		await seedUsers(db);
+		await seedMarketplaceUsers(db);
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
@@ -504,7 +494,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 	});
 
 	it("combines duplicate cart rows for the same listing", async () => {
-		await seedUsers(db);
+		await seedMarketplaceUsers(db);
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
@@ -556,7 +546,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 	});
 
 	it("preserves purchase and seller-order history when buyer and seller accounts are deleted", async () => {
-		await seedUsers(db);
+		await seedMarketplaceUsers(db);
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
@@ -625,7 +615,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 	});
 
 	it("rolls back stock and persistence when later notification creation fails", async () => {
-		await seedUsers(db);
+		await seedMarketplaceUsers(db);
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
@@ -662,7 +652,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 	});
 
 	it("prevents overselling with concurrent guarded stock mutations", async () => {
-		await seedUsers(db);
+		await seedMarketplaceUsers(db);
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
@@ -731,104 +721,4 @@ class FailingNotificationCreator
 	) {
 		throw new Error("notification creation failed");
 	}
-}
-
-async function seedUsers(db: PrismaClient) {
-	await db.user.createMany({
-		data: [
-			{
-				id: "customer-1",
-				email: "customer@example.com",
-				firstName: "Pat",
-				lastName: "Buyer",
-				password: "password",
-				role: "CUSTOMER",
-			},
-			{
-				id: "seller-1",
-				email: "seller-1@example.com",
-				firstName: "A",
-				lastName: "Seller",
-				password: "password",
-				role: "SELLER",
-			},
-			{
-				id: "seller-2",
-				email: "seller-2@example.com",
-				firstName: "B",
-				lastName: "Seller",
-				password: "password",
-				role: "SELLER",
-			},
-		],
-	});
-}
-
-async function seedProduct(
-	db: PrismaClient,
-	{
-		id,
-		sellerId,
-		name = "Telecaster",
-		priceCents,
-		stock,
-		listingStatus = "APPROVED",
-		isApproved = true,
-	}: {
-		id: string;
-		sellerId: string;
-		name?: string;
-		priceCents: number;
-		stock: number;
-		listingStatus?: ListingStatus;
-		isApproved?: boolean;
-	},
-) {
-	await db.product.create({
-		data: {
-			id,
-			sellerId,
-			name,
-			category: "ELECTRIC",
-			condition: "USED",
-			brand: "Fender",
-			model: "American Standard",
-			images: [
-				{
-					url: `https://cdn.example.com/${id}.jpg`,
-					publicId: id,
-				},
-			],
-			description: "A test listing",
-			price: priceCents / 100,
-			priceCents,
-			currencyCode: "USD",
-			stock,
-			isApproved,
-			listingStatus,
-		},
-	});
-}
-
-async function productStock(db: PrismaClient, id: string) {
-	const product = await db.product.findUniqueOrThrow({
-		where: { id },
-		select: { stock: true },
-	});
-
-	return product.stock;
-}
-
-async function cleanDatabase(db: PrismaClient) {
-	await db.notification.deleteMany();
-	await db.sellerOrderItem.deleteMany();
-	await db.sellerOrder.deleteMany();
-	await db.purchase.deleteMany();
-	await db.favorite.deleteMany();
-	await db.review.deleteMany();
-	await db.orderItem.deleteMany();
-	await db.order.deleteMany();
-	await db.product.deleteMany();
-	await db.userSettings.deleteMany();
-	await db.user.deleteMany();
 }

@@ -1,52 +1,37 @@
-import { PrismaPg } from "@prisma/adapter-pg";
+import type { PrismaClient } from "generated/prisma/client";
+import { beforeEach, expect, it } from "vitest";
 import {
-	type ListingStatus,
-	PrismaClient,
-	type ProductCategory,
-	type ProductCondtion,
-} from "generated/prisma/client";
-import {
-	afterAll,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	vi,
-} from "vitest";
+	describeDb,
+	seedMarketplaceUsers,
+	seedListing as seedProduct,
+	setupPrismaTestDatabase,
+} from "@/test/prisma-test-support";
 import { PrismaListingReadModels } from "./prisma-listing-read-models";
-
-const databaseUrl = process.env.DATABASE_URL;
-const runDbTests = process.env.RUN_DB_TESTS === "1" && Boolean(databaseUrl);
-const describeDb = runDbTests ? describe : describe.skip;
 
 describeDb("Prisma listing read models", () => {
 	let db: PrismaClient;
 	let readModels: PrismaListingReadModels;
-
-	beforeAll(async () => {
-		vi.doMock("@/env", () => ({
-			env: {
-				DATABASE_URL: databaseUrl,
-			},
-		}));
-
-		db = new PrismaClient({
-			adapter: new PrismaPg({
-				connectionString: databaseUrl,
-			}),
-		});
-		readModels = new PrismaListingReadModels(db);
-	});
+	const testDb = setupPrismaTestDatabase();
 
 	beforeEach(async () => {
-		await cleanDatabase(db);
-		await seedSeller(db);
-	});
-
-	afterAll(async () => {
-		await cleanDatabase(db);
-		await db.$disconnect();
+		db = testDb.client;
+		readModels = new PrismaListingReadModels(db);
+		await seedMarketplaceUsers(db, [
+			{
+				id: "seller-1",
+				email: "seller@example.com",
+				firstName: "A",
+				lastName: "Seller",
+				role: "SELLER",
+			},
+			{
+				id: "seller-2",
+				email: "seller-2@example.com",
+				firstName: "B",
+				lastName: "Seller",
+				role: "SELLER",
+			},
+		]);
 	});
 
 	it("searches only approved listings through the listing read model", async () => {
@@ -443,102 +428,3 @@ describeDb("Prisma listing read models", () => {
 		]);
 	});
 });
-
-async function seedSeller(db: PrismaClient) {
-	await db.user.createMany({
-		data: [
-			{
-				id: "seller-1",
-				email: "seller@example.com",
-				firstName: "A",
-				lastName: "Seller",
-				password: "password",
-				role: "SELLER",
-			},
-			{
-				id: "seller-2",
-				email: "seller-2@example.com",
-				firstName: "B",
-				lastName: "Seller",
-				password: "password",
-				role: "SELLER",
-			},
-		],
-	});
-}
-
-async function seedProduct(
-	db: PrismaClient,
-	{
-		id,
-		sellerId = "seller-1",
-		name,
-		listingStatus,
-		isApproved,
-		category = "ELECTRIC",
-		condition = "USED",
-		brand = "Fender",
-		model = "American Standard",
-		description = "A test listing",
-		price = 199.95,
-		priceCents = 19995,
-		createdAt,
-		updatedAt,
-	}: {
-		id: string;
-		sellerId?: string;
-		name: string;
-		listingStatus: ListingStatus;
-		isApproved: boolean;
-		category?: ProductCategory;
-		condition?: ProductCondtion;
-		brand?: string;
-		model?: string;
-		description?: string;
-		price?: number;
-		priceCents?: number | null;
-		createdAt?: Date;
-		updatedAt?: Date;
-	},
-) {
-	await db.product.create({
-		data: {
-			id,
-			sellerId,
-			name,
-			category,
-			condition,
-			brand,
-			model,
-			images: [
-				{
-					url: `https://cdn.example.com/${id}.jpg`,
-					publicId: id,
-				},
-			],
-			description,
-			price,
-			priceCents,
-			currencyCode: "USD",
-			stock: 2,
-			isApproved,
-			listingStatus,
-			...(createdAt && { createdAt }),
-			...(updatedAt && { updatedAt }),
-		},
-	});
-}
-
-async function cleanDatabase(db: PrismaClient) {
-	await db.notification.deleteMany();
-	await db.sellerOrderItem.deleteMany();
-	await db.sellerOrder.deleteMany();
-	await db.purchase.deleteMany();
-	await db.favorite.deleteMany();
-	await db.review.deleteMany();
-	await db.orderItem.deleteMany();
-	await db.order.deleteMany();
-	await db.product.deleteMany();
-	await db.userSettings.deleteMany();
-	await db.user.deleteMany();
-}

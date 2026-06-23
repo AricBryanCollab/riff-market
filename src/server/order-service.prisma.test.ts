@@ -1,0 +1,268 @@
+import type { PrismaClient } from "generated/prisma/client";
+import { beforeEach, expect, it } from "vitest";
+import { PrismaOrderReadModels } from "@/domains/ordering/infrastructure/prisma-order-read-models";
+import { PrismaSellerOrderStatusRepository } from "@/domains/ordering/infrastructure/prisma-seller-order-status-repository";
+import type { ServerUserContext } from "@/server/function-middleware";
+import {
+	changeSellerOrderStatusForCurrentUser,
+	getOrderDetailForCurrentUser,
+	listOrdersForCurrentUser,
+} from "@/server/order-service";
+import {
+	describeDb,
+	seedMarketplaceUsers,
+	seedPurchaseWithSellerOrders,
+	setupPrismaTestDatabase,
+} from "@/test/prisma-test-support";
+
+const customerUser: ServerUserContext = {
+	id: "customer-1",
+	email: "customer@example.com",
+	firstName: "Pat",
+	lastName: "Buyer",
+	role: "CUSTOMER",
+};
+
+const sellerUser: ServerUserContext = {
+	id: "seller-1",
+	email: "seller-1@example.com",
+	firstName: "A",
+	lastName: "Seller",
+	role: "SELLER",
+};
+
+const sellerTwoUser: ServerUserContext = {
+	id: "seller-2",
+	email: "seller-2@example.com",
+	firstName: "B",
+	lastName: "Seller",
+	role: "SELLER",
+};
+
+const adminUser: ServerUserContext = {
+	id: "admin-1",
+	email: "admin@example.com",
+	firstName: "Admin",
+	lastName: "User",
+	role: "ADMIN",
+};
+
+describeDb("order service Prisma integration", () => {
+	let db: PrismaClient;
+	const testDb = setupPrismaTestDatabase();
+
+	beforeEach(async () => {
+		db = testDb.client;
+		await seedMarketplaceUsers(db);
+	});
+
+	it("serves persisted purchases and seller orders by current-user role", async () => {
+		await seedOrderServicePurchase(db);
+		const readModels = new PrismaOrderReadModels(db);
+
+		const customerOrders = await listOrdersForCurrentUser(
+			customerUser,
+			readModels,
+		);
+		expect(customerOrders).toMatchObject([
+			{
+				id: "purchase-1",
+				purchaseId: "purchase-1",
+				totalAmount: 275,
+				status: "OPEN",
+			},
+		]);
+
+		const sellerOrders = await listOrdersForCurrentUser(sellerUser, readModels);
+		expect(sellerOrders).toMatchObject([
+			{
+				id: "seller-order-1",
+				sellerOrderId: "seller-order-1",
+				totalAmount: 125,
+				status: "NEW",
+			},
+		]);
+
+		const adminOrders = await listOrdersForCurrentUser(adminUser, readModels);
+		expect(adminOrders.map((order) => order.id).sort()).toEqual([
+			"seller-order-1",
+			"seller-order-2",
+		]);
+
+		const customerDetail = await getOrderDetailForCurrentUser(
+			customerUser,
+			{ orderId: "purchase-1" },
+			readModels,
+		);
+		expect(customerDetail).toMatchObject({
+			id: "purchase-1",
+			totalAmount: 275,
+			items: expect.arrayContaining([
+				expect.objectContaining({
+					productId: "listing-1",
+					quantity: 1,
+				}),
+				expect.objectContaining({
+					productId: "listing-2",
+					quantity: 2,
+				}),
+			]),
+		});
+
+		await expect(
+			getOrderDetailForCurrentUser(
+				sellerUser,
+				{ orderId: "seller-order-2" },
+				readModels,
+			),
+		).rejects.toMatchObject({
+			name: "OrderRequestError",
+			status: 404,
+			message: "Order not found with the provided order ID",
+		});
+
+		const sellerDetail = await getOrderDetailForCurrentUser(
+			sellerUser,
+			{ orderId: "seller-order-1" },
+			readModels,
+		);
+		expect(sellerDetail).toMatchObject({
+			id: "seller-order-1",
+			sellerOrderId: "seller-order-1",
+			totalAmount: 125,
+			status: "NEW",
+			customer: {
+				id: "customer-1",
+				email: "customer@example.com",
+				firstName: "Pat",
+				lastName: "Buyer",
+			},
+		});
+
+		const adminDetail = await getOrderDetailForCurrentUser(
+			adminUser,
+			{ orderId: "seller-order-2" },
+			readModels,
+		);
+		expect(adminDetail).toMatchObject({
+			id: "seller-order-2",
+			sellerOrderId: "seller-order-2",
+			totalAmount: 150,
+			status: "NEW",
+		});
+	});
+
+	it("persists seller-order status changes by current-user command", async () => {
+		await seedOrderServicePurchase(db);
+		const sellerOrders = new PrismaSellerOrderStatusRepository(db);
+
+		await expect(
+			changeSellerOrderStatusForCurrentUser(
+				sellerTwoUser,
+				{ sellerOrderId: "seller-order-1", status: "PROCESSING" },
+				sellerOrders,
+			),
+		).rejects.toMatchObject({
+			name: "OrderRequestError",
+			code: "CHANGE_SELLER_ORDER_STATUS_UNAUTHORIZED",
+			status: 403,
+		});
+		await expect(sellerOrderStatus(db, "seller-order-1")).resolves.toEqual({
+			status: "NEW",
+			trackingNumber: null,
+		});
+
+		const processed = await changeSellerOrderStatusForCurrentUser(
+			sellerUser,
+			{ sellerOrderId: "seller-order-1", status: "PROCESSING" },
+			sellerOrders,
+		);
+		expect(processed).toEqual({
+			sellerOrderId: "seller-order-1",
+			purchaseId: "purchase-1",
+			status: "PROCESSING",
+			trackingNumber: null,
+		});
+
+		const shipped = await changeSellerOrderStatusForCurrentUser(
+			sellerUser,
+			{
+				sellerOrderId: "seller-order-1",
+				status: "SHIPPED",
+				trackingNumber: "TRACK-1",
+			},
+			sellerOrders,
+		);
+		expect(shipped).toEqual({
+			sellerOrderId: "seller-order-1",
+			purchaseId: "purchase-1",
+			status: "SHIPPED",
+			trackingNumber: "TRACK-1",
+		});
+
+		await expect(
+			db.sellerOrder.findUniqueOrThrow({
+				where: { id: "seller-order-1" },
+				select: {
+					status: true,
+					trackingNumber: true,
+				},
+			}),
+		).resolves.toEqual({
+			status: "SHIPPED",
+			trackingNumber: "TRACK-1",
+		});
+	});
+});
+
+async function sellerOrderStatus(db: PrismaClient, sellerOrderId: string) {
+	return db.sellerOrder.findUniqueOrThrow({
+		where: { id: sellerOrderId },
+		select: {
+			status: true,
+			trackingNumber: true,
+		},
+	});
+}
+
+async function seedOrderServicePurchase(db: PrismaClient) {
+	await seedPurchaseWithSellerOrders(db, {
+		id: "purchase-1",
+		totalAmountCents: 275_00,
+		sellerOrders: [
+			{
+				id: "seller-order-1",
+				sellerId: "seller-1",
+				sellerIdSnapshot: "seller-1",
+				subtotalCents: 125_00,
+				items: [
+					{
+						id: "seller-order-item-1",
+						listingId: "listing-1",
+						sellerId: "seller-1",
+						sellerDisplayName: "A Seller",
+						unitPriceCents: 125_00,
+						quantity: 1,
+					},
+				],
+			},
+			{
+				id: "seller-order-2",
+				sellerId: "seller-2",
+				sellerIdSnapshot: "seller-2",
+				subtotalCents: 150_00,
+				items: [
+					{
+						id: "seller-order-item-2",
+						listingId: "listing-2",
+						listingName: "Jazzmaster",
+						sellerId: "seller-2",
+						sellerDisplayName: "B Seller",
+						unitPriceCents: 75_00,
+						quantity: 2,
+					},
+				],
+			},
+		],
+	});
+}
