@@ -13,3 +13,4 @@ tanstack_auth_redirection|docs/runbooks/tanstack-start-auth-redirection.md|Auth 
 feature_capsules_index|docs/features/index.md|Entry point for optional feature capsule documentation
 feature_capsules_template|docs/features/TEMPLATE.md|Canonical template for feature capsule structure
 logger_patterns|docs/logger-patterns.md|Structured logging usage for server and client code
+testing_strategy|docs/testing-strategy.md|Small-team testing strategy and test selection rules

@@ -9,6 +9,10 @@ import {
 	updateRequestContext,
 	withRequestContext,
 } from "@/lib/logger";
+import {
+	getRequestLogOutcome,
+	getRequestLogStatusCode,
+} from "@/server/request-log-status";
 import { useAppSession } from "@/utils/session";
 
 export const requestLoggerMiddleware = createMiddleware().server(
@@ -18,6 +22,7 @@ export const requestLoggerMiddleware = createMiddleware().server(
 			| Response
 			| RequestServerResult<object, unknown, unknown>
 			| undefined;
+		let didThrow = false;
 
 		return withRequestContext(requestContext, async () => {
 			try {
@@ -28,6 +33,7 @@ export const requestLoggerMiddleware = createMiddleware().server(
 					| Response
 					| RequestServerResult<object, unknown, unknown>;
 			} catch (error) {
+				didThrow = true;
 				updateRequestContext({
 					statusCode: 500,
 					outcome: "error",
@@ -35,19 +41,10 @@ export const requestLoggerMiddleware = createMiddleware().server(
 				});
 				throw error;
 			} finally {
-				const response =
-					nextResult instanceof Response
-						? nextResult
-						: nextResult?.response || new Response(null, { status: 500 });
-				const statusCode = response?.status ?? 500;
+				const statusCode = getRequestLogStatusCode(nextResult, { didThrow });
 				const durationMs =
 					Date.now() - (requestContext.requestStartAt || Date.now());
-				const hasServerError = statusCode >= 500;
-				const outcome = hasServerError
-					? "error"
-					: statusCode >= 400
-						? "warning"
-						: "success";
+				const outcome = getRequestLogOutcome(statusCode);
 
 				updateRequestContext({
 					statusCode,
