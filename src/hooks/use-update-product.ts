@@ -5,10 +5,38 @@ import { useProductById } from "@/hooks/use-get-products";
 import type { ImageFile } from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
 import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
-import { updateProduct } from "@/lib/tanstack-query/product-queries";
+import type { UpdateProductInput } from "@/lib/zod/product-validation";
+import { updateListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
-import type { UpdateProductForm, UpdateProductRequest } from "@/types/product";
+import type {
+	ProductResponse,
+	UpdateProductForm,
+	UpdateProductRequest,
+} from "@/types/product";
+
+function prepareProductFormData(data: UpdateProductInput): FormData {
+	const formData = new FormData();
+
+	if (data.name !== undefined) formData.append("name", data.name);
+	if (data.category !== undefined) formData.append("category", data.category);
+	if (data.condition !== undefined)
+		formData.append("condition", data.condition);
+	if (data.brand !== undefined) formData.append("brand", data.brand);
+	if (data.model !== undefined) formData.append("model", data.model);
+	if (data.description !== undefined)
+		formData.append("description", data.description);
+	if (data.price !== undefined) formData.append("price", String(data.price));
+	if (data.stock !== undefined) formData.append("stock", String(data.stock));
+
+	if (data.images && data.images.length > 0) {
+		data.images.forEach((file) => {
+			formData.append("image", file);
+		});
+	}
+
+	return formData;
+}
 
 const useUpdateProduct = (id: string) => {
 	const [product, setProduct] = useState<UpdateProductForm | null>(null);
@@ -92,8 +120,12 @@ const useUpdateProduct = (id: string) => {
 		isPending: loadingUpdateProduct,
 		isError: errorUpdateProduct,
 	} = useMutation({
-		mutationFn: ({ id, data }: { id: string; data: UpdateProductRequest }) =>
-			updateProduct(id, data),
+		mutationFn: ({ id, data }: { id: string; data: UpdateProductRequest }) => {
+			const formData = prepareProductFormData(data);
+			formData.append("listingId", id);
+
+			return updateListingFn({ data: formData }) as Promise<ProductResponse>;
+		},
 		onSuccess: async () => {
 			await invalidateProductCache(queryClient);
 			showToast(

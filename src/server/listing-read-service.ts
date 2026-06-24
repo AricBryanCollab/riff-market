@@ -37,7 +37,7 @@ export type ListingReadServiceDependencies = {
 
 type ProductApiReadError = {
 	readonly error: string;
-	readonly details?: unknown;
+	readonly details?: object;
 };
 
 type ProductApiListingReadModel = {
@@ -56,8 +56,8 @@ type ProductApiListingReadModel = {
 	readonly stock: number;
 	readonly isApproved: boolean;
 	readonly listingStatus: ListingReadStatus;
-	readonly createdAt?: Date;
-	readonly updatedAt?: Date;
+	readonly createdAt?: string;
+	readonly updatedAt?: string;
 	readonly seller: ListingReadModel["seller"];
 };
 
@@ -83,21 +83,6 @@ export async function getListingDetailsForProductApi(
 	}
 
 	return toProductApiListingReadModel(result.value);
-}
-
-export async function getListingDetailsProductResponse(
-	listingId: string,
-	dependencies?: ListingReadServiceDependencies,
-): Promise<Response> {
-	const listing = await getListingDetailsForProductApi(listingId, dependencies);
-
-	if (isProductApiReadError(listing)) {
-		return new Response(JSON.stringify({ message: "Product not found" }), {
-			status: 404,
-		});
-	}
-
-	return new Response(JSON.stringify(listing), { status: 200 });
 }
 
 export async function getApprovedListingsForProductApi(
@@ -266,12 +251,6 @@ async function createPrismaListingReadDependencies(): Promise<ListingReadService
 	};
 }
 
-function isProductApiReadError(
-	value: ProductApiListingReadModel | ProductApiReadError,
-): value is ProductApiReadError {
-	return "error" in value;
-}
-
 function isPublicProductApiListingVisible(listing: ListingReadModel) {
 	return listing.listingStatus === "APPROVED";
 }
@@ -315,8 +294,8 @@ function toProductApiListingReadModel(
 		stock: listing.stock,
 		isApproved: listing.listingStatus === "APPROVED",
 		listingStatus: listing.listingStatus,
-		createdAt: listing.createdAt,
-		updatedAt: listing.updatedAt,
+		createdAt: listing.createdAt?.toISOString(),
+		updatedAt: listing.updatedAt?.toISOString(),
 		seller: listing.seller,
 	};
 }

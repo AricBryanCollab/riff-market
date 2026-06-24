@@ -1,13 +1,38 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { getProductsByIds } from "@/lib/tanstack-query/product-queries";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import { getCartListingsProductApiFn } from "@/server/listing-read.functions";
 import { useCartStore } from "@/store/cart";
 import type { BaseProduct } from "@/types/product";
+
+type ProductReadError = {
+	readonly error: string;
+};
+
+function unwrapProductReadResult<T>(result: T | ProductReadError): T {
+	if (
+		typeof result === "object" &&
+		result !== null &&
+		"error" in result &&
+		typeof result.error === "string"
+	) {
+		throw new Error(result.error);
+	}
+
+	return result as T;
+}
 
 export const cartDetailsQueryOpt = (productIds: string[]) =>
 	queryOptions<BaseProduct[]>({
 		queryKey: queryKeys.products.cartDetails(productIds),
-		queryFn: () => getProductsByIds(productIds),
+		queryFn: async () => {
+			const result = await getCartListingsProductApiFn({
+				data: {
+					ids: productIds,
+				},
+			});
+
+			return unwrapProductReadResult(result) as BaseProduct[];
+		},
 		staleTime: 1000 * 60 * 2,
 	});
 

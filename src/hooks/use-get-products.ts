@@ -1,11 +1,11 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import {
-	getApprovedProducts,
-	getFeaturedProducts,
-	getProductCountByStatus,
-	getProductDetailsById,
-} from "@/lib/tanstack-query/product-queries";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import {
+	getApprovedListingsProductApiFn,
+	getListingDetailsProductApiFn,
+	getListingStatusCountProductApiFn,
+	type ProductApiQueryInput,
+} from "@/server/listing-read.functions";
 import type {
 	ApprovedProductCount,
 	BaseProduct,
@@ -14,32 +14,105 @@ import type {
 	ProductCountStatusQuery,
 } from "@/types/product";
 
+type ProductReadError = {
+	readonly error: string;
+	readonly details?: unknown;
+};
+
+function toProductApiQueryInput(
+	filters: GetApprovedProductsFilterQuery,
+): ProductApiQueryInput {
+	return {
+		limit: filters?.limit !== undefined ? filters.limit.toString() : null,
+		offset: filters?.offset !== undefined ? filters.offset.toString() : null,
+		random: null,
+		category: toNullableQueryString(filters?.category),
+		brand: toNullableQueryString(filters?.brand),
+		search: toNullableQueryString(filters?.search),
+		condition: toNullableQueryString(filters?.condition),
+		priceMin:
+			filters?.priceMin !== undefined ? filters.priceMin.toString() : null,
+		priceMax:
+			filters?.priceMax !== undefined ? filters.priceMax.toString() : null,
+	};
+}
+
+function toNullableQueryString(value: string | undefined): string | null {
+	return value ? value : null;
+}
+
+function unwrapProductReadResult<T>(result: T | ProductReadError): T {
+	if (isProductReadError(result)) {
+		throw new Error(result.error);
+	}
+
+	return result;
+}
+
+function isProductReadError(value: unknown): value is ProductReadError {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		"error" in value &&
+		typeof value.error === "string"
+	);
+}
+
 export const approvedProductsQueryOpt = (
 	filters: GetApprovedProductsFilterQuery,
 ) =>
 	queryOptions<BaseProduct[]>({
 		queryKey: queryKeys.products.approved(filters),
-		queryFn: () => getApprovedProducts(filters),
+		queryFn: async () => {
+			const result = await getApprovedListingsProductApiFn({
+				data: toProductApiQueryInput(filters),
+			});
+
+			return unwrapProductReadResult(result) as BaseProduct[];
+		},
 		staleTime: 1000 * 60 * 5,
 	});
 
 export const featuredProductsQueryOpt = queryOptions<BaseProduct[]>({
 	queryKey: queryKeys.products.featured,
-	queryFn: getFeaturedProducts,
+	queryFn: async () => {
+		const result = await getApprovedListingsProductApiFn({
+			data: {
+				...toProductApiQueryInput({ limit: 5 }),
+				random: "true",
+			},
+		});
+
+		return unwrapProductReadResult(result) as BaseProduct[];
+	},
 	staleTime: 1000 * 60 * 5,
 });
 
 export const productbyIdQueryOpt = (id: string) =>
 	queryOptions<BaseProduct>({
 		queryKey: queryKeys.products.detail(id),
-		queryFn: () => getProductDetailsById(id),
+		queryFn: async () => {
+			const result = await getListingDetailsProductApiFn({
+				data: { listingId: id },
+			});
+
+			return unwrapProductReadResult(result) as BaseProduct;
+		},
 		retry: false,
 	});
 
 export const productCountByStatusQueryOpt = (status: ProductCountStatusQuery) =>
 	queryOptions<ApprovedProductCount | PendingProductCount>({
 		queryKey: queryKeys.products.countByStatus(status),
-		queryFn: () => getProductCountByStatus(status),
+		queryFn: async () => {
+			const result = await getListingStatusCountProductApiFn({
+				data: { status },
+			});
+
+			return unwrapProductReadResult(result) as
+				| ApprovedProductCount
+				| PendingProductCount;
+		},
 	});
 
 export const useApprovedProducts = (

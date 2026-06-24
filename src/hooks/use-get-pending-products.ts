@@ -1,11 +1,32 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getPendingApprovalProducts } from "@/lib/tanstack-query/product-queries";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import { getPendingModerationListingsProductApiFn } from "@/server/listing-read.functions";
 import type { BaseProduct } from "@/types/product";
+
+type ProductReadError = {
+	readonly error: string;
+};
+
+function unwrapProductReadResult<T>(result: T | ProductReadError): T {
+	if (
+		typeof result === "object" &&
+		result !== null &&
+		"error" in result &&
+		typeof result.error === "string"
+	) {
+		throw new Error(result.error);
+	}
+
+	return result as T;
+}
 
 export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
 	queryKey: queryKeys.products.pending,
-	queryFn: getPendingApprovalProducts,
+	queryFn: async () => {
+		const result = await getPendingModerationListingsProductApiFn();
+
+		return unwrapProductReadResult(result) as BaseProduct[];
+	},
 	retry: false,
 	staleTime: 30000,
 });

@@ -4,10 +4,11 @@ import { useState } from "react";
 import type { ImageFile } from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
 import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
-import { createProduct } from "@/lib/tanstack-query/product-queries";
+import type { CreateProductInput } from "@/lib/zod/product-validation";
+import { createListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
-import type { CreateProductRequest } from "@/types/product";
+import type { CreateProductRequest, ProductResponse } from "@/types/product";
 
 const initialProduct = {
 	name: "",
@@ -22,6 +23,25 @@ const initialProduct = {
 
 type CreateProductWithoutImages = Omit<CreateProductRequest, "images">;
 
+function prepareProductFormData(data: CreateProductInput): FormData {
+	const formData = new FormData();
+
+	formData.append("name", data.name);
+	formData.append("category", data.category);
+	formData.append("condition", data.condition);
+	formData.append("brand", data.brand);
+	formData.append("model", data.model);
+	formData.append("description", data.description);
+	formData.append("price", String(data.price));
+	formData.append("stock", String(data.stock));
+
+	data.images.forEach((file) => {
+		formData.append("image", file);
+	});
+
+	return formData;
+}
+
 const useCreateProduct = () => {
 	const [product, setProduct] =
 		useState<CreateProductWithoutImages>(initialProduct);
@@ -31,7 +51,10 @@ const useCreateProduct = () => {
 	const navigate = useNavigate();
 
 	const { mutate, isPending, isError } = useMutation({
-		mutationFn: createProduct,
+		mutationFn: (data: CreateProductInput) =>
+			createListingFn({
+				data: prepareProductFormData(data),
+			}) as Promise<ProductResponse>,
 		onSuccess: async () => {
 			await invalidateProductCache(queryClient);
 			showToast(

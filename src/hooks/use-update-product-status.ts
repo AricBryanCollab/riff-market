@@ -1,9 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
-import { updateProductStatus } from "@/lib/tanstack-query/product-queries";
+import { moderateListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
-import type { UpdateProductStatusRequest } from "@/types/product";
+import type {
+	UpdateProductStatusRequest,
+	UpdateProductStatusResult,
+} from "@/types/product";
 
 const useUpdateProductStatus = () => {
 	const { showToast } = useToastStore();
@@ -12,7 +15,12 @@ const useUpdateProductStatus = () => {
 
 	const { mutate, isPending, isError } = useMutation({
 		mutationFn: ({ id, isApproved }: UpdateProductStatusRequest) =>
-			updateProductStatus(id, isApproved),
+			moderateListingFn({
+				data: {
+					listingId: id,
+					decision: isApproved ? "APPROVE" : "DECLINE",
+				},
+			}) as Promise<UpdateProductStatusResult>,
 		onSuccess: async (_, variables) => {
 			await invalidateProductCache(queryClient);
 			const message = variables.isApproved
