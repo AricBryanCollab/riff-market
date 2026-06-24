@@ -32,7 +32,7 @@ import {
 	seedListing as seedProduct,
 	seedPurchaseWithSellerOrders,
 	setupPrismaTestDatabase,
-} from "@/test/prisma-test-support";
+} from "@/test/prisma-vitest-support";
 import type { ImageAssetRef } from "@/types/image-asset";
 
 describeDb("listing service Prisma integration", () => {

@@ -13,7 +13,7 @@ import {
 	seedMarketplaceUsers,
 	seedPurchaseWithSellerOrders,
 	setupPrismaTestDatabase,
-} from "@/test/prisma-test-support";
+} from "@/test/prisma-vitest-support";
 
 const customerUser: ServerUserContext = {
 	id: "customer-1",

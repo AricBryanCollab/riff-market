@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { requireSafeTestDatabaseUrl } from "./prisma-test-support";
+import { requireSafeTestDatabaseUrl } from "./prisma-test-data";
 
-describe("Prisma test support database URL guard", () => {
+describe("database-backed test URL guard", () => {
 	it("accepts database names that clearly identify disposable test databases", () => {
 		const url = "postgresql://user:pass@localhost:5432/riff_market_test";
 

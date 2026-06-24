@@ -5,7 +5,7 @@ import {
 	seedMarketplaceUsers,
 	seedListing as seedProduct,
 	setupPrismaTestDatabase,
-} from "@/test/prisma-test-support";
+} from "@/test/prisma-vitest-support";
 import { PrismaListingReadModels } from "./prisma-listing-read-models";
 
 describeDb("Prisma listing read models", () => {

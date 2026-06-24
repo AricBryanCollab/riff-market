@@ -22,7 +22,7 @@ import {
 	seedMarketplaceUsers,
 	seedProduct,
 	setupPrismaTestDatabase,
-} from "@/test/prisma-test-support";
+} from "@/test/prisma-vitest-support";
 
 describeDb("PlacePurchase Prisma integration", () => {
 	let db: PrismaClient;

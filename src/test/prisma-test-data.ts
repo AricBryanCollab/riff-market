@@ -9,20 +9,15 @@ import {
 	type Role,
 	type SellerOrderStatus,
 } from "generated/prisma/client";
-import { afterAll, beforeAll, beforeEach, describe } from "vitest";
 import type { ImageAssetRef } from "@/types/image-asset";
 
-const databaseUrl = process.env.TEST_DATABASE_URL;
 const databaseUrlSource = "TEST_DATABASE_URL";
-const runDbTests = process.env.RUN_DB_TESTS === "1";
 const safeTestDatabaseNamePattern =
 	/(^|[_-])(test|testing|vitest|integration)([_-]|$)/;
 
-export const describeDb = runDbTests ? describe : describe.skip;
-
 export function createTestPrismaClient() {
 	const connectionString = requireSafeTestDatabaseUrl(
-		databaseUrl,
+		process.env[databaseUrlSource],
 		databaseUrlSource,
 	);
 
@@ -38,14 +33,14 @@ export function requireSafeTestDatabaseUrl(
 	sourceName = "TEST_DATABASE_URL",
 ) {
 	if (!connectionString) {
-		throw new Error("TEST_DATABASE_URL is required to run Prisma tests");
+		throw new Error(`${sourceName} is required to run database-backed tests`);
 	}
 
 	const databaseName = databaseNameFromUrl(connectionString, sourceName);
 
 	if (!safeTestDatabaseNamePattern.test(databaseName.toLowerCase())) {
 		throw new Error(
-			`${sourceName} points to database "${databaseName}". Prisma tests delete rows; use TEST_DATABASE_URL with a database name containing test, testing, vitest, or integration.`,
+			`${sourceName} points to database "${databaseName}". Database-backed tests delete rows; use TEST_DATABASE_URL with a database name containing test, testing, vitest, or integration.`,
 		);
 	}
 
@@ -70,44 +65,6 @@ function databaseNameFromUrl(connectionString: string, sourceName: string) {
 	}
 
 	return databaseName;
-}
-
-export function setupPrismaTestDatabase() {
-	let client: PrismaClient | undefined;
-
-	beforeAll(() => {
-		client = createTestPrismaClient();
-	});
-
-	beforeEach(async () => {
-		await cleanDatabase(getClient());
-	});
-
-	afterAll(async () => {
-		if (!client) {
-			return;
-		}
-
-		try {
-			await cleanDatabase(client);
-		} finally {
-			await client.$disconnect();
-		}
-	});
-
-	return {
-		get client() {
-			return getClient();
-		},
-	};
-
-	function getClient() {
-		if (!client) {
-			throw new Error("Prisma test database was accessed before setup");
-		}
-
-		return client;
-	}
 }
 
 export async function cleanDatabase(db: PrismaClient) {
