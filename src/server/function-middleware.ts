@@ -1,7 +1,9 @@
 import { createMiddleware } from "@tanstack/react-start";
+import { setResponseStatus } from "@tanstack/react-start/server";
 import { findUserById } from "@/data/auth-repo";
-import { updateRequestContext } from "@/lib/logger";
+import { logger, updateRequestContext } from "@/lib/logger";
 import { requestLoggerMiddleware } from "@/middleware";
+import { NotificationRequestError } from "@/server/notification-service";
 import type { UserRole } from "@/types/enum";
 import { useAppSession } from "@/utils/session";
 
@@ -60,6 +62,24 @@ export const createServerRoleMiddleware = (allowedRoles: UserRole[]) =>
 
 			return next();
 		});
+
+export const notificationErrorMiddleware = createMiddleware({
+	type: "function",
+}).server(async ({ next }) => {
+	try {
+		return await next();
+	} catch (error) {
+		if (error instanceof NotificationRequestError) {
+			setResponseStatus(error.status);
+			throw new Error(error.message);
+		}
+
+		const fallbackMessage = "Failed to process notification request";
+		logger.error(fallbackMessage, error);
+		setResponseStatus(500);
+		throw new Error(fallbackMessage);
+	}
+});
 
 export const authenticatedServerFunctionMiddleware = [
 	requestLoggerMiddleware,
