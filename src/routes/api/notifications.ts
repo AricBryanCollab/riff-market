@@ -1,39 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getNotificationsByUserService } from "@/actions/notifications";
-import { logger } from "@/lib/logger";
 import { authMiddleware, requestLoggerMiddleware } from "@/middleware";
+import { handleListNotificationsRoute } from "@/server/notification-route-handlers";
 
 export const Route = createFileRoute("/api/notifications")({
 	server: {
 		middleware: [requestLoggerMiddleware, authMiddleware],
 		handlers: {
-			GET: async ({ context }) => {
-				try {
-					const userId = context.id;
-
-					const notifications = await getNotificationsByUserService(userId);
-
-					if ("error" in notifications) {
-						return new Response(
-							JSON.stringify({
-								message: notifications.error || "Failed to get notifications",
-							}),
-							{ status: 400 },
-						);
-					}
-
-					return new Response(JSON.stringify(notifications), { status: 200 });
-				} catch (error) {
-					logger.error("Failed to get notifications", error);
-					return new Response(
-						JSON.stringify({
-							error: "Failed to get notifications",
-							details: error instanceof Error ? error.message : "Unknown error",
-						}),
-						{ status: 500 },
-					);
-				}
-			},
+			GET: async ({ context }) => handleListNotificationsRoute(context),
 		},
 	},
 });

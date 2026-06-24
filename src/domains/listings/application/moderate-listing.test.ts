@@ -42,35 +42,57 @@ function makeSavedListing(status: ListingStatus): ListingModerationResult {
 }
 
 function makePorts(snapshot: ListingSnapshot | null = makeListing()) {
-	const calls: string[] = [];
+	const lookedUpListingIds: string[] = [];
+	const savedStatuses: Array<{
+		readonly listingId: string;
+		status: ListingStatus;
+		expectedStatus: ListingStatus;
+	}> = [];
+	const notifications: ModerationNotification[] = [];
 	const repository: ListingModerationRepositoryPort = {
 		findListingForModeration: async (listingId) => {
-			calls.push(`find:${listingId}`);
+			lookedUpListingIds.push(listingId);
 			return snapshot;
 		},
-		saveListingStatus: async (listingId, status) => {
-			calls.push(`save:${listingId}:${status}`);
+		saveListingStatus: async (listingId, status, expectedStatus) => {
+			savedStatuses.push({ listingId, status, expectedStatus });
 			return makeSavedListing(status);
 		},
 	};
 	const notifier: ListingModerationNotifierPort = {
-		notifyListingApproved: async (listing) => {
-			calls.push(`approved:${listing.id}`);
+		notifyListingApproved: async (listing, event) => {
+			notifications.push({
+				kind: "approved",
+				listing,
+				eventName: event.eventName,
+				listingId: event.payload.listingId,
+				sellerId: event.payload.sellerId,
+				actorId: event.metadata?.actor?.id,
+			});
 		},
-		notifyListingDeclined: async (listing) => {
-			calls.push(`declined:${listing.id}`);
+		notifyListingDeclined: async (listing, event) => {
+			notifications.push({
+				kind: "declined",
+				listing,
+				eventName: event.eventName,
+				listingId: event.payload.listingId,
+				sellerId: event.payload.sellerId,
+				actorId: event.metadata?.actor?.id,
+			});
 		},
 	};
 
 	return {
-		calls,
+		lookedUpListingIds,
+		notifications,
+		savedStatuses,
 		useCase: new ModerateListing(repository, notifier),
 	};
 }
 
 describe("ModerateListing", () => {
 	it("approves a pending listing and notifies the seller", async () => {
-		const { calls, useCase } = makePorts();
+		const { notifications, savedStatuses, useCase } = makePorts();
 
 		const result = await useCase.execute(admin, {
 			listingId: "listing-1",
@@ -81,15 +103,27 @@ describe("ModerateListing", () => {
 			ok: true,
 			value: makeSavedListing("APPROVED"),
 		});
-		expect(calls).toEqual([
-			"find:listing-1",
-			"save:listing-1:APPROVED",
-			"approved:listing-1",
+		expect(savedStatuses).toEqual([
+			{
+				listingId: "listing-1",
+				status: "APPROVED",
+				expectedStatus: "PENDING",
+			},
+		]);
+		expect(notifications).toEqual([
+			{
+				kind: "approved",
+				listing: makeSavedListing("APPROVED"),
+				eventName: "ListingApproved",
+				listingId: "listing-1",
+				sellerId: "seller-1",
+				actorId: "admin-1",
+			},
 		]);
 	});
 
 	it("declines a pending listing without deleting it", async () => {
-		const { calls, useCase } = makePorts();
+		const { notifications, savedStatuses, useCase } = makePorts();
 
 		const result = await useCase.execute(admin, {
 			listingId: "listing-1",
@@ -100,15 +134,28 @@ describe("ModerateListing", () => {
 			ok: true,
 			value: makeSavedListing("DECLINED"),
 		});
-		expect(calls).toEqual([
-			"find:listing-1",
-			"save:listing-1:DECLINED",
-			"declined:listing-1",
+		expect(savedStatuses).toEqual([
+			{
+				listingId: "listing-1",
+				status: "DECLINED",
+				expectedStatus: "PENDING",
+			},
+		]);
+		expect(notifications).toEqual([
+			{
+				kind: "declined",
+				listing: makeSavedListing("DECLINED"),
+				eventName: "ListingDeclined",
+				listingId: "listing-1",
+				sellerId: "seller-1",
+				actorId: "admin-1",
+			},
 		]);
 	});
 
 	it("requires an admin actor", async () => {
-		const { calls, useCase } = makePorts();
+		const { lookedUpListingIds, notifications, savedStatuses, useCase } =
+			makePorts();
 
 		const result = await useCase.execute(seller, {
 			listingId: "listing-1",
@@ -123,11 +170,14 @@ describe("ModerateListing", () => {
 				message: "Only admins can moderate listings",
 			},
 		});
-		expect(calls).toEqual([]);
+		expect(lookedUpListingIds).toEqual([]);
+		expect(savedStatuses).toEqual([]);
+		expect(notifications).toEqual([]);
 	});
 
 	it("returns not found for missing listings", async () => {
-		const { calls, useCase } = makePorts(null);
+		const { lookedUpListingIds, notifications, savedStatuses, useCase } =
+			makePorts(null);
 
 		const result = await useCase.execute(admin, {
 			listingId: "missing",
@@ -142,11 +192,14 @@ describe("ModerateListing", () => {
 				message: "Listing not found",
 			},
 		});
-		expect(calls).toEqual(["find:missing"]);
+		expect(lookedUpListingIds).toEqual(["missing"]);
+		expect(savedStatuses).toEqual([]);
+		expect(notifications).toEqual([]);
 	});
 
 	it("rejects invalid lifecycle transitions", async () => {
-		const { calls, useCase } = makePorts(makeListing({ status: "WITHDRAWN" }));
+		const { lookedUpListingIds, notifications, savedStatuses, useCase } =
+			makePorts(makeListing({ status: "WITHDRAWN" }));
 
 		const result = await useCase.execute(admin, {
 			listingId: "listing-1",
@@ -162,24 +215,31 @@ describe("ModerateListing", () => {
 				details: { code: "LISTING_WITHDRAWN_CANNOT_BE_APPROVED" },
 			},
 		});
-		expect(calls).toEqual(["find:listing-1"]);
+		expect(lookedUpListingIds).toEqual(["listing-1"]);
+		expect(savedStatuses).toEqual([]);
+		expect(notifications).toEqual([]);
 	});
 
-	it("returns a save failure when persistence does not confirm the status", async () => {
-		const calls: string[] = [];
+	it("returns a conflict when persistence does not confirm the expected status", async () => {
+		const savedStatuses: Array<{
+			readonly listingId: string;
+			status: ListingStatus;
+			expectedStatus: ListingStatus;
+		}> = [];
+		let notified = false;
 		const repository: ListingModerationRepositoryPort = {
 			findListingForModeration: async () => makeListing(),
-			saveListingStatus: async (listingId, status) => {
-				calls.push(`save:${listingId}:${status}`);
+			saveListingStatus: async (listingId, status, expectedStatus) => {
+				savedStatuses.push({ listingId, status, expectedStatus });
 				return null;
 			},
 		};
 		const notifier: ListingModerationNotifierPort = {
 			notifyListingApproved: async () => {
-				calls.push("approved");
+				notified = true;
 			},
 			notifyListingDeclined: async () => {
-				calls.push("declined");
+				notified = true;
 			},
 		};
 
@@ -194,11 +254,27 @@ describe("ModerateListing", () => {
 		expect(result).toEqual({
 			ok: false,
 			error: {
-				kind: "unexpected",
-				code: "MODERATE_LISTING_SAVE_FAILED",
-				message: "Failed to save listing moderation result",
+				kind: "conflict",
+				code: "MODERATE_LISTING_STALE_STATUS",
+				message: "Listing status changed before moderation completed",
 			},
 		});
-		expect(calls).toEqual(["save:listing-1:APPROVED"]);
+		expect(savedStatuses).toEqual([
+			{
+				listingId: "listing-1",
+				status: "APPROVED",
+				expectedStatus: "PENDING",
+			},
+		]);
+		expect(notified).toBe(false);
 	});
 });
+
+type ModerationNotification = {
+	readonly kind: "approved" | "declined";
+	readonly listing: ListingModerationResult;
+	readonly eventName: "ListingApproved" | "ListingDeclined";
+	readonly listingId: string;
+	readonly sellerId: string;
+	readonly actorId: string | undefined;
+};

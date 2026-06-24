@@ -110,7 +110,13 @@ function makeFakeContext() {
 				async ({ data }: { readonly data: CreatedNotification }) => {
 					createdNotifications.push(data);
 
-					return data;
+					return {
+						id: `notification-${createdNotifications.length}`,
+						createdAt: new Date("2026-06-11T00:00:00.000Z"),
+						purchaseId: null,
+						sellerOrderId: null,
+						...data,
+					};
 				},
 			),
 		},
@@ -134,6 +140,7 @@ describe("PrismaPurchasePlacedNotificationCreator", () => {
 			{
 				userId: "customer-1",
 				purchaseId: "purchase-1",
+				sellerOrderId: null,
 				message:
 					"Your purchase #RM-1001 has been placed successfully! Total: USD 250.00",
 				isRead: false,

@@ -78,10 +78,19 @@ export type ListingCommandServiceDependencies = {
 	readonly imageManager: ListingImageManagerPort;
 };
 
-export type ListingModerationServiceDependencies = {
+export type ListingModerationExecutionDependencies = {
 	readonly repository: ListingModerationRepositoryPort;
 	readonly notifier: ListingModerationNotifierPort;
 };
+
+export type ListingModerationServiceDependencies =
+	ListingModerationExecutionDependencies & {
+		readonly runInTransaction?: <T>(
+			handler: (
+				dependencies: ListingModerationExecutionDependencies,
+			) => Promise<T>,
+		) => Promise<T>;
+	};
 
 export class ListingRequestError extends Error {
 	readonly code?: string;
@@ -281,11 +290,26 @@ export async function moderateListingForCurrentUser(
 ): Promise<ListingModerationResult> {
 	const moderationDependencies =
 		dependencies ?? (await createPrismaListingModerationDependencies());
+
+	if (moderationDependencies.runInTransaction) {
+		return moderationDependencies.runInTransaction((transactionDependencies) =>
+			moderateListingWithDependencies(user, input, transactionDependencies),
+		);
+	}
+
+	return moderateListingWithDependencies(user, input, moderationDependencies);
+}
+
+async function moderateListingWithDependencies(
+	user: ServerUserContext,
+	input: ModerateListingInput,
+	dependencies: ListingModerationExecutionDependencies,
+): Promise<ListingModerationResult> {
 	const actor = toActor(user);
 	const command = toCommand(input);
 	const moderateListing = new ModerateListing(
-		moderationDependencies.repository,
-		moderationDependencies.notifier,
+		dependencies.repository,
+		dependencies.notifier,
 	);
 	const result = await moderateListing.execute(actor, command);
 
@@ -318,6 +342,15 @@ async function createPrismaListingModerationDependencies(): Promise<ListingModer
 	return {
 		repository: new moderation.PrismaListingModerationRepository(prisma),
 		notifier: new moderation.PrismaListingModerationNotifier(prisma),
+		runInTransaction: (handler) =>
+			prisma.$transaction((transaction) =>
+				handler({
+					repository: new moderation.PrismaListingModerationRepository(
+						transaction,
+					),
+					notifier: new moderation.PrismaListingModerationNotifier(transaction),
+				}),
+			),
 	};
 }
 

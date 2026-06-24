@@ -1,5 +1,7 @@
 import type { Prisma, PrismaClient } from "generated/prisma/client";
 import type {
+	ListingApprovedEvent,
+	ListingDeclinedEvent,
 	ListingModerationNotifierPort,
 	ListingModerationRepositoryPort,
 	ListingModerationResult,
@@ -8,6 +10,8 @@ import type {
 	ListingSnapshot,
 	ListingStatus,
 } from "@/domains/listings/domain/listing";
+import { CreateListingModerationNotification } from "@/domains/notifications/application/notification-event-handlers";
+import { PrismaNotifications } from "@/domains/notifications/infrastructure/prisma-notifications";
 import { Money } from "@/domains/shared/domain/money";
 import { toImageAssetUrls } from "@/utils/image-asset-ref";
 
@@ -77,13 +81,25 @@ export class PrismaListingModerationRepository
 	async saveListingStatus(
 		listingId: string,
 		status: ListingStatus,
+		expectedStatus: ListingStatus,
 	): Promise<ListingModerationResult | null> {
-		const product = await this.db.product.update({
-			where: { id: listingId },
+		const updated = await this.db.product.updateMany({
+			where: {
+				id: listingId,
+				listingStatus: expectedStatus,
+			},
 			data: {
 				listingStatus: status,
 				isApproved: status === "APPROVED",
 			},
+		});
+
+		if (updated.count === 0) {
+			return null;
+		}
+
+		const product = await this.db.product.findUnique({
+			where: { id: listingId },
 			select: {
 				id: true,
 				name: true,
@@ -92,6 +108,10 @@ export class PrismaListingModerationRepository
 				listingStatus: true,
 			},
 		});
+
+		if (!product) {
+			return null;
+		}
 
 		return {
 			id: product.id,
@@ -106,25 +126,34 @@ export class PrismaListingModerationRepository
 export class PrismaListingModerationNotifier
 	implements ListingModerationNotifierPort
 {
-	constructor(private readonly db: DbClient) {}
+	private readonly listingModerationNotifications: CreateListingModerationNotification;
 
-	async notifyListingApproved(input: ListingModerationResult): Promise<void> {
-		await this.db.notification.create({
-			data: {
-				userId: input.sellerId,
-				message: `Great News! Your product ${input.name} has been approved and live at the RiffMarket shop`,
-				isRead: false,
-			},
-		});
+	constructor(db: DbClient) {
+		this.listingModerationNotifications =
+			new CreateListingModerationNotification(new PrismaNotifications(db));
 	}
 
-	async notifyListingDeclined(input: ListingModerationResult): Promise<void> {
-		await this.db.notification.create({
-			data: {
-				userId: input.sellerId,
-				message: `Your product ${input.name} has been declined by the admin`,
-				isRead: false,
-			},
+	async notifyListingApproved(
+		input: ListingModerationResult,
+		event: ListingApprovedEvent,
+	): Promise<void> {
+		await this.notifyListingModeration(input, event);
+	}
+
+	async notifyListingDeclined(
+		input: ListingModerationResult,
+		event: ListingDeclinedEvent,
+	): Promise<void> {
+		await this.notifyListingModeration(input, event);
+	}
+
+	private async notifyListingModeration(
+		input: ListingModerationResult,
+		event: ListingApprovedEvent | ListingDeclinedEvent,
+	): Promise<void> {
+		await this.listingModerationNotifications.execute({
+			event,
+			listingName: input.name,
 		});
 	}
 }

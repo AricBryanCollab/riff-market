@@ -13,29 +13,59 @@ Required read order for every session:
 Then inspect actual repo state:
 
 - `git status --short`
-- relevant source files and tests for checkout, orders, listings/products, moderation, and shared test setup
+- relevant source files and tests for checkout, orders, listings/products, moderation, and shared Prisma test setup
 
 Do not rely on any manually maintained current-state file. The repo is the current state.
 
 ## Recommended Next Task
 
-Verify Slice `4` listing query/read-model migration, then begin Slice `5` notifications if clean.
+Browser-smoke Slice `4` reads on the now-healthy local database, then migrate notification delivery to TanStack server functions before starting Slice `6`.
 
 Exact next task:
 
+- Slice `5` notification read/use-case boundary and event-driven creation policy has started:
+  - notification DTOs/use cases live under `src/domains/notifications`
+  - `src/server/notification-service.ts` is the route-facing notification service boundary
+  - `src/domains/notifications/infrastructure/prisma-notifications.ts` is the Prisma notification adapter
+  - `src/server/notification-route-errors.ts` centralizes notification API JSON success/error responses
+  - `src/actions/notifications.ts` and `src/data/notification-repo.ts` have been deleted; do not reintroduce notification behavior there
+  - purchase and listing moderation notification message policy now lives in `src/domains/notifications/application/notification-event-handlers.ts`
+  - notification count client query now calls `/api/notifications/unread/count`
+  - single-notification read mutations are scoped to the current authenticated user
+  - notification read use cases receive an explicit `Actor`; creation still accepts recipient user IDs for event-targeted notification writes
+  - listing moderation seller notifications use the aggregate's actual lifecycle event and the default Prisma path wraps status persistence plus notification creation in one transaction
+  - `src/server/listing-service.prisma.test.ts` includes a gated rollback test for notification-write failure during moderation
+  - listing moderation status persistence is guarded by the expected prior `listingStatus`, so stale concurrent moderation attempts return conflict instead of overwriting a newer status or sending a contradictory notification
+  - named notification route handlers live in `src/server/notification-route-handlers.ts` and have focused coverage for authenticated list, unread count, read-one, read-all, and request-error responses
+  - `src/server/notification-service.prisma.test.ts` covers the real Prisma notification adapter for current-user list/count/read-one/read-all behavior and cross-user isolation, verified through the service interface
+- Shared Prisma integration test setup now lives in `src/test/prisma-test-support.ts`.
+- Destructive DB tests require `RUN_DB_TESTS=1` and `TEST_DATABASE_URL`; do not use `DATABASE_URL` for this harness.
+- `TEST_DATABASE_URL` must point to a disposable database whose name contains `test`, `testing`, `vitest`, or `integration`.
+- Latest gated DB verification passed against disposable database `riff_market_test`: 34 DB tests passed.
+- Local ignored `.env` now includes `TEST_DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_test`, so `bun run test:db` works without passing the URL inline.
+- Local `riff` app database schema health is restored; `bunx prisma migrate status` reports database schema is up to date.
+- `package.json` `test:db` includes the new DB-backed Order module suite: `src/server/order-service.prisma.test.ts`.
+- `src/server/order-service.test.ts` is intentionally narrow and should stay focused on validation/request-error mapping; persisted order visibility/status behavior belongs in `src/server/order-service.prisma.test.ts`.
 - Listing/product read routes have moved to listing read-model use cases; do not route them back through `src/actions/product.ts` or `src/data/product-repo.ts`.
 - Listing read query parsing now lives in the listings DTO layer, category/condition are typed before Prisma, and `/api/products` compatibility mapping is explicit in `src/server/listing-read-service.ts`.
 - Seller listings and pending moderation queue reads have moved to listing read-model use cases; do not route them back through `src/actions/product.ts` or `src/data/product-repo.ts`.
 - Count, recent, and cart-detail reads have moved to listing read-model use cases; do not route them back through product actions/repositories.
 - `src/actions/product.ts` and `src/data/product-repo.ts` have been deleted; do not reintroduce listing/product behavior there.
-- Browser-smoke the read flows before starting Slice `5`:
+- Browser-smoke the Slice `4` read flows once local DB/schema health is fixed:
   - shop approved search/filter reads
   - product detail not-found behavior for missing/non-`APPROVED` listings
   - seller settings listings
   - admin pending moderation queue
   - home recent listings
   - cart and checkout cart detail reads
-- If smoke is clean, start Slice `5` notifications from `ddd/migration-plan.md`.
+- Notification inbox/count/read-one/read-all behavior now has route-handler compatibility coverage plus gated Prisma adapter coverage; browser-smoke it as extra UI confidence once local browser access works.
+- In the latest session, in-app browser local navigation was blocked with `net::ERR_BLOCKED_BY_CLIENT`; curl probes required unsandboxed localhost access.
+- Earlier local public product read probes returned Prisma `500`s while Postgres was stopped; rerun Slice `4` smoke now that local DB/schema health is restored.
+- If browser smoke is clean, finish Slice `5` delivery migration before Slice `6`:
+  - add `src/server/notification.functions.ts` with TanStack `createServerFn` wrappers for list, unread count, read-one, and read-all notification operations
+  - update `src/lib/tanstack-query/notifications-queries.ts` to call notification server functions instead of `/api/notifications...`
+  - remove the notification API route files after callers move, unless a concrete external HTTP compatibility requirement appears
+  - keep `src/server/notification-service.ts` as the use-case-facing service boundary behind the server functions
 - Move product/listing reads toward listing query use cases/read DTOs under `src/domains/listings`.
 - Keep product API routes as compatibility shells only until consumers move.
 - Preserve the fixed product detail UX: deleted/missing and non-`APPROVED` product detail compatibility reads return HTTP `404` with the existing "Product not found" state.
@@ -43,6 +73,7 @@ Exact next task:
 - Preserve product/listing read compatibility at the route/client wrapper boundary until consumers move to listing vocabulary.
 - Keep vertical command coverage at `src/server/listing-service.prisma.test.ts`; it intentionally starts at the delivery-facing service boundary and exercises application use cases plus real Prisma infrastructure with a fake image manager.
 - Re-run focused read/route tests, typecheck, touched-file Biome, docs check, and the gated DB suite if local Postgres is available.
+- For future gated DB verification, use `TEST_DATABASE_URL=postgresql://.../<disposable-test-db> bun run test:db`.
 - Keep these active listing command server functions:
   - `createListingFn`
   - `updateListingFn`
@@ -100,6 +131,8 @@ Useful first inspection targets:
 - `src/domains/listings/dto/listing-read-model.ts`
 - `src/domains/listings/infrastructure/prisma-listing-read-models.ts`
 - `src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts`
+- `src/test/prisma-test-support.ts`
+- `src/test/prisma-test-support.test.ts`
 - `src/domains/ordering/infrastructure/prisma-listings-for-purchase.ts`
 - `src/domains/ordering/application/place-purchase.prisma.test.ts`
 - `src/domains/listings/infrastructure/listing-image-assets.test.ts`
@@ -120,8 +153,23 @@ Useful first inspection targets:
 - `src/server/function-middleware.ts`
 - `src/server/order.functions.ts`
 - `src/server/order-service.ts`
+- `src/server/order-service.test.ts`
+- `src/server/order-service.prisma.test.ts`
 - `src/server/place-purchase-service.ts`
 - `src/server/user.functions.ts`
+- `src/domains/notifications/dto/notification.ts`
+- `src/domains/notifications/application/notification-use-cases.ts`
+- `src/domains/notifications/application/notification-event-handlers.ts`
+- `src/domains/notifications/infrastructure/prisma-notifications.ts`
+- `src/server/notification-service.ts`
+- `src/server/notification-route-handlers.ts`
+- `src/server/notification-route-handlers.test.ts`
+- `src/server/notification.functions.ts` (new target)
+- `src/routes/api/notifications.ts`
+- `src/routes/api/notifications.$id.ts`
+- `src/routes/api/notifications.read-all.ts`
+- `src/routes/api/notifications.unread.count.ts`
+- `src/lib/tanstack-query/notifications-queries.ts`
 - `src/hooks/use-place-order.ts`
 - `src/lib/tanstack-query/orders-queries.ts`
 - `src/types/order.ts`
@@ -143,7 +191,28 @@ Useful first inspection targets:
 
 ## Current Repo State From Latest Completed Session
 
-- Latest implementation session completed on 2026-06-22:
+- Latest review-hardening session completed on 2026-06-24:
+  - work completed: spawned the requested TDD review sub-agent for the notification/moderation test changes; addressed its test-shape findings by moving notification route behavior into named handlers, replacing the TanStack-route-internals compatibility test with behavior tests, splitting the Prisma notification service test into focused service-interface checks, and moving the stale moderation DB regression through `moderateListingForCurrentUser`; the stale conflict test now verifies the seller receives no notification through the notification read service
+  - files changed: `src/server/notification-route-handlers.ts`, `src/server/notification-route-handlers.test.ts`, notification API route files, `src/server/notification-service.prisma.test.ts`, `src/server/listing-service.prisma.test.ts`, deleted `src/routes/api/notifications.compat.test.ts`, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: focused route/use-case suite passed with 17 tests; `bun run typecheck` passed; full non-DB `bun run test:unit` passed with 200 tests and 34 DB tests skipped; gated Prisma DB suite passed with `bun run test:db` across 5 files and 34 tests; `bun run docs:check` and `git diff --check` passed
+  - decisions made: route behavior tests should target named route-handler functions instead of TanStack route internals; Prisma integration tests may seed rows directly but should verify behavior through service/use-case interfaces when available; stale moderation regression coverage belongs at the delivery-facing service boundary
+  - blockers or risks: Slice `4` browser smoke and authenticated notification UI smoke still need a browser environment that can reach localhost; create-listing browser smoke still needs real Cloudinary config; moderation navigation warning and request logging issue remain
+  - exact next recommended task: browser-smoke Slice `4` reads plus notification inbox/count/read-all behavior with an authenticated session; if clean, migrate notification delivery to TanStack server functions and delete the notification API route files after callers move
+- Previous Slice `5` implementation session completed on 2026-06-23:
+  - work completed: completed Slice `5` notification read/use-case boundary, Prisma adapter, route-facing notification service, compatibility notification routes, and event-driven purchase/listing-moderation notification policy; deleted `src/actions/notifications.ts` and `src/data/notification-repo.ts`; fixed notification count client wrapper to call `/api/notifications/unread/count`; scoped single-notification read mutations to the current authenticated user; changed notification read use cases to accept explicit `Actor`; changed listing moderation seller notifications to use aggregate lifecycle events; wrapped default Prisma moderation status persistence plus notification creation in one transaction; added notification route error helper coverage; fixed reviewer findings; ran requested reviewer and production-only refactor sub-agents
+  - files changed: `src/domains/notifications/dto/notification.ts`, `src/domains/notifications/application/notification-use-cases.ts`, `src/domains/notifications/application/notification-use-cases.test.ts`, `src/domains/notifications/application/notification-event-handlers.ts`, `src/domains/notifications/application/notification-event-handlers.test.ts`, `src/domains/notifications/infrastructure/prisma-notifications.ts`, `src/server/notification-service.ts`, `src/server/notification-service.test.ts`, `src/server/notification-route-errors.ts`, `src/server/notification-route-errors.test.ts`, notification API route files, `src/lib/tanstack-query/notifications-queries.ts`, `src/types/notification.ts`, `src/domains/listings/application/moderate-listing.ts`, `src/domains/listings/application/moderate-listing.test.ts`, `src/domains/listings/infrastructure/prisma-listing-moderation.ts`, `src/server/listing-service.ts`, `src/server/listing-service.prisma.test.ts`, ordering purchase notification creator files, deleted `src/actions/notifications.ts`, deleted `src/data/notification-repo.ts`, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: final focused notification/listing/review-fix suite passed with bundled Node: 27 tests passed and 8 DB tests skipped; TypeScript passed with bundled Node; touched-file Biome passed; full non-DB Vitest suite passed with bundled Node: 194 tests passed and 28 DB tests skipped; gated Prisma DB suite passed after starting Docker Desktop and `riff-ddd-postgres`, creating fresh disposable database `riff_market_test`, and applying migrations: 28 tests passed; local ignored `.env` now contains `TEST_DATABASE_URL` and plain `bun run test:db` also passed; local app DB `riff` migrate status passed and reports database schema is up to date; `bun run docs:check` passed; `git diff --check` passed; earlier route smoke showed `/api/notifications/unread/count` returns expected unauthenticated `401`; in-app browser local navigation was blocked with `net::ERR_BLOCKED_BY_CLIENT`; earlier public product read curl probes returned Prisma `500`s while Postgres was stopped
+  - decisions made: keep notification API routes as compatibility delivery for now while routing through notification use cases; do not introduce an outbox; keep existing purchase/listing moderation notification messages; do not add seller-order status notifications without existing behavior/product requirements; current-user scoping for `ReadNotification` is a security fix; notification read use cases receive explicit `Actor`; listing moderation notification creation uses aggregate lifecycle events; default Prisma moderation path keeps status persistence and notification creation in one transaction; notification routes use the shared response helper to avoid leaking unknown error details
+  - blockers or risks: Slice `4` browser smoke still needs rerun now that local DB/schema health is restored; local in-app browser access may still be blocked; create-listing browser smoke still needs real Cloudinary config; moderation navigation warning and request logging issue remain
+  - exact next recommended task: browser-smoke Slice `4` reads plus notification inbox/count/read-all behavior with an authenticated session; if clean, migrate notification delivery to TanStack server functions and delete the notification API route files after callers move; only then begin Slice `6` accounts from `ddd/migration-plan.md`
+- Previous implementation session completed on 2026-06-23:
+  - work completed: consolidated Prisma integration test setup into `src/test/prisma-test-support.ts`; added DB-backed Order module integration coverage in `src/server/order-service.prisma.test.ts`; trimmed `src/server/order-service.test.ts` to validation/request-error mapping; refactored existing Prisma suites to use shared setup/cleanup/seeds; added URL-guard tests for destructive DB tests; committed as `fb8c9c2 ref: consolidate prisma integration tests`
+  - files changed: `package.json`, `src/test/prisma-test-support.ts`, `src/test/prisma-test-support.test.ts`, `src/server/order-service.prisma.test.ts`, `src/server/order-service.test.ts`, `src/domains/ordering/application/place-purchase.prisma.test.ts`, `src/server/listing-service.prisma.test.ts`, `src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts`, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: TypeScript passed with bundled Node; full non-DB Vitest suite passed with bundled Node with DB suites skipped; changed-file Biome passed; `git diff --check` passed; targeted Vitest for Prisma test support and Order unit tests passed; commit hook `bun run docs:report` passed; `bun run test:db` was not run because no `TEST_DATABASE_URL` was provided
+  - decisions made: `TEST_DATABASE_URL` is the only DB URL for destructive Prisma integration tests; shared Prisma test support owns DB lifecycle, cleanup order, and common marketplace fixtures; persisted Order behavior belongs in `src/server/order-service.prisma.test.ts`; `src/server/order-service.test.ts` stays narrow
+  - blockers or risks: gated DB suite still needs a disposable `TEST_DATABASE_URL` run; Slice `4` browser smoke remains; create-listing browser smoke still needs real Cloudinary config; moderation navigation warning and request logging issue remain
+  - exact next recommended task: run `TEST_DATABASE_URL=... bun run test:db` against a disposable test database if available, then browser-smoke Slice `4` read flows and start Slice `5` notifications if clean
+- Previous implementation session completed on 2026-06-22:
   - work completed: Slice `4` listing/product read source migration drained; added listing read DTOs/use cases and `PrismaListingReadModels`; moved `/api/products/$id`, `/api/products`, `/api/products/seller`, `/api/products/pending`, `/api/products/count`, `/api/products/recent`, and `/api/products/cart-details` compatibility routes to `src/server/listing-read-service.ts`; deleted `src/actions/product.ts`, `src/data/product-repo.ts`, and their tests; moved active DB behavior coverage for detail/search/seller/pending/count/recent/cart reads to listing infrastructure; kept product-compatible response mapping at the server read boundary
   - files changed: `package.json`, `src/domains/listings/application/listing-read-models.ts`, `src/domains/listings/dto/listing-read-model.ts`, `src/domains/listings/infrastructure/prisma-listing-read-models.ts`, `src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts`, `src/server/listing-read-service.ts`, `src/server/listing-read-service.test.ts`, deleted `src/server/product-read-service.ts`, deleted `src/server/product-read-service.test.ts`, deleted `src/actions/product.ts`, deleted `src/actions/product.test.ts`, deleted `src/actions/product.prisma.test.ts`, deleted `src/data/product-repo.ts`, deleted `src/data/product-repo.prisma.test.ts`, `src/lib/zod/product-validation.ts`, product API route files, ordering checkout files touched for `listingStatus` orderability, `ddd/progress.md`, `ddd/next-session.md`
   - tests/checks run: focused listing read service tests passed with bundled Node; `bun run typecheck` passed; listing read-model Prisma test passed with local DB access during TDD cycles through 9 DB tests; final DB rerun was blocked by the approval reviewer before execution; touched-file Biome passed; `bun run docs:check` passed; `git diff --check` passed

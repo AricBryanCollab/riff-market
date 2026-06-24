@@ -1,14 +1,23 @@
 import type { PrismaClient } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
 import type { ListingImageManagerPort } from "@/domains/listings/application/manage-listing";
+import type {
+	ListingApprovedEvent,
+	ListingDeclinedEvent,
+	ListingModerationNotifierPort,
+	ListingModerationRepositoryPort,
+	ListingModerationResult,
+} from "@/domains/listings/application/moderate-listing";
 import { PrismaListingCommandRepository } from "@/domains/listings/infrastructure/prisma-listing-commands";
 import {
 	PrismaListingModerationNotifier,
 	PrismaListingModerationRepository,
 } from "@/domains/listings/infrastructure/prisma-listing-moderation";
+import { PrismaNotifications } from "@/domains/notifications/infrastructure/prisma-notifications";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	createListingForCurrentUser,
+	type ListingModerationServiceDependencies,
 	type ListingRequestError,
 	moderateListingForCurrentUser,
 	removeListingForCurrentUser,
@@ -16,6 +25,7 @@ import {
 	validateCreateListingFormData,
 	validateUpdateListingFormData,
 } from "@/server/listing-service";
+import { getNotificationsForCurrentUser } from "@/server/notification-service";
 import {
 	describeDb,
 	seedMarketplaceUsers,
@@ -210,6 +220,67 @@ describeDb("listing service Prisma integration", () => {
 		]);
 	});
 
+	it("rolls back moderation status when notification creation fails", async () => {
+		await seedProduct(db, {
+			id: "listing-rollback",
+			sellerId: "seller-1",
+			isApproved: false,
+			listingStatus: "PENDING",
+		});
+
+		await expect(
+			moderateListingForCurrentUser(
+				adminUser(),
+				{ listingId: "listing-rollback", decision: "APPROVE" },
+				failingModerationDependencies(db),
+			),
+		).rejects.toThrow("Notification write failed");
+
+		const listing = await db.product.findUniqueOrThrow({
+			where: { id: "listing-rollback" },
+		});
+		expect(listing).toMatchObject({
+			isApproved: false,
+			listingStatus: "PENDING",
+		});
+
+		const notifications = await db.notification.findMany({
+			where: { userId: "seller-1" },
+		});
+		expect(notifications).toEqual([]);
+	});
+
+	it("returns conflict and does not notify when moderation status changes after read", async () => {
+		await seedProduct(db, {
+			id: "listing-stale",
+			sellerId: "seller-1",
+			isApproved: false,
+			listingStatus: "PENDING",
+		});
+
+		await expect(
+			moderateListingForCurrentUser(
+				adminUser(),
+				{ listingId: "listing-stale", decision: "DECLINE" },
+				staleStatusModerationDependencies(db),
+			),
+		).rejects.toMatchObject({
+			name: "ListingRequestError",
+			status: 409,
+			code: "MODERATE_LISTING_STALE_STATUS",
+		} satisfies Partial<ListingRequestError>);
+
+		const listing = await new PrismaListingModerationRepository(
+			db,
+		).findListingForModeration("listing-stale");
+		expect(listing).toMatchObject({
+			status: "APPROVED",
+		});
+		await expect(
+			getNotificationsForCurrentUser(sellerUser(), new PrismaNotifications(db)),
+		).resolves.toEqual([]);
+	});
+
 	it("hard-deletes unreferenced listings and cleans up images", async () => {
 		await seedProduct(db, {
 			id: "listing-1",
@@ -341,11 +412,93 @@ function commandDependencies(
 	};
 }
 
-function moderationDependencies(db: PrismaClient) {
+function moderationDependencies(
+	db: PrismaClient,
+): ListingModerationServiceDependencies {
 	return {
 		repository: new PrismaListingModerationRepository(db),
 		notifier: new PrismaListingModerationNotifier(db),
+		runInTransaction: (handler) =>
+			db.$transaction((transaction) =>
+				handler({
+					repository: new PrismaListingModerationRepository(transaction),
+					notifier: new PrismaListingModerationNotifier(transaction),
+				}),
+			),
 	};
+}
+
+function failingModerationDependencies(
+	db: PrismaClient,
+): ListingModerationServiceDependencies {
+	return {
+		repository: new PrismaListingModerationRepository(db),
+		notifier: new FailingListingModerationNotifier(),
+		runInTransaction: (handler) =>
+			db.$transaction((transaction) =>
+				handler({
+					repository: new PrismaListingModerationRepository(transaction),
+					notifier: new FailingListingModerationNotifier(),
+				}),
+			),
+	};
+}
+
+function staleStatusModerationDependencies(
+	db: PrismaClient,
+): ListingModerationServiceDependencies {
+	return {
+		repository: new StaleStatusListingModerationRepository(db),
+		notifier: new PrismaListingModerationNotifier(db),
+	};
+}
+
+class StaleStatusListingModerationRepository
+	implements ListingModerationRepositoryPort
+{
+	private readonly delegate: PrismaListingModerationRepository;
+
+	constructor(private readonly db: PrismaClient) {
+		this.delegate = new PrismaListingModerationRepository(db);
+	}
+
+	async findListingForModeration(listingId: string) {
+		return this.delegate.findListingForModeration(listingId);
+	}
+
+	async saveListingStatus(
+		listingId: string,
+		status: ListingModerationResult["status"],
+		expectedStatus: ListingModerationResult["status"],
+	) {
+		await this.db.product.update({
+			where: { id: listingId },
+			data: {
+				isApproved: true,
+				listingStatus: "APPROVED",
+			},
+		});
+
+		return this.delegate.saveListingStatus(listingId, status, expectedStatus);
+	}
+}
+
+class FailingListingModerationNotifier
+	implements ListingModerationNotifierPort
+{
+	async notifyListingApproved(
+		_listing: ListingModerationResult,
+		_event: ListingApprovedEvent,
+	): Promise<void> {
+		throw new Error("Notification write failed");
+	}
+
+	async notifyListingDeclined(
+		_listing: ListingModerationResult,
+		_event: ListingDeclinedEvent,
+	): Promise<void> {
+		throw new Error("Notification write failed");
+	}
 }
 
 function sellerUser(id = "seller-1"): ServerUserContext {

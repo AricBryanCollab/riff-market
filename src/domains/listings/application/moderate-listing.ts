@@ -2,6 +2,7 @@ import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	Listing,
 	ListingLifecycleError,
+	type ListingLifecycleEvent,
 	type ListingSnapshot,
 	type ListingStatus,
 } from "../domain/listing";
@@ -33,7 +34,8 @@ export type ListingModerationErrorCode =
 	| "MODERATE_LISTING_NOT_FOUND"
 	| "MODERATE_LISTING_INVALID_DECISION"
 	| "MODERATE_LISTING_INVALID_TRANSITION"
-	| "MODERATE_LISTING_SAVE_FAILED";
+	| "MODERATE_LISTING_EVENT_MISSING"
+	| "MODERATE_LISTING_STALE_STATUS";
 
 export type ListingModerationError = {
 	readonly kind: ListingModerationErrorKind;
@@ -51,13 +53,32 @@ export interface ListingModerationRepositoryPort {
 	saveListingStatus(
 		listingId: string,
 		status: ListingStatus,
+		expectedStatus: ListingStatus,
 	): Promise<ListingModerationResult | null>;
 }
 
 export interface ListingModerationNotifierPort {
-	notifyListingApproved(input: ListingModerationResult): Promise<void>;
-	notifyListingDeclined(input: ListingModerationResult): Promise<void>;
+	notifyListingApproved(
+		input: ListingModerationResult,
+		event: ListingApprovedEvent,
+	): Promise<void>;
+	notifyListingDeclined(
+		input: ListingModerationResult,
+		event: ListingDeclinedEvent,
+	): Promise<void>;
 }
+
+export type ListingApprovedEvent = Extract<
+	ListingLifecycleEvent,
+	{ readonly eventName: "ListingApproved" }
+>;
+
+export type ListingDeclinedEvent = Extract<
+	ListingLifecycleEvent,
+	{ readonly eventName: "ListingDeclined" }
+>;
+
+type ListingModerationEvent = ListingApprovedEvent | ListingDeclinedEvent;
 
 export class ModerateListing {
 	constructor(
@@ -130,33 +151,85 @@ export class ModerateListing {
 			throw error;
 		}
 
+		const moderationEvent = getModerationEvent(
+			listing.pullDomainEvents(),
+			listing.status,
+		);
+		if (!moderationEvent) {
+			return {
+				ok: false,
+				error: {
+					kind: "unexpected",
+					code: "MODERATE_LISTING_EVENT_MISSING",
+					message: "Listing moderation event was not recorded",
+				},
+			};
+		}
+
 		const savedListing = await this.listings.saveListingStatus(
 			listing.id,
 			listing.status,
+			snapshot.status,
 		);
 
 		if (!savedListing) {
 			return {
 				ok: false,
 				error: {
-					kind: "unexpected",
-					code: "MODERATE_LISTING_SAVE_FAILED",
-					message: "Failed to save listing moderation result",
+					kind: "conflict",
+					code: "MODERATE_LISTING_STALE_STATUS",
+					message: "Listing status changed before moderation completed",
 				},
 			};
 		}
 
-		if (listing.status === "APPROVED") {
-			await this.notifier.notifyListingApproved(savedListing);
-		}
-
-		if (listing.status === "DECLINED") {
-			await this.notifier.notifyListingDeclined(savedListing);
-		}
+		await notifyModerationResult(this.notifier, savedListing, moderationEvent);
 
 		return {
 			ok: true,
 			value: savedListing,
 		};
 	}
+}
+
+async function notifyModerationResult(
+	notifier: ListingModerationNotifierPort,
+	listing: ListingModerationResult,
+	event: ListingModerationEvent,
+): Promise<void> {
+	switch (event.eventName) {
+		case "ListingApproved":
+			await notifier.notifyListingApproved(listing, event);
+			return;
+		case "ListingDeclined":
+			await notifier.notifyListingDeclined(listing, event);
+			return;
+	}
+}
+
+function getModerationEvent(
+	events: readonly ListingLifecycleEvent[],
+	status: ListingStatus,
+): ListingModerationEvent | undefined {
+	if (status === "APPROVED") {
+		return events.find(isListingApprovedEvent);
+	}
+
+	if (status === "DECLINED") {
+		return events.find(isListingDeclinedEvent);
+	}
+
+	return undefined;
+}
+
+function isListingApprovedEvent(
+	event: ListingLifecycleEvent,
+): event is ListingApprovedEvent {
+	return event.eventName === "ListingApproved";
+}
+
+function isListingDeclinedEvent(
+	event: ListingLifecycleEvent,
+): event is ListingDeclinedEvent {
+	return event.eventName === "ListingDeclined";
 }

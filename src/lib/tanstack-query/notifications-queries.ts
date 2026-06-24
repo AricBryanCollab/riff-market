@@ -9,7 +9,7 @@ export function getUserNotifications() {
 }
 
 export function getNotificationCount() {
-	return apiFetch<{ count: number }>("/api/notifications/count", {
+	return apiFetch<{ count: number }>("/api/notifications/unread/count", {
 		method: "GET",
 	});
 }
