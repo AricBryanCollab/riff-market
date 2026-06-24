@@ -19,25 +19,26 @@ Do not rely on any manually maintained current-state file. The repo is the curre
 
 ## Recommended Next Task
 
-Browser-smoke Slice `4` reads on the now-healthy local database, then migrate notification delivery to TanStack server functions before starting Slice `6`.
+Browser-smoke Slice `4` reads and notification server-function flows on the now-healthy local database, then address the request-logging false `500` issue before broadening server-function read migration or starting Slice `6`.
 
 Exact next task:
 
-- Slice `5` notification read/use-case boundary and event-driven creation policy has started:
+- Slice `5` notification read/use-case boundary, event-driven creation policy, and server-function delivery are in place:
   - notification DTOs/use cases live under `src/domains/notifications`
-  - `src/server/notification-service.ts` is the route-facing notification service boundary
+  - `src/server/notification-service.ts` is the use-case-facing notification service module
+  - `src/server/notification.functions.ts` exposes TanStack server functions for list, unread count, read-one, and read-all
   - `src/domains/notifications/infrastructure/prisma-notifications.ts` is the Prisma notification adapter
-  - `src/server/notification-route-errors.ts` centralizes notification API JSON success/error responses
   - `src/actions/notifications.ts` and `src/data/notification-repo.ts` have been deleted; do not reintroduce notification behavior there
+  - the notification API route files and route-specific handler/error helper modules have been deleted; do not reintroduce them without a concrete external HTTP compatibility requirement
   - purchase and listing moderation notification message policy now lives in `src/domains/notifications/application/notification-event-handlers.ts`
-  - notification count client query now calls `/api/notifications/unread/count`
+  - `src/hooks/use-notifications.ts` calls notification server functions directly; `src/lib/tanstack-query/notifications-queries.ts` has been deleted
   - single-notification read mutations are scoped to the current authenticated user
   - notification read use cases receive an explicit `Actor`; creation still accepts recipient user IDs for event-targeted notification writes
   - listing moderation seller notifications use the aggregate's actual lifecycle event and the default Prisma path wraps status persistence plus notification creation in one transaction
   - `src/server/listing-service.prisma.test.ts` includes a gated rollback test for notification-write failure during moderation
   - listing moderation status persistence is guarded by the expected prior `listingStatus`, so stale concurrent moderation attempts return conflict instead of overwriting a newer status or sending a contradictory notification
-  - named notification route handlers live in `src/server/notification-route-handlers.ts` and have focused coverage for authenticated list, unread count, read-one, read-all, and request-error responses
   - `src/server/notification-service.prisma.test.ts` covers the real Prisma notification adapter for current-user list/count/read-one/read-all behavior and cross-user isolation, verified through the service interface
+  - `src/routeTree.gen.ts` has been regenerated without the old notification API routes
 - Shared Prisma integration test setup now lives in `src/test/prisma-test-support.ts`.
 - Destructive DB tests require `RUN_DB_TESTS=1` and `TEST_DATABASE_URL`; do not use `DATABASE_URL` for this harness.
 - `TEST_DATABASE_URL` must point to a disposable database whose name contains `test`, `testing`, `vitest`, or `integration`.
@@ -58,14 +59,10 @@ Exact next task:
   - admin pending moderation queue
   - home recent listings
   - cart and checkout cart detail reads
-- Notification inbox/count/read-one/read-all behavior now has route-handler compatibility coverage plus gated Prisma adapter coverage; browser-smoke it as extra UI confidence once local browser access works.
+- Notification inbox/count/read-one/read-all behavior now goes through server functions and has gated Prisma adapter coverage; browser-smoke it as UI confidence once local browser access works.
 - In the latest session, in-app browser local navigation was blocked with `net::ERR_BLOCKED_BY_CLIENT`; curl probes required unsandboxed localhost access.
 - Earlier local public product read probes returned Prisma `500`s while Postgres was stopped; rerun Slice `4` smoke now that local DB/schema health is restored.
-- If browser smoke is clean, finish Slice `5` delivery migration before Slice `6`:
-  - add `src/server/notification.functions.ts` with TanStack `createServerFn` wrappers for list, unread count, read-one, and read-all notification operations
-  - update `src/lib/tanstack-query/notifications-queries.ts` to call notification server functions instead of `/api/notifications...`
-  - remove the notification API route files after callers move, unless a concrete external HTTP compatibility requirement appears
-  - keep `src/server/notification-service.ts` as the use-case-facing service boundary behind the server functions
+- Slice `5` notification delivery migration is complete; keep `src/server/notification-service.ts` as the use-case-facing service module behind the server functions.
 - Move product/listing reads toward listing query use cases/read DTOs under `src/domains/listings`.
 - Keep product API routes as compatibility shells only until consumers move.
 - Preserve the fixed product detail UX: deleted/missing and non-`APPROVED` product detail compatibility reads return HTTP `404` with the existing "Product not found" state.
@@ -162,14 +159,8 @@ Useful first inspection targets:
 - `src/domains/notifications/application/notification-event-handlers.ts`
 - `src/domains/notifications/infrastructure/prisma-notifications.ts`
 - `src/server/notification-service.ts`
-- `src/server/notification-route-handlers.ts`
-- `src/server/notification-route-handlers.test.ts`
-- `src/server/notification.functions.ts` (new target)
-- `src/routes/api/notifications.ts`
-- `src/routes/api/notifications.$id.ts`
-- `src/routes/api/notifications.read-all.ts`
-- `src/routes/api/notifications.unread.count.ts`
-- `src/lib/tanstack-query/notifications-queries.ts`
+- `src/server/notification.functions.ts`
+- `src/hooks/use-notifications.ts`
 - `src/hooks/use-place-order.ts`
 - `src/lib/tanstack-query/orders-queries.ts`
 - `src/types/order.ts`
@@ -191,6 +182,13 @@ Useful first inspection targets:
 
 ## Current Repo State From Latest Completed Session
 
+- Latest delivery-collapse session completed on 2026-06-24:
+  - work completed: collapsed notification delivery to TanStack server functions; updated `useNotifications` to call `listNotificationsFn`, `getUnreadNotificationCountFn`, `readNotificationFn`, and `readAllNotificationsFn` directly; deleted the pass-through `src/lib/tanstack-query/notifications-queries.ts`; deleted notification API route files plus route-handler/error helper modules; regenerated `src/routeTree.gen.ts`; updated DDD handoff docs
+  - files changed: `src/server/notification.functions.ts`, `src/hooks/use-notifications.ts`, `src/routeTree.gen.ts`, deleted `src/lib/tanstack-query/notifications-queries.ts`, deleted notification API route files, deleted notification route handler/error helper modules, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: focused notification suite passed with 8 tests and 5 gated DB tests skipped; full non-DB `bun run test:unit` passed with 192 tests and 34 DB tests skipped; `bun run typecheck` passed; touched-file Biome passed; `bun run build` passed with the existing large client chunk warning; `bun run docs:check` passed; `git diff --check` passed
+  - decisions made: no notification HTTP compatibility requirement exists right now; use server functions directly from the hook instead of a pass-through tanstack-query module
+  - blockers or risks: browser smoke for notification UI still useful once local browser access works; request logging still misreports successful non-`Response` server-function returns as status `500`; unrelated docs work is present in the worktree
+  - exact next recommended task: browser-smoke Slice `4` reads and notification server-function flows, then fix/deepen `requestLoggerMiddleware`
 - Latest review-hardening session completed on 2026-06-24:
   - work completed: spawned the requested TDD review sub-agent for the notification/moderation test changes; addressed its test-shape findings by moving notification route behavior into named handlers, replacing the TanStack-route-internals compatibility test with behavior tests, splitting the Prisma notification service test into focused service-interface checks, and moving the stale moderation DB regression through `moderateListingForCurrentUser`; the stale conflict test now verifies the seller receives no notification through the notification read service
   - files changed: `src/server/notification-route-handlers.ts`, `src/server/notification-route-handlers.test.ts`, notification API route files, `src/server/notification-service.prisma.test.ts`, `src/server/listing-service.prisma.test.ts`, deleted `src/routes/api/notifications.compat.test.ts`, `ddd/progress.md`, `ddd/next-session.md`
