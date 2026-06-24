@@ -12,7 +12,7 @@ tags:
   - pagination
   - admin
 status: active
-last_reviewed: 2026-02-17
+last_reviewed: 2026-06-24
 ---
 
 ## Purpose
@@ -34,20 +34,21 @@ last_reviewed: 2026-02-17
 - `src/hooks/use-shop-pagination.ts`
 - `src/hooks/use-get-products.ts`
 - `src/hooks/use-get-pending-products.ts`
+- `src/server/listing-read.functions.ts`
 - `src/components/shop-sidebar.tsx`
 - `src/components/product-filter-badges.tsx`
 - `src/components/page-headers.tsx`
 - `src/utils/shop-search.ts`
 - `src/utils/validate-product-search.ts`
-- `src/lib/tanstack-query/product-queries.ts`
 
 ## Data Flow / Dependencies
 - Inputs: TanStack Router search params from `/shop/`.
-- Outputs: `/api/products` query string with `limit=8` and URL-derived filters.
+- Outputs: product-compatible listing read server function input with `limit=8` and URL-derived filters.
 - Query deps: React Query keys `['products', 'approved', filters]`, `['products', 'count', 'approved']`, and `['pendingProducts']`.
 - State deps: `usePendingProductStore` controls pending/approved list switching.
 
 ## Change Log
+- 2026-06-24: Updated catalog data-flow docs after product read delivery moved from `/api/products` to listing read server functions.
 - 2026-02-17: Added URL-driven filters/pagination contract and admin pending behavior baseline.
 
 ## Test Impact / Verification Notes

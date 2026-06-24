@@ -42,8 +42,31 @@ Clean slate started: 2026-06-11
 - Slice `5` notification read/use-case boundary, event-driven creation policy, review fixes, and refactor pass completed on 2026-06-23.
 - Slice `5` review hardening for stale listing moderation persistence and authenticated notification read verification completed on 2026-06-24.
 - Slice `5` notification delivery collapsed to TanStack server functions and notification API routes removed on 2026-06-24.
+- Slice `4` listing/product read delivery collapsed to TanStack server functions and product API read routes removed on 2026-06-24.
 
 ## Latest Session Notes
+
+- Collapsed the remaining product/listing read delivery shells:
+  - added `src/server/listing-read.functions.ts` with server-function delivery for product-compatible listing detail, approved search/filter, pending moderation, seller listings, category/status counts, recent listings, and cart detail reads
+  - updated product hooks so listing reads call listing read server functions directly instead of `/api/products*`
+  - deleted `src/lib/tanstack-query/product-queries.ts`; hooks now call server functions directly
+  - deleted the remaining product read API route files
+  - regenerated `src/routeTree.gen.ts` so `/api/products*` routes are no longer registered
+  - kept product-compatible wrapper names and product-compatible response mapping while UI callers still use product vocabulary
+  - normalized product-compatible read `createdAt` / `updatedAt` values to ISO strings so the server-function delivery path preserves the old JSON API shape
+  - requested a read-only code-review sub-agent with the `requesting-code-review` skill
+  - fixed the reviewer finding about the dead HTTP `Response` helper; the requested wrapper test expansion was later removed at user direction
+  - fixed both Minor reviewer findings by normalizing empty optional filters to `null` and updating `docs/features/shop-catalog-browsing.md`
+- Verification:
+  - `bun run build` passed with the existing large client chunk warning
+  - focused listing read service tests passed
+  - `bun run typecheck` passed
+  - touched-file Biome passed
+  - full non-DB `bun run test:unit` passed after removing the wrapper test: 197 tests passed and 34 DB tests skipped
+  - `bun run docs:check` passed
+  - `git diff --check` passed
+- Current exact next recommended task:
+  - browser-smoke listing read server-function flows plus notification flows where local browser access allows
 
 - Collapsed notification delivery after the architecture review:
   - added `src/server/notification.functions.ts` with server-function delivery for list, unread count, read-one, and read-all notification operations
@@ -62,6 +85,7 @@ Clean slate started: 2026-06-11
   - split gated Prisma notification service coverage into current-user list/count/read-one/read-all behavior and cross-user isolation tests that verify through the service interface
   - added `src/server/notification-service.prisma.test.ts` to `package.json` `test:db`
 - Review artifacts:
+  - code-review sub-agent `Kant` reviewed the listing read delivery collapse with the `requesting-code-review` skill; it found no Critical issues, two Important issues, and two Minor issues; all four were fixed
   - code-review sub-agent found no Critical issues and two Important issues; both are addressed by the stale moderation guard and notification route/Prisma verification
   - TDD sub-agent found no Critical issues; its Important/Minor test-shape findings are addressed by the named route-handler tests, split Prisma notification tests, and service-boundary stale moderation DB regression
   - architecture explorer produced deepening candidates; top recommendation remains fixing/deepening server-function request logging before broad server-function read migration
@@ -97,99 +121,57 @@ Clean slate started: 2026-06-11
 
 ## Files Changed In Latest Session
 
-- `src/domains/notifications/dto/notification.ts`
-- `src/domains/notifications/application/notification-use-cases.ts`
-- `src/domains/notifications/application/notification-use-cases.test.ts`
-- `src/domains/notifications/application/notification-event-handlers.ts`
-- `src/domains/notifications/application/notification-event-handlers.test.ts`
-- `src/domains/notifications/infrastructure/prisma-notifications.ts`
-- `src/server/notification-service.ts`
-- `src/server/notification-service.test.ts`
-- `src/server/notification.functions.ts`
-- `src/hooks/use-notifications.ts`
+- `src/server/listing-read.functions.ts`
+- deleted `src/lib/tanstack-query/product-queries.ts`
+- `src/hooks/use-get-products.ts`
+- `src/hooks/use-cart-details.ts`
+- `src/hooks/use-get-pending-products.ts`
+- `src/hooks/use-get-product-count.ts`
+- `src/hooks/use-get-recent-products.ts`
+- `src/hooks/use-create-product.ts`
+- `src/hooks/use-update-product.ts`
+- `src/hooks/use-delete-product.ts`
+- `src/hooks/use-update-product-status.ts`
+- `src/server/listing-read-service.ts`
+- `src/server/listing-read-service.test.ts`
 - `src/routeTree.gen.ts`
-- `src/types/notification.ts`
-- `src/domains/listings/application/moderate-listing.ts`
-- `src/domains/listings/application/moderate-listing.test.ts`
-- `src/domains/listings/infrastructure/prisma-listing-moderation.ts`
-- `src/server/listing-service.ts`
-- `src/server/listing-service.prisma.test.ts`
-- `src/server/notification-service.prisma.test.ts`
-- `src/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator.ts`
-- `src/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator.test.ts`
-- `package.json`
-- deleted `src/actions/notifications.ts`
-- deleted `src/data/notification-repo.ts`
-- deleted `src/lib/tanstack-query/notifications-queries.ts`
-- deleted `src/routes/api/notifications.compat.test.ts`
-- deleted `src/routes/api/notifications.ts`
-- deleted `src/routes/api/notifications.$id.ts`
-- deleted `src/routes/api/notifications.read-all.ts`
-- deleted `src/routes/api/notifications.unread.count.ts`
-- deleted `src/server/notification-route-errors.ts`
-- deleted `src/server/notification-route-errors.test.ts`
-- deleted `src/server/notification-route-handlers.ts`
-- deleted `src/server/notification-route-handlers.test.ts`
+- `docs/features/shop-catalog-browsing.md`
+- deleted `src/routes/api/products.ts`
+- deleted `src/routes/api/products.$id.ts`
+- deleted `src/routes/api/products.cart-details.ts`
+- deleted `src/routes/api/products.count.ts`
+- deleted `src/routes/api/products.pending.ts`
+- deleted `src/routes/api/products.recent.ts`
+- deleted `src/routes/api/products.seller.ts`
 - `ddd/progress.md`
 - `ddd/next-session.md`
 
 ## Tests And Checks In Latest Session
 
-- TDD red/green cycles run with bundled Node for:
-  - `src/domains/notifications/application/notification-use-cases.test.ts`
-  - `src/domains/notifications/application/notification-event-handlers.test.ts`
-  - `src/server/notification-service.test.ts`
-  - `src/server/notification-route-errors.test.ts`
-  - `src/domains/listings/application/moderate-listing.test.ts`
-  - `src/server/listing-service.prisma.test.ts`
-  - `src/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator.test.ts`
-- Final focused notification/listing/review-fix suite passed with bundled Node: 27 tests passed, 8 DB tests skipped.
-- TypeScript passed with bundled Node after the refactor.
-- Touched-file Biome passed after safe formatting/import fixes.
-- Full non-DB Vitest suite passed after the TDD review follow-up: 200 tests passed, 34 DB tests skipped.
-- Gated Prisma DB suite passed after starting Docker Desktop and `riff-ddd-postgres`, creating fresh disposable DB `riff_market_test`, and applying migrations: 28 tests passed.
-- TDD review follow-up focused route/use-case suite passed before the delivery collapse: 17 tests passed across notification route handlers, moderation use case, notification service, and notification use cases.
-- Follow-up `bun run typecheck` passed.
-- Follow-up gated Prisma DB suite passed with `bun run test:db`: 5 files passed, 34 tests passed.
-- Notification delivery collapse focused suite passed: 8 tests passed and 5 gated DB tests skipped across notification use cases, event handlers, notification service, and notification Prisma service test file.
-- `bun run typecheck` passed after notification server-function delivery migration.
-- Touched-file Biome passed for `src/server/notification.functions.ts` and notification client delivery files; `src/routeTree.gen.ts` is ignored by Biome.
-- `bun run build` passed after removing the notification API routes and regenerating the route tree, with the existing large client chunk warning.
-- Local ignored `.env` now includes `TEST_DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_test`; plain `bun run test:db` picks it up and passed.
-- Local app DB schema health check passed after Postgres startup: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff bunx prisma migrate status` reports database schema is up to date.
+- `bun run build` passed after deleting product read API routes and regenerating the route tree, with the existing large client chunk warning.
+- First focused test attempt failed because the default shell used an old Node runtime that cannot import `node:fs/promises.constants` from the current Vite/Vitest stack.
+- Focused listing read service tests passed with bundled Node after removing the wrapper test.
+- `bun run typecheck` passed with bundled Node.
+- Touched-file Biome passed with bundled Node.
+- Full non-DB `bun run test:unit` passed with bundled Node after removing the wrapper test: 197 tests passed and 34 DB tests skipped.
+- Final `bun run build` passed with bundled Node, with the existing large client chunk warning.
 - `bun run docs:check` passed.
 - `git diff --check` passed.
-- Local smoke attempts:
-  - app dev server required dummy local-only `SESSION_SECRET` and Cloudinary env values for smoke startup.
-  - in-app browser blocked local `localhost`/`127.0.0.1` navigation with `net::ERR_BLOCKED_BY_CLIENT`.
-  - local route probes reached `/api/notifications/unread/count` and received expected unauthenticated `401`.
-  - earlier public product read route probes returned `500` from Prisma while Postgres was stopped; rerun browser/product smoke now that local DB schema health is restored.
 
 ## Decisions In Latest Session
 
-- Keep notification API routes as compatibility delivery for now, but route behavior now delegates to notification use cases through `src/server/notification-service.ts`.
-- Notification rows remain local DB rows; no outbox was introduced.
-- Existing purchase and listing moderation notification message text remains the compatibility behavior.
-- Seller-order status notifications were not added because no existing UI behavior or message policy was present to preserve; the handler structure can accept them later if product requirements appear.
-- Current-user scoping for `ReadNotification` is a security fix made while touching the read mutation path.
-- Notification read use cases should receive explicit `Actor` inputs; creation still accepts a recipient user ID because it is event-driven recipient targeting, not current-user authorization.
-- Listing moderation notification creation should use the aggregate lifecycle event emitted by `Listing`, not infrastructure-synthesized events.
-- The default Prisma moderation path must keep listing status persistence and seller notification creation in the same transaction.
-- Notification route handlers and their response helper were deleted after the server-function cutover.
-- Listing moderation status saves must guard on the expected prior `listingStatus`; stale saves are conflicts, not unexpected persistence failures.
-- Notification behavior can be verified through the server-function-backed hook, notification service tests, and the real Prisma service/adapter test when in-app browser localhost navigation is blocked.
-- DB tests may seed through Prisma directly, but should verify behavior through the service/use-case interface when one exists.
-- Notification UI queries now use TanStack server functions; no concrete external HTTP compatibility requirement appeared, so the notification API routes were removed.
-- Keep `src/server/notification-service.ts` as the use-case-facing service module behind notification server functions.
+- Product/listing read API routes no longer have a concrete compatibility caller after the wrapper migration, so they were deleted instead of kept as HTTP shells.
+- Keep product-compatible client wrapper names and DTO shape while UI vocabulary is still product-heavy.
+- Keep listing read behavior owned by `src/server/listing-read-service.ts` and listing read-model use cases; server functions are delivery adapters only.
+- Preserve old API JSON date shape by returning ISO strings in the product-compatible listing read mapper.
+- Expected product read errors remain rejected React Query calls by unwrapping `{ error }` server-function payloads in the client wrapper.
+- Remove route-delivery helpers when route files are deleted; `src/server/listing-read-service.ts` now returns product-compatible data/error shapes, not HTTP `Response` objects.
 
 ## Risks / Follow-Ups From Latest Session
 
-- Browser-smoke Slice `4` read flows now that local DB/schema health is restored.
-- Notification read/count/read-one/read-all behavior now uses server functions from the UI query wrappers; browser smoke remains useful as UI confidence once local browser access works.
-- The architecture review's top recommendation remains fixing/deepening `requestLoggerMiddleware`; successful server-function return values without a `Response` wrapper are still logged as status `500`.
-- Browser smoke may also need the local browser blocker resolved; in this session the in-app browser blocked local addresses even while curl could reach the dev server outside the sandbox.
+- Browser-smoke listing read server-function flows and notification read/count/read-one/read-all behavior once local browser access works.
 - Create listing through `createListingFn` still needs browser smoke in an environment with real Cloudinary config.
-- Existing non-fatal moderation navigation warning and misleading server-function request logging remain.
+- Existing non-fatal moderation navigation warning remains.
 - `ddd/` files remain temporary worktree handoff docs and should be removed before opening a PR.
 
 ## Previous Prisma Test Harness Session Notes
@@ -460,10 +442,10 @@ Clean slate started: 2026-06-11
   - deleted the unused `src/actions/product-image-assets.ts` compatibility re-export
   - replaced `src/actions/product.test.ts` with read-service compatibility coverage only
   - added `src/domains/listings/infrastructure/listing-image-assets.test.ts` for upload bounded-concurrency and image cleanup behavior that belongs with listing infrastructure
-- Preserved temporary product/listing read compatibility:
-  - current product read API routes still use `src/actions/product.ts` or existing read repository helpers
-  - active create/update/delete/moderate client command wrappers still call listing server functions from `src/lib/tanstack-query/product-queries.ts`
-- Left `src/actions/product.ts` as a temporary read compatibility layer until Slice `4`; it no longer contains listing/product command behavior.
+- Preserved temporary product/listing read compatibility at the time:
+  - product read API routes still used `src/actions/product.ts` or existing read repository helpers
+  - active create/update/delete/moderate client command wrappers still called listing server functions from `src/lib/tanstack-query/product-queries.ts`
+- Left `src/actions/product.ts` as a temporary read compatibility layer until Slice `4`; it no longer contained listing/product command behavior.
 
 ## Files Changed In Previous Slice 3 Product Command Cleanup Session
 
