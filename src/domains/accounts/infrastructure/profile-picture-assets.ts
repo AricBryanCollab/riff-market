@@ -21,40 +21,38 @@ function getMissingUploadMetadataMessage(
 	return `Image upload did not return required ${missingFields.join(" and ")}`;
 }
 
-export class CloudinaryProfilePictureAssets {
-	async uploadProfilePicture(
-		profilePic: File,
-	): Promise<AccountProfilePictureAsset> {
-		const compressedImage = await compressImage({
-			file: profilePic,
-			options: {
-				maxSize: 800,
-				quality: 85,
-				format: "jpeg",
-			},
-		});
+export async function uploadCloudinaryProfilePicture(
+	profilePic: File,
+): Promise<AccountProfilePictureAsset> {
+	const compressedImage = await compressImage({
+		file: profilePic,
+		options: {
+			maxSize: 800,
+			quality: 85,
+			format: "jpeg",
+		},
+	});
 
-		const uploadResult = (await unsignedUploadImage({
-			buffer: compressedImage.buffer,
-			filename: profilePic.name,
-			uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
-		})) as CloudinaryUploadResult;
+	const uploadResult = (await unsignedUploadImage({
+		buffer: compressedImage.buffer,
+		filename: profilePic.name,
+		uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
+	})) as CloudinaryUploadResult;
 
-		if (!uploadResult?.secure_url || !uploadResult.public_id) {
-			throw new Error(
-				uploadResult?.error ?? getMissingUploadMetadataMessage(uploadResult),
-			);
-		}
-
-		return {
-			url: uploadResult.secure_url,
-			publicId: uploadResult.public_id,
-		};
+	if (!uploadResult?.secure_url || !uploadResult.public_id) {
+		throw new Error(
+			uploadResult?.error ?? getMissingUploadMetadataMessage(uploadResult),
+		);
 	}
 
-	async deleteProfilePictureAsset(
-		profilePic: AccountProfilePictureAsset,
-	): Promise<void> {
-		await deleteCloudinaryImageAsset(profilePic);
-	}
+	return {
+		url: uploadResult.secure_url,
+		publicId: uploadResult.public_id,
+	};
+}
+
+export async function deleteCloudinaryProfilePictureAsset(
+	profilePic: AccountProfilePictureAsset,
+): Promise<void> {
+	await deleteCloudinaryImageAsset(profilePic);
 }

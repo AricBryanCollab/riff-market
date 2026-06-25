@@ -24,7 +24,7 @@ vi.mock("@/utils/compress-image", () => ({
 	compressImage: compressImageMock,
 }));
 
-import { CloudinaryProfilePictureAssets } from "./profile-picture-assets";
+import { uploadCloudinaryProfilePicture } from "./profile-picture-assets";
 
 function makeImage(name: string) {
 	return new File([`bytes-${name}`], name, {
@@ -52,7 +52,6 @@ describe("profile picture assets", () => {
 	});
 
 	it("compresses and uploads a profile picture to Cloudinary", async () => {
-		const assets = new CloudinaryProfilePictureAssets();
 		const profilePic = makeImage("avatar.jpg");
 		(compressImageMock as Mock).mockImplementation(withCompressedImage);
 		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
@@ -60,7 +59,7 @@ describe("profile picture assets", () => {
 			public_id: "avatar",
 		});
 
-		await expect(assets.uploadProfilePicture(profilePic)).resolves.toEqual({
+		await expect(uploadCloudinaryProfilePicture(profilePic)).resolves.toEqual({
 			url: "https://cdn.example.com/avatar.jpg",
 			publicId: "avatar",
 		});
@@ -80,14 +79,13 @@ describe("profile picture assets", () => {
 	});
 
 	it("rejects uploads missing required Cloudinary metadata", async () => {
-		const assets = new CloudinaryProfilePictureAssets();
 		(compressImageMock as Mock).mockImplementation(withCompressedImage);
 		(cloudinaryMock.unsignedUploadImage as Mock).mockResolvedValue({
 			secure_url: "https://cdn.example.com/avatar.jpg",
 		});
 
 		await expect(
-			assets.uploadProfilePicture(makeImage("avatar.jpg")),
+			uploadCloudinaryProfilePicture(makeImage("avatar.jpg")),
 		).rejects.toThrow("Image upload did not return required public ID");
 	});
 });

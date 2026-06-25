@@ -195,8 +195,13 @@ async function createUserRepoAccountProfiles() {
 }
 
 async function createCloudinaryProfilePictureAssets() {
-	const { CloudinaryProfilePictureAssets } = await import(
-		"@/domains/accounts/infrastructure/profile-picture-assets"
-	);
-	return new CloudinaryProfilePictureAssets();
+	const {
+		deleteCloudinaryProfilePictureAsset,
+		uploadCloudinaryProfilePicture,
+	} = await import("@/domains/accounts/infrastructure/profile-picture-assets");
+
+	return {
+		uploadProfilePicture: uploadCloudinaryProfilePicture,
+		deleteProfilePictureAsset: deleteCloudinaryProfilePictureAsset,
+	};
 }
