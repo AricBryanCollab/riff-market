@@ -5,7 +5,6 @@ import type {
 	User,
 	UserSettings,
 } from "generated/prisma/client";
-import { prisma } from "@/data/connect-db";
 import { logger } from "@/lib/logger";
 import type { UpdateUserInput } from "@/lib/zod/user-validation";
 import { getAccountMediaCleanupJobInputs } from "./media-cleanup-job-data";
@@ -75,9 +74,12 @@ const getUserProfiles = async (
 
 export const getUserById = async (
 	id: string,
+	db?: DbClient,
 ): Promise<UserProfileRecord | null> => {
 	try {
-		const users = await getUserProfiles(prisma, { id });
+		const users = await getUserProfiles(db ?? (await getDefaultPrisma()), {
+			id,
+		});
 		return users[0] ?? null;
 	} catch (err) {
 		logger.error("Error at getUserById", err);
@@ -87,9 +89,12 @@ export const getUserById = async (
 
 export const getUserProfilePictureValueById = async (
 	userId: string,
+	db?: DbClient,
 ): Promise<Prisma.JsonValue | null> => {
 	try {
-		const settings = await prisma.userSettings.findUnique({
+		const settings = await (
+			db ?? (await getDefaultPrisma())
+		).userSettings.findUnique({
 			where: { userId },
 			select: { profilePic: true },
 		});
@@ -101,9 +106,11 @@ export const getUserProfilePictureValueById = async (
 	}
 };
 
-export const getAllUsers = async (): Promise<UserProfileRecord[]> => {
+export const getAllUsers = async (
+	db?: DbClient,
+): Promise<UserProfileRecord[]> => {
 	try {
-		return await getUserProfiles(prisma);
+		return await getUserProfiles(db ?? (await getDefaultPrisma()));
 	} catch (err) {
 		logger.error("Error at getAllUsers", err);
 		throw err;
@@ -113,40 +120,43 @@ export const getAllUsers = async (): Promise<UserProfileRecord[]> => {
 export const updateUser = async (
 	id: string,
 	data: UpdateUserInput,
+	db?: PrismaClient,
 ): Promise<UserProfileRecord> => {
 	try {
-		const result = await prisma.$transaction(async (tx) => {
-			if (data.firstName || data.lastName) {
-				await tx.user.update({
-					where: { id },
-					data: {
-						firstName: data.firstName,
-						lastName: data.lastName,
-					},
-				});
-			}
+		const result = await (db ?? (await getDefaultPrisma())).$transaction(
+			async (tx) => {
+				if (data.firstName || data.lastName) {
+					await tx.user.update({
+						where: { id },
+						data: {
+							firstName: data.firstName,
+							lastName: data.lastName,
+						},
+					});
+				}
 
-			if (
-				data.phone !== undefined ||
-				data.address !== undefined ||
-				data.theme !== undefined
-			) {
-				const settingsData = getProvidedUserSettingsData(data);
+				if (
+					data.phone !== undefined ||
+					data.address !== undefined ||
+					data.theme !== undefined
+				) {
+					const settingsData = getProvidedUserSettingsData(data);
 
-				await tx.userSettings.upsert({
-					where: { userId: id },
-					update: settingsData,
-					create: {
-						userId: id,
-						theme: "light",
-						...settingsData,
-					},
-				});
-			}
+					await tx.userSettings.upsert({
+						where: { userId: id },
+						update: settingsData,
+						create: {
+							userId: id,
+							theme: "light",
+							...settingsData,
+						},
+					});
+				}
 
-			const users = await getUserProfiles(tx, { id });
-			return users[0];
-		});
+				const users = await getUserProfiles(tx, { id });
+				return users[0];
+			},
+		);
 
 		return result;
 	} catch (err) {
@@ -158,9 +168,10 @@ export const updateUser = async (
 export const updateProfilePicture = async (
 	userId: string,
 	profilePic: Prisma.InputJsonValue | typeof Prisma.JsonNull,
+	db?: DbClient,
 ): Promise<void> => {
 	try {
-		await prisma.userSettings.upsert({
+		await (db ?? (await getDefaultPrisma())).userSettings.upsert({
 			where: { userId },
 			update: { profilePic },
 			create: {
@@ -177,11 +188,12 @@ export const updateProfilePicture = async (
 
 export const deleteUserAndEnqueueMediaCleanupJobs = async (
 	id: string,
+	db?: PrismaClient,
 ): Promise<void> => {
 	try {
 		const cleanupBatchId = randomUUID();
 
-		await prisma.$transaction(async (tx) => {
+		await (db ?? (await getDefaultPrisma())).$transaction(async (tx) => {
 			const [settings, products] = await Promise.all([
 				tx.userSettings.findUnique({
 					where: { userId: id },
@@ -221,3 +233,8 @@ export const deleteUserAndEnqueueMediaCleanupJobs = async (
 		throw err;
 	}
 };
+
+async function getDefaultPrisma() {
+	const { prisma } = await import("@/data/connect-db");
+	return prisma;
+}

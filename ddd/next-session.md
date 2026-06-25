@@ -19,10 +19,61 @@ Do not rely on any manually maintained current-state file. The repo is the curre
 
 ## Recommended Next Task
 
-Browser-smoke Slice `4` listing reads and notification server-function flows on the now-healthy local database before starting Slice `6`.
+Continue Slice `6` Accounts from `ddd/migration-plan.md`.
 
 Exact next task:
 
+- Account profile read/update/delete is now started and covered:
+  - account profile DTOs and application functions live under `src/domains/accounts`
+  - account profile use cases are plain functions, not one-method classes
+  - `src/server/account-service.ts` composes the new use cases over `UserRepoAccountProfiles(db)`
+  - `UserRepoAccountProfiles(db)` is the Prisma-backed account adapter and remains a class because it owns the Prisma client
+  - `src/server/current-user-service.ts` now routes current-user read/update/delete through the account service
+  - `src/server/account-service.prisma.test.ts` covers account profile read/update/delete through real Prisma test data
+  - `src/data/user-repo.ts` supports injected DB clients and lazily loads the default Prisma client
+  - validation and session clearing remain in server/delivery code
+- Continue by moving profile-picture lifecycle/upload behavior behind account application/infrastructure ports:
+  - preserve current upload, replace, remove, cleanup-after-failure, and best-effort old-asset cleanup behavior
+  - keep Cloudinary, compression, `File`, `FormData`, and Prisma JSON concerns out of account application/domain code
+  - likely source files:
+    - `src/actions/user.ts`
+    - `src/actions/profile-picture-lifecycle.ts`
+    - `src/hooks/use-update-profile-picture.ts`
+    - `src/server/current-user-service.ts`
+    - `src/server/user.functions.ts`
+- After profile-picture behavior is moved, migrate sign-up/sign-in behind account use cases while keeping session handling in delivery/server adapters:
+  - `src/actions/auth.ts`
+  - `src/data/auth-repo.ts`
+  - `src/routes/api/auth.signin.ts`
+  - `src/routes/api/auth.signup.ts`
+  - `src/routes/api/auth.signout.ts`
+- Account/profile behavior inspection targets:
+  - `src/actions/auth.ts`
+  - `src/actions/user.ts`
+  - `src/actions/profile-picture-lifecycle.ts`
+  - `src/data/auth-repo.ts`
+  - `src/data/user-repo.ts`
+  - `src/server/user.functions.ts`
+  - `src/server/current-user-service.ts`
+  - `src/routes/api/auth.signin.ts`
+  - `src/routes/api/auth.signup.ts`
+  - `src/routes/api/auth.signout.ts`
+  - `src/routes/settings/route.tsx`
+  - `src/routes/settings/-hooks/use-settings-page.ts`
+  - `src/hooks/use-auth-user.ts`
+  - `src/hooks/use-update-user.ts`
+  - `src/hooks/use-delete-user.ts`
+  - `src/hooks/use-update-profile-picture.ts`
+  - `src/services/media-cleanup-worker.ts`
+  - `src/data/media-cleanup-job-repo.ts`
+- Keep adding account use-case tests around existing behavior first; keep session handling in delivery/server adapter code.
+- Preserve profile-picture lifecycle/media cleanup behavior behind application/infrastructure ports; do not put Cloudinary, FormData, Request, Response, React, TanStack, Prisma, or Zod in domain code.
+- Keep current auth/profile/settings UX behavior and account-deletion media cleanup semantics while `src/actions/user.ts` server-function layering is cleaned up.
+- Listing/product read and notification server-function browser smoke completed on 2026-06-24:
+  - local in-app browser still failed with `net::ERR_BLOCKED_BY_CLIENT`, so the smoke used standalone Playwright with system Chrome against the local dev server
+  - verified shop approved search/filter reads, product detail approved and missing/non-`APPROVED` not-found behavior, home recent listings, admin pending moderation dropdown/shop queue, seller edit listing detail read, cart dropdown/page listing detail reads, and notification empty/list/read-one/read-all flows
+  - observed server-function delivery for the migrated listing-read and notification flows
+  - verified no requests to removed `/api/products*`, `/api/notifications*`, or `/api/orders*` routes; `/api/auth/*` remains expected auth delivery
 - A listing read delivery collapse is complete in the current working tree:
   - `src/server/listing-read.functions.ts` now exposes TanStack server functions for product-compatible listing detail, approved search/filter, pending moderation, seller listings, category/status counts, recent listings, and cart detail reads
   - product hooks now call listing read server functions directly instead of `/api/products*`
@@ -34,14 +85,6 @@ Exact next task:
   - read-only code-review sub-agent `Kant` reviewed this with the `requesting-code-review` skill; no Critical findings; two Important and two Minor findings were fixed
   - user requested removing the wrapper test file after review; keep behavior covered by listing read service/read-model tests and browser smoke
   - verification: `bun run build` passed with the existing large client chunk warning; focused listing read service tests passed; `bun run typecheck` passed; touched-file Biome passed; full non-DB `bun run test:unit` passed after wrapper-test removal with 197 tests and 34 DB tests skipped; `bun run docs:check` passed; `git diff --check` passed
-- Browser-smoke the migrated listing read server-function flows:
-  - shop approved search/filter reads
-  - product detail not-found behavior for missing/non-`APPROVED` listings
-  - seller listing reads if/where a current UI path exists
-  - admin pending moderation queue
-  - home recent listings
-  - cart and checkout cart detail reads
-- Browser-smoke notification inbox/count/read-one/read-all behavior through server functions once local browser access works.
 - Do not reintroduce `/api/products*`, `/api/orders*`, `/api/notifications*`, `src/actions/product.ts`, or `src/data/product-repo.ts`.
 - Remaining non-product API routes are auth, reviews, and upload image; those align with later accounts/reviews/media slices or HTTP-specific upload handling.
 
@@ -61,29 +104,21 @@ Exact next task:
   - listing moderation status persistence is guarded by the expected prior `listingStatus`, so stale concurrent moderation attempts return conflict instead of overwriting a newer status or sending a contradictory notification
   - `src/server/notification-service.prisma.test.ts` covers the real Prisma notification adapter for current-user list/count/read-one/read-all behavior and cross-user isolation, verified through the service interface
   - `src/routeTree.gen.ts` has been regenerated without the old notification API routes
-- Shared Prisma integration test setup now lives in `src/test/prisma-test-support.ts`.
+- Shared Prisma integration test setup now lives in `src/test/prisma-vitest-support.ts` and `src/test/prisma-test-data.ts`.
 - Destructive DB tests require `RUN_DB_TESTS=1` and `TEST_DATABASE_URL`; do not use `DATABASE_URL` for this harness.
 - `TEST_DATABASE_URL` must point to a disposable database whose name contains `test`, `testing`, `vitest`, or `integration`.
-- Latest gated DB verification passed against disposable database `riff_market_test`: 34 DB tests passed.
+- Latest gated DB verification passed against disposable database `riff_market_test`: 36 DB tests passed across 6 DB files.
 - Local ignored `.env` now includes `TEST_DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_test`, so `bun run test:db` works without passing the URL inline.
 - Local `riff` app database schema health is restored; `bunx prisma migrate status` reports database schema is up to date.
-- `package.json` `test:db` includes the new DB-backed Order module suite: `src/server/order-service.prisma.test.ts`.
+- `package.json` `test:db` includes DB-backed ordering, listing, notification, and account service suites, including `src/server/account-service.prisma.test.ts`.
 - `src/server/order-service.test.ts` is intentionally narrow and should stay focused on validation/request-error mapping; persisted order visibility/status behavior belongs in `src/server/order-service.prisma.test.ts`.
 - Listing/product reads have moved to listing read-model use cases and server-function delivery; do not route them back through `/api/products*`, `src/actions/product.ts`, or `src/data/product-repo.ts`.
 - Listing read query parsing now lives in the listings DTO layer, category/condition are typed before Prisma, and product-compatible mapping is explicit in `src/server/listing-read-service.ts`.
 - Seller listings and pending moderation queue reads have moved to listing read-model use cases; do not route them back through `src/actions/product.ts` or `src/data/product-repo.ts`.
 - Count, recent, and cart-detail reads have moved to listing read-model use cases; do not route them back through product actions/repositories.
 - `src/actions/product.ts` and `src/data/product-repo.ts` have been deleted; do not reintroduce listing/product behavior there.
-- Browser-smoke the Slice `4` read flows once local browser access works:
-  - shop approved search/filter reads
-  - product detail not-found behavior for missing/non-`APPROVED` listings
-  - seller settings listings
-  - admin pending moderation queue
-  - home recent listings
-  - cart and checkout cart detail reads
-- Notification inbox/count/read-one/read-all behavior now goes through server functions and has gated Prisma adapter coverage; browser-smoke it as UI confidence once local browser access works.
-- In the latest session, in-app browser local navigation was blocked with `net::ERR_BLOCKED_BY_CLIENT`; curl probes required unsandboxed localhost access.
-- Earlier local public product read probes returned Prisma `500`s while Postgres was stopped; rerun Slice `4` smoke through server functions now that local DB/schema health is restored.
+- Slice `4` listing read and Slice `5` notification server-function browser smoke passed on 2026-06-24 with standalone Playwright/system Chrome after the in-app browser still blocked localhost with `net::ERR_BLOCKED_BY_CLIENT`.
+- Keep the local smoke result as UI confidence for listing-read and notification delivery; do not reintroduce removed product, notification, or order API routes to make future browser smoke easier.
 - Slice `5` notification delivery migration is complete; keep `src/server/notification-service.ts` as the use-case-facing service module behind the server functions.
 - Product/listing reads now use listing query use cases/read DTOs under `src/domains/listings` and server-function delivery.
 - Product API read routes have been removed; do not reintroduce them without a concrete external HTTP compatibility requirement.
@@ -108,7 +143,7 @@ Exact next task:
 - Legacy product command action/repository helpers have been removed; do not reintroduce them.
 - Legacy product detail/search action and repository helpers have been removed; do not reintroduce them.
 - Keep product/listing read wrappers as temporary compatibility while UI consumers still use product vocabulary.
-- Slice `4` source migration is drained; remaining Slice `4` work is browser smoke and any fixes found there.
+- Slice `4` source migration is drained and its current read-delivery browser smoke passed.
 - Active order delivery is now server functions only for migrated flows:
   - `listOrdersForCurrentUserFn`
   - `getOrderDetailFn`
@@ -127,7 +162,36 @@ Exact next task:
 
 Useful first inspection targets:
 
-- `ddd/migration-plan.md` Slice `3`
+- `ddd/migration-plan.md` Slice `6`
+- `src/actions/auth.ts`
+- `src/actions/user.ts`
+- `src/actions/profile-picture-lifecycle.ts`
+- `src/actions/user.test.ts`
+- `src/data/auth-repo.ts`
+- `src/data/user-repo.ts`
+- `src/data/user-repo.test.ts`
+- `src/server/user.functions.ts`
+- `src/server/current-user-service.ts`
+- `src/server/current-user-service.test.ts`
+- `src/routes/api/auth.signin.ts`
+- `src/routes/api/auth.signup.ts`
+- `src/routes/api/auth.signout.ts`
+- `src/routes/settings/route.tsx`
+- `src/routes/settings/-hooks/use-settings-page.ts`
+- `src/routes/settings/-components/delete-account-dialog.tsx`
+- `src/routes/settings/-components/profile-picture-dialog.tsx`
+- `src/components/user-settings/update-profile-form.tsx`
+- `src/hooks/use-auth-user.ts`
+- `src/hooks/use-update-user.ts`
+- `src/hooks/use-delete-user.ts`
+- `src/hooks/use-update-profile-picture.ts`
+- `src/lib/tanstack-query/auth-queries.ts`
+- `src/lib/zod/auth-validation.ts`
+- `src/lib/zod/user-validation.ts`
+- `src/services/media-cleanup-worker.ts`
+- `src/services/media-cleanup-targets.ts`
+- `src/data/media-cleanup-job-repo.ts`
+- `src/domains/listings/domain/listing.ts`
 - `src/domains/listings/domain/listing.ts`
 - `src/domains/listings/application/manage-listing.ts`
 - `src/domains/listings/application/manage-listing.test.ts`
@@ -156,8 +220,9 @@ Useful first inspection targets:
 - `src/domains/listings/dto/listing-read-model.ts`
 - `src/domains/listings/infrastructure/prisma-listing-read-models.ts`
 - `src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts`
-- `src/test/prisma-test-support.ts`
-- `src/test/prisma-test-support.test.ts`
+- `src/test/prisma-vitest-support.ts`
+- `src/test/prisma-test-data.ts`
+- `src/test/prisma-test-data.test.ts`
 - `src/domains/ordering/infrastructure/prisma-listings-for-purchase.ts`
 - `src/domains/ordering/application/place-purchase.prisma.test.ts`
 - `src/domains/listings/infrastructure/listing-image-assets.test.ts`
@@ -209,21 +274,35 @@ Useful first inspection targets:
 
 ## Current Repo State From Latest Completed Session
 
-- Latest listing-read delivery-collapse session completed on 2026-06-24:
+- Latest Slice `6` account-profile boundary session completed on 2026-06-24:
+  - work completed: added account profile DTOs/use cases for profile read, profile update, and account deletion; added `src/server/account-service.ts`; rewired `src/server/current-user-service.ts` read/update/delete paths through the account service while keeping validation and session clearing in delivery/server code
+  - files changed: `src/domains/accounts/dto/account-profile.ts`, `src/domains/accounts/application/account-profile.ts`, `src/domains/accounts/application/account-profile.test.ts`, `src/server/account-service.ts`, `src/server/account-service.test.ts`, `src/server/current-user-service.ts`, `src/server/current-user-service.test.ts`, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: focused account/current-user tests passed with 15 tests; `bun run typecheck` passed with bundled Node; touched-file Biome passed; `bun run docs:check` passed; `git diff --check` passed
+  - decisions made: start Slice `6` with current-user profile read/update/delete; keep profile-picture upload and auth sign-in/sign-up on existing paths for the next Slice `6` pass; keep session handling in delivery/server adapters
+  - blockers or risks: profile-picture lifecycle still needs movement behind account ports; sign-up/sign-in still need account use cases; create-listing smoke still needs real Cloudinary config; in-app browser localhost navigation still fails with `net::ERR_BLOCKED_BY_CLIENT`
+  - exact next recommended task: continue Slice `6` by moving profile-picture lifecycle/upload behavior behind account application/infrastructure ports
+- Previous browser-smoke handoff session completed on 2026-06-24:
+  - work completed: browser-smoked Slice `4` listing/product read server-function delivery and Slice `5` notification server-function UI flows against the local `riff` app database; updated `ddd/progress.md` and `ddd/next-session.md` so Slice `6` Accounts is next
+  - files changed: local ignored `tmp/ddd-read-notification-smoke.mjs`, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: `bun --bun tmp/ddd-read-notification-smoke.mjs` passed with 20 assertions; it verified no requests to removed `/api/products*`, `/api/notifications*`, or `/api/orders*` routes; `bun run docs:check` passed
+  - decisions made: treat current listing-read delivery and notification UI smoke as complete; use standalone Playwright/system Chrome when the Codex Desktop in-app browser is blocked from localhost
+  - blockers or risks: create-listing smoke still needs real Cloudinary config; in-app browser localhost navigation still fails with `net::ERR_BLOCKED_BY_CLIENT`; existing add-to-cart and moderation navigation warnings remain; `ReviewSection` still has random-value hydration mismatch noise during product detail smoke
+  - exact next recommended task: begin Slice `6` Accounts from `ddd/migration-plan.md`
+- Previous listing-read delivery-collapse session completed on 2026-06-24:
   - work completed: added listing read server functions; switched product hooks from `/api/products*` and the deleted product-query facade to direct server-function calls; deleted product read API routes; regenerated route tree; normalized product-compatible read dates to ISO strings; deleted the old HTTP response helper; updated focused listing read service tests; updated shop catalog feature docs; requested and addressed a read-only code review
   - files changed: `src/server/listing-read.functions.ts`, product hooks, `src/server/listing-read-service.ts`, `src/server/listing-read-service.test.ts`, `src/routeTree.gen.ts`, `docs/features/shop-catalog-browsing.md`, deleted `src/lib/tanstack-query/product-queries.ts`, deleted product API read route files, `ddd/progress.md`, `ddd/next-session.md`
   - tests/checks run: `bun run build` passed with the existing large client chunk warning; focused listing read service tests passed; `bun run typecheck` passed; touched-file Biome passed; full non-DB `bun run test:unit` passed after wrapper-test removal with 197 tests and 34 DB tests skipped; `bun run docs:check` passed; `git diff --check` passed
   - decisions made: delete product read API route delivery after moving callers; keep product-compatible wrapper names and DTO shapes during vocabulary migration; keep server functions as delivery adapters over listing read service/use cases; remove route-delivery helpers once route files are deleted
-  - blockers or risks: browser smoke still pending; create-listing browser smoke still needs real Cloudinary configuration
-  - exact next recommended task: browser-smoke listing read and notification server-function flows
-- Latest delivery-collapse session completed on 2026-06-24:
+  - blockers or risks: browser smoke was pending at the time of this session and is now complete; create-listing browser smoke still needs real Cloudinary configuration
+  - exact next recommended task: superseded by the browser-smoke handoff session; begin Slice `6` Accounts
+- Previous notification delivery-collapse session completed on 2026-06-24:
   - work completed: collapsed notification delivery to TanStack server functions; updated `useNotifications` to call `listNotificationsFn`, `getUnreadNotificationCountFn`, `readNotificationFn`, and `readAllNotificationsFn` directly; deleted the pass-through `src/lib/tanstack-query/notifications-queries.ts`; deleted notification API route files plus route-handler/error helper modules; regenerated `src/routeTree.gen.ts`; updated DDD handoff docs
   - files changed: `src/server/notification.functions.ts`, `src/hooks/use-notifications.ts`, `src/routeTree.gen.ts`, deleted `src/lib/tanstack-query/notifications-queries.ts`, deleted notification API route files, deleted notification route handler/error helper modules, `ddd/progress.md`, `ddd/next-session.md`
   - tests/checks run: focused notification suite passed with 8 tests and 5 gated DB tests skipped; full non-DB `bun run test:unit` passed with 192 tests and 34 DB tests skipped; `bun run typecheck` passed; touched-file Biome passed; `bun run build` passed with the existing large client chunk warning; `bun run docs:check` passed; `git diff --check` passed
   - decisions made: no notification HTTP compatibility requirement exists right now; use server functions directly from the hook instead of a pass-through tanstack-query module
-  - blockers or risks: browser smoke for notification UI still useful once local browser access works; unrelated docs work is present in the worktree
-  - exact next recommended task: superseded by the listing-read delivery-collapse session; browser-smoke Slice `4` reads and notification server-function flows next
-- Latest review-hardening session completed on 2026-06-24:
+  - blockers or risks: notification UI browser smoke was still useful at the time of this session and is now complete; unrelated docs work was present in the worktree
+  - exact next recommended task: superseded by the browser-smoke handoff session; begin Slice `6` Accounts
+- Previous review-hardening session completed on 2026-06-24:
   - work completed: spawned the requested TDD review sub-agent for the notification/moderation test changes; addressed its test-shape findings by moving notification route behavior into named handlers, replacing the TanStack-route-internals compatibility test with behavior tests, splitting the Prisma notification service test into focused service-interface checks, and moving the stale moderation DB regression through `moderateListingForCurrentUser`; the stale conflict test now verifies the seller receives no notification through the notification read service
   - files changed: `src/server/notification-route-handlers.ts`, `src/server/notification-route-handlers.test.ts`, notification API route files, `src/server/notification-service.prisma.test.ts`, `src/server/listing-service.prisma.test.ts`, deleted `src/routes/api/notifications.compat.test.ts`, `ddd/progress.md`, `ddd/next-session.md`
   - tests/checks run: focused route/use-case suite passed with 17 tests; `bun run typecheck` passed; full non-DB `bun run test:unit` passed with 200 tests and 34 DB tests skipped; gated Prisma DB suite passed with `bun run test:db` across 5 files and 34 tests; `bun run docs:check` and `git diff --check` passed

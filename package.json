@@ -11,7 +11,7 @@
 		"db:generate": "bun prisma generate",
 		"test": "vitest run",
 		"test:unit": "vitest run --config vitest.config.ts",
-		"test:db": "RUN_DB_TESTS=1 bun run test:unit -- --no-file-parallelism src/domains/ordering/application/place-purchase.prisma.test.ts src/server/order-service.prisma.test.ts src/server/listing-service.prisma.test.ts src/server/notification-service.prisma.test.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts",
+		"test:db": "RUN_DB_TESTS=1 bun run test:unit -- --no-file-parallelism src/domains/ordering/application/place-purchase.prisma.test.ts src/server/order-service.prisma.test.ts src/server/listing-service.prisma.test.ts src/server/account-service.prisma.test.ts src/server/notification-service.prisma.test.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts",
 		"test:browser": "vitest run --config vitest.browser.config.ts",
 		"test:browser:headed": "vitest run --config vitest.browser.config.ts --browser.headless=false",
 		"test:e2e": "playwright test",

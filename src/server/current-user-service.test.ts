@@ -1,14 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { UserProfile } from "@/types/user";
+
+const accountServiceMocks = vi.hoisted(() => ({
+	deleteAccount: vi.fn(),
+	getAccountProfile: vi.fn(),
+	updateAccountProfile: vi.fn(),
+}));
 
 const actionMocks = vi.hoisted(() => ({
-	deleteUserService: vi.fn(),
-	getUserByIdService: vi.fn(),
 	updateValidatedUserProfilePicService: vi.fn(),
-	updateValidatedUserService: vi.fn(),
 }));
 
 vi.mock("@/actions/user", () => actionMocks);
+vi.mock("@/server/account-service", () => accountServiceMocks);
 
 import {
 	CurrentUserRequestError,
@@ -17,37 +20,13 @@ import {
 	validateCurrentUserUpdateInput,
 } from "./current-user-service";
 
-function makeUser(overrides: Partial<UserProfile> = {}): UserProfile {
-	return {
-		id: "user-1",
-		firstName: "Angus",
-		lastName: "Young",
-		email: "angus@example.com",
-		role: "CUSTOMER",
-		theme: "light",
-		phone: null,
-		profilePic: null,
-		address: null,
-		...overrides,
-	};
-}
-
 describe("current-user service", () => {
 	afterEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it("unwraps the authenticated user from the action result", async () => {
-		const user = makeUser();
-		actionMocks.getUserByIdService.mockResolvedValue({ data: user });
-
-		await expect(getCurrentUser(user.id)).resolves.toEqual(user);
-
-		expect(actionMocks.getUserByIdService).toHaveBeenCalledWith(user.id);
-	});
-
-	it("normalizes action errors into request errors", async () => {
-		actionMocks.getUserByIdService.mockResolvedValue({
+	it("normalizes missing account errors into request errors", async () => {
+		accountServiceMocks.getAccountProfile.mockResolvedValue({
 			error: "User not found",
 		});
 

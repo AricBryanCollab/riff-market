@@ -1,15 +1,15 @@
 import z from "zod";
-import {
-	deleteUserService,
-	getUserByIdService,
-	updateValidatedUserProfilePicService,
-	updateValidatedUserService,
-} from "@/actions/user";
+import { updateValidatedUserProfilePicService } from "@/actions/user";
 import {
 	type UpdateUserInput,
 	updateProfilePictureSchema,
 	updateUserSchema,
 } from "@/lib/zod/user-validation";
+import {
+	deleteAccount,
+	getAccountProfile,
+	updateAccountProfile,
+} from "@/server/account-service";
 
 type ActionError = {
 	error: string;
@@ -107,12 +107,12 @@ export function validateProfilePictureFormData(data: FormData) {
 }
 
 export async function getCurrentUser(userId: string) {
-	const result = await getUserByIdService(userId);
+	const result = await getAccountProfile(userId);
 	return unwrapActionResult(result).data;
 }
 
 export async function updateCurrentUser(userId: string, data: UpdateUserInput) {
-	return unwrapActionResult(await updateValidatedUserService(userId, data));
+	return unwrapActionResult(await updateAccountProfile(userId, data));
 }
 
 export async function updateCurrentUserProfilePicture(
@@ -125,7 +125,7 @@ export async function updateCurrentUserProfilePicture(
 }
 
 export async function deleteCurrentUser(userId: string, email: string) {
-	return unwrapActionResult(await deleteUserService(userId, email));
+	return unwrapActionResult(await deleteAccount(userId, email));
 }
 
 export function toProfilePictureResponse(profilePic: string | null) {
