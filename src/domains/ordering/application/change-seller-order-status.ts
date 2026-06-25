@@ -7,7 +7,6 @@ import type { Actor } from "@/domains/shared/domain/actor";
 import type { DomainEvent } from "@/domains/shared/domain/domain-event";
 import {
 	type AppError,
-	appError,
 	err,
 	ok,
 	type Result,
@@ -116,12 +115,12 @@ export function changeSellerOrderStatusError(
 	kind: ChangeSellerOrderStatusError["kind"],
 	details?: unknown,
 ): ChangeSellerOrderStatusError {
-	return appError({
+	return {
 		code,
 		message,
 		kind,
 		details,
-	});
+	};
 }
 
 function validateCommand(command: ChangeSellerOrderStatusCommand) {

@@ -4,7 +4,6 @@ import type {
 } from "@/domains/accounts/dto/account-profile-picture";
 import {
 	type AppError,
-	appError,
 	err,
 	ok,
 	type Result,
@@ -133,22 +132,22 @@ async function cleanupProfilePictureAsset(
 }
 
 function accountNotFoundError(): AccountProfilePictureError {
-	return appError({
+	return {
 		code: "ACCOUNT_PROFILE_NOT_FOUND",
 		message: "User not found",
 		kind: "not-found",
-	});
+	};
 }
 
 function profilePictureUpdateFailedError(
 	error: unknown,
 ): AccountProfilePictureError {
-	return appError({
+	return {
 		code: "ACCOUNT_PROFILE_PICTURE_UPDATE_FAILED",
 		message: "Failed to update the user profile picture",
 		kind: "unexpected",
 		details: getErrorMessage(error, "Internal server error"),
-	});
+	};
 }
 
 function getErrorMessage(error: unknown, fallback: string) {

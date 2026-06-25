@@ -32,9 +32,3 @@ export function ok<T>(value: T): Ok<T> {
 export function err<E extends AppError>(error: E): Err<E> {
 	return { ok: false, error };
 }
-
-export function appError<TCode extends string>(
-	error: AppError<TCode>,
-): AppError<TCode> {
-	return error;
-}

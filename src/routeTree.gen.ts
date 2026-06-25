@@ -22,8 +22,6 @@ import { Route as ShopIndexRouteImport } from './routes/shop/index'
 import { Route as ReviewsIndexRouteImport } from './routes/reviews/index'
 import { Route as ProductNewRouteImport } from './routes/product/new'
 import { Route as ProductIdRouteImport } from './routes/product/$id'
-import { Route as ApiUploadimageRouteImport } from './routes/api/uploadimage'
-import { Route as ApiReviewsRouteImport } from './routes/api/reviews'
 import { Route as ProductEditIdRouteImport } from './routes/product/edit.$id'
 import { Route as ApiAuthSignupRouteImport } from './routes/api/auth.signup'
 import { Route as ApiAuthSignoutRouteImport } from './routes/api/auth.signout'
@@ -94,16 +92,6 @@ const ProductIdRoute = ProductIdRouteImport.update({
   path: '/product/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUploadimageRoute = ApiUploadimageRouteImport.update({
-  id: '/api/uploadimage',
-  path: '/api/uploadimage',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiReviewsRoute = ApiReviewsRouteImport.update({
-  id: '/api/reviews',
-  path: '/api/reviews',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProductEditIdRoute = ProductEditIdRouteImport.update({
   id: '/product/edit/$id',
   path: '/product/edit/$id',
@@ -135,8 +123,6 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/notifications': typeof NotificationsRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/api/reviews': typeof ApiReviewsRoute
-  '/api/uploadimage': typeof ApiUploadimageRoute
   '/product/$id': typeof ProductIdRoute
   '/product/new': typeof ProductNewRoute
   '/reviews': typeof ReviewsIndexRoute
@@ -155,8 +141,6 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/notifications': typeof NotificationsRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/api/reviews': typeof ApiReviewsRoute
-  '/api/uploadimage': typeof ApiUploadimageRoute
   '/product/$id': typeof ProductIdRoute
   '/product/new': typeof ProductNewRoute
   '/reviews': typeof ReviewsIndexRoute
@@ -177,8 +161,6 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/notifications': typeof NotificationsRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/api/reviews': typeof ApiReviewsRoute
-  '/api/uploadimage': typeof ApiUploadimageRoute
   '/product/$id': typeof ProductIdRoute
   '/product/new': typeof ProductNewRoute
   '/reviews/': typeof ReviewsIndexRoute
@@ -200,8 +182,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/notifications'
     | '/unauthorized'
-    | '/api/reviews'
-    | '/api/uploadimage'
     | '/product/$id'
     | '/product/new'
     | '/reviews'
@@ -220,8 +200,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/notifications'
     | '/unauthorized'
-    | '/api/reviews'
-    | '/api/uploadimage'
     | '/product/$id'
     | '/product/new'
     | '/reviews'
@@ -241,8 +219,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/notifications'
     | '/unauthorized'
-    | '/api/reviews'
-    | '/api/uploadimage'
     | '/product/$id'
     | '/product/new'
     | '/reviews/'
@@ -263,8 +239,6 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   NotificationsRoute: typeof NotificationsRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
-  ApiReviewsRoute: typeof ApiReviewsRoute
-  ApiUploadimageRoute: typeof ApiUploadimageRoute
   ProductIdRoute: typeof ProductIdRoute
   ProductNewRoute: typeof ProductNewRoute
   ReviewsIndexRoute: typeof ReviewsIndexRoute
@@ -367,20 +341,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/uploadimage': {
-      id: '/api/uploadimage'
-      path: '/api/uploadimage'
-      fullPath: '/api/uploadimage'
-      preLoaderRoute: typeof ApiUploadimageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/reviews': {
-      id: '/api/reviews'
-      path: '/api/reviews'
-      fullPath: '/api/reviews'
-      preLoaderRoute: typeof ApiReviewsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/product/edit/$id': {
       id: '/product/edit/$id'
       path: '/product/edit/$id'
@@ -434,8 +394,6 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   NotificationsRoute: NotificationsRoute,
   UnauthorizedRoute: UnauthorizedRoute,
-  ApiReviewsRoute: ApiReviewsRoute,
-  ApiUploadimageRoute: ApiUploadimageRoute,
   ProductIdRoute: ProductIdRoute,
   ProductNewRoute: ProductNewRoute,
   ReviewsIndexRoute: ReviewsIndexRoute,

@@ -7,7 +7,6 @@ import type {
 } from "@/domains/listings/dto/listing-read-model";
 import {
 	type AppError,
-	appError,
 	err,
 	ok,
 	type Result,
@@ -174,9 +173,9 @@ function listingReadError(
 	message: string,
 	kind: ListingReadError["kind"],
 ): ListingReadError {
-	return appError({
+	return {
 		code,
 		message,
 		kind,
-	});
+	};
 }

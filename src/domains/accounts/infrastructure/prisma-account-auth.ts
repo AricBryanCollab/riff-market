@@ -9,6 +9,7 @@ import type {
 import { accountEmailTakenError } from "@/domains/accounts/application/account-auth";
 import type { AccountAuthUser } from "@/domains/accounts/dto/account-auth";
 import { err, ok, type Result } from "@/domains/shared/domain/result";
+import { isPrismaUniqueConflict } from "@/domains/shared/infrastructure/prisma-errors";
 
 export class PrismaAccountAuth
 	implements AccountCredentialsReadPort, AccountRegistrationPort
@@ -82,33 +83,5 @@ export class PrismaAccountAuth
 }
 
 function isUniqueEmailConflict(error: unknown) {
-	if (
-		!(error instanceof Prisma.PrismaClientKnownRequestError) ||
-		error.code !== "P2002"
-	) {
-		return false;
-	}
-
-	return (
-		hasFieldTarget(error.meta?.target, "email") ||
-		hasDriverAdapterConstraintField(error.meta?.driverAdapterError, "email")
-	);
-}
-
-function hasDriverAdapterConstraintField(value: unknown, field: string) {
-	if (!isRecord(value) || !isRecord(value.cause)) {
-		return false;
-	}
-
-	const constraint = value.cause.constraint;
-
-	return isRecord(constraint) && hasFieldTarget(constraint.fields, field);
-}
-
-function hasFieldTarget(value: unknown, field: string) {
-	return Array.isArray(value) && value.includes(field);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object" && value !== null;
+	return isPrismaUniqueConflict(error, ["email"]);
 }

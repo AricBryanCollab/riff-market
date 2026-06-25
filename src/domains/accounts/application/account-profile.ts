@@ -5,7 +5,6 @@ import type {
 } from "@/domains/accounts/dto/account-profile";
 import {
 	type AppError,
-	appError,
 	err,
 	ok,
 	type Result,
@@ -105,9 +104,9 @@ function accountError(
 	message: string,
 	kind: AccountProfileError["kind"],
 ): AccountProfileError {
-	return appError({
+	return {
 		code,
 		message,
 		kind,
-	});
+	};
 }
