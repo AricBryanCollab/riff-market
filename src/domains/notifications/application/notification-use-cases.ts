@@ -5,7 +5,6 @@ import type {
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	type AppError,
-	appError,
 	err,
 	ok,
 	type Result,
@@ -164,9 +163,9 @@ function notificationError(
 	message: string,
 	kind: NotificationError["kind"],
 ): NotificationError {
-	return appError({
+	return {
 		code,
 		message,
 		kind,
-	});
+	};
 }

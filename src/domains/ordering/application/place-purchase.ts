@@ -8,7 +8,6 @@ import type { DomainEvent } from "@/domains/shared/domain/domain-event";
 import { Money } from "@/domains/shared/domain/money";
 import {
 	type AppError,
-	appError,
 	err,
 	ok,
 	type Result,
@@ -216,12 +215,12 @@ export function placePurchaseError(
 	kind: PlacePurchaseError["kind"],
 	details?: unknown,
 ): PlacePurchaseError {
-	return appError({
+	return {
 		code,
 		message,
 		kind,
 		details,
-	});
+	};
 }
 
 class PlacePurchaseRollback extends Error {

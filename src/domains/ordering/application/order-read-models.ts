@@ -10,7 +10,6 @@ import type {
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	type AppError,
-	appError,
 	err,
 	ok,
 	type Result,
@@ -179,9 +178,9 @@ function orderReadError(
 	message: string,
 	kind: OrderReadError["kind"] = "authorization",
 ): OrderReadError {
-	return appError({
+	return {
 		code,
 		message,
 		kind,
-	});
+	};
 }

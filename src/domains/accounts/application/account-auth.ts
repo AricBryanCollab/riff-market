@@ -6,7 +6,6 @@ import type {
 import type { ActorRole } from "@/domains/shared/domain/actor";
 import {
 	type AppError,
-	appError,
 	err,
 	ok,
 	type Result,
@@ -105,9 +104,9 @@ function accountAuthError(
 	code: AccountAuthErrorCode,
 	message: string,
 ): AccountAuthError {
-	return appError({
+	return {
 		code,
 		message,
 		kind: "validation",
-	});
+	};
 }
