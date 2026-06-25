@@ -4,6 +4,7 @@ import { findUserById } from "@/data/auth-repo";
 import { logger, updateRequestContext } from "@/lib/logger";
 import { requestLoggerMiddleware } from "@/middleware";
 import { NotificationRequestError } from "@/server/notification-service";
+import { ReviewRequestError } from "@/server/review-service";
 import type { UserRole } from "@/types/enum";
 import { useAppSession } from "@/utils/session";
 
@@ -75,6 +76,24 @@ export const notificationErrorMiddleware = createMiddleware({
 		}
 
 		const fallbackMessage = "Failed to process notification request";
+		logger.error(fallbackMessage, error);
+		setResponseStatus(500);
+		throw new Error(fallbackMessage);
+	}
+});
+
+export const reviewErrorMiddleware = createMiddleware({
+	type: "function",
+}).server(async ({ next }) => {
+	try {
+		return await next();
+	} catch (error) {
+		if (error instanceof ReviewRequestError) {
+			setResponseStatus(error.status);
+			throw new Error(error.message);
+		}
+
+		const fallbackMessage = "Failed to process review request";
 		logger.error(fallbackMessage, error);
 		setResponseStatus(500);
 		throw new Error(fallbackMessage);

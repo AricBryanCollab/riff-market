@@ -19,33 +19,28 @@ Do not rely on any manually maintained current-state file. The repo is the curre
 
 ## Recommended Next Task
 
-Begin Slice `7` Reviews from `ddd/migration-plan.md`.
+Begin Slice `8` Media from `ddd/migration-plan.md`.
 
 Exact next task:
 
-- Slice `6` Accounts is complete for active account/profile/auth paths:
-  - account profile read/update/delete use cases and DTOs live under `src/domains/accounts`
-  - account profile-picture update/remove use case and DTOs live under `src/domains/accounts`
-  - account sign-up/sign-in use cases and DTOs live under `src/domains/accounts`
-  - `src/server/account-service.ts` composes account profile/profile-picture use cases over `UserRepoAccountProfiles(db)` and lazy-loads `CloudinaryProfilePictureAssets`
-  - `src/server/account-auth-service.ts` composes sign-up/sign-in use cases over `PrismaAccountAuth(db)` and `BcryptAccountPasswords`
-  - `src/server/current-user-service.ts` routes current-user read/update/delete/profile-picture behavior through account services
-  - auth sign-in/sign-up routes call account auth services and update sessions in route delivery code
-  - sign-out remains route delivery/session clearing
-  - `src/actions/user.ts`, `src/actions/user.test.ts`, `src/actions/profile-picture-lifecycle.ts`, and `src/actions/auth.ts` are deleted; do not reintroduce account behavior there
-  - `src/data/auth-repo.ts` now only keeps `findUserById` for middleware
-  - account profile and account auth Prisma tests are included in `bun run test:db`
-- Begin Reviews by inspecting current behavior first:
-  - `src/actions/review.ts`
-  - `src/data/review-repo.ts`
-  - `src/routes/api/reviews.ts`
-  - `src/components/review-section.tsx`
-  - `src/lib/zod/review-validation.ts`
-  - `src/types/review.ts`
-  - `src/domains/reviews`
-- Add review use-case tests around existing behavior first.
-- Preserve current review creation/query behavior while moving business rules behind `src/domains/reviews`.
-- Use listing vocabulary in the reviews domain even if UI compatibility still says product.
+- Slice `7` Reviews source migration is complete for active server-function behavior:
+  - review domain, DTOs, use cases, and Prisma adapter live under `src/domains/reviews`
+  - review use cases use `listingId` vocabulary and an explicit `Actor`
+  - `prisma/schema.prisma` exposes `Review.listingId @map("productId")`, preserving the existing physical column until the later Product-to-Listing persistence rename
+  - `src/server/review-service.ts` composes review use cases over `PrismaListingReviews(prisma)`
+  - `src/server/review.functions.ts` exposes `listListingReviewsFn` and `createListingReviewFn`
+  - `/api/reviews` has been deleted; do not reintroduce it without a concrete external HTTP compatibility requirement
+  - duplicate review creation maps to `REVIEW_ALREADY_EXISTS`
+  - `src/actions/review.ts`, `src/data/review-repo.ts`, and `src/lib/zod/review-validation.ts` are deleted; do not reintroduce review behavior there
+  - `package.json` `test:db` includes `src/domains/reviews/infrastructure/prisma-listing-reviews.prisma.test.ts`
+- TDD review application tests were added for:
+  - creating and reading listing reviews
+  - rejecting ratings outside 1-5
+  - rejecting a second review by the same user for the same listing
+- Gated Prisma verification is complete:
+  - focused review Prisma test passed with `RUN_DB_TESTS=1` and sandbox escalation for localhost Postgres
+  - full `bun run test:db` passed with sandbox escalation: 8 DB files, 41 tests
+- Current product detail review UI remains static placeholder content; do not assume review server functions have a live UI caller yet.
 - Listing/product read and notification server-function browser smoke completed on 2026-06-24:
   - local in-app browser still failed with `net::ERR_BLOCKED_BY_CLIENT`, so the smoke used standalone Playwright with system Chrome against the local dev server
   - verified shop approved search/filter reads, product detail approved and missing/non-`APPROVED` not-found behavior, home recent listings, admin pending moderation dropdown/shop queue, seller edit listing detail read, cart dropdown/page listing detail reads, and notification empty/list/read-one/read-all flows
@@ -251,6 +246,13 @@ Useful first inspection targets:
 
 ## Current Repo State From Latest Completed Session
 
+- Latest Slice `7` review boundary session completed on 2026-06-25:
+  - work completed: added review domain/DTO/application/infrastructure modules under `src/domains/reviews`; wrote review domain/use-case/service tests for creating/reading listing reviews, rating/input validation, and one-review-per-user/listing conflict behavior; changed Prisma `Review` client vocabulary to `listingId @map("productId")`; added `PrismaListingReviews`; exposed review delivery through `src/server/review.functions.ts`; deleted `/api/reviews`, `src/actions/review.ts`, `src/data/review-repo.ts`, and `src/lib/zod/review-validation.ts`; added the review Prisma test to `bun run test:db`
+  - files changed: `prisma/schema.prisma`, `package.json`, `src/domains/reviews/domain/review.ts`, `src/domains/reviews/domain/review.test.ts`, `src/domains/reviews/dto/listing-review.ts`, `src/domains/reviews/application/review-use-cases.ts`, `src/domains/reviews/application/review-use-cases.test.ts`, `src/domains/reviews/infrastructure/prisma-listing-reviews.ts`, `src/domains/reviews/infrastructure/prisma-listing-reviews.prisma.test.ts`, `src/domains/shared/infrastructure/prisma-errors.ts`, `src/server/review-service.ts`, `src/server/review-service.test.ts`, `src/server/review.functions.ts`, `src/server/function-middleware.ts`, `src/routeTree.gen.ts`, deleted legacy review action/repo/Zod/API files, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: `bun run db:generate` passed; focused review unit tests passed with the Prisma test skipped without `RUN_DB_TESTS`; `bun run typecheck` passed; touched-file Biome passed; full non-DB `bun run test:unit` passed with 214 tests and 41 DB tests skipped; `bun prisma validate --schema prisma/schema.prisma` passed; `bun run build` passed with existing chunk warnings; `bun run docs:check` passed; `git diff --check` passed; focused review Prisma test passed with sandbox escalation; full `bun run test:db` passed with sandbox escalation across 8 DB files and 41 tests
+  - decisions made: Review domain/server-function vocabulary is `listingId`; `productId` remains only as the mapped physical Review column until Slice `10`; duplicate review writes are treated as database-backed uniqueness conflicts and mapped by the adapter; no review HTTP compatibility route remains because no active external caller was found
+  - blockers or risks: product detail review UI remains static placeholder content and still has the existing random-value hydration mismatch risk
+  - exact next recommended task: begin Slice `8` Media from `ddd/migration-plan.md`
 - Latest Slice `6` account profile-picture/auth boundary session completed on 2026-06-25:
   - work completed: moved account profile-picture update/remove behind account application ports and Cloudinary/compression infrastructure adapter; rewired current-user profile-picture server-function path through `src/server/account-service.ts`; migrated sign-up/sign-in behind account use cases, `PrismaAccountAuth`, and `bcryptAccountPasswords`; kept sign-in/sign-up/sign-out session handling in auth route delivery; pruned `src/data/auth-repo.ts` to middleware-only `findUserById`; deleted obsolete account/auth action modules and tests; ran a `gpt-5.5` `xhigh` thermo-nuclear code-quality sub-agent review, fixed its three findings, then ran a focused follow-up review that found no remaining high-conviction structural blockers
   - files changed: `src/domains/accounts/dto/account-profile-picture.ts`, `src/domains/accounts/application/account-profile-picture.ts`, `src/domains/accounts/application/account-profile-picture.test.ts`, `src/domains/accounts/infrastructure/profile-picture-assets.ts`, `src/domains/accounts/infrastructure/profile-picture-assets.test.ts`, `src/domains/accounts/dto/account-auth.ts`, `src/domains/accounts/application/account-auth.ts`, `src/domains/accounts/application/account-auth.test.ts`, `src/domains/accounts/infrastructure/prisma-account-auth.ts`, `src/domains/accounts/infrastructure/bcrypt-passwords.ts`, `src/server/account-service.ts`, `src/server/account-auth-service.ts`, `src/server/account-auth-service.test.ts`, `src/server/account-auth-service.prisma.test.ts`, `src/server/current-user-service.ts`, `src/server/current-user-service.test.ts`, auth API route files, `src/data/auth-repo.ts`, `package.json`, deleted `src/actions/auth.ts`, deleted `src/actions/user.ts`, deleted `src/actions/user.test.ts`, deleted `src/actions/profile-picture-lifecycle.ts`, `ddd/progress.md`, `ddd/next-session.md`

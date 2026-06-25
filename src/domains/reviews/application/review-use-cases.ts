@@ -1,0 +1,106 @@
+import { Review, ReviewDomainError } from "@/domains/reviews/domain/review";
+import type {
+	ListingReview,
+	ListingReviewCreateData,
+} from "@/domains/reviews/dto/listing-review";
+import type { Actor } from "@/domains/shared/domain/actor";
+import {
+	type AppError,
+	err,
+	ok,
+	type Result,
+} from "@/domains/shared/domain/result";
+
+export type {
+	ListingReview,
+	ListingReviewCreateData,
+} from "@/domains/reviews/dto/listing-review";
+
+export type ReviewErrorCode =
+	| ReviewDomainError["code"]
+	| "REVIEW_ALREADY_EXISTS";
+
+export type ReviewError = AppError<ReviewErrorCode>;
+
+export interface ListingReviewPort {
+	createReview(
+		data: ListingReviewCreateData,
+	): Promise<Result<ListingReview, ReviewError>>;
+	listByListingId(listingId: string): Promise<ListingReview[]>;
+}
+
+export async function createListingReview(
+	command: {
+		readonly listingId: string;
+		readonly rating: number;
+		readonly comment: string;
+	},
+	actor: Actor,
+	reviews: ListingReviewPort,
+): Promise<Result<ListingReview, ReviewError>> {
+	let review: Review;
+
+	try {
+		review = Review.create({
+			listingId: command.listingId,
+			userId: actor.id,
+			rating: command.rating,
+			comment: command.comment,
+		});
+	} catch (error) {
+		if (error instanceof ReviewDomainError) {
+			return err(reviewDomainError(error));
+		}
+
+		throw error;
+	}
+
+	return reviews.createReview(review.toCreateData());
+}
+
+export async function getListingReviews(
+	listingId: string,
+	reviews: ListingReviewPort,
+): Promise<Result<ListingReview[], ReviewError>> {
+	const normalizedListingId = listingId.trim();
+
+	if (normalizedListingId.length === 0) {
+		return err(
+			reviewError(
+				"REVIEW_INVALID_LISTING_ID",
+				"Listing ID is required",
+				"validation",
+			),
+		);
+	}
+
+	return ok(await reviews.listByListingId(normalizedListingId));
+}
+
+export function reviewAlreadyExistsError(): ReviewError {
+	return reviewError(
+		"REVIEW_ALREADY_EXISTS",
+		"User has already reviewed this listing",
+		"conflict",
+	);
+}
+
+function reviewDomainError(error: ReviewDomainError): ReviewError {
+	return reviewError(
+		error.code,
+		error.message,
+		error.code === "REVIEW_UNAUTHENTICATED" ? "authorization" : "validation",
+	);
+}
+
+function reviewError(
+	code: ReviewErrorCode,
+	message: string,
+	kind: ReviewError["kind"],
+): ReviewError {
+	return {
+		code,
+		message,
+		kind,
+	};
+}

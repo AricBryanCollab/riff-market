@@ -299,19 +299,18 @@ model Message {
 model Review {
   id        String @id @default(uuid())
   userId    String
-  productId String
+  listingId String @map("productId")
   rating    Int
   comment   String
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  listing Product @relation(fields: [listingId], references: [id], onDelete: Cascade, map: "Review_productId_fkey")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-
-  @@unique([userId, productId]) 
-  @@index([productId])
+  @@unique([userId, listingId], map: "Review_userId_productId_key")
+  @@index([listingId], map: "Review_productId_idx")
   @@index([userId])
 }
 
