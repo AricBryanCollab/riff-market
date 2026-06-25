@@ -1,5 +1,4 @@
 import z from "zod";
-import { updateValidatedUserProfilePicService } from "@/actions/user";
 import {
 	type UpdateUserInput,
 	updateProfilePictureSchema,
@@ -9,6 +8,7 @@ import {
 	deleteAccount,
 	getAccountProfile,
 	updateAccountProfile,
+	updateAccountProfilePicture,
 } from "@/server/account-service";
 
 type ActionError = {
@@ -119,9 +119,11 @@ export async function updateCurrentUserProfilePicture(
 	userId: string,
 	profilePic: File | null,
 ) {
-	return unwrapActionResult(
-		await updateValidatedUserProfilePicService(userId, profilePic),
+	const result = unwrapActionResult(
+		await updateAccountProfilePicture(userId, profilePic),
 	);
+
+	return result.profilePic;
 }
 
 export async function deleteCurrentUser(userId: string, email: string) {

@@ -3,6 +3,7 @@ import {
 	deleteUserAndEnqueueMediaCleanupJobs,
 	getUserById,
 	type UserProfileRecord,
+	updateProfilePicture,
 	updateUser,
 } from "@/data/user-repo";
 import {
@@ -13,14 +14,30 @@ import {
 	getAccountProfile as getAccountProfileUseCase,
 	updateAccountProfile as updateAccountProfileUseCase,
 } from "@/domains/accounts/application/account-profile";
+import {
+	type AccountProfilePictureCleanupPort,
+	type AccountProfilePictureReadPort,
+	type AccountProfilePictureUploadPort,
+	type AccountProfilePictureWritePort,
+	updateAccountProfilePicture as updateAccountProfilePictureUseCase,
+} from "@/domains/accounts/application/account-profile-picture";
 import type {
 	AccountDeletionResult,
 	AccountProfile,
 	AccountProfileUpdate,
 } from "@/domains/accounts/dto/account-profile";
+import type {
+	AccountProfilePictureAsset,
+	AccountProfilePictureUpdateResult,
+} from "@/domains/accounts/dto/account-profile-picture";
 import type { AppError } from "@/domains/shared/domain/result";
+import { logger } from "@/lib/logger";
 import type { UserProfile } from "@/types/user";
-import { toImageAssetUrl } from "@/utils/image-asset-ref";
+import {
+	toImageAssetRef,
+	toImageAssetUrl,
+	toNullableJsonImageAssetRef,
+} from "@/utils/image-asset-ref";
 
 type AccountServiceError = {
 	readonly error: string;
@@ -31,7 +48,9 @@ export class UserRepoAccountProfiles
 	implements
 		AccountProfileReadPort,
 		AccountProfileWritePort,
-		AccountDeletionPort
+		AccountDeletionPort,
+		AccountProfilePictureReadPort,
+		AccountProfilePictureWritePort
 {
 	constructor(private readonly db: PrismaClient) {}
 
@@ -50,6 +69,29 @@ export class UserRepoAccountProfiles
 
 	async deleteAccountAndEnqueueMediaCleanup(userId: string): Promise<void> {
 		await deleteUserAndEnqueueMediaCleanupJobs(userId, this.db);
+	}
+
+	async findProfilePictureStateByUserId(userId: string) {
+		const user = await getUserById(userId, this.db);
+
+		if (!user) {
+			return null;
+		}
+
+		return {
+			profilePic: toImageAssetRef(user.profilePic),
+		};
+	}
+
+	async updateProfilePicture(
+		userId: string,
+		profilePic: AccountProfilePictureAsset | null,
+	): Promise<void> {
+		await updateProfilePicture(
+			userId,
+			toNullableJsonImageAssetRef(profilePic),
+			this.db,
+		);
 	}
 }
 
@@ -106,6 +148,29 @@ export async function deleteAccount(
 	return result.value;
 }
 
+export async function updateAccountProfilePicture(
+	userId: string,
+	profilePic: File | null,
+	accounts?: AccountProfilePictureReadPort & AccountProfilePictureWritePort,
+	imageAssets?: AccountProfilePictureUploadPort<File> &
+		AccountProfilePictureCleanupPort,
+): Promise<AccountProfilePictureUpdateResult | AccountServiceError> {
+	const result = await updateAccountProfilePictureUseCase(
+		profilePic === null
+			? { userId, kind: "remove" }
+			: { userId, kind: "replace", profilePic },
+		accounts ?? (await createUserRepoAccountProfiles()),
+		imageAssets ?? (await createCloudinaryProfilePictureAssets()),
+		logger,
+	);
+
+	if (!result.ok) {
+		return toAccountServiceError(result.error);
+	}
+
+	return result.value;
+}
+
 function toAccountProfile(user: UserProfileRecord): AccountProfile {
 	return {
 		...user,
@@ -127,4 +192,11 @@ function toAccountServiceError(error: AppError): AccountServiceError {
 async function createUserRepoAccountProfiles() {
 	const { prisma } = await import("@/data/connect-db");
 	return new UserRepoAccountProfiles(prisma);
+}
+
+async function createCloudinaryProfilePictureAssets() {
+	const { CloudinaryProfilePictureAssets } = await import(
+		"@/domains/accounts/infrastructure/profile-picture-assets"
+	);
+	return new CloudinaryProfilePictureAssets();
 }

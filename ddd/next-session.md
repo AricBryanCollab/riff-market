@@ -19,56 +19,33 @@ Do not rely on any manually maintained current-state file. The repo is the curre
 
 ## Recommended Next Task
 
-Continue Slice `6` Accounts from `ddd/migration-plan.md`.
+Begin Slice `7` Reviews from `ddd/migration-plan.md`.
 
 Exact next task:
 
-- Account profile read/update/delete is now started and covered:
-  - account profile DTOs and application functions live under `src/domains/accounts`
-  - account profile use cases are plain functions, not one-method classes
-  - `src/server/account-service.ts` composes the new use cases over `UserRepoAccountProfiles(db)`
-  - `UserRepoAccountProfiles(db)` is the Prisma-backed account adapter and remains a class because it owns the Prisma client
-  - `src/server/current-user-service.ts` now routes current-user read/update/delete through the account service
-  - `src/server/account-service.prisma.test.ts` covers account profile read/update/delete through real Prisma test data
-  - `src/data/user-repo.ts` supports injected DB clients and lazily loads the default Prisma client
-  - validation and session clearing remain in server/delivery code
-- Continue by moving profile-picture lifecycle/upload behavior behind account application/infrastructure ports:
-  - preserve current upload, replace, remove, cleanup-after-failure, and best-effort old-asset cleanup behavior
-  - keep Cloudinary, compression, `File`, `FormData`, and Prisma JSON concerns out of account application/domain code
-  - likely source files:
-    - `src/actions/user.ts`
-    - `src/actions/profile-picture-lifecycle.ts`
-    - `src/hooks/use-update-profile-picture.ts`
-    - `src/server/current-user-service.ts`
-    - `src/server/user.functions.ts`
-- After profile-picture behavior is moved, migrate sign-up/sign-in behind account use cases while keeping session handling in delivery/server adapters:
-  - `src/actions/auth.ts`
-  - `src/data/auth-repo.ts`
-  - `src/routes/api/auth.signin.ts`
-  - `src/routes/api/auth.signup.ts`
-  - `src/routes/api/auth.signout.ts`
-- Account/profile behavior inspection targets:
-  - `src/actions/auth.ts`
-  - `src/actions/user.ts`
-  - `src/actions/profile-picture-lifecycle.ts`
-  - `src/data/auth-repo.ts`
-  - `src/data/user-repo.ts`
-  - `src/server/user.functions.ts`
-  - `src/server/current-user-service.ts`
-  - `src/routes/api/auth.signin.ts`
-  - `src/routes/api/auth.signup.ts`
-  - `src/routes/api/auth.signout.ts`
-  - `src/routes/settings/route.tsx`
-  - `src/routes/settings/-hooks/use-settings-page.ts`
-  - `src/hooks/use-auth-user.ts`
-  - `src/hooks/use-update-user.ts`
-  - `src/hooks/use-delete-user.ts`
-  - `src/hooks/use-update-profile-picture.ts`
-  - `src/services/media-cleanup-worker.ts`
-  - `src/data/media-cleanup-job-repo.ts`
-- Keep adding account use-case tests around existing behavior first; keep session handling in delivery/server adapter code.
-- Preserve profile-picture lifecycle/media cleanup behavior behind application/infrastructure ports; do not put Cloudinary, FormData, Request, Response, React, TanStack, Prisma, or Zod in domain code.
-- Keep current auth/profile/settings UX behavior and account-deletion media cleanup semantics while `src/actions/user.ts` server-function layering is cleaned up.
+- Slice `6` Accounts is complete for active account/profile/auth paths:
+  - account profile read/update/delete use cases and DTOs live under `src/domains/accounts`
+  - account profile-picture update/remove use case and DTOs live under `src/domains/accounts`
+  - account sign-up/sign-in use cases and DTOs live under `src/domains/accounts`
+  - `src/server/account-service.ts` composes account profile/profile-picture use cases over `UserRepoAccountProfiles(db)` and lazy-loads `CloudinaryProfilePictureAssets`
+  - `src/server/account-auth-service.ts` composes sign-up/sign-in use cases over `PrismaAccountAuth(db)` and `BcryptAccountPasswords`
+  - `src/server/current-user-service.ts` routes current-user read/update/delete/profile-picture behavior through account services
+  - auth sign-in/sign-up routes call account auth services and update sessions in route delivery code
+  - sign-out remains route delivery/session clearing
+  - `src/actions/user.ts`, `src/actions/user.test.ts`, `src/actions/profile-picture-lifecycle.ts`, and `src/actions/auth.ts` are deleted; do not reintroduce account behavior there
+  - `src/data/auth-repo.ts` now only keeps `findUserById` for middleware
+  - account profile and account auth Prisma tests are included in `bun run test:db`
+- Begin Reviews by inspecting current behavior first:
+  - `src/actions/review.ts`
+  - `src/data/review-repo.ts`
+  - `src/routes/api/reviews.ts`
+  - `src/components/review-section.tsx`
+  - `src/lib/zod/review-validation.ts`
+  - `src/types/review.ts`
+  - `src/domains/reviews`
+- Add review use-case tests around existing behavior first.
+- Preserve current review creation/query behavior while moving business rules behind `src/domains/reviews`.
+- Use listing vocabulary in the reviews domain even if UI compatibility still says product.
 - Listing/product read and notification server-function browser smoke completed on 2026-06-24:
   - local in-app browser still failed with `net::ERR_BLOCKED_BY_CLIENT`, so the smoke used standalone Playwright with system Chrome against the local dev server
   - verified shop approved search/filter reads, product detail approved and missing/non-`APPROVED` not-found behavior, home recent listings, admin pending moderation dropdown/shop queue, seller edit listing detail read, cart dropdown/page listing detail reads, and notification empty/list/read-one/read-all flows
@@ -274,6 +251,13 @@ Useful first inspection targets:
 
 ## Current Repo State From Latest Completed Session
 
+- Latest Slice `6` account profile-picture/auth boundary session completed on 2026-06-25:
+  - work completed: moved account profile-picture update/remove behind account application ports and Cloudinary/compression infrastructure adapter; rewired current-user profile-picture server-function path through `src/server/account-service.ts`; migrated sign-up/sign-in behind account use cases, `PrismaAccountAuth`, and `bcryptAccountPasswords`; kept sign-in/sign-up/sign-out session handling in auth route delivery; pruned `src/data/auth-repo.ts` to middleware-only `findUserById`; deleted obsolete account/auth action modules and tests; ran a `gpt-5.5` `xhigh` thermo-nuclear code-quality sub-agent review, fixed its three findings, then ran a focused follow-up review that found no remaining high-conviction structural blockers
+  - files changed: `src/domains/accounts/dto/account-profile-picture.ts`, `src/domains/accounts/application/account-profile-picture.ts`, `src/domains/accounts/application/account-profile-picture.test.ts`, `src/domains/accounts/infrastructure/profile-picture-assets.ts`, `src/domains/accounts/infrastructure/profile-picture-assets.test.ts`, `src/domains/accounts/dto/account-auth.ts`, `src/domains/accounts/application/account-auth.ts`, `src/domains/accounts/application/account-auth.test.ts`, `src/domains/accounts/infrastructure/prisma-account-auth.ts`, `src/domains/accounts/infrastructure/bcrypt-passwords.ts`, `src/server/account-service.ts`, `src/server/account-auth-service.ts`, `src/server/account-auth-service.test.ts`, `src/server/account-auth-service.prisma.test.ts`, `src/server/current-user-service.ts`, `src/server/current-user-service.test.ts`, auth API route files, `src/data/auth-repo.ts`, `package.json`, deleted `src/actions/auth.ts`, deleted `src/actions/user.ts`, deleted `src/actions/user.test.ts`, deleted `src/actions/profile-picture-lifecycle.ts`, `ddd/progress.md`, `ddd/next-session.md`
+  - tests/checks run: focused account/auth/current-user tests passed; touched-file Biome passed; `bun run typecheck` passed; full non-DB `bun run test:unit` passed after review fixes with 206 tests and 39 DB tests skipped; gated `bun run test:db` passed after review fixes with 39 DB tests across 7 files; `bun run build` passed with the existing large client chunk warning; `bun run docs:check` and `git diff --check` passed
+  - decisions made: Slice `6` is complete for active account/profile/auth behavior; keep profile-picture `FormData` validation and auth session handling in delivery/server adapters; lazy-load Cloudinary profile-picture infrastructure from account service so unrelated account imports do not eagerly read server-only Cloudinary env; keep auth API routes because they are session/HTTP delivery, while moving business behavior behind account use cases; enforce duplicate-email registration at the adapter/result boundary; keep bcrypt as a plain password adapter object because it owns no state
+  - blockers or risks: create-listing smoke still needs real Cloudinary config; in-app browser localhost navigation still fails with `net::ERR_BLOCKED_BY_CLIENT`; existing add-to-cart and moderation navigation warnings remain; `ReviewSection` hydration mismatch from random rendered values remains observable during product detail smoke
+  - exact next recommended task: begin Slice `7` Reviews from `ddd/migration-plan.md`
 - Latest Slice `6` account-profile boundary session completed on 2026-06-24:
   - work completed: added account profile DTOs/use cases for profile read, profile update, and account deletion; added `src/server/account-service.ts`; rewired `src/server/current-user-service.ts` read/update/delete paths through the account service while keeping validation and session clearing in delivery/server code
   - files changed: `src/domains/accounts/dto/account-profile.ts`, `src/domains/accounts/application/account-profile.ts`, `src/domains/accounts/application/account-profile.test.ts`, `src/server/account-service.ts`, `src/server/account-service.test.ts`, `src/server/current-user-service.ts`, `src/server/current-user-service.test.ts`, `ddd/progress.md`, `ddd/next-session.md`

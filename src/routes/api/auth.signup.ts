@@ -1,7 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { signUpService } from "@/actions/auth";
 import { requestLoggerMiddleware } from "@/middleware";
+import {
+	signUpAccountService,
+	toPublicAuthResponse,
+} from "@/server/account-auth-service";
 import type { SignUpRequest } from "@/types/auth";
+import { useAppSession as getAppSession } from "@/utils/session";
 
 export const Route = createFileRoute("/api/auth/signup")({
 	server: {
@@ -10,15 +14,23 @@ export const Route = createFileRoute("/api/auth/signup")({
 			POST: async ({ request }) => {
 				try {
 					const body = (await request.json()) as SignUpRequest;
-					const newUser = await signUpService(body);
+					const newUser = await signUpAccountService(body);
 
-					if (newUser.error) {
+					if ("error" in newUser) {
 						return new Response(JSON.stringify({ error: newUser.error }), {
 							status: 400,
 						});
 					}
 
-					return new Response(JSON.stringify(newUser), { status: 201 });
+					const session = await getAppSession();
+					await session.update({
+						userId: newUser.user.id,
+						role: newUser.user.role,
+					});
+
+					return new Response(JSON.stringify(toPublicAuthResponse(newUser)), {
+						status: 201,
+					});
 				} catch (error) {
 					return new Response(
 						JSON.stringify({

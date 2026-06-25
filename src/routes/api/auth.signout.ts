@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { signOutService } from "@/actions/auth";
 import { logger } from "@/lib/logger";
 import { requestLoggerMiddleware } from "@/middleware";
+import { useAppSession as getAppSession } from "@/utils/session";
 
 export const Route = createFileRoute("/api/auth/signout")({
 	server: {
@@ -9,7 +9,8 @@ export const Route = createFileRoute("/api/auth/signout")({
 		handlers: {
 			POST: async () => {
 				try {
-					await signOutService();
+					const session = await getAppSession();
+					await session.clear();
 
 					return new Response(
 						JSON.stringify({ message: "Sign out is successful" }),

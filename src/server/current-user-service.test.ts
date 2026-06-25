@@ -3,14 +3,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const accountServiceMocks = vi.hoisted(() => ({
 	deleteAccount: vi.fn(),
 	getAccountProfile: vi.fn(),
+	updateAccountProfilePicture: vi.fn(),
 	updateAccountProfile: vi.fn(),
 }));
 
-const actionMocks = vi.hoisted(() => ({
-	updateValidatedUserProfilePicService: vi.fn(),
-}));
-
-vi.mock("@/actions/user", () => actionMocks);
 vi.mock("@/server/account-service", () => accountServiceMocks);
 
 import {
@@ -48,8 +44,8 @@ describe("current-user service", () => {
 		);
 	});
 
-	it("surfaces profile picture action errors", async () => {
-		actionMocks.updateValidatedUserProfilePicService.mockResolvedValue({
+	it("surfaces profile picture account-service errors", async () => {
+		accountServiceMocks.updateAccountProfilePicture.mockResolvedValue({
 			error: "Failed to update the user profile picture",
 			details: "upload failed",
 		});
