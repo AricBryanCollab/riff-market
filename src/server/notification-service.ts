@@ -13,7 +13,10 @@ import type { NotificationReadModel } from "@/domains/notifications/dto/notifica
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { Result } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
-import { RequestError, toRequestError } from "@/server/request-error";
+import {
+	RequestError,
+	unwrapResultOrThrowRequestError,
+} from "@/server/request-error";
 
 const notificationIdInputSchema = z.object({
 	notificationId: z.string().trim().min(1, "Notification ID is required"),
@@ -102,11 +105,8 @@ async function executeNotificationUseCase<T>(
 	const notifications =
 		dependencies ?? (await createPrismaNotificationDependencies());
 	const result = await execute(notifications, toActor(user));
-	if (!result.ok) {
-		throw toRequestError(result.error);
-	}
 
-	return result.value;
+	return unwrapResultOrThrowRequestError(result);
 }
 
 async function createPrismaNotificationDependencies(): Promise<NotificationServiceDependencies> {

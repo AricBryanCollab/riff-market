@@ -22,7 +22,10 @@ import {
 	updateProductSchema,
 } from "@/lib/zod/product-validation";
 import type { ServerUserContext } from "@/server/function-middleware";
-import { RequestError, toRequestError } from "@/server/request-error";
+import {
+	RequestError,
+	unwrapResultOrThrowRequestError,
+} from "@/server/request-error";
 
 const moderateListingInputSchema = z.object({
 	listingId: z.string().trim().min(1, "Listing ID is required"),
@@ -202,12 +205,9 @@ export async function createListingForCurrentUser(
 	const actor = toActor(user);
 	const command = toCreateListingCommand(input);
 	const result = await createListing(actor, command, commandDependencies);
+	const listing = unwrapResultOrThrowRequestError(result);
 
-	if (!result.ok) {
-		throw toRequestError(result.error);
-	}
-
-	return toMutationResponse("New product has been added", result.value);
+	return toMutationResponse("New product has been added", listing);
 }
 
 export async function updateListingForCurrentUser(
@@ -220,12 +220,9 @@ export async function updateListingForCurrentUser(
 	const actor = toActor(user);
 	const command = toUpdateListingCommand(input);
 	const result = await updateListing(actor, command, commandDependencies);
+	const listing = unwrapResultOrThrowRequestError(result);
 
-	if (!result.ok) {
-		throw toRequestError(result.error);
-	}
-
-	return toMutationResponse("Product has been updated", result.value);
+	return toMutationResponse("Product has been updated", listing);
 }
 
 export async function removeListingForCurrentUser(
@@ -238,14 +235,11 @@ export async function removeListingForCurrentUser(
 	const actor = toActor(user);
 	const command = toRemoveListingCommand(input);
 	const result = await removeListing(actor, command, commandDependencies);
-
-	if (!result.ok) {
-		throw toRequestError(result.error);
-	}
+	const removal = unwrapResultOrThrowRequestError(result);
 
 	return {
-		message: result.value.message,
-		product: result.value,
+		message: removal.message,
+		product: removal,
 	};
 }
 
@@ -280,11 +274,7 @@ async function moderateListingWithDependencies(
 		dependencies.notifier,
 	);
 
-	if (!result.ok) {
-		throw toRequestError(result.error);
-	}
-
-	return result.value;
+	return unwrapResultOrThrowRequestError(result);
 }
 
 async function createListingCommandInfrastructure(): Promise<ListingCommandServiceDependencies> {

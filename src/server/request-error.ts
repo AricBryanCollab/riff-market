@@ -1,4 +1,8 @@
-import type { AppError, AppErrorKind } from "@/domains/shared/domain/result";
+import type {
+	AppError,
+	AppErrorKind,
+	Result,
+} from "@/domains/shared/domain/result";
 
 export type RequestErrorOptions = {
 	readonly code?: string;
@@ -32,6 +36,16 @@ export function toRequestError<TError extends AppError>(
 		details: error.details,
 		status: statusForAppError(error),
 	});
+}
+
+export function unwrapResultOrThrowRequestError<T, TError extends AppError>(
+	result: Result<T, TError>,
+): T {
+	if (!result.ok) {
+		throw toRequestError(result.error);
+	}
+
+	return result.value;
 }
 
 export function statusForAppError(error: AppError): number {

@@ -11,7 +11,10 @@ import {
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { Result } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
-import { RequestError, toRequestError } from "@/server/request-error";
+import {
+	RequestError,
+	unwrapResultOrThrowRequestError,
+} from "@/server/request-error";
 
 type PlacePurchaseRunner = (
 	actor: Actor,
@@ -53,12 +56,9 @@ export async function placePurchaseForCurrentUser(
 	const actor = toActor(user);
 	const command = toCommand(user, input);
 	const result = await placePurchaseRunner(actor, command);
+	const purchase = unwrapResultOrThrowRequestError(result);
 
-	if (!result.ok) {
-		throw toRequestError(result.error);
-	}
-
-	return toResponse(result.value);
+	return toResponse(purchase);
 }
 
 async function createPrismaPlacePurchaseRunner() {

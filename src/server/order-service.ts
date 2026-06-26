@@ -18,7 +18,10 @@ import type {
 } from "@/domains/ordering/dto/order-read-model";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { ServerUserContext } from "@/server/function-middleware";
-import { RequestError, toRequestError } from "@/server/request-error";
+import {
+	RequestError,
+	unwrapResultOrThrowRequestError,
+} from "@/server/request-error";
 
 const sellerOrderCommandStatuses = [
 	"PROCESSING",
@@ -106,21 +109,13 @@ export async function listOrdersForCurrentUser(
 	if (actor.role === "CUSTOMER") {
 		const result = await listBuyerPurchaseHistory(actor, orderReadModels);
 
-		if (!result.ok) {
-			throw toRequestError(result.error);
-		}
-
-		return result.value;
+		return unwrapResultOrThrowRequestError(result);
 	}
 
 	if (actor.role === "SELLER" || actor.role === "ADMIN") {
 		const result = await listSellerOrderDashboard(actor, orderReadModels);
 
-		if (!result.ok) {
-			throw toRequestError(result.error);
-		}
-
-		return result.value;
+		return unwrapResultOrThrowRequestError(result);
 	}
 
 	throw new RequestError(
@@ -140,11 +135,7 @@ export async function getOrderDetailForCurrentUser(
 	const actor = toActor(user);
 	const result = await getOrderDetail(actor, input.orderId, orderReadModels);
 
-	if (!result.ok) {
-		throw toRequestError(result.error);
-	}
-
-	return result.value;
+	return unwrapResultOrThrowRequestError(result);
 }
 
 export async function changeSellerOrderStatusForCurrentUser(
@@ -162,11 +153,7 @@ export async function changeSellerOrderStatusForCurrentUser(
 	};
 	const result = await changeSellerOrderStatus(actor, command, sellerOrders);
 
-	if (!result.ok) {
-		throw toRequestError(result.error);
-	}
-
-	return result.value;
+	return unwrapResultOrThrowRequestError(result);
 }
 
 function toActor(user: ServerUserContext): Actor {
