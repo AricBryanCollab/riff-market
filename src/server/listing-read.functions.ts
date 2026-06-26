@@ -1,9 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requestLoggerMiddleware } from "@/middleware";
 import {
 	authenticatedServerFunctionMiddleware,
-	createServerRoleMiddleware,
+	createRoleServerFunctionMiddleware,
+	publicServerFunctionMiddleware,
 } from "@/server/function-middleware";
 import {
 	getApprovedListingsForProductApi,
@@ -47,19 +47,19 @@ const cartListingDetailsInputSchema = z.object({
 export type ProductApiQueryInput = z.infer<typeof productApiQueryInputSchema>;
 
 export const getListingDetailsProductApiFn = createServerFn({ method: "GET" })
-	.middleware([requestLoggerMiddleware])
+	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => productDetailInputSchema.parse(data))
 	.handler(async ({ data }) => getListingDetailsForProductApi(data.listingId));
 
 export const getApprovedListingsProductApiFn = createServerFn({ method: "GET" })
-	.middleware([requestLoggerMiddleware])
+	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => productApiQueryInputSchema.parse(data))
 	.handler(async ({ data }) => getApprovedListingsForProductApi(data));
 
 export const getPendingModerationListingsProductApiFn = createServerFn({
 	method: "GET",
 })
-	.middleware([requestLoggerMiddleware, createServerRoleMiddleware(["ADMIN"])])
+	.middleware(createRoleServerFunctionMiddleware(["ADMIN"]))
 	.handler(async () => getPendingModerationListingsForProductApi());
 
 export const getSellerListingsProductApiFn = createServerFn({ method: "GET" })
@@ -71,20 +71,20 @@ export const getSellerListingsProductApiFn = createServerFn({ method: "GET" })
 export const getListingCategoryCountsProductApiFn = createServerFn({
 	method: "GET",
 })
-	.middleware([requestLoggerMiddleware])
+	.middleware(publicServerFunctionMiddleware)
 	.handler(async () => getListingCategoryCountsForProductApi());
 
 export const getListingStatusCountProductApiFn = createServerFn({
 	method: "GET",
 })
-	.middleware([requestLoggerMiddleware])
+	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => productCountStatusInputSchema.parse(data))
 	.handler(async ({ data }) =>
 		getListingStatusCountForProductApi(data.status === "approved"),
 	);
 
 export const getRecentListingsProductApiFn = createServerFn({ method: "GET" })
-	.middleware([requestLoggerMiddleware])
+	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => recentListingsInputSchema.parse(data))
 	.handler(async ({ data }) => getRecentListingsForProductApi(data.limit));
 

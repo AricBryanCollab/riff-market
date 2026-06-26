@@ -5,10 +5,10 @@ import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	changeSellerOrderStatusForCurrentUser,
 	getOrderDetailForCurrentUser,
-	OrderRequestError,
 	validateChangeSellerOrderStatusInput,
 	validateOrderDetailInput,
 } from "@/server/order-service";
+import { RequestError } from "@/server/request-error";
 
 type OrderReadModels = NonNullable<
 	Parameters<typeof getOrderDetailForCurrentUser>[2]
@@ -39,7 +39,7 @@ describe("order server service", () => {
 
 	it("requires order detail IDs", () => {
 		expect(() => validateOrderDetailInput({ orderId: " " })).toThrow(
-			OrderRequestError,
+			RequestError,
 		);
 	});
 
@@ -51,20 +51,20 @@ describe("order server service", () => {
 				new EmptyOrderReadModels(),
 			),
 		).rejects.toMatchObject({
-			name: "OrderRequestError",
+			name: "RequestError",
 			status: 404,
 			message: "Order not found with the provided order ID",
 		});
 	});
 
 	it("requires a tracking number before shipping", () => {
-		expect(() =>
+		expect(() => {
 			validateChangeSellerOrderStatusInput({
 				sellerOrderId: "seller-order-1",
 				status: "SHIPPED",
 				trackingNumber: " ",
-			}),
-		).toThrow(OrderRequestError);
+			});
+		}).toThrow(RequestError);
 	});
 
 	it("trims tracking numbers for shipping commands", () => {
@@ -92,7 +92,7 @@ describe("order server service", () => {
 				new MissingSellerOrderStatusRepository(),
 			),
 		).rejects.toMatchObject({
-			name: "OrderRequestError",
+			name: "RequestError",
 			code: "CHANGE_SELLER_ORDER_STATUS_NOT_FOUND",
 			status: 404,
 		});

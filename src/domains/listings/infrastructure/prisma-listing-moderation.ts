@@ -10,7 +10,7 @@ import type {
 	ListingSnapshot,
 	ListingStatus,
 } from "@/domains/listings/domain/listing";
-import { CreateListingModerationNotification } from "@/domains/notifications/application/notification-event-handlers";
+import { createListingModerationNotification } from "@/domains/notifications/application/notification-event-handlers";
 import { PrismaNotifications } from "@/domains/notifications/infrastructure/prisma-notifications";
 import { Money } from "@/domains/shared/domain/money";
 import { toImageAssetUrls } from "@/utils/image-asset-ref";
@@ -126,11 +126,10 @@ export class PrismaListingModerationRepository
 export class PrismaListingModerationNotifier
 	implements ListingModerationNotifierPort
 {
-	private readonly listingModerationNotifications: CreateListingModerationNotification;
+	private readonly notifications: PrismaNotifications;
 
 	constructor(db: DbClient) {
-		this.listingModerationNotifications =
-			new CreateListingModerationNotification(new PrismaNotifications(db));
+		this.notifications = new PrismaNotifications(db);
 	}
 
 	async notifyListingApproved(
@@ -151,9 +150,12 @@ export class PrismaListingModerationNotifier
 		input: ListingModerationResult,
 		event: ListingApprovedEvent | ListingDeclinedEvent,
 	): Promise<void> {
-		await this.listingModerationNotifications.execute({
-			event,
-			listingName: input.name,
-		});
+		await createListingModerationNotification(
+			{
+				event,
+				listingName: input.name,
+			},
+			this.notifications,
+		);
 	}
 }

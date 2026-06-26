@@ -18,7 +18,6 @@ import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	createListingForCurrentUser,
 	type ListingModerationServiceDependencies,
-	type ListingRequestError,
 	moderateListingForCurrentUser,
 	removeListingForCurrentUser,
 	updateListingForCurrentUser,
@@ -26,6 +25,7 @@ import {
 	validateUpdateListingFormData,
 } from "@/server/listing-service";
 import { getNotificationsForCurrentUser } from "@/server/notification-service";
+import type { RequestError } from "@/server/request-error";
 import {
 	describeDb,
 	seedMarketplaceUsers,
@@ -265,10 +265,10 @@ describeDb("listing service Prisma integration", () => {
 				staleStatusModerationDependencies(db),
 			),
 		).rejects.toMatchObject({
-			name: "ListingRequestError",
+			name: "RequestError",
 			status: 409,
 			code: "MODERATE_LISTING_STALE_STATUS",
-		} satisfies Partial<ListingRequestError>);
+		} satisfies Partial<RequestError>);
 
 		const listing = await new PrismaListingModerationRepository(
 			db,
@@ -362,10 +362,10 @@ describeDb("listing service Prisma integration", () => {
 				commandDependencies(db, imageManager),
 			),
 		).rejects.toMatchObject({
-			name: "ListingRequestError",
+			name: "RequestError",
 			status: 403,
 			code: "LISTING_COMMAND_UNAUTHORIZED",
-		} satisfies Partial<ListingRequestError>);
+		} satisfies Partial<RequestError>);
 
 		const listing = await db.product.findUniqueOrThrow({
 			where: { id: "listing-1" },
@@ -407,8 +407,8 @@ function commandDependencies(
 	imageManager: ListingImageManagerPort,
 ) {
 	return {
-		repository: new PrismaListingCommandRepository(db),
-		imageManager,
+		listings: new PrismaListingCommandRepository(db),
+		images: imageManager,
 	};
 }
 

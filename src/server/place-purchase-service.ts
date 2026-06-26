@@ -11,13 +11,12 @@ import {
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { Result } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
+import { RequestError, toRequestError } from "@/server/request-error";
 
-type PlacePurchaseExecutor = {
-	execute(
-		actor: Actor,
-		command: PlacePurchaseCommand,
-	): Promise<Result<PlacePurchaseResult, PlacePurchaseError>>;
-};
+type PlacePurchaseRunner = (
+	actor: Actor,
+	command: PlacePurchaseCommand,
+) => Promise<Result<PlacePurchaseResult, PlacePurchaseError>>;
 
 export type PlacePurchaseResponse = {
 	readonly message: string;
@@ -32,28 +31,11 @@ export type PlacePurchaseResponse = {
 	};
 };
 
-export class PlacePurchaseRequestError extends Error {
-	readonly code?: string;
-	readonly details?: unknown;
-	readonly status: number;
-
-	constructor(
-		message: string,
-		options: { code?: string; details?: unknown; status?: number } = {},
-	) {
-		super(message);
-		this.name = "PlacePurchaseRequestError";
-		this.code = options.code;
-		this.details = options.details;
-		this.status = options.status ?? 400;
-	}
-}
-
 export function validatePlacePurchaseInput(data: unknown): PlacePurchaseInput {
 	const parsed = placePurchaseInputSchema.safeParse(data);
 
 	if (!parsed.success) {
-		throw new PlacePurchaseRequestError("Invalid order data", {
+		throw new RequestError("Invalid order data", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -64,12 +46,13 @@ export function validatePlacePurchaseInput(data: unknown): PlacePurchaseInput {
 export async function placePurchaseForCurrentUser(
 	user: ServerUserContext,
 	input: PlacePurchaseInput,
-	executor?: PlacePurchaseExecutor,
+	runPlacePurchase?: PlacePurchaseRunner,
 ): Promise<PlacePurchaseResponse> {
-	const placePurchase = executor ?? (await createPrismaPlacePurchaseExecutor());
+	const placePurchaseRunner =
+		runPlacePurchase ?? (await createPrismaPlacePurchaseRunner());
 	const actor = toActor(user);
 	const command = toCommand(user, input);
-	const result = await placePurchase.execute(actor, command);
+	const result = await placePurchaseRunner(actor, command);
 
 	if (!result.ok) {
 		throw toRequestError(result.error);
@@ -78,7 +61,7 @@ export async function placePurchaseForCurrentUser(
 	return toResponse(result.value);
 }
 
-async function createPrismaPlacePurchaseExecutor() {
+async function createPrismaPlacePurchaseRunner() {
 	const [{ prisma }, { createPrismaPlacePurchase }] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/ordering/infrastructure/prisma-place-purchase"),
@@ -127,28 +110,4 @@ function toResponse(result: PlacePurchaseResult): PlacePurchaseResponse {
 			sellerOrderIds: result.sellerOrderIds,
 		},
 	};
-}
-
-function toRequestError(error: PlacePurchaseError) {
-	return new PlacePurchaseRequestError(error.message, {
-		code: error.code,
-		details: error.details,
-		status: toStatus(error),
-	});
-}
-
-function toStatus(error: PlacePurchaseError) {
-	switch (error.kind) {
-		case "authorization":
-			return 403;
-		case "not-found":
-			return 404;
-		case "conflict":
-			return 409;
-		case "validation":
-			return 400;
-		case "invariant":
-		case "unexpected":
-			return 500;
-	}
 }

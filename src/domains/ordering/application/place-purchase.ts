@@ -79,6 +79,10 @@ export interface PurchaseNumberGeneratorPort<TContext> {
 	generate(context: TContext): Promise<string>;
 }
 
+export interface PurchaseEntityIdGeneratorPort<TContext> {
+	generate(context: TContext): Promise<string>;
+}
+
 export interface PurchasePlacedNotificationCreatorPort<TContext> {
 	createForPurchasePlaced(
 		context: TContext,
@@ -92,120 +96,122 @@ export type PlacePurchaseDependencies<TContext> = {
 	readonly purchases: PurchasePersistencePort<TContext>;
 	readonly sellerOrders: SellerOrderPersistencePort<TContext>;
 	readonly purchaseNumbers: PurchaseNumberGeneratorPort<TContext>;
+	readonly entityIds: PurchaseEntityIdGeneratorPort<TContext>;
 	readonly notifications: PurchasePlacedNotificationCreatorPort<TContext>;
 };
 
-export class PlacePurchase<TContext> {
-	private readonly unitOfWork: UnitOfWork<TContext>;
-	private readonly listings: ListingsForPurchasePort<TContext>;
-	private readonly purchases: PurchasePersistencePort<TContext>;
-	private readonly sellerOrders: SellerOrderPersistencePort<TContext>;
-	private readonly purchaseNumbers: PurchaseNumberGeneratorPort<TContext>;
-	private readonly notifications: PurchasePlacedNotificationCreatorPort<TContext>;
+export async function placePurchase<TContext>(
+	actor: Actor,
+	command: PlacePurchaseCommand,
+	dependencies: PlacePurchaseDependencies<TContext>,
+): Promise<Result<PlacePurchaseResult, PlacePurchaseError>> {
+	const {
+		unitOfWork,
+		listings,
+		purchases,
+		sellerOrders: sellerOrderPersistence,
+		purchaseNumbers,
+		entityIds,
+		notifications,
+	} = dependencies;
 
-	constructor(dependencies: PlacePurchaseDependencies<TContext>) {
-		this.unitOfWork = dependencies.unitOfWork;
-		this.listings = dependencies.listings;
-		this.purchases = dependencies.purchases;
-		this.sellerOrders = dependencies.sellerOrders;
-		this.purchaseNumbers = dependencies.purchaseNumbers;
-		this.notifications = dependencies.notifications;
+	if (actor.role !== "CUSTOMER") {
+		return err(
+			placePurchaseError(
+				"PLACE_PURCHASE_UNAUTHORIZED",
+				"Only customers can place purchases",
+				"authorization",
+			),
+		);
 	}
 
-	async execute(
-		actor: Actor,
-		command: PlacePurchaseCommand,
-	): Promise<Result<PlacePurchaseResult, PlacePurchaseError>> {
-		if (actor.role !== "CUSTOMER") {
-			return err(
-				placePurchaseError(
-					"PLACE_PURCHASE_UNAUTHORIZED",
-					"Only customers can place purchases",
-					"authorization",
-				),
+	const validationError = validateCommand(command);
+	if (validationError) {
+		return err(validationError);
+	}
+
+	try {
+		return await unitOfWork.runInTransaction(async (context) => {
+			const reservation = await listings.reserveForPurchase(
+				context,
+				command.items,
 			);
-		}
 
-		const validationError = validateCommand(command);
-		if (validationError) {
-			return err(validationError);
-		}
-
-		try {
-			return await this.unitOfWork.runInTransaction(async (context) => {
-				const reservation = await this.listings.reserveForPurchase(
-					context,
-					command.items,
-				);
-
-				if (!reservation.ok) {
-					throw new PlacePurchaseRollback(reservation.error);
-				}
-
-				const purchaseId = createEntityId();
-				const purchaseNumber = await this.purchaseNumbers.generate(context);
-				let sellerOrders: SellerOrder[];
-				let purchase: Purchase;
-
-				try {
-					sellerOrders = createSellerOrders(purchaseId, reservation.value);
-					const total = calculatePurchaseTotal(sellerOrders);
-					purchase = Purchase.placeManualPayment({
-						id: purchaseId,
-						customerId: actor.id,
-						purchaseNumber,
-						total,
-						buyerSnapshot: {
-							buyerName: command.buyerName,
-							buyerEmail: command.buyerEmail,
-							buyerPhone: command.buyerPhone,
-							shippingAddress: command.shippingAddress,
-						},
-						sellerOrderCount: sellerOrders.length,
-					});
-				} catch (error) {
-					throw new PlacePurchaseRollback(toDomainError(error));
-				}
-
-				await this.purchases.save(context, purchase);
-				await this.sellerOrders.saveMany(context, sellerOrders);
-
-				const domainEvents = [
-					...purchase.pullDomainEvents(),
-					...sellerOrders.flatMap((sellerOrder) =>
-						sellerOrder.pullDomainEvents(),
-					),
-				];
-
-				await this.notifications.createForPurchasePlaced(context, {
-					purchase,
-					sellerOrders,
-					domainEvents,
-				});
-
-				return ok({
-					purchaseId: purchase.id,
-					purchaseNumber: purchase.purchaseNumber,
-					total: purchase.total,
-					paymentStatus: purchase.paymentStatus,
-					status: purchase.status,
-					sellerOrderIds: sellerOrders.map((sellerOrder) => sellerOrder.id),
-				});
-			});
-		} catch (error) {
-			if (error instanceof PlacePurchaseRollback) {
-				return err(error.placePurchaseError);
+			if (!reservation.ok) {
+				throw new PlacePurchaseRollback(reservation.error);
 			}
 
-			return err(
-				placePurchaseError(
-					"PLACE_PURCHASE_TRANSACTION_FAILED",
-					"Failed to place purchase",
-					"unexpected",
-					error,
-				),
+			const [purchaseId, purchaseNumber] = await Promise.all([
+				entityIds.generate(context),
+				purchaseNumbers.generate(context),
+			]);
+			const sellerOrderInputs = await Promise.all(
+				reservation.value.map(async (group) => ({
+					group,
+					id: await entityIds.generate(context),
+				})),
 			);
+			let sellerOrders: SellerOrder[];
+			let purchase: Purchase;
+
+			try {
+				sellerOrders = createSellerOrders(purchaseId, sellerOrderInputs);
+				const total = calculatePurchaseTotal(sellerOrders);
+				purchase = Purchase.placeManualPayment({
+					id: purchaseId,
+					customerId: actor.id,
+					purchaseNumber,
+					total,
+					buyerSnapshot: {
+						buyerName: command.buyerName,
+						buyerEmail: command.buyerEmail,
+						buyerPhone: command.buyerPhone,
+						shippingAddress: command.shippingAddress,
+					},
+					sellerOrderCount: sellerOrders.length,
+				});
+			} catch (error) {
+				throw new PlacePurchaseRollback(toDomainError(error));
+			}
+
+			await purchases.save(context, purchase);
+			await sellerOrderPersistence.saveMany(context, sellerOrders);
+
+			const domainEvents = [
+				...purchase.pullDomainEvents(),
+				...sellerOrders.flatMap((sellerOrder) =>
+					sellerOrder.pullDomainEvents(),
+				),
+			];
+
+			await notifications.createForPurchasePlaced(context, {
+				purchase,
+				sellerOrders,
+				domainEvents,
+			});
+
+			return ok({
+				purchaseId: purchase.id,
+				purchaseNumber: purchase.purchaseNumber,
+				total: purchase.total,
+				paymentStatus: purchase.paymentStatus,
+				status: purchase.status,
+				sellerOrderIds: sellerOrders.map((sellerOrder) => sellerOrder.id),
+			});
+		});
+	} catch (error) {
+		if (error instanceof PlacePurchaseRollback) {
+			return err(error.placePurchaseError);
 		}
+
+		return err(
+			placePurchaseError(
+				"PLACE_PURCHASE_TRANSACTION_FAILED",
+				"Failed to place purchase",
+				"unexpected",
+				error,
+			),
+		);
 	}
 }
 
@@ -277,11 +283,14 @@ function validateCommand(command: PlacePurchaseCommand) {
 
 function createSellerOrders(
 	purchaseId: string,
-	groups: ReservedSellerListingGroup[],
+	inputs: Array<{
+		readonly id: string;
+		readonly group: ReservedSellerListingGroup;
+	}>,
 ) {
-	return groups.map((group) =>
+	return inputs.map(({ group, id }) =>
 		SellerOrder.createManualPaymentReady({
-			id: createEntityId(),
+			id,
 			purchaseId,
 			sellerId: group.sellerId,
 			items: group.items.map(toSellerOrderItemSnapshot),
@@ -339,15 +348,4 @@ function toDomainError(error: unknown) {
 		"invariant",
 		error,
 	);
-}
-
-function createEntityId() {
-	if (
-		typeof crypto !== "undefined" &&
-		typeof crypto.randomUUID === "function"
-	) {
-		return crypto.randomUUID();
-	}
-
-	return `entity_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 }

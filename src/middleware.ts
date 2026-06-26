@@ -23,6 +23,7 @@ export const requestLoggerMiddleware = createMiddleware().server(
 			| RequestServerResult<object, unknown, unknown>
 			| undefined;
 		let didThrow = false;
+		let thrownError: unknown;
 
 		return withRequestContext(requestContext, async () => {
 			try {
@@ -34,14 +35,22 @@ export const requestLoggerMiddleware = createMiddleware().server(
 					| RequestServerResult<object, unknown, unknown>;
 			} catch (error) {
 				didThrow = true;
+				thrownError = error;
+				const statusCode = getRequestLogStatusCode(undefined, {
+					didThrow,
+					error,
+				});
 				updateRequestContext({
-					statusCode: 500,
-					outcome: "error",
+					statusCode,
+					outcome: getRequestLogOutcome(statusCode),
 					error: toErrorDetails(error),
 				});
 				throw error;
 			} finally {
-				const statusCode = getRequestLogStatusCode(nextResult, { didThrow });
+				const statusCode = getRequestLogStatusCode(nextResult, {
+					didThrow,
+					error: thrownError,
+				});
 				const durationMs =
 					Date.now() - (requestContext.requestStartAt || Date.now());
 				const outcome = getRequestLogOutcome(statusCode);
@@ -106,7 +115,12 @@ export const roleMiddleware = (allowedRoles: string[]) =>
 			const { role } = context as User;
 
 			if (!allowedRoles.includes(role)) {
-				throw new Error("Access denied, your role is not allowed for this");
+				return new Response(
+					JSON.stringify({
+						error: "Access denied, your role is not allowed for this",
+					}),
+					{ status: 403 },
+				);
 			}
 
 			return next();

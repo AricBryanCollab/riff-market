@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-	ChangeSellerOrderStatus,
+	type ChangeSellerOrderStatusCommand,
+	changeSellerOrderStatus,
 	type SellerOrderStatusChangeRecord,
 	type SellerOrderStatusRepositoryPort,
 } from "@/domains/ordering/application/change-seller-order-status";
@@ -11,13 +12,14 @@ import {
 	type SellerOrderStatus,
 	type SellerOrderStatusChangedEvent,
 } from "@/domains/ordering/domain/seller-order";
+import type { Actor } from "@/domains/shared/domain/actor";
 
-describe("ChangeSellerOrderStatus", () => {
+describe("changeSellerOrderStatus", () => {
 	it("allows the owning seller to process a new seller order", async () => {
 		const repo = new FakeSellerOrderStatusRepository(makeRecord());
-		const useCase = new ChangeSellerOrderStatus(repo);
+		const changeStatus = makeChangeStatus(repo);
 
-		const result = await useCase.execute(
+		const result = await changeStatus(
 			{ id: "seller-1", role: "SELLER" },
 			{ sellerOrderId: "seller-order-1", status: "PROCESSING" },
 		);
@@ -45,9 +47,9 @@ describe("ChangeSellerOrderStatus", () => {
 
 	it("blocks sellers from updating seller orders owned by another seller", async () => {
 		const repo = new FakeSellerOrderStatusRepository(makeRecord());
-		const useCase = new ChangeSellerOrderStatus(repo);
+		const changeStatus = makeChangeStatus(repo);
 
-		const result = await useCase.execute(
+		const result = await changeStatus(
 			{ id: "seller-2", role: "SELLER" },
 			{ sellerOrderId: "seller-order-1", status: "PROCESSING" },
 		);
@@ -64,9 +66,9 @@ describe("ChangeSellerOrderStatus", () => {
 
 	it("allows a customer to cancel seller orders for their own purchase", async () => {
 		const repo = new FakeSellerOrderStatusRepository(makeRecord());
-		const useCase = new ChangeSellerOrderStatus(repo);
+		const changeStatus = makeChangeStatus(repo);
 
-		const result = await useCase.execute(
+		const result = await changeStatus(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{ sellerOrderId: "seller-order-1", status: "CANCELED" },
 		);
@@ -84,9 +86,9 @@ describe("ChangeSellerOrderStatus", () => {
 		const repo = new FakeSellerOrderStatusRepository(
 			makeRecord({ customerId: "customer-2" }),
 		);
-		const useCase = new ChangeSellerOrderStatus(repo);
+		const changeStatus = makeChangeStatus(repo);
 
-		const result = await useCase.execute(
+		const result = await changeStatus(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{ sellerOrderId: "seller-order-1", status: "CANCELED" },
 		);
@@ -103,9 +105,9 @@ describe("ChangeSellerOrderStatus", () => {
 
 	it("blocks customers from seller fulfillment status updates", async () => {
 		const repo = new FakeSellerOrderStatusRepository(makeRecord());
-		const useCase = new ChangeSellerOrderStatus(repo);
+		const changeStatus = makeChangeStatus(repo);
 
-		const result = await useCase.execute(
+		const result = await changeStatus(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{ sellerOrderId: "seller-order-1", status: "PROCESSING" },
 		);
@@ -123,9 +125,9 @@ describe("ChangeSellerOrderStatus", () => {
 		const repo = new FakeSellerOrderStatusRepository(
 			makeRecord({ status: "PROCESSING" }),
 		);
-		const useCase = new ChangeSellerOrderStatus(repo);
+		const changeStatus = makeChangeStatus(repo);
 
-		const result = await useCase.execute(
+		const result = await changeStatus(
 			{ id: "seller-1", role: "SELLER" },
 			{ sellerOrderId: "seller-order-1", status: "SHIPPED" },
 		);
@@ -142,9 +144,9 @@ describe("ChangeSellerOrderStatus", () => {
 
 	it("rejects invalid domain transitions", async () => {
 		const repo = new FakeSellerOrderStatusRepository(makeRecord());
-		const useCase = new ChangeSellerOrderStatus(repo);
+		const changeStatus = makeChangeStatus(repo);
 
-		const result = await useCase.execute(
+		const result = await changeStatus(
 			{ id: "seller-1", role: "SELLER" },
 			{
 				sellerOrderId: "seller-order-1",
@@ -163,9 +165,9 @@ describe("ChangeSellerOrderStatus", () => {
 
 	it("returns not found for missing seller orders", async () => {
 		const repo = new FakeSellerOrderStatusRepository(null);
-		const useCase = new ChangeSellerOrderStatus(repo);
+		const changeStatus = makeChangeStatus(repo);
 
-		const result = await useCase.execute(
+		const result = await changeStatus(
 			{ id: "seller-1", role: "SELLER" },
 			{ sellerOrderId: "missing", status: "PROCESSING" },
 		);
@@ -178,6 +180,11 @@ describe("ChangeSellerOrderStatus", () => {
 		});
 	});
 });
+
+function makeChangeStatus(repository: SellerOrderStatusRepositoryPort) {
+	return (actor: Actor, command: ChangeSellerOrderStatusCommand) =>
+		changeSellerOrderStatus(actor, command, repository);
+}
 
 class FakeSellerOrderStatusRepository
 	implements SellerOrderStatusRepositoryPort

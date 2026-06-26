@@ -1,21 +1,11 @@
-import type {
-	MediaCleanupJob,
-	PrismaClient,
-} from "generated/prisma/client";
+import type { PrismaClient } from "generated/prisma/client";
 import { MediaCleanupJobStatus } from "generated/prisma/client";
 import { prisma } from "@/data/connect-db";
+import type { ClaimedMediaCleanupJob } from "@/domains/media/domain/media-cleanup-job";
 
 type TransactionCapableDbClient = Pick<PrismaClient, "$transaction">;
 
-export type ClaimedMediaCleanupJob = Pick<
-	MediaCleanupJob,
-	| "id"
-	| "provider"
-	| "assetType"
-	| "providerAssetId"
-	| "attempts"
-	| "maxAttempts"
->;
+export type { ClaimedMediaCleanupJob };
 
 type ClaimNextMediaCleanupJobOptions = {
 	workerId: string;

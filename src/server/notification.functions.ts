@@ -1,8 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import {
-	authenticatedServerFunctionMiddleware,
-	notificationErrorMiddleware,
-} from "@/server/function-middleware";
+import { authenticatedServerFunctionMiddleware } from "@/server/function-middleware";
 import {
 	getNotificationsForCurrentUser,
 	getUnreadNotificationCountForCurrentUser,
@@ -12,17 +9,11 @@ import {
 } from "@/server/notification-service";
 
 export const listNotificationsFn = createServerFn({ method: "GET" })
-	.middleware([
-		...authenticatedServerFunctionMiddleware,
-		notificationErrorMiddleware,
-	])
+	.middleware(authenticatedServerFunctionMiddleware)
 	.handler(async ({ context }) => getNotificationsForCurrentUser(context.user));
 
 export const getUnreadNotificationCountFn = createServerFn({ method: "GET" })
-	.middleware([
-		...authenticatedServerFunctionMiddleware,
-		notificationErrorMiddleware,
-	])
+	.middleware(authenticatedServerFunctionMiddleware)
 	.handler(async ({ context }) => {
 		const count = await getUnreadNotificationCountForCurrentUser(context.user);
 
@@ -30,20 +21,14 @@ export const getUnreadNotificationCountFn = createServerFn({ method: "GET" })
 	});
 
 export const readNotificationFn = createServerFn({ method: "POST" })
-	.middleware([
-		...authenticatedServerFunctionMiddleware,
-		notificationErrorMiddleware,
-	])
+	.middleware(authenticatedServerFunctionMiddleware)
 	.inputValidator(validateNotificationIdInput)
 	.handler(async ({ context, data }) =>
 		readNotificationForCurrentUser(context.user, data),
 	);
 
 export const readAllNotificationsFn = createServerFn({ method: "POST" })
-	.middleware([
-		...authenticatedServerFunctionMiddleware,
-		notificationErrorMiddleware,
-	])
+	.middleware(authenticatedServerFunctionMiddleware)
 	.handler(async ({ context }) =>
 		readAllNotificationsForCurrentUser(context.user),
 	);

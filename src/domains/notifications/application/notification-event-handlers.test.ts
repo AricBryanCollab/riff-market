@@ -2,50 +2,52 @@ import { describe, expect, it } from "vitest";
 import type { DomainEvent } from "@/domains/shared/domain/domain-event";
 import type { CreateNotificationCommand } from "../dto/notification";
 import {
-	CreateListingModerationNotification,
-	CreatePurchasePlacedNotifications,
+	createListingModerationNotification,
+	createPurchasePlacedNotifications,
 } from "./notification-event-handlers";
 
 describe("notification event handlers", () => {
 	it("creates buyer and seller notifications from purchase placement events", async () => {
 		const notifications = new CreatedNotifications();
-		const handler = new CreatePurchasePlacedNotifications(notifications);
 
-		await handler.execute({
-			purchase: {
-				id: "purchase-1",
-				customerId: "customer-1",
-				purchaseNumber: "RM-1001",
-				totalAmountCents: 250_00,
-				currencyCode: "USD",
-			},
-			sellerOrders: [
-				{
-					id: "seller-order-1",
-					purchaseId: "purchase-1",
-					sellerId: "seller-1",
-					listingNames: ["Telecaster"],
-					subtotalCents: 250_00,
-					currencyCode: "USD",
-				},
-			],
-			domainEvents: [
-				domainEvent("PurchasePlaced", "purchase-1", {
-					purchaseId: "purchase-1",
+		await createPurchasePlacedNotifications(
+			{
+				purchase: {
+					id: "purchase-1",
 					customerId: "customer-1",
 					purchaseNumber: "RM-1001",
 					totalAmountCents: 250_00,
 					currencyCode: "USD",
-				}),
-				domainEvent("SellerOrderCreated", "seller-order-1", {
-					sellerOrderId: "seller-order-1",
-					purchaseId: "purchase-1",
-					sellerId: "seller-1",
-					subtotalCents: 250_00,
-					currencyCode: "USD",
-				}),
-			],
-		});
+				},
+				sellerOrders: [
+					{
+						id: "seller-order-1",
+						purchaseId: "purchase-1",
+						sellerId: "seller-1",
+						listingNames: ["Telecaster"],
+						subtotalCents: 250_00,
+						currencyCode: "USD",
+					},
+				],
+				domainEvents: [
+					domainEvent("PurchasePlaced", "purchase-1", {
+						purchaseId: "purchase-1",
+						customerId: "customer-1",
+						purchaseNumber: "RM-1001",
+						totalAmountCents: 250_00,
+						currencyCode: "USD",
+					}),
+					domainEvent("SellerOrderCreated", "seller-order-1", {
+						sellerOrderId: "seller-order-1",
+						purchaseId: "purchase-1",
+						sellerId: "seller-1",
+						subtotalCents: 250_00,
+						currencyCode: "USD",
+					}),
+				],
+			},
+			notifications,
+		);
 
 		expect(notifications.created).toEqual([
 			{
@@ -69,22 +71,27 @@ describe("notification event handlers", () => {
 
 	it("creates listing moderation notifications from listing lifecycle events", async () => {
 		const notifications = new CreatedNotifications();
-		const handler = new CreateListingModerationNotification(notifications);
 
-		await handler.execute({
-			event: domainEvent("ListingApproved", "listing-1", {
-				listingId: "listing-1",
-				sellerId: "seller-1",
-			}),
-			listingName: "Telecaster",
-		});
-		await handler.execute({
-			event: domainEvent("ListingDeclined", "listing-2", {
-				listingId: "listing-2",
-				sellerId: "seller-2",
-			}),
-			listingName: "Jazzmaster",
-		});
+		await createListingModerationNotification(
+			{
+				event: domainEvent("ListingApproved", "listing-1", {
+					listingId: "listing-1",
+					sellerId: "seller-1",
+				}),
+				listingName: "Telecaster",
+			},
+			notifications,
+		);
+		await createListingModerationNotification(
+			{
+				event: domainEvent("ListingDeclined", "listing-2", {
+					listingId: "listing-2",
+					sellerId: "seller-2",
+				}),
+				listingName: "Jazzmaster",
+			},
+			notifications,
+		);
 
 		expect(notifications.created).toEqual([
 			{

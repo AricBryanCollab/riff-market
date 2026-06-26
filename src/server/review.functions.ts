@@ -1,8 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requestLoggerMiddleware } from "@/middleware";
 import {
 	authenticatedServerFunctionMiddleware,
-	reviewErrorMiddleware,
+	publicServerFunctionMiddleware,
 } from "@/server/function-middleware";
 import {
 	createListingReviewForCurrentUser,
@@ -12,12 +11,12 @@ import {
 } from "@/server/review-service";
 
 export const listListingReviewsFn = createServerFn({ method: "GET" })
-	.middleware([requestLoggerMiddleware, reviewErrorMiddleware])
+	.middleware(publicServerFunctionMiddleware)
 	.inputValidator(validateGetListingReviewsInput)
 	.handler(async ({ data }) => listListingReviews(data));
 
 export const createListingReviewFn = createServerFn({ method: "POST" })
-	.middleware([...authenticatedServerFunctionMiddleware, reviewErrorMiddleware])
+	.middleware(authenticatedServerFunctionMiddleware)
 	.inputValidator(validateCreateListingReviewInput)
 	.handler(async ({ context, data }) =>
 		createListingReviewForCurrentUser(context.user, data),

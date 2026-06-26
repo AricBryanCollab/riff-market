@@ -1,5 +1,5 @@
 import {
-	CreatePurchasePlacedNotifications,
+	createPurchasePlacedNotifications,
 	NotificationEventHandlerError,
 } from "@/domains/notifications/application/notification-event-handlers";
 import { PrismaNotifications } from "@/domains/notifications/infrastructure/prisma-notifications";
@@ -24,26 +24,27 @@ export class PrismaPurchasePlacedNotificationCreator
 		input: PurchasePlacedNotificationInput,
 	) {
 		try {
-			await new CreatePurchasePlacedNotifications(
-				new PrismaNotifications(context),
-			).execute({
-				purchase: {
-					id: input.purchase.id,
-					customerId: input.purchase.customerId,
-					purchaseNumber: input.purchase.purchaseNumber,
-					totalAmountCents: input.purchase.total.amountCents,
-					currencyCode: input.purchase.total.currencyCode,
+			await createPurchasePlacedNotifications(
+				{
+					purchase: {
+						id: input.purchase.id,
+						customerId: input.purchase.customerId,
+						purchaseNumber: input.purchase.purchaseNumber,
+						totalAmountCents: input.purchase.total.amountCents,
+						currencyCode: input.purchase.total.currencyCode,
+					},
+					sellerOrders: input.sellerOrders.map((sellerOrder) => ({
+						id: sellerOrder.id,
+						purchaseId: sellerOrder.purchaseId,
+						sellerId: sellerOrder.sellerId,
+						listingNames: sellerOrder.items.map((item) => item.listingName),
+						subtotalCents: sellerOrder.subtotal.amountCents,
+						currencyCode: sellerOrder.subtotal.currencyCode,
+					})),
+					domainEvents: input.domainEvents,
 				},
-				sellerOrders: input.sellerOrders.map((sellerOrder) => ({
-					id: sellerOrder.id,
-					purchaseId: sellerOrder.purchaseId,
-					sellerId: sellerOrder.sellerId,
-					listingNames: sellerOrder.items.map((item) => item.listingName),
-					subtotalCents: sellerOrder.subtotal.amountCents,
-					currencyCode: sellerOrder.subtotal.currencyCode,
-				})),
-				domainEvents: input.domainEvents,
-			});
+				new PrismaNotifications(context),
+			);
 		} catch (error) {
 			if (error instanceof NotificationEventHandlerError) {
 				throw new PurchaseNotificationCreationError(error.message);

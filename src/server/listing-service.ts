@@ -1,23 +1,20 @@
 import { z } from "zod";
 import {
-	CreateListing,
 	type CreateListingCommand,
-	type ListingCommandError,
-	type ListingCommandRepositoryPort,
-	type ListingImageManagerPort,
+	createListing,
+	type ListingCommandDependencies,
 	type ListingMutationResult,
-	RemoveListing,
 	type RemoveListingCommand,
-	UpdateListing,
+	removeListing,
 	type UpdateListingCommand,
+	updateListing,
 } from "@/domains/listings/application/manage-listing";
 import {
-	type ListingModerationError,
 	type ListingModerationNotifierPort,
 	type ListingModerationRepositoryPort,
 	type ListingModerationResult,
-	ModerateListing,
 	type ModerateListingCommand,
+	moderateListing,
 } from "@/domains/listings/application/moderate-listing";
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
@@ -25,6 +22,7 @@ import {
 	updateProductSchema,
 } from "@/lib/zod/product-validation";
 import type { ServerUserContext } from "@/server/function-middleware";
+import { RequestError, toRequestError } from "@/server/request-error";
 
 const moderateListingInputSchema = z.object({
 	listingId: z.string().trim().min(1, "Listing ID is required"),
@@ -73,10 +71,7 @@ export type RemoveListingResponse = {
 	};
 };
 
-export type ListingCommandServiceDependencies = {
-	readonly repository: ListingCommandRepositoryPort;
-	readonly imageManager: ListingImageManagerPort;
-};
+export type ListingCommandServiceDependencies = ListingCommandDependencies;
 
 export type ListingModerationExecutionDependencies = {
 	readonly repository: ListingModerationRepositoryPort;
@@ -92,30 +87,13 @@ export type ListingModerationServiceDependencies =
 		) => Promise<T>;
 	};
 
-export class ListingRequestError extends Error {
-	readonly code?: string;
-	readonly details?: unknown;
-	readonly status: number;
-
-	constructor(
-		message: string,
-		options: { code?: string; details?: unknown; status?: number } = {},
-	) {
-		super(message);
-		this.name = "ListingRequestError";
-		this.code = options.code;
-		this.details = options.details;
-		this.status = options.status ?? 400;
-	}
-}
-
 export function validateModerateListingInput(
 	data: unknown,
 ): ModerateListingInput {
 	const parsed = moderateListingInputSchema.safeParse(data);
 
 	if (!parsed.success) {
-		throw new ListingRequestError("Invalid listing moderation request", {
+		throw new RequestError("Invalid listing moderation request", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -127,7 +105,7 @@ export function validateCreateListingFormData(
 	data: FormData,
 ): CreateListingInput {
 	if (!(data instanceof FormData)) {
-		throw new ListingRequestError("Expected listing form data");
+		throw new RequestError("Expected listing form data");
 	}
 
 	const parsed = createProductSchema.safeParse({
@@ -143,7 +121,7 @@ export function validateCreateListingFormData(
 	});
 
 	if (!parsed.success) {
-		throw new ListingRequestError("Invalid listing data", {
+		throw new RequestError("Invalid listing data", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -155,7 +133,7 @@ export function validateUpdateListingFormData(
 	data: FormData,
 ): UpdateListingInput {
 	if (!(data instanceof FormData)) {
-		throw new ListingRequestError("Expected listing form data");
+		throw new RequestError("Expected listing form data");
 	}
 
 	const listingId = getRequiredString(data, "listingId");
@@ -187,7 +165,7 @@ export function validateUpdateListingFormData(
 	const parsed = updateProductSchema.safeParse(rawData);
 
 	if (!parsed.success) {
-		throw new ListingRequestError("Invalid listing data", {
+		throw new RequestError("Invalid listing data", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -206,7 +184,7 @@ export function validateRemoveListingInput(data: unknown): RemoveListingInput {
 		.safeParse(data);
 
 	if (!parsed.success) {
-		throw new ListingRequestError("Invalid listing removal request", {
+		throw new RequestError("Invalid listing removal request", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -223,14 +201,10 @@ export async function createListingForCurrentUser(
 		dependencies ?? (await createListingCommandInfrastructure());
 	const actor = toActor(user);
 	const command = toCreateListingCommand(input);
-	const createListing = new CreateListing(
-		commandDependencies.repository,
-		commandDependencies.imageManager,
-	);
-	const result = await createListing.execute(actor, command);
+	const result = await createListing(actor, command, commandDependencies);
 
 	if (!result.ok) {
-		throw toListingCommandRequestError(result.error);
+		throw toRequestError(result.error);
 	}
 
 	return toMutationResponse("New product has been added", result.value);
@@ -245,14 +219,10 @@ export async function updateListingForCurrentUser(
 		dependencies ?? (await createListingCommandInfrastructure());
 	const actor = toActor(user);
 	const command = toUpdateListingCommand(input);
-	const updateListing = new UpdateListing(
-		commandDependencies.repository,
-		commandDependencies.imageManager,
-	);
-	const result = await updateListing.execute(actor, command);
+	const result = await updateListing(actor, command, commandDependencies);
 
 	if (!result.ok) {
-		throw toListingCommandRequestError(result.error);
+		throw toRequestError(result.error);
 	}
 
 	return toMutationResponse("Product has been updated", result.value);
@@ -267,14 +237,10 @@ export async function removeListingForCurrentUser(
 		dependencies ?? (await createListingCommandInfrastructure());
 	const actor = toActor(user);
 	const command = toRemoveListingCommand(input);
-	const removeListing = new RemoveListing(
-		commandDependencies.repository,
-		commandDependencies.imageManager,
-	);
-	const result = await removeListing.execute(actor, command);
+	const result = await removeListing(actor, command, commandDependencies);
 
 	if (!result.ok) {
-		throw toListingCommandRequestError(result.error);
+		throw toRequestError(result.error);
 	}
 
 	return {
@@ -307,29 +273,30 @@ async function moderateListingWithDependencies(
 ): Promise<ListingModerationResult> {
 	const actor = toActor(user);
 	const command = toCommand(input);
-	const moderateListing = new ModerateListing(
+	const result = await moderateListing(
+		actor,
+		command,
 		dependencies.repository,
 		dependencies.notifier,
 	);
-	const result = await moderateListing.execute(actor, command);
 
 	if (!result.ok) {
-		throw toListingRequestError(result.error);
+		throw toRequestError(result.error);
 	}
 
 	return result.value;
 }
 
 async function createListingCommandInfrastructure(): Promise<ListingCommandServiceDependencies> {
-	const [{ prisma }, commands, images] = await Promise.all([
+	const [{ prisma }, commands, imageAssets] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/listings/infrastructure/prisma-listing-commands"),
 		import("@/domains/listings/infrastructure/listing-image-assets"),
 	]);
 
 	return {
-		repository: new commands.PrismaListingCommandRepository(prisma),
-		imageManager: new images.CloudinaryListingImageManager(),
+		listings: new commands.PrismaListingCommandRepository(prisma),
+		images: new imageAssets.CloudinaryListingImageManager(),
 	};
 }
 
@@ -438,51 +405,4 @@ function getImageFiles(data: FormData) {
 	return data
 		.getAll("image")
 		.filter((value): value is File => value instanceof File);
-}
-
-function toListingRequestError(error: ListingModerationError) {
-	return new ListingRequestError(error.message, {
-		code: error.code,
-		details: error.details,
-		status: toStatus(error),
-	});
-}
-
-function toListingCommandRequestError(error: ListingCommandError) {
-	return new ListingRequestError(error.message, {
-		code: error.code,
-		details: error.details,
-		status: toCommandStatus(error),
-	});
-}
-
-function toStatus(error: ListingModerationError) {
-	switch (error.kind) {
-		case "authorization":
-			return 403;
-		case "not-found":
-			return 404;
-		case "conflict":
-			return 409;
-		case "validation":
-			return 400;
-		case "unexpected":
-			return 500;
-	}
-}
-
-function toCommandStatus(error: ListingCommandError) {
-	switch (error.kind) {
-		case "authorization":
-			return 403;
-		case "not-found":
-			return 404;
-		case "conflict":
-			return 409;
-		case "validation":
-			return 400;
-		case "invariant":
-		case "unexpected":
-			return error.code === "LISTING_COMMAND_IMAGE_UPLOAD_FAILED" ? 400 : 500;
-	}
 }

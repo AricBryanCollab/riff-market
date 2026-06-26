@@ -1,6 +1,7 @@
+import { randomUUID } from "node:crypto";
 import type { PrismaClient } from "generated/prisma/client";
 import {
-	deleteUserAndEnqueueMediaCleanupJobs,
+	deleteUser,
 	getUserById,
 	type UserProfileRecord,
 	updateProfilePicture,
@@ -30,6 +31,8 @@ import type {
 	AccountProfilePictureAsset,
 	AccountProfilePictureUpdateResult,
 } from "@/domains/accounts/dto/account-profile-picture";
+import { stageAccountMediaForCleanup } from "@/domains/media/application/stage-account-media-cleanup";
+import { PrismaAccountMediaCleanupStaging } from "@/domains/media/infrastructure/prisma-account-media-cleanup-staging";
 import type { AppError } from "@/domains/shared/domain/result";
 import { logger } from "@/lib/logger";
 import type { UserProfile } from "@/types/user";
@@ -39,9 +42,8 @@ import {
 	toNullableJsonImageAssetRef,
 } from "@/utils/image-asset-ref";
 
-type AccountServiceError = {
+export type AccountServiceError = AppError & {
 	readonly error: string;
-	readonly details?: unknown;
 };
 
 export class UserRepoAccountProfiles
@@ -67,8 +69,17 @@ export class UserRepoAccountProfiles
 		return toAccountProfile(await updateUser(userId, data, this.db));
 	}
 
-	async deleteAccountAndEnqueueMediaCleanup(userId: string): Promise<void> {
-		await deleteUserAndEnqueueMediaCleanupJobs(userId, this.db);
+	async deleteAccount(userId: string): Promise<void> {
+		await this.db.$transaction(async (transaction) => {
+			await stageAccountMediaForCleanup(
+				{
+					accountId: userId,
+					cleanupBatchId: randomUUID(),
+				},
+				new PrismaAccountMediaCleanupStaging(transaction),
+			);
+			await deleteUser(userId, transaction);
+		});
 	}
 
 	async findProfilePictureStateByUserId(userId: string) {
@@ -184,8 +195,8 @@ function toUserProfile(account: AccountProfile): UserProfile {
 
 function toAccountServiceError(error: AppError): AccountServiceError {
 	return {
+		...error,
 		error: error.message,
-		...(error.details === undefined ? {} : { details: error.details }),
 	};
 }
 

@@ -43,88 +43,83 @@ export interface OrderDetailReadPort {
 	findForAdmin(orderId: string): Promise<OrderingOrderReadModel | null>;
 }
 
-export class ListBuyerPurchaseHistory {
-	constructor(private readonly purchases: BuyerPurchaseHistoryPort) {}
-
-	async execute(
-		actor: Actor,
-	): Promise<Result<OrderingOrderReadModel[], OrderReadError>> {
-		if (actor.role !== "CUSTOMER") {
-			return err(
-				orderReadError(
-					"ORDER_READ_UNAUTHORIZED",
-					"Only customers can read purchase history",
-				),
-			);
-		}
-
-		return ok(await this.purchases.listForCustomer(actor.id));
+export async function listBuyerPurchaseHistory(
+	actor: Actor,
+	purchases: BuyerPurchaseHistoryPort,
+): Promise<Result<OrderingOrderReadModel[], OrderReadError>> {
+	if (actor.role !== "CUSTOMER") {
+		return err(
+			orderReadError(
+				"ORDER_READ_UNAUTHORIZED",
+				"Only customers can read purchase history",
+			),
+		);
 	}
+
+	return ok(await purchases.listForCustomer(actor.id));
 }
 
-export class ListSellerOrderDashboard {
-	constructor(private readonly sellerOrders: SellerOrderDashboardPort) {}
-
-	async execute(
-		actor: Actor,
-	): Promise<Result<OrderingOrderReadModel[], OrderReadError>> {
-		if (actor.role !== "SELLER" && actor.role !== "ADMIN") {
-			return err(
-				orderReadError(
-					"ORDER_READ_UNAUTHORIZED",
-					"Only sellers and admins can read seller orders",
-				),
-			);
-		}
-
-		if (actor.role === "ADMIN") {
-			return ok(await this.sellerOrders.listAllForAdmin());
-		}
-
-		return ok(await this.sellerOrders.listForSeller(actor.id));
+export async function listSellerOrderDashboard(
+	actor: Actor,
+	sellerOrders: SellerOrderDashboardPort,
+): Promise<Result<OrderingOrderReadModel[], OrderReadError>> {
+	if (actor.role !== "SELLER" && actor.role !== "ADMIN") {
+		return err(
+			orderReadError(
+				"ORDER_READ_UNAUTHORIZED",
+				"Only sellers and admins can read seller orders",
+			),
+		);
 	}
+
+	if (actor.role === "ADMIN") {
+		return ok(await sellerOrders.listAllForAdmin());
+	}
+
+	return ok(await sellerOrders.listForSeller(actor.id));
 }
 
-export class GetOrderDetail {
-	constructor(private readonly orderDetails: OrderDetailReadPort) {}
-
-	async execute(
-		actor: Actor,
-		orderId: string,
-	): Promise<Result<OrderingOrderReadModel, OrderReadError>> {
-		if (orderId.trim().length === 0) {
-			return err(
-				orderReadError(
-					"ORDER_READ_INVALID_ID",
-					"Order ID is required",
-					"validation",
-				),
-			);
-		}
-
-		const order = await this.findAuthorizedOrder(actor, orderId);
-		if (!order) {
-			return err(
-				orderReadError(
-					"ORDER_READ_NOT_FOUND",
-					"Order not found with the provided order ID",
-					"not-found",
-				),
-			);
-		}
-
-		return ok(order);
+export async function getOrderDetail(
+	actor: Actor,
+	orderId: string,
+	orderDetails: OrderDetailReadPort,
+): Promise<Result<OrderingOrderReadModel, OrderReadError>> {
+	if (orderId.trim().length === 0) {
+		return err(
+			orderReadError(
+				"ORDER_READ_INVALID_ID",
+				"Order ID is required",
+				"validation",
+			),
+		);
 	}
 
-	private findAuthorizedOrder(actor: Actor, orderId: string) {
-		switch (actor.role) {
-			case "CUSTOMER":
-				return this.orderDetails.findPurchaseForCustomer(orderId, actor.id);
-			case "SELLER":
-				return this.orderDetails.findSellerOrderForSeller(orderId, actor.id);
-			case "ADMIN":
-				return this.orderDetails.findForAdmin(orderId);
-		}
+	const order = await findAuthorizedOrder(actor, orderId, orderDetails);
+	if (!order) {
+		return err(
+			orderReadError(
+				"ORDER_READ_NOT_FOUND",
+				"Order not found with the provided order ID",
+				"not-found",
+			),
+		);
+	}
+
+	return ok(order);
+}
+
+function findAuthorizedOrder(
+	actor: Actor,
+	orderId: string,
+	orderDetails: OrderDetailReadPort,
+) {
+	switch (actor.role) {
+		case "CUSTOMER":
+			return orderDetails.findPurchaseForCustomer(orderId, actor.id);
+		case "SELLER":
+			return orderDetails.findSellerOrderForSeller(orderId, actor.id);
+		case "ADMIN":
+			return orderDetails.findForAdmin(orderId);
 	}
 }
 

@@ -5,10 +5,10 @@ import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	getNotificationsForCurrentUser,
 	getUnreadNotificationCountForCurrentUser,
-	type NotificationRequestError,
 	readAllNotificationsForCurrentUser,
 	readNotificationForCurrentUser,
 } from "@/server/notification-service";
+import type { RequestError } from "@/server/request-error";
 import {
 	describeDb,
 	seedMarketplaceUsers,
@@ -77,10 +77,10 @@ describeDb("notification service Prisma integration", () => {
 				notifications,
 			),
 		).rejects.toMatchObject({
-			name: "NotificationRequestError",
+			name: "RequestError",
 			status: 404,
 			code: "NOTIFICATION_NOT_FOUND",
-		} satisfies Partial<NotificationRequestError>);
+		} satisfies Partial<RequestError>);
 
 		await expect(
 			getUnreadNotificationCountForCurrentUser(sellerUser, notifications),

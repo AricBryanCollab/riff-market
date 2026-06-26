@@ -74,12 +74,13 @@ src/
 - **Tailwind CSS** for utility-first styling.
 - **shadcn/ui** for accessible, customizable UI components.
 
-## Documentation Framework
+## Garden Context
 
-- This repo uses an AGENTS-first docs flow: `AGENTS.md` -> `docs/README.md` -> `docs/agent-context-packs.md`.
-- Concepts use the registry in `docs/concepts.map` and canonical files include `<!-- concept:def <id> -->`.
-- Required docs checks: `bun run hooks:install` (once) and `bun run docs:check` before finalizing docs work.
-- Core docs entry points: `docs/agent-documentation-pattern.md`, `docs/adr/001-docs-framework.md`, and `docs/gotchas/docs.md`.
+- This repo uses Garden context cards in `.garden/context/*.md`.
+- Garden owns the generated context section in `AGENTS.md`; update context cards, then run `bun run garden:sync`.
+- Required context check: `bun run garden:lint`.
+- To inspect context for changed files, run `bun run garden:check -- <paths...>`.
+- The pre-commit hook skips Garden checks when the `garden` CLI is not installed.
 
 ---
 

@@ -1,18 +1,19 @@
 import { z } from "zod";
 import {
-	GetNotifications,
-	GetUnreadNotificationCount,
+	getNotifications,
+	getUnreadNotificationCount,
 	type NotificationError,
 	type NotificationReadPort,
 	type NotificationReadStatePort,
 	type NotificationUnreadCountPort,
-	ReadAllNotifications,
-	ReadNotification,
+	readAllNotifications,
+	readNotification,
 } from "@/domains/notifications/application/notification-use-cases";
 import type { NotificationReadModel } from "@/domains/notifications/dto/notification";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { Result } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
+import { RequestError, toRequestError } from "@/server/request-error";
 
 const notificationIdInputSchema = z.object({
 	notificationId: z.string().trim().min(1, "Notification ID is required"),
@@ -24,30 +25,13 @@ export type NotificationServiceDependencies = NotificationReadPort &
 	NotificationUnreadCountPort &
 	NotificationReadStatePort;
 
-export class NotificationRequestError extends Error {
-	readonly code?: string;
-	readonly details?: unknown;
-	readonly status: number;
-
-	constructor(
-		message: string,
-		options: { code?: string; details?: unknown; status?: number } = {},
-	) {
-		super(message);
-		this.name = "NotificationRequestError";
-		this.code = options.code;
-		this.details = options.details;
-		this.status = options.status ?? 400;
-	}
-}
-
 export function validateNotificationIdInput(
 	data: unknown,
 ): NotificationIdInput {
 	const parsed = notificationIdInputSchema.safeParse(data);
 
 	if (!parsed.success) {
-		throw new NotificationRequestError("Invalid notification request", {
+		throw new RequestError("Invalid notification request", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -62,8 +46,7 @@ export async function getNotificationsForCurrentUser(
 	return executeNotificationUseCase(
 		user,
 		dependencies,
-		(notifications, actor) =>
-			new GetNotifications(notifications).execute(actor),
+		(notifications, actor) => getNotifications(actor, notifications),
 	);
 }
 
@@ -74,8 +57,7 @@ export async function getUnreadNotificationCountForCurrentUser(
 	return executeNotificationUseCase(
 		user,
 		dependencies,
-		(notifications, actor) =>
-			new GetUnreadNotificationCount(notifications).execute(actor),
+		(notifications, actor) => getUnreadNotificationCount(actor, notifications),
 	);
 }
 
@@ -88,10 +70,13 @@ export async function readNotificationForCurrentUser(
 		user,
 		dependencies,
 		(notifications, actor) =>
-			new ReadNotification(notifications).execute({
-				notificationId: input.notificationId,
-				actor,
-			}),
+			readNotification(
+				{
+					notificationId: input.notificationId,
+					actor,
+				},
+				notifications,
+			),
 	);
 }
 
@@ -102,8 +87,7 @@ export async function readAllNotificationsForCurrentUser(
 	return executeNotificationUseCase(
 		user,
 		dependencies,
-		(notifications, actor) =>
-			new ReadAllNotifications(notifications).execute(actor),
+		(notifications, actor) => readAllNotifications(actor, notifications),
 	);
 }
 
@@ -119,7 +103,7 @@ async function executeNotificationUseCase<T>(
 		dependencies ?? (await createPrismaNotificationDependencies());
 	const result = await execute(notifications, toActor(user));
 	if (!result.ok) {
-		throw toNotificationRequestError(result.error);
+		throw toRequestError(result.error);
 	}
 
 	return result.value;
@@ -139,28 +123,4 @@ function toActor(user: ServerUserContext): Actor {
 		id: user.id,
 		role: user.role,
 	};
-}
-
-function toNotificationRequestError(error: NotificationError) {
-	return new NotificationRequestError(error.message, {
-		code: error.code,
-		details: error.details,
-		status: toStatus(error),
-	});
-}
-
-function toStatus(error: NotificationError) {
-	switch (error.kind) {
-		case "authorization":
-			return 403;
-		case "not-found":
-			return 404;
-		case "conflict":
-			return 409;
-		case "validation":
-			return 400;
-		case "invariant":
-		case "unexpected":
-			return 500;
-	}
 }

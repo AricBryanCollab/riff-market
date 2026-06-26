@@ -8,9 +8,9 @@ import type {
 import { reviewAlreadyExistsError } from "@/domains/reviews/application/review-use-cases";
 import { err, ok, type Result } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
+import type { RequestError } from "@/server/request-error";
 import {
 	createListingReviewForCurrentUser,
-	type ReviewRequestError,
 	validateCreateListingReviewInput,
 	validateGetListingReviewsInput,
 } from "@/server/review-service";
@@ -84,10 +84,10 @@ describe("review server service", () => {
 				reviews,
 			),
 		).rejects.toMatchObject({
-			name: "ReviewRequestError",
+			name: "RequestError",
 			status: 409,
 			code: "REVIEW_ALREADY_EXISTS",
-		} satisfies Partial<ReviewRequestError>);
+		} satisfies Partial<RequestError>);
 	});
 });
 

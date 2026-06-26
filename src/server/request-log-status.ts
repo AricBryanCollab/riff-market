@@ -1,8 +1,10 @@
+import { RequestError } from "@/server/request-error";
+
 export type RequestLogOutcome = "success" | "warning" | "error";
 
 export function getRequestLogStatusCode(
 	result: unknown,
-	options: { readonly didThrow: boolean },
+	options: { readonly didThrow: boolean; readonly error?: unknown },
 ): number {
 	const response = getResponseFromMiddlewareResult(result);
 
@@ -10,7 +12,11 @@ export function getRequestLogStatusCode(
 		return response.status;
 	}
 
-	return options.didThrow ? 500 : 200;
+	if (options.didThrow) {
+		return getThrownErrorStatusCode(options.error) ?? 500;
+	}
+
+	return 200;
 }
 
 export function getRequestLogOutcome(statusCode: number): RequestLogOutcome {
@@ -34,6 +40,18 @@ function getResponseFromMiddlewareResult(
 
 	if (hasResponse(result)) {
 		return result.response;
+	}
+
+	return undefined;
+}
+
+function getThrownErrorStatusCode(error: unknown): number | undefined {
+	if (error instanceof RequestError) {
+		return error.status;
+	}
+
+	if (error instanceof Response) {
+		return error.status;
 	}
 
 	return undefined;

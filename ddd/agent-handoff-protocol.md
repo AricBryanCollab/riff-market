@@ -7,10 +7,9 @@ Use this folder as the handoff source of truth for the DDD migration.
 At the start of every new implementation/planning session, read:
 
 1. `ddd/agent-handoff-protocol.md`
-2. `ddd/next-session.md`
-3. `ddd/migration-plan.md`
-4. `ddd/grill-me-summary.md`
-5. `ddd/progress.md`
+2. `ddd/migration-plan.md`
+3. `ddd/grill-me-summary.md`
+4. `ddd/progress.md`
 
 Then inspect the actual repo state with git and code reads. Do not rely on a manually maintained current-state file.
 
@@ -31,10 +30,7 @@ Then inspect the actual repo state with git and code reads. Do not rely on a man
 
 ## End-Of-Session Requirements
 
-Before ending a session, update:
-
-1. `ddd/next-session.md`
-2. `ddd/progress.md`
+Before ending a session, update `ddd/progress.md`.
 
 Each update must include:
 
@@ -48,12 +44,12 @@ Each update must include:
 Actual implementation state must be inferred from git status, git diff, tests, and the codebase, not duplicated in a hand-maintained state file.
 
 For an agent-to-agent handoff, invoke the local `handoff` skill at
-`/Users/aricjiang/.agents/skills/handoff/SKILL.md` after updating the files
-above. Pass the next-session focus as the skill argument, for example
-`$handoff "Continue the DDD migration from ddd/next-session.md"`.
+`/Users/aricjiang/.agents/skills/handoff/SKILL.md` after updating
+`ddd/progress.md`. Pass the next-session focus as the skill argument, for
+example `$handoff "Continue Slice 8 Media from ddd/progress.md"`.
 
 The generated handoff document must stay in the user's OS temporary directory,
-not this workspace. It should point to `ddd/next-session.md`, `ddd/progress.md`,
+not this workspace. It should point to `ddd/progress.md`, `ddd/migration-plan.md`,
 and any relevant plans instead of duplicating their content, and it must include
 the skill's required suggested-skills section.
 

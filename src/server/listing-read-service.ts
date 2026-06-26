@@ -2,18 +2,12 @@ import {
 	type ApprovedListingSearchPort,
 	type ApprovedListingSearchQuery,
 	type CartListingReadPort,
-	GetApprovedListingCategoryCounts,
-	GetCartListingDetails,
-	GetListingDetails,
-	GetListingStatusCount,
+	getListingDetails,
 	type ListingCountReadPort,
 	type ListingDetailReadPort,
-	ListPendingModerationListings,
-	ListRecentApprovedListings,
-	ListSellerListings,
+	listSellerListings,
 	type PendingModerationListingReadPort,
 	type RecentApprovedListingReadPort,
-	SearchApprovedListings,
 	type SellerListingReadPort,
 } from "@/domains/listings/application/listing-read-models";
 import {
@@ -71,8 +65,7 @@ export async function getListingDetailsForProductApi(
 ): Promise<ProductApiListingReadModel | ProductApiReadError> {
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
-	const getListingDetails = new GetListingDetails(readDependencies.listings);
-	const result = await getListingDetails.execute(listingId);
+	const result = await getListingDetails(listingId, readDependencies.listings);
 
 	if (!result.ok) {
 		return { error: result.error.message };
@@ -101,16 +94,9 @@ export async function getApprovedListingsForProductApi(
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
 	const query = toListingSearchQuery(parsed.data);
-	const searchApprovedListings = new SearchApprovedListings(
-		readDependencies.listings,
-	);
-	const result = await searchApprovedListings.execute(query);
+	const listings = await readDependencies.listings.searchApproved(query);
 
-	if (!result.ok) {
-		return { error: result.error.message };
-	}
-
-	return result.value.map(toProductApiListingReadModel);
+	return listings.map(toProductApiListingReadModel);
 }
 
 export async function getSellerListingsForProductApi(
@@ -124,8 +110,7 @@ export async function getSellerListingsForProductApi(
 
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
-	const listSellerListings = new ListSellerListings(readDependencies.listings);
-	const result = await listSellerListings.execute(sellerId);
+	const result = await listSellerListings(sellerId, readDependencies.listings);
 
 	if (!result.ok) {
 		return { error: result.error.message };
@@ -139,16 +124,9 @@ export async function getPendingModerationListingsForProductApi(
 ): Promise<ProductApiListingReadModel[] | ProductApiReadError> {
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
-	const listPendingModerationListings = new ListPendingModerationListings(
-		readDependencies.listings,
-	);
-	const result = await listPendingModerationListings.execute();
+	const listings = await readDependencies.listings.listPendingModeration();
 
-	if (!result.ok) {
-		return { error: result.error.message };
-	}
-
-	return result.value.map(toProductApiListingReadModel);
+	return listings.map(toProductApiListingReadModel);
 }
 
 export async function getListingCategoryCountsForProductApi(
@@ -156,16 +134,7 @@ export async function getListingCategoryCountsForProductApi(
 ): Promise<ListingCategoryCount[] | ProductApiReadError> {
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
-	const getApprovedListingCategoryCounts = new GetApprovedListingCategoryCounts(
-		readDependencies.listings,
-	);
-	const result = await getApprovedListingCategoryCounts.execute();
-
-	if (!result.ok) {
-		return { error: result.error.message };
-	}
-
-	return result.value;
+	return readDependencies.listings.countApprovedByCategory();
 }
 
 export async function getListingStatusCountForProductApi(
@@ -174,19 +143,12 @@ export async function getListingStatusCountForProductApi(
 ): Promise<ProductApiListingCountByStatus | ProductApiReadError> {
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
-	const getListingStatusCount = new GetListingStatusCount(
-		readDependencies.listings,
-	);
 	const status = isApproved ? "APPROVED" : "PENDING";
-	const result = await getListingStatusCount.execute(status);
-
-	if (!result.ok) {
-		return { error: result.error.message };
-	}
+	const count = await readDependencies.listings.countByStatus(status);
 
 	return isApproved
-		? { approvedProductCount: result.value }
-		: { pendingProductCount: result.value };
+		? { approvedProductCount: count }
+		: { pendingProductCount: count };
 }
 
 export async function getRecentListingsForProductApi(
@@ -195,16 +157,9 @@ export async function getRecentListingsForProductApi(
 ): Promise<ProductApiListingReadModel[] | ProductApiReadError> {
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
-	const listRecentApprovedListings = new ListRecentApprovedListings(
-		readDependencies.listings,
-	);
-	const result = await listRecentApprovedListings.execute(limit);
+	const listings = await readDependencies.listings.listRecentApproved(limit);
 
-	if (!result.ok) {
-		return { error: result.error.message };
-	}
-
-	return result.value.map(toProductApiListingReadModel);
+	return listings.map(toProductApiListingReadModel);
 }
 
 export async function getCartListingsForProductApi(
@@ -228,16 +183,9 @@ export async function getCartListingsForProductApi(
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
 	const uniqueIds = Array.from(new Set(parsed.data.ids));
-	const getCartListingDetails = new GetCartListingDetails(
-		readDependencies.listings,
-	);
-	const result = await getCartListingDetails.execute(uniqueIds);
+	const listings = await readDependencies.listings.findByIds(uniqueIds);
 
-	if (!result.ok) {
-		return { error: result.error.message };
-	}
-
-	return result.value.map(toProductApiListingReadModel);
+	return listings.map(toProductApiListingReadModel);
 }
 
 async function createPrismaListingReadDependencies(): Promise<ListingReadServiceDependencies> {

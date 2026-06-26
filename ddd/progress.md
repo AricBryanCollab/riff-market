@@ -7,7 +7,6 @@ Clean slate started: 2026-06-11
 - Approved decision summary: `ddd/grill-me-summary.md`
 - Approved migration plan: `ddd/migration-plan.md`
 - Agent handoff protocol: `ddd/agent-handoff-protocol.md`
-- Next-session handoff: `ddd/next-session.md`
 - Class/function shape guidance: `ddd/class-vs-functions.md`
 
 ## Current Status
@@ -24,7 +23,7 @@ Clean slate started: 2026-06-11
 | `5` Notifications | Complete for current delivery. Notification read/create use cases and Prisma adapter exist; notification UI calls server functions; notification API routes/actions/repos are removed. |
 | `6` Accounts | Complete for active account/profile/auth paths. Profile read/update/delete, profile-picture lifecycle, and sign-up/sign-in now go through account use cases/adapters; sessions remain delivery concerns. |
 | `7` Reviews | Complete for active server-function behavior. Review domain/use cases, Prisma adapter, server functions, and gated DB coverage are in place. |
-| `8` Media | Not started beyond existing cleanup worker/repo behavior. |
+| `8` Media | Started. Cleanup retry/fail decisions now have a media domain model; batch orchestration lives in media application; the old service worker is a thin adapter. |
 | `9` API route cleanup | Partially complete through migrated slices. Auth and upload image routes remain. |
 | `10` Naming and polish | Not started. Product-to-listing persistence rename remains future work. |
 
@@ -46,8 +45,23 @@ Clean slate started: 2026-06-11
   - reject a second review by the same user for the same listing
 - Gated Prisma verification passed after running with sandbox escalation for local Postgres access.
 
+## Current Slice 8 State
+
+- `MediaCleanupJob` domain behavior now lives in `src/domains/media/domain/media-cleanup-job.ts`.
+- Retry delay, unsupported-target failure, final-attempt failure, exhausted-attempt error formatting, and bounded `lastError` formatting are covered by `src/domains/media/domain/media-cleanup-job.test.ts`.
+- Batch orchestration now lives in `src/domains/media/application/run-media-cleanup-batch.ts`.
+- Account-owned media cleanup staging now lives in `src/domains/media/application/stage-account-media-cleanup.ts`.
+- Prisma account media cleanup staging now lives in `src/domains/media/infrastructure/prisma-account-media-cleanup-staging.ts`.
+- Account deletion calls `stageAccountMediaForCleanup` before deleting the user in one transaction; `src/data/user-repo.ts` only owns user persistence.
+- Cloudinary provider deletion now lives in `src/domains/media/infrastructure/cloudinary-media-cleanup-targets.ts`.
+- `src/services/media-cleanup-worker.ts` remains as the compatibility entrypoint that wires logger, Prisma cleanup-job functions, and Cloudinary infrastructure.
+- `src/services/media-cleanup-targets.ts` remains as a compatibility re-export.
+- `src/data/media-cleanup-job-repo.ts` still owns Prisma cleanup-job claiming/marking. Moving this behind a media infrastructure port remains the next cleanup step.
+
 ## Current Verification
 
+- Focused media unit run passed: `bun run test:unit -- src/domains/media/domain/media-cleanup-job.test.ts src/services/media-cleanup-worker.test.ts`.
+- `bun run typecheck` passed after the media boundary extraction.
 - `bun run db:generate` passed after the review Prisma schema mapping.
 - Focused review unit run passed: `src/domains/reviews/domain/review.test.ts`, `src/domains/reviews/application/review-use-cases.test.ts`, and `src/server/review-service.test.ts`; the review Prisma test was collected and skipped without `RUN_DB_TESTS`.
 - `bun run typecheck` passed with bundled Node on PATH.
@@ -55,13 +69,26 @@ Clean slate started: 2026-06-11
 - Full non-DB `bun run test:unit` passed: 34 files passed, 8 DB files skipped, 214 tests passed and 41 skipped.
 - `bun prisma validate --schema prisma/schema.prisma` passed.
 - `bun run build` passed with the existing large client chunk warning and SSR connect-db chunk warning.
-- `bun run docs:check` passed.
+- `bun run garden:lint` passed.
 - `git diff --check` passed.
 - Focused review Prisma test passed with `RUN_DB_TESTS=1` after sandbox escalation.
 - Full gated `bun run test:db` passed with sandbox escalation: 8 DB files, 41 tests.
 
 ## Active Files And Boundaries
 
+- Media boundary:
+  - `src/domains/media/domain/media-cleanup-job.ts`
+  - `src/domains/media/domain/media-cleanup-job.test.ts`
+  - `src/domains/media/application/run-media-cleanup-batch.ts`
+  - `src/domains/media/application/stage-account-media-cleanup.ts`
+  - `src/domains/media/application/stage-account-media-cleanup.test.ts`
+  - `src/domains/media/infrastructure/cloudinary-media-cleanup-targets.ts`
+  - `src/domains/media/infrastructure/prisma-account-media-cleanup-staging.ts`
+  - `src/domains/media/infrastructure/prisma-account-media-cleanup-staging.test.ts`
+  - `src/services/media-cleanup-worker.ts`
+  - `src/services/media-cleanup-worker.test.ts`
+  - `src/services/media-cleanup-targets.ts`
+  - `src/data/media-cleanup-job-repo.ts`
 - Reviews boundary:
   - `src/domains/reviews/domain/review.ts`
   - `src/domains/reviews/dto/listing-review.ts`
@@ -133,20 +160,17 @@ Clean slate started: 2026-06-11
 
 ## Exact Next Recommended Task
 
-Begin Slice `8` Media from `ddd/migration-plan.md`:
+Continue Slice `8` Media from `ddd/migration-plan.md`:
 
-1. Inspect existing media cleanup behavior and tests.
-2. Add `MediaCleanupJob` domain/application boundary.
-3. Preserve cleanup worker retry/lock/succeed/fail behavior.
-4. Keep provider deletion in infrastructure.
-5. Consider a small review server-function/browser smoke only if a real caller is added; current product detail review UI is still static placeholder content.
+1. Move Prisma cleanup-job claiming/marking from `src/data/media-cleanup-job-repo.ts` into `src/domains/media/infrastructure` behind media application port names.
+2. Preserve cleanup worker behavior with focused tests after the persistence-port move.
+3. Then evaluate listing image lifecycle cleanup integration.
 
 Useful first inspection targets:
 
-- `ddd/migration-plan.md` Slice `8`
-- `src/services/media-cleanup-worker.ts`
-- `src/services/media-cleanup-targets.ts`
 - `src/data/media-cleanup-job-repo.ts`
-- `src/data/media-cleanup-job-data.ts`
+- `src/domains/media/application/run-media-cleanup-batch.ts`
+- `src/domains/media/infrastructure/prisma-account-media-cleanup-staging.ts`
+- `src/server/account-service.ts`
 - `src/services/media-cleanup-worker.test.ts`
-- `src/domains/reviews/infrastructure/prisma-listing-reviews.prisma.test.ts`
+- `src/server/account-service.prisma.test.ts`

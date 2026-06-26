@@ -5,35 +5,13 @@ import {
 	updateUserSchema,
 } from "@/lib/zod/user-validation";
 import {
+	type AccountServiceError,
 	deleteAccount,
 	getAccountProfile,
 	updateAccountProfile,
 	updateAccountProfilePicture,
 } from "@/server/account-service";
-
-type ActionError = {
-	error: string;
-	details?: unknown;
-};
-
-type UnwrappedActionResult<TResult> = TResult extends ActionError
-	? never
-	: TResult;
-
-export class CurrentUserRequestError extends Error {
-	readonly details?: unknown;
-	readonly status: number;
-
-	constructor(
-		message: string,
-		options: { details?: unknown; status?: number } = {},
-	) {
-		super(message);
-		this.name = "CurrentUserRequestError";
-		this.details = options.details;
-		this.status = options.status ?? 400;
-	}
-}
+import { RequestError, toRequestError } from "@/server/request-error";
 
 const deleteCurrentUserSchema = z.object({
 	email: z.email("Enter the email address on your account"),
@@ -41,33 +19,34 @@ const deleteCurrentUserSchema = z.object({
 
 export type DeleteCurrentUserInput = z.infer<typeof deleteCurrentUserSchema>;
 
-function isActionError(value: unknown): value is ActionError {
+function isAccountServiceError(value: unknown): value is AccountServiceError {
 	return (
 		typeof value === "object" &&
 		value !== null &&
-		"error" in value &&
-		typeof value.error === "string"
+		"code" in value &&
+		typeof value.code === "string" &&
+		"kind" in value &&
+		typeof value.kind === "string" &&
+		"message" in value &&
+		typeof value.message === "string"
 	);
 }
 
 function unwrapActionResult<TResult>(
-	result: TResult,
-): UnwrappedActionResult<TResult> {
-	if (isActionError(result)) {
-		throw new CurrentUserRequestError(result.error, {
-			details: result.details,
-			status: result.error === "User not found" ? 404 : 400,
-		});
+	result: TResult | AccountServiceError,
+): TResult {
+	if (isAccountServiceError(result)) {
+		throw toRequestError(result);
 	}
 
-	return result as UnwrappedActionResult<TResult>;
+	return result;
 }
 
 export function validateCurrentUserUpdateInput(data: unknown): UpdateUserInput {
 	const parsed = updateUserSchema.safeParse(data);
 
 	if (!parsed.success) {
-		throw new CurrentUserRequestError("Invalid user data to update", {
+		throw new RequestError("Invalid user data to update", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -81,7 +60,7 @@ export function validateDeleteCurrentUserInput(
 	const parsed = deleteCurrentUserSchema.safeParse(data);
 
 	if (!parsed.success) {
-		throw new CurrentUserRequestError("Invalid account deletion request", {
+		throw new RequestError("Invalid account deletion request", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -91,14 +70,14 @@ export function validateDeleteCurrentUserInput(
 
 export function validateProfilePictureFormData(data: FormData) {
 	if (!(data instanceof FormData)) {
-		throw new CurrentUserRequestError("Expected profile picture form data");
+		throw new RequestError("Expected profile picture form data");
 	}
 
 	const profilePic = data.get("profilePic");
 	const parsed = updateProfilePictureSchema.safeParse({ profilePic });
 
 	if (!parsed.success) {
-		throw new CurrentUserRequestError("Invalid profile picture", {
+		throw new RequestError("Invalid profile picture", {
 			details: z.flattenError(parsed.error),
 		});
 	}
