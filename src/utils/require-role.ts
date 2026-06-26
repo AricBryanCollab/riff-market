@@ -1,8 +1,10 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
 import { RoleDescription } from "@/constants/role-description";
-import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import { getCurrentUserFn } from "@/server/user.functions";
+import {
+	optionalAuthUserQueryOpt,
+	refreshAuthUser,
+} from "@/lib/tanstack-query/auth-user-query";
 import type { UserRole } from "@/types/enum";
 import type { UserProfile } from "@/types/user";
 
@@ -10,7 +12,7 @@ async function getAuthUser(
 	queryClient: QueryClient,
 ): Promise<UserProfile | null> {
 	const cachedUser = queryClient.getQueryData<UserProfile | null>(
-		queryKeys.auth.user,
+		optionalAuthUserQueryOpt.queryKey,
 	);
 
 	if (cachedUser) {
@@ -18,12 +20,7 @@ async function getAuthUser(
 	}
 
 	try {
-		return await queryClient.fetchQuery({
-			queryKey: queryKeys.auth.user,
-			queryFn: () => getCurrentUserFn(),
-			retry: false,
-			staleTime: 1000 * 60 * 5,
-		});
+		return await refreshAuthUser(queryClient);
 	} catch {
 		return null;
 	}

@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requestLoggerMiddleware } from "@/middleware";
 import {
 	deleteCurrentUser,
 	getCurrentUser,
+	getOptionalCurrentUser,
 	toProfilePictureResponse,
 	updateCurrentUser,
 	updateCurrentUserProfilePicture,
@@ -10,10 +12,18 @@ import {
 	validateProfilePictureFormData,
 } from "@/server/current-user-service";
 import { authenticatedServerFunctionMiddleware } from "@/server/function-middleware";
+import { useAppSession } from "@/utils/session";
 
 export const getCurrentUserFn = createServerFn({ method: "GET" })
 	.middleware(authenticatedServerFunctionMiddleware)
 	.handler(async ({ context }) => getCurrentUser(context.user.id));
+
+export const getOptionalCurrentUserFn = createServerFn({ method: "GET" })
+	.middleware([requestLoggerMiddleware])
+	.handler(async () => {
+		const session = await useAppSession();
+		return getOptionalCurrentUser(session.data.userId);
+	});
 
 export const updateCurrentUserFn = createServerFn({ method: "POST" })
 	.middleware(authenticatedServerFunctionMiddleware)

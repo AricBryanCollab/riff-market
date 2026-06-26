@@ -40,13 +40,14 @@ export const Route = createFileRoute('/_authed/admin')({
 
 ## Current repo approach
 
+- Root route seeds the optional Current User into `["auth", "user"]` before shared UI renders.
 - Query-backed route guards in `src/utils/require-role.ts`.
 - Use `requireAuthUser(context.queryClient, redirectTo?)` and `requireRole(context.queryClient, allowedRoles)`.
 - Consumer auth hook remains `useAuthUser()`.
 
 ## Guarded routes
 
-- `src/routes/settings.tsx`
+- `src/routes/settings/route.tsx`
 - `src/routes/notifications.tsx`
 - `src/routes/cart.tsx`
 - `src/routes/product/new.tsx`

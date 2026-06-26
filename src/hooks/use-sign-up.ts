@@ -2,8 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useState } from "react";
 import { clientLogger } from "@/lib/client-logger";
 import { signUp } from "@/lib/tanstack-query/auth-queries";
-import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import { getCurrentUserFn } from "@/server/user.functions";
+import { refreshAuthUser } from "@/lib/tanstack-query/auth-user-query";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { SignUpRequest } from "@/types/auth";
@@ -27,10 +26,7 @@ const useSignUp = () => {
 	const { mutate, isPending, isError } = useMutation({
 		mutationFn: signUp,
 		onSuccess: async () => {
-			await queryClient.fetchQuery({
-				queryKey: queryKeys.auth.user,
-				queryFn: () => getCurrentUserFn(),
-			});
+			await refreshAuthUser(queryClient);
 			showToast("You have successfully signed up", "success");
 			setCloseDialog();
 		},
