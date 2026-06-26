@@ -24,6 +24,7 @@ import {
 	createProductSchema,
 	updateProductSchema,
 } from "@/lib/zod/product-validation";
+import { toAppErrorStatus } from "@/server/app-error-status";
 import type { ServerUserContext } from "@/server/function-middleware";
 
 const moderateListingInputSchema = z.object({
@@ -444,7 +445,7 @@ function toListingRequestError(error: ListingModerationError) {
 	return new ListingRequestError(error.message, {
 		code: error.code,
 		details: error.details,
-		status: toStatus(error),
+		status: toAppErrorStatus(error.kind),
 	});
 }
 
@@ -456,33 +457,13 @@ function toListingCommandRequestError(error: ListingCommandError) {
 	});
 }
 
-function toStatus(error: ListingModerationError) {
-	switch (error.kind) {
-		case "authorization":
-			return 403;
-		case "not-found":
-			return 404;
-		case "conflict":
-			return 409;
-		case "validation":
-			return 400;
-		case "unexpected":
-			return 500;
-	}
-}
-
 function toCommandStatus(error: ListingCommandError) {
-	switch (error.kind) {
-		case "authorization":
-			return 403;
-		case "not-found":
-			return 404;
-		case "conflict":
-			return 409;
-		case "validation":
-			return 400;
-		case "invariant":
-		case "unexpected":
-			return error.code === "LISTING_COMMAND_IMAGE_UPLOAD_FAILED" ? 400 : 500;
+	if (
+		(error.kind === "invariant" || error.kind === "unexpected") &&
+		error.code === "LISTING_COMMAND_IMAGE_UPLOAD_FAILED"
+	) {
+		return 400;
 	}
+
+	return toAppErrorStatus(error.kind);
 }

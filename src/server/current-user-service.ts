@@ -10,9 +10,12 @@ import {
 	updateAccountProfile,
 	updateAccountProfilePicture,
 } from "@/server/account-service";
+import { isAppErrorKind, toAppErrorStatus } from "@/server/app-error-status";
 
 type ActionError = {
+	code?: string;
 	error: string;
+	kind?: string;
 	details?: unknown;
 };
 
@@ -54,13 +57,25 @@ function unwrapActionResult<TResult>(
 	result: TResult,
 ): UnwrappedActionResult<TResult> {
 	if (isActionError(result)) {
-		throw new CurrentUserRequestError(result.error, {
-			details: result.details,
-			status: result.error === "User not found" ? 404 : 400,
-		});
+		throw toCurrentUserRequestError(result);
 	}
 
 	return result as UnwrappedActionResult<TResult>;
+}
+
+function toCurrentUserRequestError(error: ActionError) {
+	return new CurrentUserRequestError(error.error, {
+		details: error.details,
+		status: toCurrentUserStatus(error.kind),
+	});
+}
+
+function toCurrentUserStatus(kind: ActionError["kind"]) {
+	return isAppErrorKind(kind) ? toAppErrorStatus(kind) : 400;
+}
+
+function isMissingCurrentUserError(error: ActionError) {
+	return error.code === "ACCOUNT_PROFILE_NOT_FOUND";
 }
 
 export function validateCurrentUserUpdateInput(data: unknown): UpdateUserInput {
@@ -109,6 +124,26 @@ export function validateProfilePictureFormData(data: FormData) {
 export async function getCurrentUser(userId: string) {
 	const result = await getAccountProfile(userId);
 	return unwrapActionResult(result).data;
+}
+
+export async function getOptionalCurrentUser(
+	userId: string | null | undefined,
+) {
+	if (!userId) {
+		return null;
+	}
+
+	const result = await getAccountProfile(userId);
+
+	if (isActionError(result)) {
+		if (isMissingCurrentUserError(result)) {
+			return null;
+		}
+
+		throw toCurrentUserRequestError(result);
+	}
+
+	return result.data;
 }
 
 export async function updateCurrentUser(userId: string, data: UpdateUserInput) {

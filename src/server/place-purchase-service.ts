@@ -10,6 +10,7 @@ import {
 } from "@/domains/ordering/dto/place-purchase-request";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { Result } from "@/domains/shared/domain/result";
+import { toAppErrorStatus } from "@/server/app-error-status";
 import type { ServerUserContext } from "@/server/function-middleware";
 
 type PlacePurchaseExecutor = {
@@ -133,22 +134,6 @@ function toRequestError(error: PlacePurchaseError) {
 	return new PlacePurchaseRequestError(error.message, {
 		code: error.code,
 		details: error.details,
-		status: toStatus(error),
+		status: toAppErrorStatus(error.kind),
 	});
-}
-
-function toStatus(error: PlacePurchaseError) {
-	switch (error.kind) {
-		case "authorization":
-			return 403;
-		case "not-found":
-			return 404;
-		case "conflict":
-			return 409;
-		case "validation":
-			return 400;
-		case "invariant":
-		case "unexpected":
-			return 500;
-	}
 }

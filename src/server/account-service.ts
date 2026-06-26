@@ -40,7 +40,9 @@ import {
 } from "@/utils/image-asset-ref";
 
 type AccountServiceError = {
+	readonly code: string;
 	readonly error: string;
+	readonly kind: AppError["kind"];
 	readonly details?: unknown;
 };
 
@@ -184,7 +186,9 @@ function toUserProfile(account: AccountProfile): UserProfile {
 
 function toAccountServiceError(error: AppError): AccountServiceError {
 	return {
+		code: error.code,
 		error: error.message,
+		kind: error.kind,
 		...(error.details === undefined ? {} : { details: error.details }),
 	};
 }

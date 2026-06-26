@@ -13,6 +13,7 @@ import {
 	type ListingReview,
 } from "@/domains/reviews/dto/listing-review";
 import type { Actor } from "@/domains/shared/domain/actor";
+import { toAppErrorStatus } from "@/server/app-error-status";
 import type { ServerUserContext } from "@/server/function-middleware";
 
 export type ReviewCreationResponse = {
@@ -117,22 +118,6 @@ function toReviewRequestError(error: ReviewError) {
 	return new ReviewRequestError(error.message, {
 		code: error.code,
 		details: error.details,
-		status: toStatus(error),
+		status: toAppErrorStatus(error.kind),
 	});
-}
-
-function toStatus(error: ReviewError) {
-	switch (error.kind) {
-		case "authorization":
-			return 403;
-		case "not-found":
-			return 404;
-		case "conflict":
-			return 409;
-		case "validation":
-			return 400;
-		case "invariant":
-		case "unexpected":
-			return 500;
-	}
 }
