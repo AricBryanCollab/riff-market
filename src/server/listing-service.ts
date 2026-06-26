@@ -453,17 +453,6 @@ function toListingCommandRequestError(error: ListingCommandError) {
 	return new ListingRequestError(error.message, {
 		code: error.code,
 		details: error.details,
-		status: toCommandStatus(error),
+		status: toAppErrorStatus(error.kind),
 	});
-}
-
-function toCommandStatus(error: ListingCommandError) {
-	if (
-		(error.kind === "invariant" || error.kind === "unexpected") &&
-		error.code === "LISTING_COMMAND_IMAGE_UPLOAD_FAILED"
-	) {
-		return 400;
-	}
-
-	return toAppErrorStatus(error.kind);
 }
