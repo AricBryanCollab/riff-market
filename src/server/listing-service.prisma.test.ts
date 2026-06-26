@@ -397,7 +397,15 @@ class FakeListingImageManager implements ListingImageManagerPort {
 		});
 	}
 
-	async cleanupImagesBestEffort(images: ImageAssetRef[]): Promise<void> {
+	async cleanupUploadedImagesBestEffort(
+		images: ImageAssetRef[],
+	): Promise<void> {
+		this.cleanedImages.push(...images);
+	}
+
+	async cleanupPersistedImagesBestEffort(
+		images: ImageAssetRef[],
+	): Promise<void> {
 		this.cleanedImages.push(...images);
 	}
 }

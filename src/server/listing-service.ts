@@ -278,15 +278,20 @@ async function moderateListingWithDependencies(
 }
 
 async function createListingCommandInfrastructure(): Promise<ListingCommandServiceDependencies> {
-	const [{ prisma }, commands, imageAssets] = await Promise.all([
+	const [{ prisma }, commands, imageAssets, mediaCleanup] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/listings/infrastructure/prisma-listing-commands"),
 		import("@/domains/listings/infrastructure/listing-image-assets"),
+		import(
+			"@/domains/media/infrastructure/prisma-listing-media-cleanup-staging"
+		),
 	]);
 
 	return {
 		listings: new commands.PrismaListingCommandRepository(prisma),
-		images: new imageAssets.CloudinaryListingImageManager(),
+		images: new imageAssets.CloudinaryListingImageManager(
+			new mediaCleanup.PrismaListingMediaCleanupStaging(prisma),
+		),
 	};
 }
 

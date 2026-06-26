@@ -102,7 +102,8 @@ function createFakes() {
 	};
 	const images: ListingImageManagerPort = {
 		uploadImages: vi.fn(async () => [image("https://cdn.example.com/new.jpg")]),
-		cleanupImagesBestEffort: vi.fn(async () => undefined),
+		cleanupUploadedImagesBestEffort: vi.fn(async () => undefined),
+		cleanupPersistedImagesBestEffort: vi.fn(async () => undefined),
 	};
 	const dependencies: ListingCommandDependencies = {
 		listings: repository,
@@ -198,7 +199,7 @@ describe("listing command use cases", () => {
 			ok: false,
 			error: { code: "LISTING_COMMAND_SAVE_FAILED" },
 		});
-		expect(images.cleanupImagesBestEffort).toHaveBeenCalledWith([
+		expect(images.cleanupUploadedImagesBestEffort).toHaveBeenCalledWith([
 			image("https://cdn.example.com/new.jpg"),
 		]);
 	});
@@ -226,9 +227,36 @@ describe("listing command use cases", () => {
 				images: [image("https://cdn.example.com/new.jpg")],
 			}),
 		);
-		expect(images.cleanupImagesBestEffort).toHaveBeenCalledWith([
-			image("https://cdn.example.com/current.jpg"),
+		expect(images.cleanupPersistedImagesBestEffort).toHaveBeenCalledWith(
+			[image("https://cdn.example.com/current.jpg")],
+			{
+				listingId: "listing-1",
+				sellerId: "seller-1",
+			},
+		);
+	});
+
+	it("cleans up uploaded replacement images when update persistence does not save", async () => {
+		const { repository, images, dependencies } = createFakes();
+		vi.mocked(repository.updateListing).mockResolvedValue(null);
+
+		const result = await updateListing(
+			sellerActor,
+			{
+				listingId: "listing-1",
+				imageFiles: [imageFile("new.jpg")],
+			},
+			dependencies,
+		);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: { code: "LISTING_COMMAND_SAVE_FAILED" },
+		});
+		expect(images.cleanupUploadedImagesBestEffort).toHaveBeenCalledWith([
+			image("https://cdn.example.com/new.jpg"),
 		]);
+		expect(images.cleanupPersistedImagesBestEffort).not.toHaveBeenCalled();
 	});
 
 	it("auto-approves admin listing updates", async () => {
@@ -294,9 +322,13 @@ describe("listing command use cases", () => {
 		});
 		expect(repository.deleteListing).toHaveBeenCalledWith("listing-1");
 		expect(repository.saveListingStatus).not.toHaveBeenCalled();
-		expect(images.cleanupImagesBestEffort).toHaveBeenCalledWith([
-			image("https://cdn.example.com/current.jpg"),
-		]);
+		expect(images.cleanupPersistedImagesBestEffort).toHaveBeenCalledWith(
+			[image("https://cdn.example.com/current.jpg")],
+			{
+				listingId: "listing-1",
+				sellerId: "seller-1",
+			},
+		);
 	});
 
 	it("withdraws referenced listings instead of deleting or cleaning images", async () => {
@@ -331,7 +363,8 @@ describe("listing command use cases", () => {
 			"listing-1",
 			"WITHDRAWN",
 		);
-		expect(images.cleanupImagesBestEffort).not.toHaveBeenCalled();
+		expect(images.cleanupPersistedImagesBestEffort).not.toHaveBeenCalled();
+		expect(images.cleanupUploadedImagesBestEffort).not.toHaveBeenCalled();
 	});
 
 	it("rejects withdrawing an already withdrawn referenced listing", async () => {

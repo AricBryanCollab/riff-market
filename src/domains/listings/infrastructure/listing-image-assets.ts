@@ -1,10 +1,19 @@
-import type { ListingImageManagerPort } from "@/domains/listings/application/manage-listing";
+import { randomUUID } from "node:crypto";
+import type {
+	ListingImageCleanupSource,
+	ListingImageManagerPort,
+} from "@/domains/listings/application/manage-listing";
+import {
+	type ListingMediaCleanupStagingPort,
+	stageListingMediaForCleanup,
+} from "@/domains/media/application/stage-listing-media-cleanup";
 import { env } from "@/env";
 import type { CloudinaryUploadResult } from "@/types/cloudinary";
-import type { ImageAssetRef } from "@/types/image-asset";
+import type { CleanupImageAssetRef, ImageAssetRef } from "@/types/image-asset";
 import { unsignedUploadImage } from "@/utils/cloudinary";
 import { tryDeleteCloudinaryImageAssets } from "@/utils/cloudinary-assets";
 import { compressImage } from "@/utils/compress-image";
+import { toCleanupImageAssetRefFromImage } from "@/utils/image-asset-ref";
 
 const MAX_PRODUCT_IMAGE_UPLOADS = 3;
 const productImageOptions = {
@@ -95,14 +104,6 @@ async function uploadProductImage(imageFile: File): Promise<ImageAssetRef> {
 	};
 }
 
-async function cleanupUploadedProductImages(images: ImageAssetRef[]) {
-	if (images.length === 0) {
-		return;
-	}
-
-	await tryDeleteCloudinaryImageAssets(images);
-}
-
 async function uploadProductImages(
 	imageFiles: File[],
 ): Promise<ImageAssetRef[]> {
@@ -121,7 +122,7 @@ async function uploadProductImages(
 
 		return images;
 	} catch (error) {
-		await cleanupUploadedProductImages(uploadedImages);
+		await cleanupProductImagesBestEffort(uploadedImages);
 		throw error;
 	}
 }
@@ -134,12 +135,51 @@ async function cleanupProductImagesBestEffort(images: ImageAssetRef[]) {
 	await tryDeleteCloudinaryImageAssets(images);
 }
 
+function toProductCleanupImageAssetRefs(
+	images: readonly ImageAssetRef[],
+): CleanupImageAssetRef[] {
+	return images
+		.map(toCleanupImageAssetRefFromImage)
+		.filter((asset): asset is CleanupImageAssetRef => asset !== null);
+}
+
 export class CloudinaryListingImageManager implements ListingImageManagerPort {
+	constructor(
+		private readonly cleanupStaging?: ListingMediaCleanupStagingPort,
+	) {}
+
 	async uploadImages(imageFiles: File[]): Promise<ImageAssetRef[]> {
 		return uploadProductImages(imageFiles);
 	}
 
-	async cleanupImagesBestEffort(images: ImageAssetRef[]): Promise<void> {
+	async cleanupUploadedImagesBestEffort(
+		images: ImageAssetRef[],
+	): Promise<void> {
+		await cleanupProductImagesBestEffort(images);
+	}
+
+	async cleanupPersistedImagesBestEffort(
+		images: ImageAssetRef[],
+		source: ListingImageCleanupSource,
+	): Promise<void> {
+		if (this.cleanupStaging) {
+			try {
+				await stageListingMediaForCleanup(
+					{
+						cleanupBatchId: randomUUID(),
+						listingId: source.listingId,
+						sellerId: source.sellerId,
+						assets: toProductCleanupImageAssetRefs(images),
+					},
+					this.cleanupStaging,
+				);
+				return;
+			} catch {
+				await cleanupProductImagesBestEffort(images);
+				return;
+			}
+		}
+
 		await cleanupProductImagesBestEffort(images);
 	}
 }

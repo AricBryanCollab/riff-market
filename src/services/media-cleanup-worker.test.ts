@@ -5,31 +5,40 @@ import {
 } from "@/domains/media/application/run-media-cleanup-batch";
 import { runMediaCleanupBatch } from "./media-cleanup-worker";
 
-const mocks = vi.hoisted(() => ({
-	claimNextMediaCleanupJob: vi.fn(),
-	deleteMediaCleanupTarget: vi.fn(),
-	loggerError: vi.fn(),
-	loggerInfo: vi.fn(),
-	loggerWarn: vi.fn(),
-	markExpiredExhaustedMediaCleanupJobsFailed: vi.fn(),
-	markMediaCleanupJobFailed: vi.fn(),
-	markMediaCleanupJobForRetry: vi.fn(),
-	markMediaCleanupJobSucceeded: vi.fn(),
-}));
+const mocks = vi.hoisted(() => {
+	const jobQueue = {
+		claimNext: vi.fn(),
+		failExpiredExhausted: vi.fn(),
+		markFailed: vi.fn(),
+		markForRetry: vi.fn(),
+		markSucceeded: vi.fn(),
+	};
 
-vi.mock("@/data/media-cleanup-job-repo", () => ({
-	claimNextMediaCleanupJob: mocks.claimNextMediaCleanupJob,
-	markExpiredExhaustedMediaCleanupJobsFailed:
-		mocks.markExpiredExhaustedMediaCleanupJobsFailed,
-	markMediaCleanupJobFailed: mocks.markMediaCleanupJobFailed,
-	markMediaCleanupJobForRetry: mocks.markMediaCleanupJobForRetry,
-	markMediaCleanupJobSucceeded: mocks.markMediaCleanupJobSucceeded,
+	return {
+		deleteMediaCleanupTarget: vi.fn(),
+		jobQueue,
+		loggerError: vi.fn(),
+		loggerInfo: vi.fn(),
+		loggerWarn: vi.fn(),
+		PrismaMediaCleanupJobQueue: vi.fn(() => jobQueue),
+	};
+});
+
+vi.mock("@/data/connect-db", () => ({
+	prisma: {},
 }));
 
 vi.mock(
 	"@/domains/media/infrastructure/cloudinary-media-cleanup-targets",
 	() => ({
 		deleteMediaCleanupTarget: mocks.deleteMediaCleanupTarget,
+	}),
+);
+
+vi.mock(
+	"@/domains/media/infrastructure/prisma-media-cleanup-job-queue",
+	() => ({
+		PrismaMediaCleanupJobQueue: mocks.PrismaMediaCleanupJobQueue,
 	}),
 );
 
@@ -46,14 +55,14 @@ describe("media cleanup worker adapter", () => {
 		vi.useFakeTimers();
 		vi.setSystemTime(new Date("2026-06-09T10:00:00.000Z"));
 		vi.clearAllMocks();
-		mocks.markExpiredExhaustedMediaCleanupJobsFailed.mockResolvedValue(0);
-		mocks.claimNextMediaCleanupJob.mockResolvedValue(null);
+		mocks.jobQueue.failExpiredExhausted.mockResolvedValue(0);
+		mocks.jobQueue.claimNext.mockResolvedValue(null);
 		mocks.deleteMediaCleanupTarget.mockResolvedValue(undefined);
-		mocks.markMediaCleanupJobSucceeded.mockResolvedValue(true);
+		mocks.jobQueue.markSucceeded.mockResolvedValue(true);
 	});
 
 	it("runs a cleanup job through the default adapter wiring", async () => {
-		mocks.claimNextMediaCleanupJob.mockResolvedValueOnce({
+		mocks.jobQueue.claimNext.mockResolvedValueOnce({
 			id: "job-1",
 			provider: "cloudinary",
 			assetType: "image",
@@ -63,17 +72,15 @@ describe("media cleanup worker adapter", () => {
 		});
 
 		const summary = await runMediaCleanupBatch({ limit: 1 });
-		const claimOptions = mocks.claimNextMediaCleanupJob.mock.calls[0]?.[0];
+		const claimOptions = mocks.jobQueue.claimNext.mock.calls[0]?.[0];
 		const workerId = claimOptions.workerId;
 
-		expect(
-			mocks.markExpiredExhaustedMediaCleanupJobsFailed,
-		).toHaveBeenCalledWith({
+		expect(mocks.jobQueue.failExpiredExhausted).toHaveBeenCalledWith({
 			now: new Date("2026-06-09T10:00:00.000Z"),
 			lastError:
 				"MEDIA_CLEANUP_ATTEMPTS_EXHAUSTED: Attempts exhausted before cleanup completed",
 		});
-		expect(mocks.claimNextMediaCleanupJob).toHaveBeenCalledWith({
+		expect(mocks.jobQueue.claimNext).toHaveBeenCalledWith({
 			workerId,
 			now: new Date("2026-06-09T10:00:00.000Z"),
 			lockedUntil: new Date(
@@ -91,7 +98,7 @@ describe("media cleanup worker adapter", () => {
 			},
 			{ timeoutMs: DEFAULT_MEDIA_CLEANUP_DELETE_TIMEOUT_MS },
 		);
-		expect(mocks.markMediaCleanupJobSucceeded).toHaveBeenCalledWith({
+		expect(mocks.jobQueue.markSucceeded).toHaveBeenCalledWith({
 			id: "job-1",
 			workerId,
 			now: new Date("2026-06-09T10:00:00.000Z"),

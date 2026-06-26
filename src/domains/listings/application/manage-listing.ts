@@ -34,6 +34,11 @@ export type RemoveListingCommand = {
 	readonly listingId: string;
 };
 
+export type ListingImageCleanupSource = {
+	readonly listingId: string;
+	readonly sellerId: string;
+};
+
 export type ListingMutationPersistenceInput = ListingMutationFields & {
 	readonly sellerId?: string;
 	readonly images?: ImageAssetRef[];
@@ -108,7 +113,11 @@ export interface ListingCommandRepositoryPort {
 
 export interface ListingImageManagerPort {
 	uploadImages(imageFiles: File[]): Promise<ImageAssetRef[]>;
-	cleanupImagesBestEffort(images: ImageAssetRef[]): Promise<void>;
+	cleanupUploadedImagesBestEffort(images: ImageAssetRef[]): Promise<void>;
+	cleanupPersistedImagesBestEffort(
+		images: ImageAssetRef[],
+		source: ListingImageCleanupSource,
+	): Promise<void>;
 }
 
 export type ListingCommandDependencies = {
@@ -144,13 +153,13 @@ export async function createListing(
 		});
 
 		if (!listing) {
-			await images.cleanupImagesBestEffort(uploadedImages);
+			await images.cleanupUploadedImagesBestEffort(uploadedImages);
 			return err(saveFailedError("Failed to create listing"));
 		}
 
 		return ok(listing);
 	} catch (error) {
-		await images.cleanupImagesBestEffort(uploadedImages);
+		await images.cleanupUploadedImagesBestEffort(uploadedImages);
 		throw error;
 	}
 }
@@ -191,19 +200,22 @@ export async function updateListing(
 
 		if (!listing) {
 			if (uploadedImages) {
-				await images.cleanupImagesBestEffort(uploadedImages);
+				await images.cleanupUploadedImagesBestEffort(uploadedImages);
 			}
 			return err(saveFailedError("Failed to update listing"));
 		}
 
 		if (uploadedImages) {
-			await images.cleanupImagesBestEffort(existing.images);
+			await images.cleanupPersistedImagesBestEffort(
+				existing.images,
+				toImageCleanupSource(existing),
+			);
 		}
 
 		return ok(listing);
 	} catch (error) {
 		if (uploadedImages) {
-			await images.cleanupImagesBestEffort(uploadedImages);
+			await images.cleanupUploadedImagesBestEffort(uploadedImages);
 		}
 		throw error;
 	}
@@ -237,13 +249,25 @@ export async function removeListing(
 		return err(saveFailedError("Failed to delete listing"));
 	}
 
-	await images.cleanupImagesBestEffort(existing.images);
+	await images.cleanupPersistedImagesBestEffort(
+		existing.images,
+		toImageCleanupSource(existing),
+	);
 
 	return ok({
 		listingId: existing.id,
 		mode: "DELETED",
 		message: "Product deleted successfully",
 	});
+}
+
+function toImageCleanupSource(
+	listing: Pick<ListingRemovalSnapshot, "id" | "sellerId">,
+): ListingImageCleanupSource {
+	return {
+		listingId: listing.id,
+		sellerId: listing.sellerId,
+	};
 }
 
 async function uploadReplacementImages(

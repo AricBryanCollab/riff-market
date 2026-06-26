@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, type Mock, vi } from "vitest";
+import type { ListingMediaCleanupStagingPort } from "@/domains/media/application/stage-listing-media-cleanup";
 import type { ImageAssetRef } from "@/types/image-asset";
 
 const { cloudinaryMock, compressImageMock } = vi.hoisted(() => {
@@ -135,7 +136,7 @@ describe("listing image assets", () => {
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledTimes(1);
 	});
 
-	it("settles image cleanup as a best-effort image manager operation", async () => {
+	it("settles uploaded image cleanup as a best-effort image manager operation", async () => {
 		const imageManager = new CloudinaryListingImageManager();
 		const images: ImageAssetRef[] = [
 			makeImageAssetRef("https://cdn.example.com/old-1.jpg"),
@@ -150,9 +151,79 @@ describe("listing image assets", () => {
 		);
 
 		await expect(
-			imageManager.cleanupImagesBestEffort(images),
+			imageManager.cleanupUploadedImagesBestEffort(images),
 		).resolves.toBeUndefined();
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old-1");
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old-2");
+	});
+
+	it("stages source-aware listing image cleanup instead of deleting immediately", async () => {
+		const staging: ListingMediaCleanupStagingPort = {
+			stageListingMediaCleanupJobs: vi.fn(async () => undefined),
+		};
+		const imageManager = new CloudinaryListingImageManager(staging);
+		const images: ImageAssetRef[] = [
+			makeImageAssetRef("https://cdn.example.com/old-1.jpg"),
+		];
+
+		await imageManager.cleanupPersistedImagesBestEffort(images, {
+			listingId: "listing-1",
+			sellerId: "seller-1",
+		});
+
+		expect(staging.stageListingMediaCleanupJobs).toHaveBeenCalledWith([
+			{
+				cleanupBatchId: expect.any(String),
+				listingId: "listing-1",
+				sellerId: "seller-1",
+				asset: {
+					url: "https://cdn.example.com/old-1.jpg",
+					provider: "cloudinary",
+					assetType: "image",
+					providerAssetId: "old-1",
+				},
+			},
+		]);
+		expect(cloudinaryMock.deleteImage).not.toHaveBeenCalled();
+	});
+
+	it("deletes persisted listing images immediately when cleanup staging is unavailable", async () => {
+		const imageManager = new CloudinaryListingImageManager();
+		const images: ImageAssetRef[] = [
+			makeImageAssetRef("https://cdn.example.com/old-1.jpg"),
+			makeImageAssetRef("https://cdn.example.com/old-2.jpg"),
+		];
+
+		await expect(
+			imageManager.cleanupPersistedImagesBestEffort(images, {
+				listingId: "listing-1",
+				sellerId: "seller-1",
+			}),
+		).resolves.toBeUndefined();
+
+		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old-1");
+		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old-2");
+	});
+
+	it("falls back to immediate deletion when persisted cleanup staging fails", async () => {
+		const staging: ListingMediaCleanupStagingPort = {
+			stageListingMediaCleanupJobs: vi.fn(async () => {
+				throw new Error("database unavailable");
+			}),
+		};
+		const imageManager = new CloudinaryListingImageManager(staging);
+		const images: ImageAssetRef[] = [
+			makeImageAssetRef("https://cdn.example.com/old-1.jpg"),
+		];
+
+		await expect(
+			imageManager.cleanupPersistedImagesBestEffort(images, {
+				listingId: "listing-1",
+				sellerId: "seller-1",
+			}),
+		).resolves.toBeUndefined();
+
+		expect(staging.stageListingMediaCleanupJobs).toHaveBeenCalledTimes(1);
+		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("old-1");
 	});
 });

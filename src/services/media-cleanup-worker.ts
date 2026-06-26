@@ -1,11 +1,5 @@
 import { randomUUID } from "node:crypto";
-import {
-	claimNextMediaCleanupJob,
-	markExpiredExhaustedMediaCleanupJobsFailed,
-	markMediaCleanupJobFailed,
-	markMediaCleanupJobForRetry,
-	markMediaCleanupJobSucceeded,
-} from "@/data/media-cleanup-job-repo";
+import { prisma } from "@/data/connect-db";
 import {
 	DEFAULT_MEDIA_CLEANUP_BATCH_LIMIT,
 	DEFAULT_MEDIA_CLEANUP_DELETE_TIMEOUT_MS,
@@ -17,6 +11,7 @@ import {
 	runMediaCleanupBatchUseCase,
 } from "@/domains/media/application/run-media-cleanup-batch";
 import { deleteMediaCleanupTarget } from "@/domains/media/infrastructure/cloudinary-media-cleanup-targets";
+import { PrismaMediaCleanupJobQueue } from "@/domains/media/infrastructure/prisma-media-cleanup-job-queue";
 import { logger } from "@/lib/logger";
 
 export {
@@ -37,13 +32,7 @@ export type RunMediaCleanupBatchOptions = Omit<
 };
 
 const defaultPorts: MediaCleanupBatchPorts = {
-	jobQueue: {
-		claimNext: claimNextMediaCleanupJob,
-		failExpiredExhausted: markExpiredExhaustedMediaCleanupJobsFailed,
-		markFailed: markMediaCleanupJobFailed,
-		markForRetry: markMediaCleanupJobForRetry,
-		markSucceeded: markMediaCleanupJobSucceeded,
-	},
+	jobQueue: new PrismaMediaCleanupJobQueue(prisma),
 	targetDeletion: {
 		deleteTarget: deleteMediaCleanupTarget,
 	},
