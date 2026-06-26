@@ -137,7 +137,7 @@ Repo conventions to preserve:
 | Typecheck | `PATH=/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH bun run typecheck` | exit 0, no TypeScript errors |
 | Focused tests | `PATH=/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH bun run test:unit -- src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts src/server/listing-read-service.test.ts src/actions/product.test.ts src/data/product-repo.prisma.test.ts` | exit 0; DB-gated tests may be skipped unless `RUN_DB_TESTS=1` |
 | Biome check | `bunx biome check src/domains/listings/application/listing-read-models.ts src/domains/listings/dto/listing-read-model.ts src/domains/listings/infrastructure/prisma-listing-read-models.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts src/server/listing-read-service.ts src/server/listing-read-service.test.ts src/lib/zod/product-validation.ts` | exit 0, no fixes applied |
-| Docs check, if DDD docs changed | `bun run docs:check` | exit 0, contradiction check passed |
+| Garden check, if Garden context changed | `bun run garden:lint` | exit 0, Garden lint passed |
 
 The plain focused test command may fail in this environment with an older local
 Node runtime error from Vite. Use the bundled Node `PATH=...` prefix shown above.
@@ -340,7 +340,7 @@ Expected: exit 0, no fixes applied.
 If DDD docs were changed:
 
 ```bash
-bun run docs:check
+bun run garden:lint
 ```
 
 Expected: exit 0, contradiction check passed.

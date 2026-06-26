@@ -34,6 +34,11 @@ export type RemoveListingCommand = {
 	readonly listingId: string;
 };
 
+export type ListingImageCleanupSource = {
+	readonly listingId: string;
+	readonly sellerId: string;
+};
+
 export type ListingMutationPersistenceInput = ListingMutationFields & {
 	readonly sellerId?: string;
 	readonly images?: ImageAssetRef[];
@@ -108,208 +113,211 @@ export interface ListingCommandRepositoryPort {
 
 export interface ListingImageManagerPort {
 	uploadImages(imageFiles: File[]): Promise<ImageAssetRef[]>;
-	cleanupImagesBestEffort(images: ImageAssetRef[]): Promise<void>;
+	cleanupUploadedImagesBestEffort(images: ImageAssetRef[]): Promise<void>;
+	cleanupPersistedImagesBestEffort(
+		images: ImageAssetRef[],
+		source: ListingImageCleanupSource,
+	): Promise<void>;
 }
 
-export class CreateListing {
-	constructor(
-		private readonly listings: ListingCommandRepositoryPort,
-		private readonly images: ListingImageManagerPort,
-	) {}
+export type ListingCommandDependencies = {
+	readonly listings: ListingCommandRepositoryPort;
+	readonly images: ListingImageManagerPort;
+};
 
-	async execute(
-		actor: Actor,
-		command: CreateListingCommand,
-	): Promise<Result<ListingMutationResult, ListingCommandError>> {
-		if (!canManageListings(actor)) {
-			return err(
-				unauthorizedError("Only sellers or admins can create listings"),
-			);
-		}
+export async function createListing(
+	actor: Actor,
+	command: CreateListingCommand,
+	dependencies: ListingCommandDependencies,
+): Promise<Result<ListingMutationResult, ListingCommandError>> {
+	const { listings, images } = dependencies;
 
-		let uploadedImages: ImageAssetRef[];
-		try {
-			uploadedImages = await this.images.uploadImages(command.imageFiles);
-		} catch (error) {
-			return err(imageUploadError(error));
-		}
-
-		try {
-			const listing = await this.listings.createListing({
-				...toPersistenceFields(command),
-				sellerId: actor.id,
-				images: uploadedImages,
-				status: "PENDING",
-				isApproved: false,
-			});
-
-			if (!listing) {
-				await this.images.cleanupImagesBestEffort(uploadedImages);
-				return err(saveFailedError("Failed to create listing"));
-			}
-
-			return ok(listing);
-		} catch (error) {
-			await this.images.cleanupImagesBestEffort(uploadedImages);
-			throw error;
-		}
-	}
-}
-
-export class UpdateListing {
-	constructor(
-		private readonly listings: ListingCommandRepositoryPort,
-		private readonly images: ListingImageManagerPort,
-	) {}
-
-	async execute(
-		actor: Actor,
-		command: UpdateListingCommand,
-	): Promise<Result<ListingMutationResult, ListingCommandError>> {
-		const existing = await this.listings.findListingForMutation(
-			command.listingId,
-		);
-
-		if (!existing) {
-			return err(notFoundError());
-		}
-
-		if (!canModifyListing(actor, existing.sellerId)) {
-			return err(
-				unauthorizedError("Unauthorized, user cannot modify this listing"),
-			);
-		}
-
-		const uploadedImagesResult = await this.uploadReplacementImages(command);
-		if (!uploadedImagesResult.ok) {
-			return uploadedImagesResult;
-		}
-
-		const uploadedImages = uploadedImagesResult.value;
-		const status = actor.role === "ADMIN" ? "APPROVED" : "PENDING";
-
-		try {
-			const listing = await this.listings.updateListing(command.listingId, {
-				...toPersistenceFields(command),
-				...(uploadedImages ? { images: uploadedImages } : {}),
-				status,
-				isApproved: status === "APPROVED",
-			});
-
-			if (!listing) {
-				if (uploadedImages) {
-					await this.images.cleanupImagesBestEffort(uploadedImages);
-				}
-				return err(saveFailedError("Failed to update listing"));
-			}
-
-			if (uploadedImages) {
-				await this.images.cleanupImagesBestEffort(existing.images);
-			}
-
-			return ok(listing);
-		} catch (error) {
-			if (uploadedImages) {
-				await this.images.cleanupImagesBestEffort(uploadedImages);
-			}
-			throw error;
-		}
+	if (!canManageListings(actor)) {
+		return err(unauthorizedError("Only sellers or admins can create listings"));
 	}
 
-	private async uploadReplacementImages(
-		command: UpdateListingCommand,
-	): Promise<Result<ImageAssetRef[] | undefined, ListingCommandError>> {
-		if (!command.imageFiles || command.imageFiles.length === 0) {
-			return ok(undefined);
-		}
-
-		try {
-			return ok(await this.images.uploadImages(command.imageFiles));
-		} catch (error) {
-			return err(imageUploadError(error));
-		}
+	let uploadedImages: ImageAssetRef[];
+	try {
+		uploadedImages = await images.uploadImages(command.imageFiles);
+	} catch (error) {
+		return err(imageUploadError(error));
 	}
-}
 
-export class RemoveListing {
-	constructor(
-		private readonly listings: ListingCommandRepositoryPort,
-		private readonly images: ListingImageManagerPort,
-	) {}
-
-	async execute(
-		actor: Actor,
-		command: RemoveListingCommand,
-	): Promise<Result<ListingRemovalResult, ListingCommandError>> {
-		const existing = await this.listings.findListingForMutation(
-			command.listingId,
-		);
-
-		if (!existing) {
-			return err(notFoundError());
-		}
-
-		if (!canModifyListing(actor, existing.sellerId)) {
-			return err(
-				unauthorizedError("Unauthorized, user cannot modify this listing"),
-			);
-		}
-
-		if (hasReferences(existing)) {
-			return this.withdrawReferencedListing(actor, existing);
-		}
-
-		const deleted = await this.listings.deleteListing(existing.id);
-
-		if (!deleted) {
-			return err(saveFailedError("Failed to delete listing"));
-		}
-
-		await this.images.cleanupImagesBestEffort(existing.images);
-
-		return ok({
-			listingId: existing.id,
-			mode: "DELETED",
-			message: "Product deleted successfully",
+	try {
+		const listing = await listings.createListing({
+			...toPersistenceFields(command),
+			sellerId: actor.id,
+			images: uploadedImages,
+			status: "PENDING",
+			isApproved: false,
 		});
-	}
 
-	private async withdrawReferencedListing(
-		actor: Actor,
-		existing: ListingRemovalSnapshot,
-	): Promise<Result<ListingRemovalResult, ListingCommandError>> {
-		const listing = Listing.reconstitute(existing);
-
-		try {
-			listing.withdraw(actor);
-		} catch (error) {
-			if (error instanceof ListingLifecycleError) {
-				return err({
-					kind: "conflict",
-					code: "LISTING_COMMAND_INVALID_TRANSITION",
-					message: error.message,
-					details: { code: error.code },
-				});
-			}
-
-			throw error;
+		if (!listing) {
+			await images.cleanupUploadedImagesBestEffort(uploadedImages);
+			return err(saveFailedError("Failed to create listing"));
 		}
 
-		const saved = await this.listings.saveListingStatus(
-			listing.id,
-			listing.status,
+		return ok(listing);
+	} catch (error) {
+		await images.cleanupUploadedImagesBestEffort(uploadedImages);
+		throw error;
+	}
+}
+
+export async function updateListing(
+	actor: Actor,
+	command: UpdateListingCommand,
+	dependencies: ListingCommandDependencies,
+): Promise<Result<ListingMutationResult, ListingCommandError>> {
+	const { listings, images } = dependencies;
+	const existing = await listings.findListingForMutation(command.listingId);
+
+	if (!existing) {
+		return err(notFoundError());
+	}
+
+	if (!canModifyListing(actor, existing.sellerId)) {
+		return err(
+			unauthorizedError("Unauthorized, user cannot modify this listing"),
 		);
+	}
 
-		if (!saved) {
-			return err(saveFailedError("Failed to withdraw listing"));
+	const uploadedImagesResult = await uploadReplacementImages(command, images);
+	if (!uploadedImagesResult.ok) {
+		return uploadedImagesResult;
+	}
+
+	const uploadedImages = uploadedImagesResult.value;
+	const status = actor.role === "ADMIN" ? "APPROVED" : "PENDING";
+
+	try {
+		const listing = await listings.updateListing(command.listingId, {
+			...toPersistenceFields(command),
+			...(uploadedImages ? { images: uploadedImages } : {}),
+			status,
+			isApproved: status === "APPROVED",
+		});
+
+		if (!listing) {
+			if (uploadedImages) {
+				await images.cleanupUploadedImagesBestEffort(uploadedImages);
+			}
+			return err(saveFailedError("Failed to update listing"));
 		}
 
-		return ok({
-			listingId: listing.id,
-			mode: "WITHDRAWN",
-			message: "Product withdrawn successfully",
-		});
+		if (uploadedImages) {
+			await images.cleanupPersistedImagesBestEffort(
+				existing.images,
+				toImageCleanupSource(existing),
+			);
+		}
+
+		return ok(listing);
+	} catch (error) {
+		if (uploadedImages) {
+			await images.cleanupUploadedImagesBestEffort(uploadedImages);
+		}
+		throw error;
 	}
+}
+
+export async function removeListing(
+	actor: Actor,
+	command: RemoveListingCommand,
+	dependencies: ListingCommandDependencies,
+): Promise<Result<ListingRemovalResult, ListingCommandError>> {
+	const { listings, images } = dependencies;
+	const existing = await listings.findListingForMutation(command.listingId);
+
+	if (!existing) {
+		return err(notFoundError());
+	}
+
+	if (!canModifyListing(actor, existing.sellerId)) {
+		return err(
+			unauthorizedError("Unauthorized, user cannot modify this listing"),
+		);
+	}
+
+	if (hasReferences(existing)) {
+		return withdrawReferencedListing(actor, existing, listings);
+	}
+
+	const deleted = await listings.deleteListing(existing.id);
+
+	if (!deleted) {
+		return err(saveFailedError("Failed to delete listing"));
+	}
+
+	await images.cleanupPersistedImagesBestEffort(
+		existing.images,
+		toImageCleanupSource(existing),
+	);
+
+	return ok({
+		listingId: existing.id,
+		mode: "DELETED",
+		message: "Product deleted successfully",
+	});
+}
+
+function toImageCleanupSource(
+	listing: Pick<ListingRemovalSnapshot, "id" | "sellerId">,
+): ListingImageCleanupSource {
+	return {
+		listingId: listing.id,
+		sellerId: listing.sellerId,
+	};
+}
+
+async function uploadReplacementImages(
+	command: UpdateListingCommand,
+	images: ListingImageManagerPort,
+): Promise<Result<ImageAssetRef[] | undefined, ListingCommandError>> {
+	if (!command.imageFiles || command.imageFiles.length === 0) {
+		return ok(undefined);
+	}
+
+	try {
+		return ok(await images.uploadImages(command.imageFiles));
+	} catch (error) {
+		return err(imageUploadError(error));
+	}
+}
+
+async function withdrawReferencedListing(
+	actor: Actor,
+	existing: ListingRemovalSnapshot,
+	listings: ListingCommandRepositoryPort,
+): Promise<Result<ListingRemovalResult, ListingCommandError>> {
+	const listing = Listing.reconstitute(existing);
+
+	try {
+		listing.withdraw(actor);
+	} catch (error) {
+		if (error instanceof ListingLifecycleError) {
+			return err({
+				kind: "conflict",
+				code: "LISTING_COMMAND_INVALID_TRANSITION",
+				message: error.message,
+				details: { code: error.code },
+			});
+		}
+
+		throw error;
+	}
+
+	const saved = await listings.saveListingStatus(listing.id, listing.status);
+
+	if (!saved) {
+		return err(saveFailedError("Failed to withdraw listing"));
+	}
+
+	return ok({
+		listingId: listing.id,
+		mode: "WITHDRAWN",
+		message: "Product withdrawn successfully",
+	});
 }
 
 function canManageListings(actor: Actor) {

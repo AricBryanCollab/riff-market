@@ -162,7 +162,7 @@ class InMemoryAccounts
 		return updatedAccount;
 	}
 
-	async deleteAccountAndEnqueueMediaCleanup(userId: string): Promise<void> {
+	async deleteAccount(userId: string): Promise<void> {
 		this.accounts.delete(userId);
 	}
 }

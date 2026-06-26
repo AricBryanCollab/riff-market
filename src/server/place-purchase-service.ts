@@ -10,15 +10,16 @@ import {
 } from "@/domains/ordering/dto/place-purchase-request";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { Result } from "@/domains/shared/domain/result";
-import { toAppErrorStatus } from "@/server/app-error-status";
 import type { ServerUserContext } from "@/server/function-middleware";
+import {
+	RequestError,
+	unwrapResultOrThrowRequestError,
+} from "@/server/request-error";
 
-type PlacePurchaseExecutor = {
-	execute(
-		actor: Actor,
-		command: PlacePurchaseCommand,
-	): Promise<Result<PlacePurchaseResult, PlacePurchaseError>>;
-};
+type PlacePurchaseRunner = (
+	actor: Actor,
+	command: PlacePurchaseCommand,
+) => Promise<Result<PlacePurchaseResult, PlacePurchaseError>>;
 
 export type PlacePurchaseResponse = {
 	readonly message: string;
@@ -33,28 +34,11 @@ export type PlacePurchaseResponse = {
 	};
 };
 
-export class PlacePurchaseRequestError extends Error {
-	readonly code?: string;
-	readonly details?: unknown;
-	readonly status: number;
-
-	constructor(
-		message: string,
-		options: { code?: string; details?: unknown; status?: number } = {},
-	) {
-		super(message);
-		this.name = "PlacePurchaseRequestError";
-		this.code = options.code;
-		this.details = options.details;
-		this.status = options.status ?? 400;
-	}
-}
-
 export function validatePlacePurchaseInput(data: unknown): PlacePurchaseInput {
 	const parsed = placePurchaseInputSchema.safeParse(data);
 
 	if (!parsed.success) {
-		throw new PlacePurchaseRequestError("Invalid order data", {
+		throw new RequestError("Invalid order data", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -65,21 +49,19 @@ export function validatePlacePurchaseInput(data: unknown): PlacePurchaseInput {
 export async function placePurchaseForCurrentUser(
 	user: ServerUserContext,
 	input: PlacePurchaseInput,
-	executor?: PlacePurchaseExecutor,
+	runPlacePurchase?: PlacePurchaseRunner,
 ): Promise<PlacePurchaseResponse> {
-	const placePurchase = executor ?? (await createPrismaPlacePurchaseExecutor());
+	const placePurchaseRunner =
+		runPlacePurchase ?? (await createPrismaPlacePurchaseRunner());
 	const actor = toActor(user);
 	const command = toCommand(user, input);
-	const result = await placePurchase.execute(actor, command);
+	const result = await placePurchaseRunner(actor, command);
+	const purchase = unwrapResultOrThrowRequestError(result);
 
-	if (!result.ok) {
-		throw toRequestError(result.error);
-	}
-
-	return toResponse(result.value);
+	return toResponse(purchase);
 }
 
-async function createPrismaPlacePurchaseExecutor() {
+async function createPrismaPlacePurchaseRunner() {
 	const [{ prisma }, { createPrismaPlacePurchase }] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/ordering/infrastructure/prisma-place-purchase"),
@@ -128,12 +110,4 @@ function toResponse(result: PlacePurchaseResult): PlacePurchaseResponse {
 			sellerOrderIds: result.sellerOrderIds,
 		},
 	};
-}
-
-function toRequestError(error: PlacePurchaseError) {
-	return new PlacePurchaseRequestError(error.message, {
-		code: error.code,
-		details: error.details,
-		status: toAppErrorStatus(error.kind),
-	});
 }

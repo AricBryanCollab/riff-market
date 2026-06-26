@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
+import type { Actor } from "@/domains/shared/domain/actor";
 import { Money } from "@/domains/shared/domain/money";
 import type { ListingSnapshot, ListingStatus } from "../domain/listing";
 import {
 	type ListingModerationNotifierPort,
 	type ListingModerationRepositoryPort,
 	type ListingModerationResult,
-	ModerateListing,
+	type ModerateListingCommand,
+	moderateListing,
 } from "./moderate-listing";
 
 const admin = { id: "admin-1", role: "ADMIN" } as const;
@@ -84,17 +86,17 @@ function makePorts(snapshot: ListingSnapshot | null = makeListing()) {
 
 	return {
 		lookedUpListingIds,
+		moderate: moderateWith(repository, notifier),
 		notifications,
 		savedStatuses,
-		useCase: new ModerateListing(repository, notifier),
 	};
 }
 
-describe("ModerateListing", () => {
+describe("moderateListing", () => {
 	it("approves a pending listing and notifies the seller", async () => {
-		const { notifications, savedStatuses, useCase } = makePorts();
+		const { moderate, notifications, savedStatuses } = makePorts();
 
-		const result = await useCase.execute(admin, {
+		const result = await moderate(admin, {
 			listingId: "listing-1",
 			decision: "APPROVE",
 		});
@@ -123,9 +125,9 @@ describe("ModerateListing", () => {
 	});
 
 	it("declines a pending listing without deleting it", async () => {
-		const { notifications, savedStatuses, useCase } = makePorts();
+		const { moderate, notifications, savedStatuses } = makePorts();
 
-		const result = await useCase.execute(admin, {
+		const result = await moderate(admin, {
 			listingId: "listing-1",
 			decision: "DECLINE",
 		});
@@ -154,10 +156,10 @@ describe("ModerateListing", () => {
 	});
 
 	it("requires an admin actor", async () => {
-		const { lookedUpListingIds, notifications, savedStatuses, useCase } =
+		const { lookedUpListingIds, moderate, notifications, savedStatuses } =
 			makePorts();
 
-		const result = await useCase.execute(seller, {
+		const result = await moderate(seller, {
 			listingId: "listing-1",
 			decision: "APPROVE",
 		});
@@ -176,10 +178,10 @@ describe("ModerateListing", () => {
 	});
 
 	it("returns not found for missing listings", async () => {
-		const { lookedUpListingIds, notifications, savedStatuses, useCase } =
+		const { lookedUpListingIds, moderate, notifications, savedStatuses } =
 			makePorts(null);
 
-		const result = await useCase.execute(admin, {
+		const result = await moderate(admin, {
 			listingId: "missing",
 			decision: "APPROVE",
 		});
@@ -198,10 +200,10 @@ describe("ModerateListing", () => {
 	});
 
 	it("rejects invalid lifecycle transitions", async () => {
-		const { lookedUpListingIds, notifications, savedStatuses, useCase } =
+		const { lookedUpListingIds, moderate, notifications, savedStatuses } =
 			makePorts(makeListing({ status: "WITHDRAWN" }));
 
-		const result = await useCase.execute(admin, {
+		const result = await moderate(admin, {
 			listingId: "listing-1",
 			decision: "APPROVE",
 		});
@@ -243,12 +245,14 @@ describe("ModerateListing", () => {
 			},
 		};
 
-		const result = await new ModerateListing(repository, notifier).execute(
+		const result = await moderateListing(
 			admin,
 			{
 				listingId: "listing-1",
 				decision: "APPROVE",
 			},
+			repository,
+			notifier,
 		);
 
 		expect(result).toEqual({
@@ -269,6 +273,14 @@ describe("ModerateListing", () => {
 		expect(notified).toBe(false);
 	});
 });
+
+function moderateWith(
+	repository: ListingModerationRepositoryPort,
+	notifier: ListingModerationNotifierPort,
+) {
+	return (actor: Actor, command: ModerateListingCommand) =>
+		moderateListing(actor, command, repository, notifier);
+}
 
 type ModerationNotification = {
 	readonly kind: "approved" | "declined";

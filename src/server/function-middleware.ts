@@ -3,8 +3,7 @@ import { setResponseStatus } from "@tanstack/react-start/server";
 import { findUserById } from "@/data/auth-repo";
 import { logger, updateRequestContext } from "@/lib/logger";
 import { requestLoggerMiddleware } from "@/middleware";
-import { NotificationRequestError } from "@/server/notification-service";
-import { ReviewRequestError } from "@/server/review-service";
+import { RequestError } from "@/server/request-error";
 import type { UserRole } from "@/types/enum";
 import { useAppSession } from "@/utils/session";
 
@@ -23,13 +22,19 @@ export const serverAuthMiddleware = createMiddleware({
 	const userId = session.data.userId;
 
 	if (!userId) {
-		throw new Error("Access Denied. Unauthorized");
+		throw new RequestError("Access Denied. Unauthorized", {
+			code: "AUTHENTICATION_REQUIRED",
+			status: 401,
+		});
 	}
 
 	const user = await findUserById(userId);
 
 	if (!user) {
-		throw new Error("User not found");
+		throw new RequestError("User not found", {
+			code: "AUTHENTICATED_USER_NOT_FOUND",
+			status: 401,
+		});
 	}
 
 	const serverUser: ServerUserContext = {
@@ -58,49 +63,54 @@ export const createServerRoleMiddleware = (allowedRoles: UserRole[]) =>
 		.middleware([serverAuthMiddleware])
 		.server(async ({ context, next }) => {
 			if (!allowedRoles.includes(context.user.role)) {
-				throw new Error("Access denied, your role is not allowed for this");
+				throw new RequestError(
+					"Access denied, your role is not allowed for this",
+					{
+						code: "ROLE_NOT_ALLOWED",
+						status: 403,
+					},
+				);
 			}
 
 			return next();
 		});
 
-export const notificationErrorMiddleware = createMiddleware({
+export const requestErrorMiddleware = createMiddleware({
 	type: "function",
 }).server(async ({ next }) => {
 	try {
 		return await next();
 	} catch (error) {
-		if (error instanceof NotificationRequestError) {
+		if (error instanceof RequestError) {
 			setResponseStatus(error.status);
-			throw new Error(error.message);
+			throw error;
 		}
 
-		const fallbackMessage = "Failed to process notification request";
+		const fallbackMessage = "Failed to process request";
 		logger.error(fallbackMessage, error);
-		setResponseStatus(500);
-		throw new Error(fallbackMessage);
+		const requestError = new RequestError(fallbackMessage, {
+			cause: error,
+			status: 500,
+		});
+		setResponseStatus(requestError.status);
+		throw requestError;
 	}
 });
 
-export const reviewErrorMiddleware = createMiddleware({
-	type: "function",
-}).server(async ({ next }) => {
-	try {
-		return await next();
-	} catch (error) {
-		if (error instanceof ReviewRequestError) {
-			setResponseStatus(error.status);
-			throw new Error(error.message);
-		}
-
-		const fallbackMessage = "Failed to process review request";
-		logger.error(fallbackMessage, error);
-		setResponseStatus(500);
-		throw new Error(fallbackMessage);
-	}
-});
+export const publicServerFunctionMiddleware = [
+	requestLoggerMiddleware,
+	requestErrorMiddleware,
+] as const;
 
 export const authenticatedServerFunctionMiddleware = [
 	requestLoggerMiddleware,
+	requestErrorMiddleware,
 	serverAuthMiddleware,
 ] as const;
+
+export const createRoleServerFunctionMiddleware = (allowedRoles: UserRole[]) =>
+	[
+		requestLoggerMiddleware,
+		requestErrorMiddleware,
+		createServerRoleMiddleware(allowedRoles),
+	] as const;

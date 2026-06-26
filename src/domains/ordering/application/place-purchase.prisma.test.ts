@@ -1,10 +1,10 @@
 import type { PrismaClient } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
-import { ChangeSellerOrderStatus } from "@/domains/ordering/application/change-seller-order-status";
+import { changeSellerOrderStatus } from "@/domains/ordering/application/change-seller-order-status";
 import {
-	GetOrderDetail,
-	ListBuyerPurchaseHistory,
-	ListSellerOrderDashboard,
+	getOrderDetail,
+	listBuyerPurchaseHistory,
+	listSellerOrderDashboard,
 } from "@/domains/ordering/application/order-read-models";
 import type {
 	PurchaseNumberGeneratorPort,
@@ -47,9 +47,12 @@ describeDb("PlacePurchase Prisma integration", () => {
 			priceCents: 75_00,
 			stock: 3,
 		});
-		const useCase = createUseCase(db, new SequentialPurchaseNumberGenerator());
+		const runPlacePurchase = createPlacePurchaseRunner(
+			db,
+			new SequentialPurchaseNumberGenerator(),
+		);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{
 				items: [
@@ -158,9 +161,12 @@ describeDb("PlacePurchase Prisma integration", () => {
 			listingStatus: "APPROVED",
 			isApproved: false,
 		});
-		const useCase = createUseCase(db, new SequentialPurchaseNumberGenerator());
+		const runPlacePurchase = createPlacePurchaseRunner(
+			db,
+			new SequentialPurchaseNumberGenerator(),
+		);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{
 				items: [{ listingId: "listing-approved-status", quantity: 1 }],
@@ -191,9 +197,12 @@ describeDb("PlacePurchase Prisma integration", () => {
 			listingStatus: "WITHDRAWN",
 			isApproved: true,
 		});
-		const useCase = createUseCase(db, new SequentialPurchaseNumberGenerator());
+		const runPlacePurchase = createPlacePurchaseRunner(
+			db,
+			new SequentialPurchaseNumberGenerator(),
+		);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{
 				items: [{ listingId: "listing-withdrawn-status", quantity: 1 }],
@@ -230,9 +239,12 @@ describeDb("PlacePurchase Prisma integration", () => {
 			priceCents: 75_00,
 			stock: 3,
 		});
-		const useCase = createUseCase(db, new SequentialPurchaseNumberGenerator());
+		const runPlacePurchase = createPlacePurchaseRunner(
+			db,
+			new SequentialPurchaseNumberGenerator(),
+		);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{
 				items: [
@@ -252,11 +264,12 @@ describeDb("PlacePurchase Prisma integration", () => {
 		}
 
 		const readModels = new PrismaOrderReadModels(db);
-		const buyerHistory = await new ListBuyerPurchaseHistory(readModels).execute(
+		const buyerHistory = await listBuyerPurchaseHistory(
 			{
 				id: "customer-1",
 				role: "CUSTOMER",
 			},
+			readModels,
 		);
 
 		expect(buyerHistory).toEqual({
@@ -291,12 +304,13 @@ describeDb("PlacePurchase Prisma integration", () => {
 			],
 		});
 
-		const sellerDashboard = await new ListSellerOrderDashboard(
+		const sellerDashboard = await listSellerOrderDashboard(
+			{
+				id: "seller-1",
+				role: "SELLER",
+			},
 			readModels,
-		).execute({
-			id: "seller-1",
-			role: "SELLER",
-		});
+		);
 
 		expect(sellerDashboard).toEqual({
 			ok: true,
@@ -322,9 +336,10 @@ describeDb("PlacePurchase Prisma integration", () => {
 			],
 		});
 
-		const customerDetail = await new GetOrderDetail(readModels).execute(
+		const customerDetail = await getOrderDetail(
 			{ id: "customer-1", role: "CUSTOMER" },
 			result.value.purchaseId,
+			readModels,
 		);
 		expect(customerDetail).toEqual({
 			ok: true,
@@ -348,9 +363,10 @@ describeDb("PlacePurchase Prisma integration", () => {
 			sellerDashboard.ok && sellerDashboard.value[0]
 				? sellerDashboard.value[0].id
 				: "";
-		const sellerDetail = await new GetOrderDetail(readModels).execute(
+		const sellerDetail = await getOrderDetail(
 			{ id: "seller-1", role: "SELLER" },
 			sellerOrderId,
+			readModels,
 		);
 		expect(sellerDetail).toEqual({
 			ok: true,
@@ -366,9 +382,10 @@ describeDb("PlacePurchase Prisma integration", () => {
 			}),
 		});
 
-		const adminPurchaseDetail = await new GetOrderDetail(readModels).execute(
+		const adminPurchaseDetail = await getOrderDetail(
 			{ id: "admin-1", role: "ADMIN" },
 			result.value.purchaseId,
+			readModels,
 		);
 		expect(adminPurchaseDetail).toEqual({
 			ok: true,
@@ -380,9 +397,10 @@ describeDb("PlacePurchase Prisma integration", () => {
 			}),
 		});
 
-		const adminSellerDetail = await new GetOrderDetail(readModels).execute(
+		const adminSellerDetail = await getOrderDetail(
 			{ id: "admin-1", role: "ADMIN" },
 			sellerOrderId,
+			readModels,
 		);
 		expect(adminSellerDetail).toEqual({
 			ok: true,
@@ -394,9 +412,11 @@ describeDb("PlacePurchase Prisma integration", () => {
 			}),
 		});
 
-		const unauthorizedSellerDetail = await new GetOrderDetail(
+		const unauthorizedSellerDetail = await getOrderDetail(
+			{ id: "seller-2", role: "SELLER" },
+			sellerOrderId,
 			readModels,
-		).execute({ id: "seller-2", role: "SELLER" }, sellerOrderId);
+		);
 		expect(unauthorizedSellerDetail).toMatchObject({
 			ok: false,
 			error: {
@@ -413,11 +433,11 @@ describeDb("PlacePurchase Prisma integration", () => {
 			priceCents: 125_00,
 			stock: 2,
 		});
-		const placePurchase = createUseCase(
+		const placePurchase = createPlacePurchaseRunner(
 			db,
 			new SequentialPurchaseNumberGenerator(),
 		);
-		const placed = await placePurchase.execute(
+		const placed = await placePurchase(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{
 				items: [{ listingId: "listing-1", quantity: 1 }],
@@ -437,12 +457,11 @@ describeDb("PlacePurchase Prisma integration", () => {
 			throw new Error("Expected seller order");
 		}
 
-		const changeStatus = new ChangeSellerOrderStatus(
-			new PrismaSellerOrderStatusRepository(db),
-		);
-		const denied = await changeStatus.execute(
+		const sellerOrderStatuses = new PrismaSellerOrderStatusRepository(db);
+		const denied = await changeSellerOrderStatus(
 			{ id: "seller-2", role: "SELLER" },
 			{ sellerOrderId, status: "PROCESSING" },
+			sellerOrderStatuses,
 		);
 
 		expect(denied).toMatchObject({
@@ -452,9 +471,10 @@ describeDb("PlacePurchase Prisma integration", () => {
 			},
 		});
 
-		const processed = await changeStatus.execute(
+		const processed = await changeSellerOrderStatus(
 			{ id: "seller-1", role: "SELLER" },
 			{ sellerOrderId, status: "PROCESSING" },
+			sellerOrderStatuses,
 		);
 		expect(processed).toMatchObject({
 			ok: true,
@@ -464,13 +484,14 @@ describeDb("PlacePurchase Prisma integration", () => {
 			},
 		});
 
-		const shipped = await changeStatus.execute(
+		const shipped = await changeSellerOrderStatus(
 			{ id: "seller-1", role: "SELLER" },
 			{
 				sellerOrderId,
 				status: "SHIPPED",
 				trackingNumber: "TRACK-1",
 			},
+			sellerOrderStatuses,
 		);
 		expect(shipped).toMatchObject({
 			ok: true,
@@ -501,9 +522,12 @@ describeDb("PlacePurchase Prisma integration", () => {
 			priceCents: 125_00,
 			stock: 3,
 		});
-		const useCase = createUseCase(db, new SequentialPurchaseNumberGenerator());
+		const runPlacePurchase = createPlacePurchaseRunner(
+			db,
+			new SequentialPurchaseNumberGenerator(),
+		);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{
 				items: [
@@ -553,9 +577,12 @@ describeDb("PlacePurchase Prisma integration", () => {
 			priceCents: 125_00,
 			stock: 1,
 		});
-		const useCase = createUseCase(db, new SequentialPurchaseNumberGenerator());
+		const runPlacePurchase = createPlacePurchaseRunner(
+			db,
+			new SequentialPurchaseNumberGenerator(),
+		);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{
 				items: [{ listingId: "listing-1", quantity: 1 }],
@@ -622,13 +649,13 @@ describeDb("PlacePurchase Prisma integration", () => {
 			priceCents: 125_00,
 			stock: 1,
 		});
-		const useCase = createUseCase(
+		const runPlacePurchase = createPlacePurchaseRunner(
 			db,
 			new SequentialPurchaseNumberGenerator(),
 			new FailingNotificationCreator(),
 		);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{
 				items: [{ listingId: "listing-1", quantity: 1 }],
@@ -659,7 +686,10 @@ describeDb("PlacePurchase Prisma integration", () => {
 			priceCents: 125_00,
 			stock: 1,
 		});
-		const useCase = createUseCase(db, new SequentialPurchaseNumberGenerator());
+		const runPlacePurchase = createPlacePurchaseRunner(
+			db,
+			new SequentialPurchaseNumberGenerator(),
+		);
 		const command = {
 			items: [{ listingId: "listing-1", quantity: 1 }],
 			buyerName: "Pat Buyer",
@@ -669,8 +699,8 @@ describeDb("PlacePurchase Prisma integration", () => {
 		};
 
 		const results = await Promise.all([
-			useCase.execute({ id: "customer-1", role: "CUSTOMER" }, command),
-			useCase.execute({ id: "customer-1", role: "CUSTOMER" }, command),
+			runPlacePurchase({ id: "customer-1", role: "CUSTOMER" }, command),
+			runPlacePurchase({ id: "customer-1", role: "CUSTOMER" }, command),
 		]);
 
 		expect(results.filter((result) => result.ok)).toHaveLength(1);
@@ -687,7 +717,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 	});
 });
 
-function createUseCase(
+function createPlacePurchaseRunner(
 	db: PrismaClient,
 	purchaseNumbers: PurchaseNumberGeneratorPort<PrismaTransactionContext>,
 	notifications: PurchasePlacedNotificationCreatorPort<PrismaTransactionContext> = new PrismaPurchasePlacedNotificationCreator(),

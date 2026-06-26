@@ -9,10 +9,10 @@ import { Money } from "@/domains/shared/domain/money";
 import { err, ok } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
-	PlacePurchaseRequestError,
 	placePurchaseForCurrentUser,
 	validatePlacePurchaseInput,
 } from "@/server/place-purchase-service";
+import { RequestError } from "@/server/request-error";
 
 const customer: ServerUserContext = {
 	id: "customer-1",
@@ -41,9 +41,11 @@ describe("placePurchaseForCurrentUser", () => {
 			} satisfies PlacePurchaseResult),
 		);
 
-		const response = await placePurchaseForCurrentUser(customer, validInput, {
+		const response = await placePurchaseForCurrentUser(
+			customer,
+			validInput,
 			execute,
-		});
+		);
 
 		expect(execute).toHaveBeenCalledWith(
 			{ id: "customer-1", role: "CUSTOMER" },
@@ -83,9 +85,9 @@ describe("placePurchaseForCurrentUser", () => {
 			);
 
 		await expect(
-			placePurchaseForCurrentUser(customer, validInput, { execute }),
+			placePurchaseForCurrentUser(customer, validInput, execute),
 		).rejects.toMatchObject({
-			name: "PlacePurchaseRequestError",
+			name: "RequestError",
 			code: "PLACE_PURCHASE_INSUFFICIENT_STOCK",
 			message: "Insufficient stock for listing listing-1",
 			status: 409,
@@ -107,12 +109,12 @@ describe("placePurchaseForCurrentUser", () => {
 	});
 
 	it("rejects invalid checkout input before use-case execution", () => {
-		expect(() =>
+		expect(() => {
 			validatePlacePurchaseInput({
 				items: [],
 				shippingAddress: "x",
 				paymentMethod: "WIRE",
-			}),
-		).toThrow(PlacePurchaseRequestError);
+			});
+		}).toThrow(RequestError);
 	});
 });

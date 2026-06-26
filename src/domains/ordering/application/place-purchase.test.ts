@@ -13,14 +13,15 @@ import type { Purchase } from "../domain/purchase";
 import type { SellerOrder } from "../domain/seller-order";
 import {
 	type ListingsForPurchasePort,
-	PlacePurchase,
 	type PlacePurchaseCommand,
 	type PlacePurchaseError,
 	type PlacePurchaseItem,
+	type PurchaseEntityIdGeneratorPort,
 	type PurchaseNumberGeneratorPort,
 	type PurchasePersistencePort,
 	type PurchasePlacedNotificationCreatorPort,
 	type PurchasePlacedNotificationInput,
+	placePurchase,
 	placePurchaseError,
 	type ReservedSellerListingGroup,
 	type SellerOrderPersistencePort,
@@ -73,32 +74,43 @@ function makeHarness(listings: Listing[]) {
 	const purchasePort = new FakePurchasePersistencePort();
 	const sellerOrderPort = new FakeSellerOrderPersistencePort();
 	const purchaseNumberPort = new FakePurchaseNumberGeneratorPort("RM-1001");
+	const entityIdPort = new FakePurchaseEntityIdGeneratorPort([
+		"purchase-1",
+		"seller-order-1",
+		"seller-order-2",
+	]);
 	const notificationPort = new FakePurchasePlacedNotificationCreator();
-	const useCase = new PlacePurchase({
+	const dependencies = {
 		unitOfWork,
 		listings: listingPort,
 		purchases: purchasePort,
 		sellerOrders: sellerOrderPort,
 		purchaseNumbers: purchaseNumberPort,
+		entityIds: entityIdPort,
 		notifications: notificationPort,
-	});
+	};
+	const runPlacePurchase = (actor: Actor, command: PlacePurchaseCommand) =>
+		placePurchase(actor, command, dependencies);
 
 	return {
+		entityIdPort,
 		listingPort,
 		notificationPort,
 		purchaseNumberPort,
 		purchasePort,
 		sellerOrderPort,
 		unitOfWork,
-		useCase,
+		runPlacePurchase,
 	};
 }
 
 describe("PlacePurchase", () => {
 	it("allows only customers to place purchases", async () => {
-		const { purchasePort, unitOfWork, useCase } = makeHarness([makeListing()]);
+		const { purchasePort, unitOfWork, runPlacePurchase } = makeHarness([
+			makeListing(),
+		]);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			{ id: "seller-1", role: "SELLER" },
 			makeCommand(),
 		);
@@ -115,9 +127,9 @@ describe("PlacePurchase", () => {
 	});
 
 	it("rejects empty purchases before opening a transaction", async () => {
-		const { unitOfWork, useCase } = makeHarness([makeListing()]);
+		const { unitOfWork, runPlacePurchase } = makeHarness([makeListing()]);
 
-		const result = await useCase.execute(customer, makeCommand([]));
+		const result = await runPlacePurchase(customer, makeCommand([]));
 
 		expect(result).toEqual({
 			ok: false,
@@ -130,9 +142,9 @@ describe("PlacePurchase", () => {
 	});
 
 	it("rejects invalid item quantities before opening a transaction", async () => {
-		const { unitOfWork, useCase } = makeHarness([makeListing()]);
+		const { unitOfWork, runPlacePurchase } = makeHarness([makeListing()]);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			customer,
 			makeCommand([{ listingId: "listing-1", quantity: 0 }]),
 		);
@@ -152,9 +164,9 @@ describe("PlacePurchase", () => {
 		["buyer email", { buyerEmail: "" }],
 		["shipping address", { shippingAddress: " " }],
 	] as const)("rejects missing %s before opening a transaction", async (_field, overrides) => {
-		const { unitOfWork, useCase } = makeHarness([makeListing()]);
+		const { unitOfWork, runPlacePurchase } = makeHarness([makeListing()]);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			customer,
 			makeCommand(undefined, overrides),
 		);
@@ -170,9 +182,9 @@ describe("PlacePurchase", () => {
 	});
 
 	it("rejects missing listings through the listing reservation port", async () => {
-		const { purchasePort, unitOfWork, useCase } = makeHarness([]);
+		const { purchasePort, unitOfWork, runPlacePurchase } = makeHarness([]);
 
-		const result = await useCase.execute(customer, makeCommand());
+		const result = await runPlacePurchase(customer, makeCommand());
 
 		expect(result).toEqual({
 			ok: false,
@@ -186,11 +198,11 @@ describe("PlacePurchase", () => {
 	});
 
 	it("rejects unapproved listings through the listing reservation port", async () => {
-		const { purchasePort, useCase } = makeHarness([
+		const { purchasePort, runPlacePurchase } = makeHarness([
 			makeListing({ status: "PENDING" }),
 		]);
 
-		const result = await useCase.execute(customer, makeCommand());
+		const result = await runPlacePurchase(customer, makeCommand());
 
 		expect(result).toEqual({
 			ok: false,
@@ -203,9 +215,11 @@ describe("PlacePurchase", () => {
 	});
 
 	it("rejects insufficient stock through the listing reservation port", async () => {
-		const { purchasePort, useCase } = makeHarness([makeListing({ stock: 1 })]);
+		const { purchasePort, runPlacePurchase } = makeHarness([
+			makeListing({ stock: 1 }),
+		]);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			customer,
 			makeCommand([{ listingId: "listing-1", quantity: 2 }]),
 		);
@@ -237,16 +251,17 @@ describe("PlacePurchase", () => {
 			stock: 5,
 		});
 		const {
+			entityIdPort,
 			listingPort,
 			notificationPort,
 			purchaseNumberPort,
 			purchasePort,
 			sellerOrderPort,
 			unitOfWork,
-			useCase,
+			runPlacePurchase,
 		} = makeHarness([listingOne, listingTwo]);
 
-		const result = await useCase.execute(
+		const result = await runPlacePurchase(
 			customer,
 			makeCommand([
 				{ listingId: "listing-1", quantity: 1 },
@@ -258,19 +273,22 @@ describe("PlacePurchase", () => {
 		expect(result).toEqual({
 			ok: true,
 			value: {
-				purchaseId: expect.any(String),
+				purchaseId: "purchase-1",
 				purchaseNumber: "RM-1001",
 				total: Money.fromCents(200_00, "USD"),
 				paymentStatus: "MANUALLY_CONFIRMED",
 				status: "OPEN",
-				sellerOrderIds: sellerOrderPort.saved.map(
-					(sellerOrder) => sellerOrder.id,
-				),
+				sellerOrderIds: ["seller-order-1", "seller-order-2"],
 			},
 		});
 		expect(unitOfWork.transactionCount).toBe(1);
 		expect(unitOfWork.rolledBack).toBe(false);
 		expect(listingPort.reservedWith).toBe(unitOfWork.context);
+		expect(entityIdPort.generatedWith).toEqual([
+			unitOfWork.context,
+			unitOfWork.context,
+			unitOfWork.context,
+		]);
 		expect(purchaseNumberPort.generatedWith).toBe(unitOfWork.context);
 		expect(purchasePort.savedWith).toBe(unitOfWork.context);
 		expect(sellerOrderPort.savedWith).toBe(unitOfWork.context);
@@ -443,6 +461,27 @@ class FakePurchaseNumberGeneratorPort
 		this.generatedWith = context;
 
 		return this.purchaseNumber;
+	}
+}
+
+class FakePurchaseEntityIdGeneratorPort
+	implements PurchaseEntityIdGeneratorPort<FakeTransaction>
+{
+	private next = 0;
+	readonly generatedWith: FakeTransaction[] = [];
+
+	constructor(private readonly ids: string[]) {}
+
+	async generate(context: FakeTransaction) {
+		this.generatedWith.push(context);
+		const id = this.ids[this.next];
+		this.next += 1;
+
+		if (id === undefined) {
+			throw new Error("No fake purchase entity ID configured");
+		}
+
+		return id;
 	}
 }
 

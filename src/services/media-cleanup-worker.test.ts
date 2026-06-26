@@ -1,425 +1,120 @@
-import { MediaCleanupJobStatus } from "generated/prisma/client";
-import { describe, expect, it, vi } from "vitest";
-import type { ClaimedMediaCleanupJob } from "@/data/media-cleanup-job-repo";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-	type MediaCleanupTarget,
-	UnsupportedMediaCleanupTargetError,
-} from "./media-cleanup-targets";
+	DEFAULT_MEDIA_CLEANUP_DELETE_TIMEOUT_MS,
+	DEFAULT_MEDIA_CLEANUP_LOCK_MS,
+} from "@/domains/media/application/run-media-cleanup-batch";
 import { runMediaCleanupBatch } from "./media-cleanup-worker";
 
-vi.mock("@/utils/cloudinary", () => ({
-	deleteImage: vi.fn(async () => {
-		throw new Error("Unexpected default deleteImage call");
+const mocks = vi.hoisted(() => {
+	const jobQueue = {
+		claimNext: vi.fn(),
+		failExpiredExhausted: vi.fn(),
+		markFailed: vi.fn(),
+		markForRetry: vi.fn(),
+		markSucceeded: vi.fn(),
+	};
+
+	return {
+		deleteMediaCleanupTarget: vi.fn(),
+		jobQueue,
+		loggerError: vi.fn(),
+		loggerInfo: vi.fn(),
+		loggerWarn: vi.fn(),
+		PrismaMediaCleanupJobQueue: vi.fn(() => jobQueue),
+	};
+});
+
+vi.mock("@/data/connect-db", () => ({
+	prisma: {},
+}));
+
+vi.mock(
+	"@/domains/media/infrastructure/cloudinary-media-cleanup-targets",
+	() => ({
+		deleteMediaCleanupTarget: mocks.deleteMediaCleanupTarget,
 	}),
-}));
+);
 
-vi.mock("@/data/media-cleanup-job-repo", () => ({
-	claimNextMediaCleanupJob: async () => {
-		throw new Error("Unexpected default claimNextMediaCleanupJob call");
-	},
-	markExpiredExhaustedMediaCleanupJobsFailed: async () => {
-		throw new Error(
-			"Unexpected default markExpiredExhaustedMediaCleanupJobsFailed call",
-		);
-	},
-	markMediaCleanupJobFailed: async () => {
-		throw new Error("Unexpected default markMediaCleanupJobFailed call");
-	},
-	markMediaCleanupJobForRetry: async () => {
-		throw new Error("Unexpected default markMediaCleanupJobForRetry call");
-	},
-	markMediaCleanupJobSucceeded: async () => {
-		throw new Error("Unexpected default markMediaCleanupJobSucceeded call");
+vi.mock(
+	"@/domains/media/infrastructure/prisma-media-cleanup-job-queue",
+	() => ({
+		PrismaMediaCleanupJobQueue: mocks.PrismaMediaCleanupJobQueue,
+	}),
+);
+
+vi.mock("@/lib/logger", () => ({
+	logger: {
+		error: mocks.loggerError,
+		info: mocks.loggerInfo,
+		warn: mocks.loggerWarn,
 	},
 }));
 
-const fixedNow = new Date("2026-06-09T10:00:00.000Z");
+describe("media cleanup worker adapter", () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date("2026-06-09T10:00:00.000Z"));
+		vi.clearAllMocks();
+		mocks.jobQueue.failExpiredExhausted.mockResolvedValue(0);
+		mocks.jobQueue.claimNext.mockResolvedValue(null);
+		mocks.deleteMediaCleanupTarget.mockResolvedValue(undefined);
+		mocks.jobQueue.markSucceeded.mockResolvedValue(true);
+	});
 
-type StoredCleanupJob = ClaimedMediaCleanupJob & {
-	status: keyof typeof MediaCleanupJobStatus;
-	runAt: Date;
-	lockedUntil: Date | null;
-	lockedBy: string | null;
-	completedAt: Date | null;
-	failedAt: Date | null;
-	lastError: string | null;
-};
-
-function makeJob(overrides: Partial<StoredCleanupJob> = {}): StoredCleanupJob {
-	return {
-		id: "job-1",
-		provider: "cloudinary",
-		assetType: "image",
-		providerAssetId: "products/one",
-		attempts: 0,
-		maxAttempts: 5,
-		status: MediaCleanupJobStatus.PENDING,
-		runAt: fixedNow,
-		lockedUntil: null,
-		lockedBy: null,
-		completedAt: null,
-		failedAt: null,
-		lastError: null,
-		...overrides,
-	};
-}
-
-function toClaimedJob(job: StoredCleanupJob): ClaimedMediaCleanupJob {
-	return {
-		id: job.id,
-		provider: job.provider,
-		assetType: job.assetType,
-		providerAssetId: job.providerAssetId,
-		attempts: job.attempts,
-		maxAttempts: job.maxAttempts,
-	};
-}
-
-function createFakeCleanupDeps({
-	jobs,
-	deleteError,
-	expiredExhaustedJobs = [],
-}: {
-	jobs: StoredCleanupJob[];
-	deleteError?: Error;
-	expiredExhaustedJobs?: StoredCleanupJob[];
-}) {
-	const claimQueue = [...jobs];
-	const deletedTargets: string[] = [];
-	const events: string[] = [];
-	const findOwnedRunningJob = (id: string, workerId: string) =>
-		jobs.find(
-			(job) =>
-				job.id === id &&
-				job.status === MediaCleanupJobStatus.RUNNING &&
-				job.lockedBy === workerId,
-		);
-
-	return {
-		deletedTargets,
-		events,
-		deps: {
-			now: () => fixedNow,
-			logger: {
-				error: () => undefined,
-				info: () => undefined,
-				warn: () => undefined,
-			},
-			failExpiredExhaustedJobs: async ({
-				now,
-				lastError,
-			}: {
-				now: Date;
-				lastError: string;
-			}) => {
-				events.push("failExpiredExhaustedJobs");
-
-				for (const job of expiredExhaustedJobs) {
-					job.status = MediaCleanupJobStatus.FAILED;
-					job.failedAt = now;
-					job.lastError = lastError;
-					job.lockedUntil = null;
-					job.lockedBy = null;
-				}
-
-				return expiredExhaustedJobs.length;
-			},
-			claimNextJob: async ({
-				workerId,
-				lockedUntil,
-			}: {
-				workerId: string;
-				now: Date;
-				lockedUntil: Date;
-			}) => {
-				events.push("claimNextJob");
-				const job = claimQueue.shift();
-
-				if (!job) {
-					return null;
-				}
-
-				job.status = MediaCleanupJobStatus.RUNNING;
-				job.attempts += 1;
-				job.lockedUntil = lockedUntil;
-				job.lockedBy = workerId;
-				job.lastError = null;
-
-				return toClaimedJob(job);
-			},
-			deleteMediaCleanupTarget: async (
-				target: MediaCleanupTarget,
-				options: { timeoutMs: number },
-			) => {
-				events.push("deleteMediaCleanupTarget");
-
-				if (target.provider !== "cloudinary" || target.assetType !== "image") {
-					throw new UnsupportedMediaCleanupTargetError(target);
-				}
-
-				if (deleteError) {
-					throw deleteError;
-				}
-
-				deletedTargets.push(`${target.providerAssetId}:${options.timeoutMs}`);
-			},
-			markSucceeded: async ({
-				id,
-				workerId,
-				now,
-			}: {
-				id: string;
-				workerId: string;
-				now: Date;
-			}) => {
-				events.push("markSucceeded");
-				const job = findOwnedRunningJob(id, workerId);
-
-				if (!job) {
-					return false;
-				}
-
-				job.status = MediaCleanupJobStatus.SUCCEEDED;
-				job.completedAt = now;
-				job.failedAt = null;
-				job.lastError = null;
-				job.lockedUntil = null;
-				job.lockedBy = null;
-
-				return true;
-			},
-			markForRetry: async ({
-				id,
-				workerId,
-				runAt,
-				lastError,
-			}: {
-				id: string;
-				workerId: string;
-				now: Date;
-				runAt: Date;
-				lastError: string;
-			}) => {
-				events.push("markForRetry");
-				const job = findOwnedRunningJob(id, workerId);
-
-				if (!job) {
-					return false;
-				}
-
-				job.status = MediaCleanupJobStatus.PENDING;
-				job.runAt = runAt;
-				job.failedAt = null;
-				job.lastError = lastError;
-				job.lockedUntil = null;
-				job.lockedBy = null;
-
-				return true;
-			},
-			markFailed: async ({
-				id,
-				workerId,
-				now,
-				lastError,
-			}: {
-				id: string;
-				workerId: string;
-				now: Date;
-				lastError: string;
-			}) => {
-				events.push("markFailed");
-				const job = findOwnedRunningJob(id, workerId);
-
-				if (!job) {
-					return false;
-				}
-
-				job.status = MediaCleanupJobStatus.FAILED;
-				job.failedAt = now;
-				job.lastError = lastError;
-				job.lockedUntil = null;
-				job.lockedBy = null;
-
-				return true;
-			},
-		},
-	};
-}
-
-describe("media cleanup worker", () => {
-	it("schedules a retry after a temporary target deletion failure", async () => {
-		const jobs = [makeJob()];
-		const { deps } = createFakeCleanupDeps({
-			jobs,
-			deleteError: new Error("network down"),
-		});
-
-		const summary = await runMediaCleanupBatch({
-			workerId: "worker-1",
-			deps,
-		});
-
-		expect(jobs[0]).toMatchObject({
-			status: MediaCleanupJobStatus.PENDING,
+	it("runs a cleanup job through the default adapter wiring", async () => {
+		mocks.jobQueue.claimNext.mockResolvedValueOnce({
+			id: "job-1",
+			provider: "cloudinary",
+			assetType: "image",
+			providerAssetId: "products/one",
 			attempts: 1,
-			runAt: new Date("2026-06-09T10:01:00.000Z"),
-			lockedUntil: null,
-			lockedBy: null,
-			lastError: "MEDIA_CLEANUP_TARGET_DELETE_FAILED: network down",
-		});
-		expect(summary).toEqual({
-			workerId: "worker-1",
-			limit: 50,
-			claimed: 1,
-			succeeded: 0,
-			retried: 1,
-			failed: 0,
-			expiredFailed: 0,
-		});
-	});
-
-	it("marks the final failed attempt failed", async () => {
-		const jobs = [makeJob({ attempts: 4, maxAttempts: 5 })];
-		const { deps } = createFakeCleanupDeps({
-			jobs,
-			deleteError: new Error("still down"),
-		});
-
-		const summary = await runMediaCleanupBatch({
-			workerId: "worker-1",
-			deps,
-		});
-
-		expect(jobs[0]).toMatchObject({
-			status: MediaCleanupJobStatus.FAILED,
-			attempts: 5,
-			failedAt: fixedNow,
-			lockedUntil: null,
-			lockedBy: null,
-			lastError: "MEDIA_CLEANUP_TARGET_DELETE_FAILED: still down",
-		});
-		expect(summary).toEqual({
-			workerId: "worker-1",
-			limit: 50,
-			claimed: 1,
-			succeeded: 0,
-			retried: 0,
-			failed: 1,
-			expiredFailed: 0,
-		});
-	});
-
-	it("marks unsupported cleanup targets failed without retrying", async () => {
-		const jobs = [
-			makeJob({
-				provider: "s3",
-				assetType: "video",
-				providerAssetId: "videos/one",
-			}),
-		];
-		const { deps } = createFakeCleanupDeps({ jobs });
-
-		const summary = await runMediaCleanupBatch({
-			workerId: "worker-1",
-			deps,
-		});
-
-		expect(jobs[0]).toMatchObject({
-			status: MediaCleanupJobStatus.FAILED,
-			attempts: 1,
-			lockedUntil: null,
-			lockedBy: null,
-			lastError: "UNSUPPORTED_MEDIA_CLEANUP_TARGET: s3/video",
-		});
-		expect(summary).toEqual({
-			workerId: "worker-1",
-			limit: 50,
-			claimed: 1,
-			succeeded: 0,
-			retried: 0,
-			failed: 1,
-			expiredFailed: 0,
-		});
-	});
-
-	it("stops after the configured limit even when more jobs are available", async () => {
-		const jobs = [
-			makeJob({ id: "job-1", providerAssetId: "products/one" }),
-			makeJob({ id: "job-2", providerAssetId: "products/two" }),
-			makeJob({ id: "job-3", providerAssetId: "products/three" }),
-		];
-		const { deletedTargets, deps } = createFakeCleanupDeps({ jobs });
-
-		const summary = await runMediaCleanupBatch({
-			workerId: "worker-1",
-			limit: 2,
-			deps,
-		});
-
-		expect(deletedTargets).toEqual([
-			"products/one:30000",
-			"products/two:30000",
-		]);
-		expect(jobs.map((job) => job.status)).toEqual([
-			MediaCleanupJobStatus.SUCCEEDED,
-			MediaCleanupJobStatus.SUCCEEDED,
-			MediaCleanupJobStatus.PENDING,
-		]);
-		expect(summary).toEqual({
-			workerId: "worker-1",
-			limit: 2,
-			claimed: 2,
-			succeeded: 2,
-			retried: 0,
-			failed: 0,
-			expiredFailed: 0,
-		});
-	});
-
-	it("fails expired exhausted jobs before claiming new work", async () => {
-		const exhaustedJob = makeJob({
-			id: "exhausted",
-			attempts: 5,
 			maxAttempts: 5,
-			status: MediaCleanupJobStatus.RUNNING,
-			lockedUntil: new Date("2026-06-09T09:59:00.000Z"),
-			lockedBy: "dead-worker",
-		});
-		const pendingJob = makeJob({
-			id: "pending",
-			providerAssetId: "products/pending",
-		});
-		const { deps, events } = createFakeCleanupDeps({
-			jobs: [pendingJob],
-			expiredExhaustedJobs: [exhaustedJob],
 		});
 
-		const summary = await runMediaCleanupBatch({
-			workerId: "worker-1",
-			deps,
-		});
+		const summary = await runMediaCleanupBatch({ limit: 1 });
+		const claimOptions = mocks.jobQueue.claimNext.mock.calls[0]?.[0];
+		const workerId = claimOptions.workerId;
 
-		expect(events.slice(0, 2)).toEqual([
-			"failExpiredExhaustedJobs",
-			"claimNextJob",
-		]);
-		expect(exhaustedJob).toMatchObject({
-			status: MediaCleanupJobStatus.FAILED,
-			failedAt: fixedNow,
-			lockedUntil: null,
-			lockedBy: null,
+		expect(mocks.jobQueue.failExpiredExhausted).toHaveBeenCalledWith({
+			now: new Date("2026-06-09T10:00:00.000Z"),
 			lastError:
 				"MEDIA_CLEANUP_ATTEMPTS_EXHAUSTED: Attempts exhausted before cleanup completed",
 		});
-		expect(pendingJob.status).toBe(MediaCleanupJobStatus.SUCCEEDED);
-		expect(summary).toEqual({
-			workerId: "worker-1",
-			limit: 50,
+		expect(mocks.jobQueue.claimNext).toHaveBeenCalledWith({
+			workerId,
+			now: new Date("2026-06-09T10:00:00.000Z"),
+			lockedUntil: new Date(
+				new Date("2026-06-09T10:00:00.000Z").getTime() +
+					DEFAULT_MEDIA_CLEANUP_LOCK_MS,
+			),
+		});
+		expect(typeof workerId).toBe("string");
+		expect(workerId.length).toBeGreaterThan(0);
+		expect(mocks.deleteMediaCleanupTarget).toHaveBeenCalledWith(
+			{
+				provider: "cloudinary",
+				assetType: "image",
+				providerAssetId: "products/one",
+			},
+			{ timeoutMs: DEFAULT_MEDIA_CLEANUP_DELETE_TIMEOUT_MS },
+		);
+		expect(mocks.jobQueue.markSucceeded).toHaveBeenCalledWith({
+			id: "job-1",
+			workerId,
+			now: new Date("2026-06-09T10:00:00.000Z"),
+		});
+		expect(summary).toMatchObject({
+			workerId,
+			limit: 1,
 			claimed: 1,
 			succeeded: 1,
 			retried: 0,
 			failed: 0,
-			expiredFailed: 1,
+			expiredFailed: 0,
 		});
+		expect(mocks.loggerInfo).toHaveBeenCalledWith(
+			"media_cleanup_batch_completed",
+			summary,
+		);
 	});
 });

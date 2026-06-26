@@ -2,13 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 import { Money } from "@/domains/shared/domain/money";
 import type { ImageAssetRef } from "@/types/image-asset";
 import {
-	CreateListing,
+	createListing,
+	type ListingCommandDependencies,
 	type ListingCommandRepositoryPort,
 	type ListingImageManagerPort,
 	type ListingMutationResult,
 	type ListingRemovalSnapshot,
-	RemoveListing,
-	UpdateListing,
+	removeListing,
+	updateListing,
 } from "./manage-listing";
 
 const sellerActor = { id: "seller-1", role: "SELLER" as const };
@@ -101,17 +102,22 @@ function createFakes() {
 	};
 	const images: ListingImageManagerPort = {
 		uploadImages: vi.fn(async () => [image("https://cdn.example.com/new.jpg")]),
-		cleanupImagesBestEffort: vi.fn(async () => undefined),
+		cleanupUploadedImagesBestEffort: vi.fn(async () => undefined),
+		cleanupPersistedImagesBestEffort: vi.fn(async () => undefined),
+	};
+	const dependencies: ListingCommandDependencies = {
+		listings: repository,
+		images,
 	};
 
-	return { repository, images };
+	return { repository, images, dependencies };
 }
 
 describe("listing command use cases", () => {
 	it("creates seller listings as pending and dual-writes product money", async () => {
-		const { repository, images } = createFakes();
+		const { repository, images, dependencies } = createFakes();
 
-		const result = await new CreateListing(repository, images).execute(
+		const result = await createListing(
 			sellerActor,
 			{
 				name: "Telecaster",
@@ -124,6 +130,7 @@ describe("listing command use cases", () => {
 				stock: 2,
 				imageFiles: [imageFile("listing.jpg")],
 			},
+			dependencies,
 		);
 
 		expect(result.ok).toBe(true);
@@ -142,9 +149,9 @@ describe("listing command use cases", () => {
 	});
 
 	it("blocks customers from creating listings before uploading images", async () => {
-		const { repository, images } = createFakes();
+		const { repository, images, dependencies } = createFakes();
 
-		const result = await new CreateListing(repository, images).execute(
+		const result = await createListing(
 			customerActor,
 			{
 				name: "Telecaster",
@@ -157,6 +164,7 @@ describe("listing command use cases", () => {
 				stock: 2,
 				imageFiles: [imageFile("listing.jpg")],
 			},
+			dependencies,
 		);
 
 		expect(result).toMatchObject({
@@ -168,10 +176,10 @@ describe("listing command use cases", () => {
 	});
 
 	it("cleans up uploaded create images when persistence does not save", async () => {
-		const { repository, images } = createFakes();
+		const { repository, images, dependencies } = createFakes();
 		vi.mocked(repository.createListing).mockResolvedValue(null);
 
-		const result = await new CreateListing(repository, images).execute(
+		const result = await createListing(
 			sellerActor,
 			{
 				name: "Telecaster",
@@ -184,27 +192,29 @@ describe("listing command use cases", () => {
 				stock: 2,
 				imageFiles: [imageFile("listing.jpg")],
 			},
+			dependencies,
 		);
 
 		expect(result).toMatchObject({
 			ok: false,
 			error: { code: "LISTING_COMMAND_SAVE_FAILED" },
 		});
-		expect(images.cleanupImagesBestEffort).toHaveBeenCalledWith([
+		expect(images.cleanupUploadedImagesBestEffort).toHaveBeenCalledWith([
 			image("https://cdn.example.com/new.jpg"),
 		]);
 	});
 
 	it("updates seller listings back to pending and cleans up replaced images after save", async () => {
-		const { repository, images } = createFakes();
+		const { repository, images, dependencies } = createFakes();
 
-		const result = await new UpdateListing(repository, images).execute(
+		const result = await updateListing(
 			sellerActor,
 			{
 				listingId: "listing-1",
 				name: "Updated",
 				imageFiles: [imageFile("new.jpg")],
 			},
+			dependencies,
 		);
 
 		expect(result.ok).toBe(true);
@@ -217,18 +227,49 @@ describe("listing command use cases", () => {
 				images: [image("https://cdn.example.com/new.jpg")],
 			}),
 		);
-		expect(images.cleanupImagesBestEffort).toHaveBeenCalledWith([
-			image("https://cdn.example.com/current.jpg"),
+		expect(images.cleanupPersistedImagesBestEffort).toHaveBeenCalledWith(
+			[image("https://cdn.example.com/current.jpg")],
+			{
+				listingId: "listing-1",
+				sellerId: "seller-1",
+			},
+		);
+	});
+
+	it("cleans up uploaded replacement images when update persistence does not save", async () => {
+		const { repository, images, dependencies } = createFakes();
+		vi.mocked(repository.updateListing).mockResolvedValue(null);
+
+		const result = await updateListing(
+			sellerActor,
+			{
+				listingId: "listing-1",
+				imageFiles: [imageFile("new.jpg")],
+			},
+			dependencies,
+		);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: { code: "LISTING_COMMAND_SAVE_FAILED" },
+		});
+		expect(images.cleanupUploadedImagesBestEffort).toHaveBeenCalledWith([
+			image("https://cdn.example.com/new.jpg"),
 		]);
+		expect(images.cleanupPersistedImagesBestEffort).not.toHaveBeenCalled();
 	});
 
 	it("auto-approves admin listing updates", async () => {
-		const { repository, images } = createFakes();
+		const { repository, images, dependencies } = createFakes();
 
-		await new UpdateListing(repository, images).execute(adminActor, {
-			listingId: "listing-1",
-			name: "Admin update",
-		});
+		await updateListing(
+			adminActor,
+			{
+				listingId: "listing-1",
+				name: "Admin update",
+			},
+			dependencies,
+		);
 
 		expect(repository.updateListing).toHaveBeenCalledWith(
 			"listing-1",
@@ -241,17 +282,18 @@ describe("listing command use cases", () => {
 	});
 
 	it("blocks seller updates for listings they do not own", async () => {
-		const { repository, images } = createFakes();
+		const { repository, dependencies } = createFakes();
 		vi.mocked(repository.findListingForMutation).mockResolvedValue(
 			makeRemovalSnapshot({ sellerId: "seller-2" }),
 		);
 
-		const result = await new UpdateListing(repository, images).execute(
+		const result = await updateListing(
 			sellerActor,
 			{
 				listingId: "listing-1",
 				name: "Blocked",
 			},
+			dependencies,
 		);
 
 		expect(result).toMatchObject({
@@ -262,11 +304,12 @@ describe("listing command use cases", () => {
 	});
 
 	it("hard-deletes unreferenced listings and cleans up images", async () => {
-		const { repository, images } = createFakes();
+		const { repository, images, dependencies } = createFakes();
 
-		const result = await new RemoveListing(repository, images).execute(
+		const result = await removeListing(
 			sellerActor,
 			{ listingId: "listing-1" },
+			dependencies,
 		);
 
 		expect(result).toEqual({
@@ -279,13 +322,17 @@ describe("listing command use cases", () => {
 		});
 		expect(repository.deleteListing).toHaveBeenCalledWith("listing-1");
 		expect(repository.saveListingStatus).not.toHaveBeenCalled();
-		expect(images.cleanupImagesBestEffort).toHaveBeenCalledWith([
-			image("https://cdn.example.com/current.jpg"),
-		]);
+		expect(images.cleanupPersistedImagesBestEffort).toHaveBeenCalledWith(
+			[image("https://cdn.example.com/current.jpg")],
+			{
+				listingId: "listing-1",
+				sellerId: "seller-1",
+			},
+		);
 	});
 
 	it("withdraws referenced listings instead of deleting or cleaning images", async () => {
-		const { repository, images } = createFakes();
+		const { repository, images, dependencies } = createFakes();
 		vi.mocked(repository.findListingForMutation).mockResolvedValue(
 			makeRemovalSnapshot({
 				referenceCounts: {
@@ -297,9 +344,10 @@ describe("listing command use cases", () => {
 			}),
 		);
 
-		const result = await new RemoveListing(repository, images).execute(
+		const result = await removeListing(
 			sellerActor,
 			{ listingId: "listing-1" },
+			dependencies,
 		);
 
 		expect(result).toEqual({
@@ -315,11 +363,12 @@ describe("listing command use cases", () => {
 			"listing-1",
 			"WITHDRAWN",
 		);
-		expect(images.cleanupImagesBestEffort).not.toHaveBeenCalled();
+		expect(images.cleanupPersistedImagesBestEffort).not.toHaveBeenCalled();
+		expect(images.cleanupUploadedImagesBestEffort).not.toHaveBeenCalled();
 	});
 
 	it("rejects withdrawing an already withdrawn referenced listing", async () => {
-		const { repository, images } = createFakes();
+		const { repository, dependencies } = createFakes();
 		vi.mocked(repository.findListingForMutation).mockResolvedValue(
 			makeRemovalSnapshot({
 				status: "WITHDRAWN",
@@ -332,9 +381,10 @@ describe("listing command use cases", () => {
 			}),
 		);
 
-		const result = await new RemoveListing(repository, images).execute(
+		const result = await removeListing(
 			sellerActor,
 			{ listingId: "listing-1" },
+			dependencies,
 		);
 
 		expect(result).toMatchObject({
@@ -346,17 +396,18 @@ describe("listing command use cases", () => {
 	});
 
 	it("returns image upload failures before saving updates", async () => {
-		const { repository, images } = createFakes();
+		const { repository, images, dependencies } = createFakes();
 		vi.mocked(images.uploadImages).mockRejectedValue(
 			new Error("upload failed"),
 		);
 
-		const result = await new UpdateListing(repository, images).execute(
+		const result = await updateListing(
 			sellerActor,
 			{
 				listingId: "listing-1",
 				imageFiles: [imageFile("new.jpg")],
 			},
+			dependencies,
 		);
 
 		expect(result).toMatchObject({

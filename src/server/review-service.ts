@@ -3,7 +3,6 @@ import {
 	createListingReview,
 	getListingReviews,
 	type ListingReviewPort,
-	type ReviewError,
 } from "@/domains/reviews/application/review-use-cases";
 import {
 	type CreateListingReviewInput,
@@ -13,30 +12,13 @@ import {
 	type ListingReview,
 } from "@/domains/reviews/dto/listing-review";
 import type { Actor } from "@/domains/shared/domain/actor";
-import { toAppErrorStatus } from "@/server/app-error-status";
 import type { ServerUserContext } from "@/server/function-middleware";
+import { RequestError, toRequestError } from "@/server/request-error";
 
 export type ReviewCreationResponse = {
 	readonly review: ListingReview;
 	readonly message: string;
 };
-
-export class ReviewRequestError extends Error {
-	readonly code?: string;
-	readonly details?: unknown;
-	readonly status: number;
-
-	constructor(
-		message: string,
-		options: { code?: string; details?: unknown; status?: number } = {},
-	) {
-		super(message);
-		this.name = "ReviewRequestError";
-		this.code = options.code;
-		this.details = options.details;
-		this.status = options.status ?? 400;
-	}
-}
 
 export function validateCreateListingReviewInput(
 	data: unknown,
@@ -44,7 +26,7 @@ export function validateCreateListingReviewInput(
 	const parsed = createListingReviewSchema.safeParse(data);
 
 	if (!parsed.success) {
-		throw new ReviewRequestError("Invalid data to create review", {
+		throw new RequestError("Invalid data to create review", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -58,7 +40,7 @@ export function validateGetListingReviewsInput(
 	const parsed = getListingReviewsQuerySchema.safeParse(data);
 
 	if (!parsed.success) {
-		throw new ReviewRequestError("Invalid review query", {
+		throw new RequestError("Invalid review query", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -75,7 +57,7 @@ export async function createListingReviewForCurrentUser(
 	const result = await createListingReview(input, toActor(user), reviewPort);
 
 	if (!result.ok) {
-		throw toReviewRequestError(result.error);
+		throw toRequestError(result.error);
 	}
 
 	return {
@@ -92,7 +74,7 @@ export async function listListingReviews(
 	const result = await getListingReviews(input.listingId, reviewPort);
 
 	if (!result.ok) {
-		throw toReviewRequestError(result.error);
+		throw toRequestError(result.error);
 	}
 
 	return result.value;
@@ -112,12 +94,4 @@ function toActor(user: ServerUserContext): Actor {
 		id: user.id,
 		role: user.role,
 	};
-}
-
-function toReviewRequestError(error: ReviewError) {
-	return new ReviewRequestError(error.message, {
-		code: error.code,
-		details: error.details,
-		status: toAppErrorStatus(error.kind),
-	});
 }

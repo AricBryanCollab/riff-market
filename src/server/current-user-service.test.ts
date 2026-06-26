@@ -10,12 +10,12 @@ const accountServiceMocks = vi.hoisted(() => ({
 vi.mock("@/server/account-service", () => accountServiceMocks);
 
 import {
-	CurrentUserRequestError,
 	getCurrentUser,
 	getOptionalCurrentUser,
 	updateCurrentUserProfilePicture,
 	validateCurrentUserUpdateInput,
 } from "./current-user-service";
+import { RequestError } from "./request-error";
 
 describe("current-user service", () => {
 	afterEach(() => {
@@ -27,9 +27,11 @@ describe("current-user service", () => {
 			code: "ACCOUNT_PROFILE_NOT_FOUND",
 			error: "User not found",
 			kind: "not-found",
+			message: "User not found",
 		});
 
 		await expect(getCurrentUser("missing-user")).rejects.toMatchObject({
+			code: "ACCOUNT_PROFILE_NOT_FOUND",
 			message: "User not found",
 			status: 404,
 		});
@@ -45,6 +47,7 @@ describe("current-user service", () => {
 			code: "ACCOUNT_PROFILE_NOT_FOUND",
 			error: "User not found",
 			kind: "not-found",
+			message: "User not found",
 		});
 
 		await expect(getOptionalCurrentUser("missing-user")).resolves.toBeNull();
@@ -52,8 +55,10 @@ describe("current-user service", () => {
 
 	it("surfaces unexpected optional current user lookup errors as server errors", async () => {
 		accountServiceMocks.getAccountProfile.mockResolvedValue({
+			code: "ACCOUNT_PROFILE_LOOKUP_FAILED",
 			error: "Database unavailable",
 			kind: "unexpected",
+			message: "Database unavailable",
 		});
 
 		await expect(getOptionalCurrentUser("user-1")).rejects.toMatchObject({
@@ -64,24 +69,15 @@ describe("current-user service", () => {
 
 	it("surfaces conflict current-user lookup errors with conflict status", async () => {
 		accountServiceMocks.getAccountProfile.mockResolvedValue({
+			code: "ACCOUNT_PROFILE_CONFLICT",
 			error: "Account is in a conflicting state",
 			kind: "conflict",
+			message: "Account is in a conflicting state",
 		});
 
 		await expect(getCurrentUser("user-1")).rejects.toMatchObject({
 			message: "Account is in a conflicting state",
 			status: 409,
-		});
-	});
-
-	it("keeps legacy account errors without a kind as bad requests", async () => {
-		accountServiceMocks.getAccountProfile.mockResolvedValue({
-			error: "Database unavailable",
-		});
-
-		await expect(getOptionalCurrentUser("user-1")).rejects.toMatchObject({
-			message: "Database unavailable",
-			status: 400,
 		});
 	});
 
@@ -92,21 +88,22 @@ describe("current-user service", () => {
 	});
 
 	it("throws request errors for invalid current-user update input", () => {
-		expect(() => validateCurrentUserUpdateInput({})).toThrow(
-			CurrentUserRequestError,
-		);
+		expect(() => validateCurrentUserUpdateInput({})).toThrow(RequestError);
 	});
 
 	it("surfaces profile picture account-service errors", async () => {
 		accountServiceMocks.updateAccountProfilePicture.mockResolvedValue({
+			code: "ACCOUNT_PROFILE_PICTURE_UPDATE_FAILED",
+			kind: "unexpected",
+			message: "Failed to update the user profile picture",
 			error: "Failed to update the user profile picture",
 			details: "upload failed",
-			kind: "unexpected",
 		});
 
 		await expect(
 			updateCurrentUserProfilePicture("user-1", null),
 		).rejects.toMatchObject({
+			code: "ACCOUNT_PROFILE_PICTURE_UPDATE_FAILED",
 			message: "Failed to update the user profile picture",
 			details: "upload failed",
 			status: 500,

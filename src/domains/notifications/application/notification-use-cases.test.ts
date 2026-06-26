@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
-	CreateNotification,
-	GetNotifications,
-	GetUnreadNotificationCount,
-	ReadAllNotifications,
-	ReadNotification,
+	createNotification,
+	getNotifications,
+	getUnreadNotificationCount,
+	readAllNotifications,
+	readNotification,
 } from "./notification-use-cases";
 
 describe("notification use cases", () => {
@@ -16,9 +16,8 @@ describe("notification use cases", () => {
 			makeNotification({ id: "notification-1", userId: "user-1" }),
 			makeNotification({ id: "notification-2", userId: "user-2" }),
 		]);
-		const getNotifications = new GetNotifications(notifications);
 
-		const result = await getNotifications.execute(userOne);
+		const result = await getNotifications(userOne, notifications);
 
 		expect(result).toEqual({
 			ok: true,
@@ -30,12 +29,14 @@ describe("notification use cases", () => {
 		const notifications = new InMemoryNotifications([
 			makeNotification({ id: "notification-1", userId: "user-2" }),
 		]);
-		const readNotification = new ReadNotification(notifications);
 
-		const result = await readNotification.execute({
-			notificationId: "notification-1",
-			actor: userOne,
-		});
+		const result = await readNotification(
+			{
+				notificationId: "notification-1",
+				actor: userOne,
+			},
+			notifications,
+		);
 
 		expect(result).toMatchObject({
 			ok: false,
@@ -55,11 +56,12 @@ describe("notification use cases", () => {
 			makeNotification({ id: "notification-2", userId: "user-1" }),
 			makeNotification({ id: "notification-3", userId: "user-2" }),
 		]);
-		const readAllNotifications = new ReadAllNotifications(notifications);
-		const getUnreadCount = new GetUnreadNotificationCount(notifications);
 
-		const result = await readAllNotifications.execute(userOne);
-		const unreadCount = await getUnreadCount.execute(userOne);
+		const result = await readAllNotifications(userOne, notifications);
+		const unreadCount = await getUnreadNotificationCount(
+			userOne,
+			notifications,
+		);
 
 		expect(result).toEqual({ ok: true, value: { count: 2 } });
 		expect(unreadCount).toEqual({ ok: true, value: 0 });
@@ -80,14 +82,16 @@ describe("notification use cases", () => {
 
 	it("creates unread notifications", async () => {
 		const notifications = new InMemoryNotifications([]);
-		const createNotification = new CreateNotification(notifications);
 
-		const result = await createNotification.execute({
-			userId: "user-1",
-			purchaseId: "purchase-1",
-			sellerOrderId: null,
-			message: "Your purchase has been placed.",
-		});
+		const result = await createNotification(
+			{
+				userId: "user-1",
+				purchaseId: "purchase-1",
+				sellerOrderId: null,
+				message: "Your purchase has been placed.",
+			},
+			notifications,
+		);
 
 		expect(result).toEqual({
 			ok: true,

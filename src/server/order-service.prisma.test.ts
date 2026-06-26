@@ -116,7 +116,7 @@ describeDb("order service Prisma integration", () => {
 				readModels,
 			),
 		).rejects.toMatchObject({
-			name: "OrderRequestError",
+			name: "RequestError",
 			status: 404,
 			message: "Order not found with the provided order ID",
 		});
@@ -163,7 +163,7 @@ describeDb("order service Prisma integration", () => {
 				sellerOrders,
 			),
 		).rejects.toMatchObject({
-			name: "OrderRequestError",
+			name: "RequestError",
 			code: "CHANGE_SELLER_ORDER_STATUS_UNAUTHORIZED",
 			status: 403,
 		});

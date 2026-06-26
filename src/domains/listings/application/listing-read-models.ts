@@ -61,111 +61,49 @@ export interface CartListingReadPort {
 	findByIds(listingIds: string[]): Promise<ListingReadModel[]>;
 }
 
-export class GetListingDetails {
-	constructor(private readonly listings: ListingDetailReadPort) {}
-
-	async execute(
-		listingId: string,
-	): Promise<Result<ListingReadModel, ListingReadError>> {
-		if (listingId.trim().length === 0) {
-			return err(
-				listingReadError(
-					"LISTING_READ_INVALID_ID",
-					"Listing ID is required",
-					"validation",
-				),
-			);
-		}
-
-		const listing = await this.listings.findById(listingId);
-		if (!listing) {
-			return err(
-				listingReadError(
-					"LISTING_READ_NOT_FOUND",
-					"Listing not found",
-					"not-found",
-				),
-			);
-		}
-
-		return ok(listing);
+export async function getListingDetails(
+	listingId: string,
+	listings: ListingDetailReadPort,
+): Promise<Result<ListingReadModel, ListingReadError>> {
+	if (listingId.trim().length === 0) {
+		return err(
+			listingReadError(
+				"LISTING_READ_INVALID_ID",
+				"Listing ID is required",
+				"validation",
+			),
+		);
 	}
+
+	const listing = await listings.findById(listingId);
+	if (!listing) {
+		return err(
+			listingReadError(
+				"LISTING_READ_NOT_FOUND",
+				"Listing not found",
+				"not-found",
+			),
+		);
+	}
+
+	return ok(listing);
 }
 
-export class SearchApprovedListings {
-	constructor(private readonly listings: ApprovedListingSearchPort) {}
-
-	async execute(
-		query: ApprovedListingSearchQuery,
-	): Promise<Result<ListingReadModel[], ListingReadError>> {
-		return ok(await this.listings.searchApproved(query));
+export async function listSellerListings(
+	sellerId: string,
+	listings: SellerListingReadPort,
+): Promise<Result<ListingReadModel[], ListingReadError>> {
+	if (sellerId.trim().length === 0) {
+		return err(
+			listingReadError(
+				"LISTING_READ_INVALID_ID",
+				"Seller ID is required",
+				"validation",
+			),
+		);
 	}
-}
 
-export class ListSellerListings {
-	constructor(private readonly listings: SellerListingReadPort) {}
-
-	async execute(
-		sellerId: string,
-	): Promise<Result<ListingReadModel[], ListingReadError>> {
-		if (sellerId.trim().length === 0) {
-			return err(
-				listingReadError(
-					"LISTING_READ_INVALID_ID",
-					"Seller ID is required",
-					"validation",
-				),
-			);
-		}
-
-		return ok(await this.listings.listForSeller(sellerId));
-	}
-}
-
-export class ListPendingModerationListings {
-	constructor(private readonly listings: PendingModerationListingReadPort) {}
-
-	async execute(): Promise<Result<ListingReadModel[], ListingReadError>> {
-		return ok(await this.listings.listPendingModeration());
-	}
-}
-
-export class GetApprovedListingCategoryCounts {
-	constructor(private readonly listings: ListingCountReadPort) {}
-
-	async execute(): Promise<Result<ListingCategoryCount[], ListingReadError>> {
-		return ok(await this.listings.countApprovedByCategory());
-	}
-}
-
-export class GetListingStatusCount {
-	constructor(private readonly listings: ListingCountReadPort) {}
-
-	async execute(
-		status: ListingCountStatus,
-	): Promise<Result<number, ListingReadError>> {
-		return ok(await this.listings.countByStatus(status));
-	}
-}
-
-export class ListRecentApprovedListings {
-	constructor(private readonly listings: RecentApprovedListingReadPort) {}
-
-	async execute(
-		limit: number = 8,
-	): Promise<Result<ListingReadModel[], ListingReadError>> {
-		return ok(await this.listings.listRecentApproved(limit));
-	}
-}
-
-export class GetCartListingDetails {
-	constructor(private readonly listings: CartListingReadPort) {}
-
-	async execute(
-		listingIds: string[],
-	): Promise<Result<ListingReadModel[], ListingReadError>> {
-		return ok(await this.listings.findByIds(listingIds));
-	}
+	return ok(await listings.listForSeller(sellerId));
 }
 
 function listingReadError(

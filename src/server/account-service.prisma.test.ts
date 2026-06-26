@@ -68,7 +68,7 @@ describeDb("account service Prisma integration", () => {
 		});
 	});
 
-	it("deletes matching accounts and enqueues media cleanup jobs", async () => {
+	it("deletes matching accounts and stages media cleanup jobs", async () => {
 		await db.userSettings.create({
 			data: {
 				userId: "seller-1",
@@ -97,8 +97,13 @@ describeDb("account service Prisma integration", () => {
 			deletedUserId: "seller-1",
 		});
 
-		await expect(getAccountProfile("seller-1", accounts)).resolves.toEqual({
+		await expect(
+			getAccountProfile("seller-1", accounts),
+		).resolves.toMatchObject({
+			code: "ACCOUNT_PROFILE_NOT_FOUND",
 			error: "User not found",
+			kind: "not-found",
+			message: "User not found",
 		});
 		await expect(
 			db.mediaCleanupJob.findMany({

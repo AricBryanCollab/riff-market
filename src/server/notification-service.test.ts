@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { NotificationReadModel } from "@/domains/notifications/dto/notification";
 import type { ServerUserContext } from "@/server/function-middleware";
+import type { RequestError } from "@/server/request-error";
 import {
 	getNotificationsForCurrentUser,
-	type NotificationRequestError,
 	readNotificationForCurrentUser,
 } from "./notification-service";
 
@@ -44,10 +44,10 @@ describe("notification server service", () => {
 				notifications,
 			),
 		).rejects.toMatchObject({
-			name: "NotificationRequestError",
+			name: "RequestError",
 			status: 404,
 			code: "NOTIFICATION_NOT_FOUND",
-		} satisfies Partial<NotificationRequestError>);
+		} satisfies Partial<RequestError>);
 	});
 });
 

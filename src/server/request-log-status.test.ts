@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { RequestError } from "./request-error";
 import {
 	getRequestLogOutcome,
 	getRequestLogStatusCode,
@@ -30,6 +31,15 @@ describe("getRequestLogStatusCode", () => {
 
 	it("keeps thrown middleware paths as server errors", () => {
 		expect(getRequestLogStatusCode(undefined, { didThrow: true })).toBe(500);
+	});
+
+	it("uses thrown request-error status codes", () => {
+		expect(
+			getRequestLogStatusCode(undefined, {
+				didThrow: true,
+				error: new RequestError("Listing not found", { status: 404 }),
+			}),
+		).toBe(404);
 	});
 
 	it("classifies request outcomes from status codes", () => {

@@ -28,7 +28,7 @@ export interface AccountProfileWritePort {
 }
 
 export interface AccountDeletionPort {
-	deleteAccountAndEnqueueMediaCleanup(userId: string): Promise<void>;
+	deleteAccount(userId: string): Promise<void>;
 }
 
 export async function getAccountProfile(
@@ -83,7 +83,7 @@ export async function deleteAccount(
 		);
 	}
 
-	await accounts.deleteAccountAndEnqueueMediaCleanup(command.userId);
+	await accounts.deleteAccount(command.userId);
 
 	return ok({
 		message: "Account has been deleted successfully",

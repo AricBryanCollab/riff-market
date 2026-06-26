@@ -16,7 +16,6 @@
 		"test:browser:headed": "vitest run --config vitest.browser.config.ts --browser.headless=false",
 		"test:e2e": "playwright test",
 		"test:e2e:headed": "playwright test --headed",
-		"test:docs:report": "node --test scripts/docs-coverage-report.test.cjs",
 		"format": "biome format",
 		"format:fix": "biome format --write",
 		"lint": "biome lint",
@@ -26,10 +25,9 @@
 		"check:fix": "biome check --write",
 		"typecheck": "tsc --noEmit",
 		"validate": "bun typecheck && bun lint",
-		"docs:check": "node scripts/docs-contradictions.cjs",
-		"docs:check:strict": "bun run docs:check",
-		"docs:report": "node scripts/docs-coverage-report.cjs",
-		"docs:check:all": "bun run docs:check && bun run docs:report"
+		"garden:sync": "garden agents sync --apply",
+		"garden:lint": "garden lint",
+		"garden:check": "garden check"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.1.0",

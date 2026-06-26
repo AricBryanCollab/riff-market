@@ -50,63 +50,60 @@ export interface SellerOrderStatusRepositoryPort {
 	): Promise<void>;
 }
 
-export class ChangeSellerOrderStatus {
-	constructor(private readonly sellerOrders: SellerOrderStatusRepositoryPort) {}
+export async function changeSellerOrderStatus(
+	actor: Actor,
+	command: ChangeSellerOrderStatusCommand,
+	sellerOrders: SellerOrderStatusRepositoryPort,
+): Promise<
+	Result<ChangeSellerOrderStatusResult, ChangeSellerOrderStatusError>
+> {
+	const commandError = validateCommand(command);
+	if (commandError) {
+		return err(commandError);
+	}
 
-	async execute(
-		actor: Actor,
-		command: ChangeSellerOrderStatusCommand,
-	): Promise<
-		Result<ChangeSellerOrderStatusResult, ChangeSellerOrderStatusError>
-	> {
-		const commandError = validateCommand(command);
-		if (commandError) {
-			return err(commandError);
-		}
+	const record = await sellerOrders.findById(command.sellerOrderId);
+	if (!record) {
+		return err(
+			changeSellerOrderStatusError(
+				"CHANGE_SELLER_ORDER_STATUS_NOT_FOUND",
+				"Seller order not found",
+				"not-found",
+			),
+		);
+	}
 
-		const record = await this.sellerOrders.findById(command.sellerOrderId);
-		if (!record) {
-			return err(
-				changeSellerOrderStatusError(
-					"CHANGE_SELLER_ORDER_STATUS_NOT_FOUND",
-					"Seller order not found",
-					"not-found",
-				),
-			);
-		}
+	const authorizationError = authorize(actor, record, command.status);
+	if (authorizationError) {
+		return err(authorizationError);
+	}
 
-		const authorizationError = authorize(actor, record, command.status);
-		if (authorizationError) {
-			return err(authorizationError);
-		}
-
-		if (record.sellerOrder.status === command.status) {
-			return ok(toResult(record.sellerOrder));
-		}
-
-		const transitionError = applyTransition(record.sellerOrder, command);
-		if (transitionError) {
-			return err(transitionError);
-		}
-
-		try {
-			await this.sellerOrders.save(
-				record.sellerOrder,
-				statusChangedEvents(record.sellerOrder.pullDomainEvents()),
-			);
-		} catch (error) {
-			return err(
-				changeSellerOrderStatusError(
-					"CHANGE_SELLER_ORDER_STATUS_SAVE_FAILED",
-					"Failed to update seller order status",
-					"unexpected",
-					error,
-				),
-			);
-		}
-
+	if (record.sellerOrder.status === command.status) {
 		return ok(toResult(record.sellerOrder));
 	}
+
+	const transitionError = applyTransition(record.sellerOrder, command);
+	if (transitionError) {
+		return err(transitionError);
+	}
+
+	try {
+		await sellerOrders.save(
+			record.sellerOrder,
+			statusChangedEvents(record.sellerOrder.pullDomainEvents()),
+		);
+	} catch (error) {
+		return err(
+			changeSellerOrderStatusError(
+				"CHANGE_SELLER_ORDER_STATUS_SAVE_FAILED",
+				"Failed to update seller order status",
+				"unexpected",
+				error,
+			),
+		);
+	}
+
+	return ok(toResult(record.sellerOrder));
 }
 
 export function changeSellerOrderStatusError(

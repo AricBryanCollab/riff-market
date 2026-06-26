@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
 	type BuyerPurchaseHistoryPort,
 	deriveBuyerOrderSummaryStatus,
-	GetOrderDetail,
-	ListBuyerPurchaseHistory,
-	ListSellerOrderDashboard,
+	getOrderDetail,
+	listBuyerPurchaseHistory,
+	listSellerOrderDashboard,
 	type OrderDetailReadPort,
 	type SellerOrderDashboardPort,
 } from "@/domains/ordering/application/order-read-models";
@@ -17,15 +17,17 @@ const sellerOrder = makeOrderReadModel({
 	sellerOrderId: "seller-order-1",
 });
 
-describe("ListBuyerPurchaseHistory", () => {
+describe("listBuyerPurchaseHistory", () => {
 	it("allows customers to read only their own purchase history", async () => {
 		const port = new FakeBuyerPurchaseHistoryPort([customerOrder]);
-		const useCase = new ListBuyerPurchaseHistory(port);
 
-		const result = await useCase.execute({
-			id: "customer-1",
-			role: "CUSTOMER",
-		});
+		const result = await listBuyerPurchaseHistory(
+			{
+				id: "customer-1",
+				role: "CUSTOMER",
+			},
+			port,
+		);
 
 		expect(result).toEqual({
 			ok: true,
@@ -36,12 +38,14 @@ describe("ListBuyerPurchaseHistory", () => {
 
 	it("rejects non-customer purchase history reads", async () => {
 		const port = new FakeBuyerPurchaseHistoryPort([customerOrder]);
-		const useCase = new ListBuyerPurchaseHistory(port);
 
-		const result = await useCase.execute({
-			id: "seller-1",
-			role: "SELLER",
-		});
+		const result = await listBuyerPurchaseHistory(
+			{
+				id: "seller-1",
+				role: "SELLER",
+			},
+			port,
+		);
 
 		expect(result).toMatchObject({
 			ok: false,
@@ -54,15 +58,17 @@ describe("ListBuyerPurchaseHistory", () => {
 	});
 });
 
-describe("ListSellerOrderDashboard", () => {
+describe("listSellerOrderDashboard", () => {
 	it("allows sellers to read their seller orders", async () => {
 		const port = new FakeSellerOrderDashboardPort([sellerOrder]);
-		const useCase = new ListSellerOrderDashboard(port);
 
-		const result = await useCase.execute({
-			id: "seller-1",
-			role: "SELLER",
-		});
+		const result = await listSellerOrderDashboard(
+			{
+				id: "seller-1",
+				role: "SELLER",
+			},
+			port,
+		);
 
 		expect(result).toEqual({
 			ok: true,
@@ -74,12 +80,14 @@ describe("ListSellerOrderDashboard", () => {
 
 	it("allows admins to read all seller orders", async () => {
 		const port = new FakeSellerOrderDashboardPort([sellerOrder]);
-		const useCase = new ListSellerOrderDashboard(port);
 
-		const result = await useCase.execute({
-			id: "admin-1",
-			role: "ADMIN",
-		});
+		const result = await listSellerOrderDashboard(
+			{
+				id: "admin-1",
+				role: "ADMIN",
+			},
+			port,
+		);
 
 		expect(result).toEqual({
 			ok: true,
@@ -91,12 +99,14 @@ describe("ListSellerOrderDashboard", () => {
 
 	it("rejects customer seller-order dashboard reads", async () => {
 		const port = new FakeSellerOrderDashboardPort([sellerOrder]);
-		const useCase = new ListSellerOrderDashboard(port);
 
-		const result = await useCase.execute({
-			id: "customer-1",
-			role: "CUSTOMER",
-		});
+		const result = await listSellerOrderDashboard(
+			{
+				id: "customer-1",
+				role: "CUSTOMER",
+			},
+			port,
+		);
 
 		expect(result).toMatchObject({
 			ok: false,
@@ -110,16 +120,16 @@ describe("ListSellerOrderDashboard", () => {
 	});
 });
 
-describe("GetOrderDetail", () => {
+describe("getOrderDetail", () => {
 	it("allows customers to read their own purchase detail", async () => {
 		const port = new FakeOrderDetailReadPort({
 			customerPurchase: customerOrder,
 		});
-		const useCase = new GetOrderDetail(port);
 
-		const result = await useCase.execute(
+		const result = await getOrderDetail(
 			{ id: "customer-1", role: "CUSTOMER" },
 			"purchase-1",
+			port,
 		);
 
 		expect(result).toEqual({
@@ -135,11 +145,11 @@ describe("GetOrderDetail", () => {
 		const port = new FakeOrderDetailReadPort({
 			customerPurchase: null,
 		});
-		const useCase = new GetOrderDetail(port);
 
-		const result = await useCase.execute(
+		const result = await getOrderDetail(
 			{ id: "customer-1", role: "CUSTOMER" },
 			"purchase-2",
+			port,
 		);
 
 		expect(result).toMatchObject({
@@ -155,11 +165,11 @@ describe("GetOrderDetail", () => {
 		const port = new FakeOrderDetailReadPort({
 			sellerOrder,
 		});
-		const useCase = new GetOrderDetail(port);
 
-		const result = await useCase.execute(
+		const result = await getOrderDetail(
 			{ id: "seller-1", role: "SELLER" },
 			"seller-order-1",
+			port,
 		);
 
 		expect(result).toEqual({
@@ -175,11 +185,11 @@ describe("GetOrderDetail", () => {
 		const port = new FakeOrderDetailReadPort({
 			adminOrder: sellerOrder,
 		});
-		const useCase = new GetOrderDetail(port);
 
-		const result = await useCase.execute(
+		const result = await getOrderDetail(
 			{ id: "admin-1", role: "ADMIN" },
 			"seller-order-1",
+			port,
 		);
 
 		expect(result).toEqual({
@@ -191,11 +201,11 @@ describe("GetOrderDetail", () => {
 
 	it("rejects blank order IDs", async () => {
 		const port = new FakeOrderDetailReadPort({});
-		const useCase = new GetOrderDetail(port);
 
-		const result = await useCase.execute(
+		const result = await getOrderDetail(
 			{ id: "customer-1", role: "CUSTOMER" },
 			" ",
+			port,
 		);
 
 		expect(result).toMatchObject({

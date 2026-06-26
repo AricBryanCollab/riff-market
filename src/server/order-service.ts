@@ -1,16 +1,14 @@
 import { z } from "zod";
-import type {
-	ChangeSellerOrderStatusError,
-	SellerOrderStatusRepositoryPort,
+import {
+	changeSellerOrderStatus,
+	type SellerOrderStatusRepositoryPort,
 } from "@/domains/ordering/application/change-seller-order-status";
-import { ChangeSellerOrderStatus } from "@/domains/ordering/application/change-seller-order-status";
 import {
 	type BuyerPurchaseHistoryPort,
-	GetOrderDetail,
-	ListBuyerPurchaseHistory,
-	ListSellerOrderDashboard,
+	getOrderDetail,
+	listBuyerPurchaseHistory,
+	listSellerOrderDashboard,
 	type OrderDetailReadPort,
-	type OrderReadError,
 	type SellerOrderDashboardPort,
 } from "@/domains/ordering/application/order-read-models";
 import type { SellerOrderStatus } from "@/domains/ordering/domain/seller-order";
@@ -19,8 +17,11 @@ import type {
 	OrderingOrderReadStatus,
 } from "@/domains/ordering/dto/order-read-model";
 import type { Actor } from "@/domains/shared/domain/actor";
-import { toAppErrorStatus } from "@/server/app-error-status";
 import type { ServerUserContext } from "@/server/function-middleware";
+import {
+	RequestError,
+	unwrapResultOrThrowRequestError,
+} from "@/server/request-error";
 
 const sellerOrderCommandStatuses = [
 	"PROCESSING",
@@ -68,23 +69,6 @@ export type SellerOrderStatusChangeResponse = {
 	readonly trackingNumber: string | null;
 };
 
-export class OrderRequestError extends Error {
-	readonly code?: string;
-	readonly details?: unknown;
-	readonly status: number;
-
-	constructor(
-		message: string,
-		options: { code?: string; details?: unknown; status?: number } = {},
-	) {
-		super(message);
-		this.name = "OrderRequestError";
-		this.code = options.code;
-		this.details = options.details;
-		this.status = options.status ?? 400;
-	}
-}
-
 type OrderReadModels = BuyerPurchaseHistoryPort &
 	SellerOrderDashboardPort &
 	OrderDetailReadPort;
@@ -93,7 +77,7 @@ export function validateOrderDetailInput(data: unknown): OrderDetailInput {
 	const parsed = orderDetailInputSchema.safeParse(data);
 
 	if (!parsed.success) {
-		throw new OrderRequestError("Invalid order detail request", {
+		throw new RequestError("Invalid order detail request", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -107,7 +91,7 @@ export function validateChangeSellerOrderStatusInput(
 	const parsed = changeSellerOrderStatusInputSchema.safeParse(data);
 
 	if (!parsed.success) {
-		throw new OrderRequestError("Invalid seller order status request", {
+		throw new RequestError("Invalid seller order status request", {
 			details: z.flattenError(parsed.error),
 		});
 	}
@@ -123,32 +107,18 @@ export async function listOrdersForCurrentUser(
 	const orderReadModels = readModels ?? (await createPrismaOrderReadModels());
 
 	if (actor.role === "CUSTOMER") {
-		const listBuyerPurchaseHistory = new ListBuyerPurchaseHistory(
-			orderReadModels,
-		);
-		const result = await listBuyerPurchaseHistory.execute(actor);
+		const result = await listBuyerPurchaseHistory(actor, orderReadModels);
 
-		if (!result.ok) {
-			throw toOrderRequestError(result.error);
-		}
-
-		return result.value;
+		return unwrapResultOrThrowRequestError(result);
 	}
 
 	if (actor.role === "SELLER" || actor.role === "ADMIN") {
-		const listSellerOrderDashboard = new ListSellerOrderDashboard(
-			orderReadModels,
-		);
-		const result = await listSellerOrderDashboard.execute(actor);
+		const result = await listSellerOrderDashboard(actor, orderReadModels);
 
-		if (!result.ok) {
-			throw toOrderRequestError(result.error);
-		}
-
-		return result.value;
+		return unwrapResultOrThrowRequestError(result);
 	}
 
-	throw new OrderRequestError(
+	throw new RequestError(
 		"Only customers, sellers, and admins can read orders",
 		{
 			status: 403,
@@ -163,14 +133,9 @@ export async function getOrderDetailForCurrentUser(
 ): Promise<OrderingOrderReadModel> {
 	const orderReadModels = readModels ?? (await createPrismaOrderReadModels());
 	const actor = toActor(user);
-	const getOrderDetail = new GetOrderDetail(orderReadModels);
-	const result = await getOrderDetail.execute(actor, input.orderId);
+	const result = await getOrderDetail(actor, input.orderId, orderReadModels);
 
-	if (!result.ok) {
-		throw toOrderRequestError(result.error);
-	}
-
-	return result.value;
+	return unwrapResultOrThrowRequestError(result);
 }
 
 export async function changeSellerOrderStatusForCurrentUser(
@@ -186,14 +151,9 @@ export async function changeSellerOrderStatusForCurrentUser(
 		status: input.status,
 		trackingNumber: input.trackingNumber,
 	};
-	const changeSellerOrderStatus = new ChangeSellerOrderStatus(sellerOrders);
-	const result = await changeSellerOrderStatus.execute(actor, command);
+	const result = await changeSellerOrderStatus(actor, command, sellerOrders);
 
-	if (!result.ok) {
-		throw toOrderRequestError(result.error);
-	}
-
-	return result.value;
+	return unwrapResultOrThrowRequestError(result);
 }
 
 function toActor(user: ServerUserContext): Actor {
@@ -223,14 +183,4 @@ async function createPrismaSellerOrderStatusRepository(): Promise<SellerOrderSta
 	);
 
 	return new PrismaSellerOrderStatusRepository(prisma);
-}
-
-function toOrderRequestError(
-	error: OrderReadError | ChangeSellerOrderStatusError,
-) {
-	return new OrderRequestError(error.message, {
-		code: error.code,
-		details: error.details,
-		status: toAppErrorStatus(error.kind),
-	});
 }

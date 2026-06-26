@@ -80,116 +80,109 @@ export type ListingDeclinedEvent = Extract<
 
 type ListingModerationEvent = ListingApprovedEvent | ListingDeclinedEvent;
 
-export class ModerateListing {
-	constructor(
-		private readonly listings: ListingModerationRepositoryPort,
-		private readonly notifier: ListingModerationNotifierPort,
-	) {}
+export async function moderateListing(
+	actor: Actor,
+	command: ModerateListingCommand,
+	listings: ListingModerationRepositoryPort,
+	notifier: ListingModerationNotifierPort,
+): Promise<ModerateListingResult> {
+	if (actor.role !== "ADMIN") {
+		return {
+			ok: false,
+			error: {
+				kind: "authorization",
+				code: "MODERATE_LISTING_UNAUTHORIZED",
+				message: "Only admins can moderate listings",
+			},
+		};
+	}
 
-	async execute(
-		actor: Actor,
-		command: ModerateListingCommand,
-	): Promise<ModerateListingResult> {
-		if (actor.role !== "ADMIN") {
-			return {
-				ok: false,
-				error: {
-					kind: "authorization",
-					code: "MODERATE_LISTING_UNAUTHORIZED",
-					message: "Only admins can moderate listings",
-				},
-			};
+	if (command.decision !== "APPROVE" && command.decision !== "DECLINE") {
+		return {
+			ok: false,
+			error: {
+				kind: "validation",
+				code: "MODERATE_LISTING_INVALID_DECISION",
+				message: "Listing moderation decision is invalid",
+			},
+		};
+	}
+
+	const snapshot = await listings.findListingForModeration(command.listingId);
+
+	if (!snapshot) {
+		return {
+			ok: false,
+			error: {
+				kind: "not-found",
+				code: "MODERATE_LISTING_NOT_FOUND",
+				message: "Listing not found",
+			},
+		};
+	}
+
+	const listing = Listing.reconstitute(snapshot);
+
+	try {
+		if (command.decision === "APPROVE") {
+			listing.approve(actor);
+		} else {
+			listing.decline(actor);
 		}
-
-		if (command.decision !== "APPROVE" && command.decision !== "DECLINE") {
-			return {
-				ok: false,
-				error: {
-					kind: "validation",
-					code: "MODERATE_LISTING_INVALID_DECISION",
-					message: "Listing moderation decision is invalid",
-				},
-			};
-		}
-
-		const snapshot = await this.listings.findListingForModeration(
-			command.listingId,
-		);
-
-		if (!snapshot) {
-			return {
-				ok: false,
-				error: {
-					kind: "not-found",
-					code: "MODERATE_LISTING_NOT_FOUND",
-					message: "Listing not found",
-				},
-			};
-		}
-
-		const listing = Listing.reconstitute(snapshot);
-
-		try {
-			if (command.decision === "APPROVE") {
-				listing.approve(actor);
-			} else {
-				listing.decline(actor);
-			}
-		} catch (error) {
-			if (error instanceof ListingLifecycleError) {
-				return {
-					ok: false,
-					error: {
-						kind: "conflict",
-						code: "MODERATE_LISTING_INVALID_TRANSITION",
-						message: error.message,
-						details: { code: error.code },
-					},
-				};
-			}
-
-			throw error;
-		}
-
-		const moderationEvent = getModerationEvent(
-			listing.pullDomainEvents(),
-			listing.status,
-		);
-		if (!moderationEvent) {
-			return {
-				ok: false,
-				error: {
-					kind: "unexpected",
-					code: "MODERATE_LISTING_EVENT_MISSING",
-					message: "Listing moderation event was not recorded",
-				},
-			};
-		}
-
-		const savedListing = await this.listings.saveListingStatus(
-			listing.id,
-			listing.status,
-			snapshot.status,
-		);
-
-		if (!savedListing) {
+	} catch (error) {
+		if (error instanceof ListingLifecycleError) {
 			return {
 				ok: false,
 				error: {
 					kind: "conflict",
-					code: "MODERATE_LISTING_STALE_STATUS",
-					message: "Listing status changed before moderation completed",
+					code: "MODERATE_LISTING_INVALID_TRANSITION",
+					message: error.message,
+					details: { code: error.code },
 				},
 			};
 		}
 
-		await notifyModerationResult(this.notifier, savedListing, moderationEvent);
+		throw error;
+	}
 
+	const moderationEvent = getModerationEvent(
+		listing.pullDomainEvents(),
+		listing.status,
+	);
+	if (!moderationEvent) {
 		return {
-			ok: true,
-			value: savedListing,
+			ok: false,
+			error: {
+				kind: "unexpected",
+				code: "MODERATE_LISTING_EVENT_MISSING",
+				message: "Listing moderation event was not recorded",
+			},
 		};
 	}
+
+	const savedListing = await listings.saveListingStatus(
+		listing.id,
+		listing.status,
+		snapshot.status,
+	);
+
+	if (!savedListing) {
+		return {
+			ok: false,
+			error: {
+				kind: "conflict",
+				code: "MODERATE_LISTING_STALE_STATUS",
+				message: "Listing status changed before moderation completed",
+			},
+		};
+	}
+
+	await notifyModerationResult(notifier, savedListing, moderationEvent);
+
+	return {
+		ok: true,
+		value: savedListing,
+	};
 }
 
 async function notifyModerationResult(
