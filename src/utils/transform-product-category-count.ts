@@ -1,8 +1,8 @@
 import { productCategoryMetadata } from "@/constants/product-category-metdata";
-import type { ProductCountByCategoryData } from "@/types/product";
+import type { ListingCategoryCountData } from "@/domains/listings/dto/listing-read-model";
 
 export function transformProductCategoryCount(
-	data: ProductCountByCategoryData[],
+	data: ListingCategoryCountData[],
 ) {
 	return data.map((item) => ({
 		category: item.category,

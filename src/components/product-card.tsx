@@ -6,10 +6,10 @@ import {
 	CardFooter,
 	CardHeader,
 } from "@/components/ui/card";
-import type { BaseProduct } from "@/types/product";
+import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 
 interface ProductCardProps {
-	product: BaseProduct;
+	product: ListingReadDto;
 	onClick?: () => void;
 }
 

@@ -13,11 +13,11 @@ import {
 import {
 	approvedListingProductApiQuerySchema,
 	type ListingCategoryCount,
+	type ListingReadDto,
 	type ListingReadModel,
-	type ListingReadStatus,
+	type ListingStatusCount,
 	listingCartDetailsProductApiQuerySchema,
 } from "@/domains/listings/dto/listing-read-model";
-import type { ProductCategory, ProductCondition } from "@/types/enum";
 
 export type ListingReadServiceDependencies = {
 	readonly listings: ListingDetailReadPort &
@@ -34,35 +34,10 @@ type ProductApiReadError = {
 	readonly details?: object;
 };
 
-type ProductApiListingReadModel = {
-	readonly id: string;
-	readonly sellerId: string;
-	readonly name: string;
-	readonly category: ProductCategory;
-	readonly condition: ProductCondition;
-	readonly brand: string;
-	readonly model: string;
-	readonly images: string[];
-	readonly description: string;
-	readonly price: number;
-	readonly priceCents?: number | null;
-	readonly currencyCode?: string | null;
-	readonly stock: number;
-	readonly isApproved: boolean;
-	readonly listingStatus: ListingReadStatus;
-	readonly createdAt?: string;
-	readonly updatedAt?: string;
-	readonly seller: ListingReadModel["seller"];
-};
-
-type ProductApiListingCountByStatus =
-	| { readonly approvedProductCount: number }
-	| { readonly pendingProductCount: number };
-
 export async function getListingDetailsForProductApi(
 	listingId: string,
 	dependencies?: ListingReadServiceDependencies,
-): Promise<ProductApiListingReadModel | ProductApiReadError> {
+): Promise<ListingReadDto | ProductApiReadError> {
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
 	const result = await getListingDetails(listingId, readDependencies.listings);
@@ -81,7 +56,7 @@ export async function getListingDetailsForProductApi(
 export async function getApprovedListingsForProductApi(
 	rawQuery: unknown,
 	dependencies?: ListingReadServiceDependencies,
-): Promise<ProductApiListingReadModel[] | ProductApiReadError> {
+): Promise<ListingReadDto[] | ProductApiReadError> {
 	const parsed = approvedListingProductApiQuerySchema.safeParse(rawQuery);
 
 	if (!parsed.success) {
@@ -103,7 +78,7 @@ export async function getSellerListingsForProductApi(
 	sellerId: string,
 	role: string,
 	dependencies?: ListingReadServiceDependencies,
-): Promise<ProductApiListingReadModel[] | ProductApiReadError> {
+): Promise<ListingReadDto[] | ProductApiReadError> {
 	if (role !== "SELLER" || !sellerId) {
 		return { error: "Unauthorized, user must be a seller" };
 	}
@@ -121,7 +96,7 @@ export async function getSellerListingsForProductApi(
 
 export async function getPendingModerationListingsForProductApi(
 	dependencies?: ListingReadServiceDependencies,
-): Promise<ProductApiListingReadModel[] | ProductApiReadError> {
+): Promise<ListingReadDto[] | ProductApiReadError> {
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
 	const listings = await readDependencies.listings.listPendingModeration();
@@ -140,7 +115,7 @@ export async function getListingCategoryCountsForProductApi(
 export async function getListingStatusCountForProductApi(
 	isApproved: boolean,
 	dependencies?: ListingReadServiceDependencies,
-): Promise<ProductApiListingCountByStatus | ProductApiReadError> {
+): Promise<ListingStatusCount | ProductApiReadError> {
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
 	const status = isApproved ? "APPROVED" : "PENDING";
@@ -154,7 +129,7 @@ export async function getListingStatusCountForProductApi(
 export async function getRecentListingsForProductApi(
 	limit: number = 8,
 	dependencies?: ListingReadServiceDependencies,
-): Promise<ProductApiListingReadModel[] | ProductApiReadError> {
+): Promise<ListingReadDto[] | ProductApiReadError> {
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
 	const listings = await readDependencies.listings.listRecentApproved(limit);
@@ -166,7 +141,7 @@ export async function getCartListingsForProductApi(
 	role: string,
 	rawQuery: unknown,
 	dependencies?: ListingReadServiceDependencies,
-): Promise<ProductApiListingReadModel[] | ProductApiReadError> {
+): Promise<ListingReadDto[] | ProductApiReadError> {
 	if (role !== "CUSTOMER") {
 		return { error: "Unauthorized, user must be a customer" };
 	}
@@ -225,7 +200,7 @@ function toListingSearchQuery(
 
 function toProductApiListingReadModel(
 	listing: ListingReadModel,
-): ProductApiListingReadModel {
+): ListingReadDto {
 	return {
 		id: listing.id,
 		sellerId: listing.sellerId,

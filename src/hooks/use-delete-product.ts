@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import type { ProductListingRemovalResponse } from "@/domains/listings/dto/listing-command";
 import { clientLogger } from "@/lib/client-logger";
 import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
 import { deleteListingFn } from "@/server/listing.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
-import type { DeleteProductResponse } from "@/types/product";
 
 const useDeleteProduct = () => {
 	const queryClient = useQueryClient();
@@ -23,7 +23,7 @@ const useDeleteProduct = () => {
 		mutationFn: (id: string) =>
 			deleteListingFn({
 				data: { listingId: id },
-			}) as Promise<DeleteProductResponse>,
+			}) as Promise<ProductListingRemovalResponse>,
 		onSuccess: async () => {
 			await invalidateProductCache(queryClient);
 			showToast("Product has been successfully deleted", "success");

@@ -1,7 +1,7 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { getPendingModerationListingsProductApiFn } from "@/server/listing-read.functions";
-import type { BaseProduct } from "@/types/product";
 
 type ProductReadError = {
 	readonly error: string;
@@ -20,12 +20,12 @@ function unwrapProductReadResult<T>(result: T | ProductReadError): T {
 	return result as T;
 }
 
-export const pendingProductsQueryOpt = queryOptions<BaseProduct[]>({
+export const pendingProductsQueryOpt = queryOptions<ListingReadDto[]>({
 	queryKey: queryKeys.products.pending,
 	queryFn: async () => {
 		const result = await getPendingModerationListingsProductApiFn();
 
-		return unwrapProductReadResult(result) as BaseProduct[];
+		return unwrapProductReadResult(result) as ListingReadDto[];
 	},
 	retry: false,
 	staleTime: 30000,

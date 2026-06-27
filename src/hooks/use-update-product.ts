@@ -1,6 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import type {
+	ProductListingMutationResponse,
+	UpdateListingProductFormDraft,
+} from "@/domains/listings/dto/listing-command";
 import type { UpdateListingFormInput } from "@/domains/listings/dto/listing-form";
 import { useProductById } from "@/hooks/use-get-products";
 import type { ImageFile } from "@/hooks/use-upload-image";
@@ -9,11 +13,6 @@ import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
 import { updateListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
-import type {
-	ProductResponse,
-	UpdateProductForm,
-	UpdateProductRequest,
-} from "@/types/product";
 
 function prepareProductFormData(data: UpdateListingFormInput): FormData {
 	const formData = new FormData();
@@ -39,7 +38,9 @@ function prepareProductFormData(data: UpdateListingFormInput): FormData {
 }
 
 const useUpdateProduct = (id: string) => {
-	const [product, setProduct] = useState<UpdateProductForm | null>(null);
+	const [product, setProduct] = useState<UpdateListingProductFormDraft | null>(
+		null,
+	);
 	const [images, setImages] = useState<ImageFile[]>([]);
 	const queryClient = useQueryClient();
 	const { showToast } = useToastStore();
@@ -120,11 +121,19 @@ const useUpdateProduct = (id: string) => {
 		isPending: loadingUpdateProduct,
 		isError: errorUpdateProduct,
 	} = useMutation({
-		mutationFn: ({ id, data }: { id: string; data: UpdateProductRequest }) => {
+		mutationFn: ({
+			id,
+			data,
+		}: {
+			id: string;
+			data: UpdateListingFormInput;
+		}) => {
 			const formData = prepareProductFormData(data);
 			formData.append("listingId", id);
 
-			return updateListingFn({ data: formData }) as Promise<ProductResponse>;
+			return updateListingFn({
+				data: formData,
+			}) as Promise<ProductListingMutationResponse>;
 		},
 		onSuccess: async () => {
 			await invalidateProductCache(queryClient);
@@ -152,9 +161,16 @@ const useUpdateProduct = (id: string) => {
 			.filter((img) => !img.file.name.startsWith("https://res.cloudinary.com"))
 			.map((img) => img.file);
 
-		const payload: UpdateProductRequest = {
-			...product,
-			images: newFiles.length ? newFiles : undefined,
+		const payload: UpdateListingFormInput = {
+			name: product.name,
+			brand: product.brand,
+			model: product.model,
+			condition: product.condition,
+			description: product.description,
+			category: product.category,
+			price: product.price,
+			stock: product.stock,
+			...(newFiles.length ? { images: newFiles } : {}),
 		};
 
 		mutate({ id, data: payload });

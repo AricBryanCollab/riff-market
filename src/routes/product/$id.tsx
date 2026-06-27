@@ -14,8 +14,8 @@ import Rating from "@/components/rating";
 import ReviewSection from "@/components/review-section";
 import SectionContainer from "@/components/section-container";
 import { productCategoryOptions } from "@/constants/select-options";
+import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { productbyIdQueryOpt } from "@/hooks/use-get-products";
-import type { BaseProduct } from "@/types/product";
 
 export const Route = createFileRoute("/product/$id")({
 	beforeLoad: async ({ context, params }) => {
@@ -205,7 +205,7 @@ function RouteComponent() {
 	);
 }
 
-function isPublicProductVisible(product: BaseProduct) {
+function isPublicProductVisible(product: ListingReadDto) {
 	return product.listingStatus === undefined
 		? product.isApproved
 		: product.listingStatus === "APPROVED";

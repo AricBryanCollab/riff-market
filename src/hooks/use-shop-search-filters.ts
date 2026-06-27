@@ -1,5 +1,5 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import type { ShopSearch } from "@/types/product";
+import type { ListingShopSearch } from "@/domains/listings/dto/listing-read-model";
 import { getApprovedFiltersFromSearch, getShopPage } from "@/utils/shop-search";
 
 const getOptionalString = (value?: string) => (value ? value : undefined);
@@ -12,7 +12,7 @@ const useShopSearchFilters = () => {
 	const navigate = useNavigate({ from: "/shop/" });
 
 	const updateSearch = (
-		updater: (previous: ShopSearch) => ShopSearch,
+		updater: (previous: ListingShopSearch) => ListingShopSearch,
 		replace = true,
 	) => {
 		navigate({

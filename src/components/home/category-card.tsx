@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { type LucideIcon, Mic2, Music, Piano, Zap } from "lucide-react";
-import type { CategoryMeta } from "@/types/product";
+import type { ListingCategoryMeta } from "@/domains/listings/dto/listing-read-model";
 
 interface CategoryCardProps {
-	category: CategoryMeta;
+	category: ListingCategoryMeta;
 }
 
 const ICON_MAP: Record<string, LucideIcon> = {

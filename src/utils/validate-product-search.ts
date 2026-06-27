@@ -1,4 +1,4 @@
-import type { ShopSearch } from "@/types/product";
+import type { ListingShopSearch } from "@/domains/listings/dto/listing-read-model";
 
 const getOptionalString = (value: unknown): string | undefined => {
 	if (typeof value !== "string" || value.length === 0) {
@@ -34,7 +34,7 @@ const getOptionalPage = (value: unknown): number | undefined => {
 
 export function validateProductSearch(
 	search: Record<string, unknown>,
-): ShopSearch {
+): ListingShopSearch {
 	return {
 		category: getOptionalString(search.category),
 		brand: getOptionalString(search.brand),

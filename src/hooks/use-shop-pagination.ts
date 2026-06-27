@@ -1,9 +1,9 @@
+import type { ApprovedListingCount } from "@/domains/listings/dto/listing-read-model";
 import {
 	useApprovedProductCount,
 	useApprovedProducts,
 } from "@/hooks/use-get-products";
 import useShopSearchFilters from "@/hooks/use-shop-search-filters";
-import type { ApprovedProductCount } from "@/types/product";
 import { SHOP_PAGE_SIZE } from "@/utils/shop-search";
 
 const useShopPagination = () => {
@@ -17,7 +17,7 @@ const useShopPagination = () => {
 		useApprovedProducts(approvedFilters);
 
 	const totalProducts =
-		(productCount as ApprovedProductCount | undefined)?.approvedProductCount ??
+		(productCount as ApprovedListingCount | undefined)?.approvedProductCount ??
 		0;
 
 	const totalPages = Math.ceil(totalProducts / pageSize);

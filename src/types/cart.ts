@@ -1,7 +1,7 @@
-import type { BaseProduct } from "@/types/product";
+import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 
 export interface CartItem {
-	product: BaseProduct | undefined;
+	product: ListingReadDto | undefined;
 	isLoading: boolean;
 	isError: boolean;
 	productId: string;

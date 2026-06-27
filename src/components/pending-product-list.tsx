@@ -4,11 +4,11 @@ import AnimatedLoader from "@/components/animated-loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
-import type { BaseProduct } from "@/types/product";
+import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { formatRelativeTime } from "@/utils/format-date";
 
 interface PendingProductListProps {
-	pendingProducts: BaseProduct[];
+	pendingProducts: ListingReadDto[];
 	pendingProductCount: number;
 	isLoading: boolean;
 	isEmptyPendingProducts: boolean;

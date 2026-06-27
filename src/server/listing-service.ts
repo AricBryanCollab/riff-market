@@ -16,6 +16,10 @@ import {
 	type ModerateListingCommand,
 	moderateListing,
 } from "@/domains/listings/application/moderate-listing";
+import type {
+	ProductListingMutationResponse,
+	ProductListingRemovalResponse,
+} from "@/domains/listings/dto/listing-command";
 import {
 	createListingFormSchema,
 	updateListingFormSchema,
@@ -42,37 +46,8 @@ export type RemoveListingInput = {
 	readonly listingId: string;
 };
 
-export type ListingMutationResponse = {
-	readonly message: string;
-	readonly product: {
-		readonly id: string;
-		readonly sellerId: string;
-		readonly name: string;
-		readonly category: string;
-		readonly condition?: string;
-		readonly brand: string;
-		readonly model: string;
-		readonly images: string[];
-		readonly description: string;
-		readonly price: number;
-		readonly priceCents?: number | null;
-		readonly currencyCode?: string | null;
-		readonly stock: number;
-		readonly isApproved: boolean;
-		readonly listingStatus: string;
-		readonly createdAt?: string;
-		readonly updatedAt?: string;
-	};
-};
-
-export type RemoveListingResponse = {
-	readonly message: string;
-	readonly product: {
-		readonly listingId: string;
-		readonly mode: "DELETED" | "WITHDRAWN";
-		readonly message: string;
-	};
-};
+export type ListingMutationResponse = ProductListingMutationResponse;
+export type RemoveListingResponse = ProductListingRemovalResponse;
 
 export type ListingCommandServiceDependencies = ListingCommandDependencies;
 

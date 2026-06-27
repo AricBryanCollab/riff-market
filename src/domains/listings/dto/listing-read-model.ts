@@ -1,12 +1,9 @@
 import { z } from "zod";
 import { parseOptionalProductPriceInputToCents } from "@/domains/listings/application/product-money";
+import type { ListingStatus } from "@/domains/listings/domain/listing";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
 
-export type ListingReadStatus =
-	| "PENDING"
-	| "APPROVED"
-	| "DECLINED"
-	| "WITHDRAWN";
+export type ListingReadStatus = ListingStatus;
 export type ListingCountStatus = Extract<
 	ListingReadStatus,
 	"APPROVED" | "PENDING"
@@ -14,6 +11,12 @@ export type ListingCountStatus = Extract<
 
 export type ListingReadCategory = ProductCategory;
 export type ListingReadCondition = ProductCondition;
+
+export type ListingReadSellerDto = {
+	readonly firstName: string;
+	readonly lastName: string;
+	readonly email: string;
+};
 
 export type ListingReadModel = {
 	readonly id: string;
@@ -32,17 +35,76 @@ export type ListingReadModel = {
 	readonly listingStatus: ListingReadStatus;
 	readonly createdAt?: Date;
 	readonly updatedAt?: Date;
-	readonly seller: {
-		readonly firstName: string;
-		readonly lastName: string;
-		readonly email: string;
-	};
+	readonly seller: ListingReadSellerDto;
+};
+
+export type ListingReadDto = {
+	readonly id: string;
+	readonly sellerId: string;
+	readonly name: string;
+	readonly category: ListingReadCategory;
+	readonly condition: ListingReadCondition;
+	readonly brand: string;
+	readonly model: string;
+	readonly images: string[];
+	readonly description: string;
+	readonly price: number;
+	readonly priceCents?: number | null;
+	readonly currencyCode?: string | null;
+	readonly stock: number;
+	readonly isApproved: boolean;
+	readonly listingStatus?: ListingReadStatus;
+	readonly createdAt?: string;
+	readonly updatedAt?: string;
+	readonly seller: ListingReadSellerDto;
 };
 
 export type ListingCategoryCount = {
 	readonly category: ListingReadCategory;
 	readonly count: number;
 };
+
+export type ListingCategoryCountData = ListingCategoryCount;
+
+export type ListingCategoryMeta = {
+	readonly category: ListingReadCategory;
+	readonly label: string;
+	readonly icon: string;
+	readonly count: number;
+};
+
+export type ApprovedListingSearchFilterQuery = {
+	readonly limit?: number;
+	readonly offset?: number;
+	readonly category?: string;
+	readonly brand?: string;
+	readonly search?: string;
+	readonly condition?: string;
+	readonly priceMin?: number;
+	readonly priceMax?: number;
+};
+
+export type ListingShopSearch = {
+	readonly category?: string;
+	readonly brand?: string;
+	readonly condition?: string;
+	readonly search?: string;
+	readonly priceMin?: number;
+	readonly priceMax?: number;
+	readonly page?: number;
+};
+
+export type ListingCountStatusQuery = "approved" | "pending";
+
+export type ApprovedListingCount = {
+	readonly approvedProductCount: number;
+};
+
+export type PendingListingCount = {
+	readonly pendingProductCount: number;
+};
+
+export type ListingStatusCount = ApprovedListingCount | PendingListingCount;
 
 const listingCategorySchema = z.enum([
 	"ELECTRIC",

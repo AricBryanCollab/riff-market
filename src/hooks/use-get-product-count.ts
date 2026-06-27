@@ -1,7 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import type { ListingCategoryCountData } from "@/domains/listings/dto/listing-read-model";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { getListingCategoryCountsProductApiFn } from "@/server/listing-read.functions";
-import type { ProductCountByCategoryData } from "@/types/product";
 import { transformProductCategoryCount } from "@/utils/transform-product-category-count";
 
 type ProductReadError = {
@@ -26,9 +26,9 @@ export const productCountByCategoryOptions = queryOptions({
 	queryFn: async () => {
 		const result = await getListingCategoryCountsProductApiFn();
 
-		return unwrapProductReadResult(result) as ProductCountByCategoryData[];
+		return unwrapProductReadResult(result) as ListingCategoryCountData[];
 	},
-	select: (data: ProductCountByCategoryData[]) =>
+	select: (data: ListingCategoryCountData[]) =>
 		transformProductCategoryCount(data),
 	staleTime: 5 * 60 * 1000,
 });

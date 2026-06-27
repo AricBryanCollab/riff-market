@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { getRecentListingsProductApiFn } from "@/server/listing-read.functions";
-import type { BaseProduct } from "@/types/product";
 
 type ProductReadError = {
 	readonly error: string;
@@ -33,7 +33,7 @@ const useGetRecentProducts = () => {
 				data: { limit: 8 },
 			});
 
-			return unwrapProductReadResult(result) as BaseProduct[];
+			return unwrapProductReadResult(result) as ListingReadDto[];
 		},
 		staleTime: 1000 * 60 * 5,
 	});

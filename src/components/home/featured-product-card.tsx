@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import MusicNote from "@/assets/music-note";
 import ConditionBadge from "@/components/home/condition-badge";
-import type { BaseProduct } from "@/types/product";
+import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 
 interface FeaturedProductCardProps {
-	product: BaseProduct;
+	product: ListingReadDto;
 }
 
 const FeaturedProductCard = ({ product }: FeaturedProductCardProps) => {

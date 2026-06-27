@@ -1,8 +1,8 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { getCartListingsProductApiFn } from "@/server/listing-read.functions";
 import { useCartStore } from "@/store/cart";
-import type { BaseProduct } from "@/types/product";
 
 type ProductReadError = {
 	readonly error: string;
@@ -22,7 +22,7 @@ function unwrapProductReadResult<T>(result: T | ProductReadError): T {
 }
 
 export const cartDetailsQueryOpt = (productIds: string[]) =>
-	queryOptions<BaseProduct[]>({
+	queryOptions<ListingReadDto[]>({
 		queryKey: queryKeys.products.cartDetails(productIds),
 		queryFn: async () => {
 			const result = await getCartListingsProductApiFn({
@@ -31,7 +31,7 @@ export const cartDetailsQueryOpt = (productIds: string[]) =>
 				},
 			});
 
-			return unwrapProductReadResult(result) as BaseProduct[];
+			return unwrapProductReadResult(result) as ListingReadDto[];
 		},
 		staleTime: 1000 * 60 * 2,
 	});

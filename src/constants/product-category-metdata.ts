@@ -1,9 +1,9 @@
+import type { ListingCategoryMeta } from "@/domains/listings/dto/listing-read-model";
 import type { ProductCategory } from "@/types/enum";
-import type { CategoryMeta } from "@/types/product";
 
 export const productCategoryMetadata: Record<
 	ProductCategory,
-	Omit<CategoryMeta, "count" | "category">
+	Omit<ListingCategoryMeta, "count" | "category">
 > = {
 	ELECTRIC: {
 		label: "Electric Guitars",

@@ -89,11 +89,31 @@ Clean slate started: 2026-06-11
 - `src/server/listing-service.ts` now imports `createListingFormSchema` and `updateListingFormSchema` from the listings DTO module.
 - `src/hooks/use-create-product.ts` and `src/hooks/use-update-product.ts` now use `CreateListingFormInput` / `UpdateListingFormInput` for listing server-function form payload typing.
 - No Prisma `Product` model/client/table naming was changed in this step.
-- Remaining low-risk naming surfaces include global `src/types/product.ts`, product-named listing read server-function compatibility names, product query hook/cache names, and product route/component naming.
+- Remaining low-risk naming surfaces include product-named listing read server-function compatibility names, product query hook/cache names, and product route/component naming.
+- Listing read/query DTOs now live in `src/domains/listings/dto/listing-read-model.ts`:
+  - `ListingReadDto` replaces the old global `BaseProduct` read shape for hooks/components.
+  - Listing search/filter, shop search, category metadata/count, and approved/pending count DTO names moved to listing vocabulary.
+  - `src/server/listing-read-service.ts` now returns listing-owned read DTO types instead of private product API read model aliases.
+- Listing command/form/status response compatibility DTOs now live in `src/domains/listings/dto/listing-command.ts`.
+- `src/types/product.ts` was removed; product-named hooks import listing-owned DTOs while keeping hook names and returned UI shape unchanged.
+- Listing read status aliases the canonical domain `ListingStatus` instead of duplicating a status union in the read DTO module.
+- Product cache keys, route paths, hook names, and component filenames were intentionally left unchanged in this DTO move.
 - Larger persistence rename remains separate: `prisma/schema.prisma` still exposes `model Product`, `User.products`, `Favorite.productId`, legacy `OrderItem.productId`, generated Prisma `Product` types, and Prisma adapters using `db.product` / `Prisma.Product*`.
 
 ## Latest Verification
 
+- Slice 10 command/status compatibility DTO cleanup removed the remaining `@/types/product` imports: `rg -n "@/types/product" src` returned no matches.
+- Slice 10 command/status compatibility DTO stale-name scan passed: `rg -n "\bCreateProductRequest\b|\bUpdateProductForm\b|\bUpdateProductRequest\b|\bMutateProductResponse\b|\bProductResponse\b|\bDeleteProductResponse\b|\bUpdateProductStatusRequest\b|\bUpdateProductStatusResult\b" src` returned no matches.
+- Slice 10 command/status compatibility DTO touched-file Biome passed: `bun run check -- src/domains/listings/dto/listing-command.ts src/domains/listings/dto/listing-read-model.ts src/server/listing-service.ts src/hooks/use-create-product.ts src/hooks/use-update-product.ts src/hooks/use-delete-product.ts src/hooks/use-update-product-status.ts`.
+- Slice 10 command/status compatibility DTO focused read-service tests passed after sandbox escalation for Vite cache writes through the shared `node_modules` symlink: `bun run test:unit -- src/server/listing-read-service.test.ts` -> 1 file passed, 2 tests passed.
+- `bun run typecheck` passed after the command/status compatibility DTO cleanup. The worktree required the ignored `node_modules` symlink to `/Users/aricjiang/dev/apps/riff-market-ddd-map/node_modules` and `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate bun run db:generate` to regenerate the local Prisma client.
+- Slice 10 listing read DTO move targeted stale-name scan passed: `rg -n "\bBaseProduct\b|\bGetApprovedProductsFilterQuery\b|\bApprovedProductCount\b|\bPendingProductCount\b|\bProductCountStatusQuery\b|\bProductCountByCategoryData\b|\bCategoryMeta\b|\bShopSearch\b|\bProductListingStatus\b" src` returned no matches.
+- Before the command/status cleanup, the Slice 10 listing read DTO move import scan confirmed the only remaining `@/types/product` imports were command/status compatibility hooks: `use-create-product`, `use-update-product`, `use-delete-product`, and `use-update-product-status`.
+- Slice 10 listing read DTO move CodeGraph inventory showed `ListingReadDto` owned by `src/domains/listings/dto/listing-read-model.ts` and no `BaseProduct` definition remaining in `src/types/product.ts`.
+- Slice 10 listing read DTO move touched-file Biome passed: `bun run check -- src/components/home/category-card.tsx src/components/home/featured-product-card.tsx src/components/home/hero-carousel.tsx src/components/home/mocks.ts src/components/home/product-grid.tsx src/components/pending-product-list.tsx src/components/product-card.tsx src/constants/product-category-metdata.ts src/domains/listings/dto/listing-read-model.ts src/hooks/use-cart-details.ts src/hooks/use-get-pending-products.ts src/hooks/use-get-product-count.ts src/hooks/use-get-products.ts src/hooks/use-get-recent-products.ts src/hooks/use-shop-pagination.ts src/hooks/use-shop-search-filters.ts src/lib/tanstack-query/query-keys.ts src/routes/product/$id.tsx src/server/listing-read-service.ts src/store/pending-product.ts src/types/cart.ts src/types/product.ts src/utils/shop-search.ts src/utils/transform-product-category-count.ts src/utils/validate-product-search.ts`.
+- Slice 10 listing read DTO move focused read-service tests passed: `bun run test:unit -- src/server/listing-read-service.test.ts` -> 1 file passed, 2 tests passed.
+- `bun run typecheck` passed after the listing read DTO move.
+- `git diff --check` passed after the listing read DTO move and progress update. `bun run check -- ddd/progress.md` was attempted, but Biome ignored `ddd/progress.md` and processed no files.
 - Slice 10 touched-file Biome passed: `bun run check -- src/domains/listings/dto/listing-form.ts src/server/listing-service.ts src/hooks/use-create-product.ts src/hooks/use-update-product.ts`.
 - Slice 10 focused listing-service test target collected and skipped without DB flags: `bun run test:unit -- src/server/listing-service.prisma.test.ts` -> 1 file skipped, 9 tests skipped.
 - `bun run typecheck` passed after the listing form DTO move.
@@ -243,7 +263,7 @@ Continue Slice `10` Naming and Polish with another low-risk cleanup before the P
 
 Recommended next step:
 
-1. Move the remaining read/query DTO types out of global `src/types/product.ts` into listings DTO modules, starting with `BaseProduct` -> a listing read DTO alias or replacement used by read hooks/components.
-2. Keep cache key names, route paths, and component filenames unchanged until the DTO move compiles cleanly.
+1. Pick the next low-risk naming cleanup now that listing read/query DTOs and command/status compatibility DTOs have moved: rename product-named listing read server-function compatibility internals in a focused pass if it can be done without changing route paths, cache key strings, hook names, or component filenames.
+2. Keep cache key names, route paths, hook names, and component filenames unchanged until the next naming cleanup compiles cleanly.
 3. Keep Prisma/database persistence rename separate unless the session intentionally scopes the full schema/generation/migration work.
 4. Before PR handoff, either run an auth browser smoke for sign-in/sign-up/sign-out or explicitly keep the current no-browser-smoke risk noted.

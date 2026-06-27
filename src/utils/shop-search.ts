@@ -1,11 +1,11 @@
 import type {
-	GetApprovedProductsFilterQuery,
-	ShopSearch,
-} from "@/types/product";
+	ApprovedListingSearchFilterQuery,
+	ListingShopSearch,
+} from "@/domains/listings/dto/listing-read-model";
 
 export const SHOP_PAGE_SIZE = 8;
 
-export const getShopPage = (searchParams: ShopSearch): number => {
+export const getShopPage = (searchParams: ListingShopSearch): number => {
 	const rawPage = searchParams.page;
 
 	if (typeof rawPage !== "number" || !Number.isFinite(rawPage)) {
@@ -16,8 +16,8 @@ export const getShopPage = (searchParams: ShopSearch): number => {
 };
 
 export const getApprovedFiltersFromSearch = (
-	searchParams: ShopSearch,
-): GetApprovedProductsFilterQuery => {
+	searchParams: ListingShopSearch,
+): ApprovedListingSearchFilterQuery => {
 	const page = getShopPage(searchParams);
 
 	return {

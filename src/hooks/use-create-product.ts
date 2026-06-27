@@ -1,6 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import type {
+	ListingProductFormDraftFields,
+	ProductListingMutationResponse,
+} from "@/domains/listings/dto/listing-command";
 import type { CreateListingFormInput } from "@/domains/listings/dto/listing-form";
 import type { ImageFile } from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
@@ -8,7 +12,6 @@ import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
 import { createListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
-import type { CreateProductRequest, ProductResponse } from "@/types/product";
 
 const initialProduct = {
 	name: "",
@@ -20,8 +23,6 @@ const initialProduct = {
 	price: 0,
 	stock: 0,
 };
-
-type CreateProductWithoutImages = Omit<CreateProductRequest, "images">;
 
 function prepareProductFormData(data: CreateListingFormInput): FormData {
 	const formData = new FormData();
@@ -44,7 +45,7 @@ function prepareProductFormData(data: CreateListingFormInput): FormData {
 
 const useCreateProduct = () => {
 	const [product, setProduct] =
-		useState<CreateProductWithoutImages>(initialProduct);
+		useState<ListingProductFormDraftFields>(initialProduct);
 	const [images, setImages] = useState<ImageFile[]>([]);
 	const queryClient = useQueryClient();
 	const { showToast } = useToastStore();
@@ -54,7 +55,7 @@ const useCreateProduct = () => {
 		mutationFn: (data: CreateListingFormInput) =>
 			createListingFn({
 				data: prepareProductFormData(data),
-			}) as Promise<ProductResponse>,
+			}) as Promise<ProductListingMutationResponse>,
 		onSuccess: async () => {
 			await invalidateProductCache(queryClient);
 			showToast(

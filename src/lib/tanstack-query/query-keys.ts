@@ -1,8 +1,8 @@
-import type { UserRole } from "@/types/enum";
 import type {
-	GetApprovedProductsFilterQuery,
-	ProductCountStatusQuery,
-} from "@/types/product";
+	ApprovedListingSearchFilterQuery,
+	ListingCountStatusQuery,
+} from "@/domains/listings/dto/listing-read-model";
+import type { UserRole } from "@/types/enum";
 
 export const queryKeys = {
 	auth: {
@@ -19,12 +19,12 @@ export const queryKeys = {
 	},
 	products: {
 		root: ["products"] as const,
-		approved: (filters: GetApprovedProductsFilterQuery) =>
+		approved: (filters: ApprovedListingSearchFilterQuery) =>
 			["products", "approved", filters] as const,
 		cartDetails: (productIds: readonly string[]) =>
 			["products", "cart-details", productIds] as const,
 		countByCategory: ["products", "count", "by-category"] as const,
-		countByStatus: (status: ProductCountStatusQuery) =>
+		countByStatus: (status: ListingCountStatusQuery) =>
 			["products", "count", status] as const,
 		detail: (id: string) => ["products", "detail", id] as const,
 		featured: ["products", "featured"] as const,

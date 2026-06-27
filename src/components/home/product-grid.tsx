@@ -1,8 +1,8 @@
 import FeaturedProductCard from "@/components/home/featured-product-card";
-import type { BaseProduct } from "@/types/product";
+import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 
 interface ProductGridProps {
-	products: BaseProduct[];
+	products: ListingReadDto[];
 }
 
 const ProductGrid = ({ products }: ProductGridProps) => {

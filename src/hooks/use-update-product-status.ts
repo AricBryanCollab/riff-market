@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import type {
+	ProductListingModerationRequest,
+	ProductListingModerationResult,
+} from "@/domains/listings/dto/listing-command";
 import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
 import { moderateListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
-import type {
-	UpdateProductStatusRequest,
-	UpdateProductStatusResult,
-} from "@/types/product";
 
 const useUpdateProductStatus = () => {
 	const { showToast } = useToastStore();
@@ -14,13 +14,13 @@ const useUpdateProductStatus = () => {
 	const navigate = useNavigate();
 
 	const { mutate, isPending, isError } = useMutation({
-		mutationFn: ({ id, isApproved }: UpdateProductStatusRequest) =>
+		mutationFn: ({ id, isApproved }: ProductListingModerationRequest) =>
 			moderateListingFn({
 				data: {
 					listingId: id,
 					decision: isApproved ? "APPROVE" : "DECLINE",
 				},
-			}) as Promise<UpdateProductStatusResult>,
+			}) as Promise<ProductListingModerationResult>,
 		onSuccess: async (_, variables) => {
 			await invalidateProductCache(queryClient);
 			const message = variables.isApproved

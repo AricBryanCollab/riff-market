@@ -1,6 +1,9 @@
-import type { BaseProduct, CategoryMeta } from "@/types/product";
+import type {
+	ListingCategoryMeta,
+	ListingReadDto,
+} from "@/domains/listings/dto/listing-read-model";
 
-export const mockProducts: BaseProduct[] = [
+export const mockProducts: ListingReadDto[] = [
 	{
 		id: "prod-001",
 		name: "American Professional II Stratocaster",
@@ -183,7 +186,7 @@ export const mockProducts: BaseProduct[] = [
 	},
 ];
 
-export const mockCategories: CategoryMeta[] = [
+export const mockCategories: ListingCategoryMeta[] = [
 	{
 		category: "ELECTRIC",
 		label: "Electric Guitars",
