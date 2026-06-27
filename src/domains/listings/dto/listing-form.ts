@@ -18,15 +18,15 @@ const fileSchema = z
 		"File must be a JPEG, PNG, or WebP image",
 	);
 
-const productPriceSchema = z
+const listingPriceSchema = z
 	.union([z.string(), z.number()])
 	.transform((value, ctx) =>
-		parseWithProductPriceIssue(ctx, () =>
+		parseWithListingPriceIssue(ctx, () =>
 			priceCentsToDecimalPrice(parseProductPriceInputToCents(value)),
 		),
 	);
 
-function parseWithProductPriceIssue<T>(
+function parseWithListingPriceIssue<T>(
 	ctx: { addIssue: (issue: { code: "custom"; message: string }) => void },
 	parse: () => T,
 ) {
@@ -35,15 +35,15 @@ function parseWithProductPriceIssue<T>(
 	} catch (error) {
 		ctx.addIssue({
 			code: "custom",
-			message: error instanceof Error ? error.message : "Invalid product price",
+			message: error instanceof Error ? error.message : "Invalid listing price",
 		});
 
 		return z.NEVER;
 	}
 }
 
-export const createProductSchema = z.object({
-	name: z.string().trim().min(1, "Product name is required"),
+export const createListingFormSchema = z.object({
+	name: z.string().trim().min(1, "Listing name is required"),
 	category: z.enum(["ELECTRIC", "ACOUSTIC", "KEYBOARD", "PEDALS", "ACCESSORY"]),
 	condition: z.enum(["NEW", "USED", "MINT"]),
 	brand: z.string().trim().min(1, "Brand is required"),
@@ -53,11 +53,11 @@ export const createProductSchema = z.object({
 		.min(1, "At least one image is required")
 		.max(5, "Maximum 5 images allowed"),
 	description: z.string().trim().min(1, "Description is required"),
-	price: productPriceSchema,
+	price: listingPriceSchema,
 	stock: z.number().int().min(0, "Stock must be at least 0"),
 });
 
-export const updateProductSchema = createProductSchema.partial();
+export const updateListingFormSchema = createListingFormSchema.partial();
 
-export type CreateProductInput = z.input<typeof createProductSchema>;
-export type UpdateProductInput = z.input<typeof updateProductSchema>;
+export type CreateListingFormInput = z.input<typeof createListingFormSchema>;
+export type UpdateListingFormInput = z.input<typeof updateListingFormSchema>;

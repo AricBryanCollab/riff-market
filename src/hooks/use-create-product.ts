@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import type { CreateListingFormInput } from "@/domains/listings/dto/listing-form";
 import type { ImageFile } from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
 import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
-import type { CreateProductInput } from "@/lib/zod/product-validation";
 import { createListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
@@ -23,7 +23,7 @@ const initialProduct = {
 
 type CreateProductWithoutImages = Omit<CreateProductRequest, "images">;
 
-function prepareProductFormData(data: CreateProductInput): FormData {
+function prepareProductFormData(data: CreateListingFormInput): FormData {
 	const formData = new FormData();
 
 	formData.append("name", data.name);
@@ -51,7 +51,7 @@ const useCreateProduct = () => {
 	const navigate = useNavigate();
 
 	const { mutate, isPending, isError } = useMutation({
-		mutationFn: (data: CreateProductInput) =>
+		mutationFn: (data: CreateListingFormInput) =>
 			createListingFn({
 				data: prepareProductFormData(data),
 			}) as Promise<ProductResponse>,

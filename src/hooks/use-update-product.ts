@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import type { UpdateListingFormInput } from "@/domains/listings/dto/listing-form";
 import { useProductById } from "@/hooks/use-get-products";
 import type { ImageFile } from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
 import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
-import type { UpdateProductInput } from "@/lib/zod/product-validation";
 import { updateListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
@@ -15,7 +15,7 @@ import type {
 	UpdateProductRequest,
 } from "@/types/product";
 
-function prepareProductFormData(data: UpdateProductInput): FormData {
+function prepareProductFormData(data: UpdateListingFormInput): FormData {
 	const formData = new FormData();
 
 	if (data.name !== undefined) formData.append("name", data.name);

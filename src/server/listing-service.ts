@@ -16,11 +16,11 @@ import {
 	type ModerateListingCommand,
 	moderateListing,
 } from "@/domains/listings/application/moderate-listing";
-import type { Actor } from "@/domains/shared/domain/actor";
 import {
-	createProductSchema,
-	updateProductSchema,
-} from "@/lib/zod/product-validation";
+	createListingFormSchema,
+	updateListingFormSchema,
+} from "@/domains/listings/dto/listing-form";
+import type { Actor } from "@/domains/shared/domain/actor";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	RequestError,
@@ -33,10 +33,10 @@ const moderateListingInputSchema = z.object({
 });
 
 export type ModerateListingInput = z.infer<typeof moderateListingInputSchema>;
-export type CreateListingInput = z.infer<typeof createProductSchema>;
+export type CreateListingInput = z.infer<typeof createListingFormSchema>;
 export type UpdateListingInput = {
 	readonly listingId: string;
-	readonly data: z.infer<typeof updateProductSchema>;
+	readonly data: z.infer<typeof updateListingFormSchema>;
 };
 export type RemoveListingInput = {
 	readonly listingId: string;
@@ -111,7 +111,7 @@ export function validateCreateListingFormData(
 		throw new RequestError("Expected listing form data");
 	}
 
-	const parsed = createProductSchema.safeParse({
+	const parsed = createListingFormSchema.safeParse({
 		name: getRequiredString(data, "name"),
 		category: getRequiredString(data, "category"),
 		condition: getRequiredString(data, "condition"),
@@ -165,7 +165,7 @@ export function validateUpdateListingFormData(
 		rawData.images = images;
 	}
 
-	const parsed = updateProductSchema.safeParse(rawData);
+	const parsed = updateListingFormSchema.safeParse(rawData);
 
 	if (!parsed.success) {
 		throw new RequestError("Invalid listing data", {
