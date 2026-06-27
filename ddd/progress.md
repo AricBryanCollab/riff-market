@@ -23,8 +23,8 @@ Clean slate started: 2026-06-11
 | `5` Notifications | Complete for current delivery. Notification read/create use cases and Prisma adapter exist; notification UI calls server functions; notification API routes/actions/repos are removed. |
 | `6` Accounts | Complete for active account/profile/auth paths. Profile read/update/delete, profile-picture lifecycle, and sign-up/sign-in now go through account use cases/adapters; sessions remain delivery concerns. |
 | `7` Reviews | Complete for active server-function behavior. Review domain/use cases, Prisma adapter, server functions, and gated DB coverage are in place. |
-| `8` Media | In progress. Cleanup retry/fail decisions, batch orchestration, cleanup-job queue persistence, and account/listing cleanup staging now live under media; the old service worker is a thin adapter. |
-| `9` API route cleanup | Partially complete through migrated slices. Auth and upload image routes remain. |
+| `8` Media | Complete. Media cleanup behavior, queue persistence, account/listing staging, and gated Prisma queue coverage are in place and verified. |
+| `9` API route cleanup | Planning started. Remaining `/api/*` route inventory is complete: only auth sign-in/sign-up/sign-out routes remain. |
 | `10` Naming and polish | Not started. Product-to-listing persistence rename remains future work. |
 
 ## Current Slice 7 State
@@ -55,13 +55,33 @@ Clean slate started: 2026-06-11
 - Account deletion calls `stageAccountMediaForCleanup` before deleting the user in one transaction; `src/data/user-repo.ts` only owns user persistence.
 - Cloudinary provider deletion now lives in `src/domains/media/infrastructure/cloudinary-media-cleanup-targets.ts`.
 - Prisma cleanup-job claiming/marking now lives in `src/domains/media/infrastructure/prisma-media-cleanup-job-queue.ts` behind `MediaCleanupJobQueuePort`.
+- Gated Prisma coverage for cleanup-job claiming/marking now lives in `src/domains/media/infrastructure/prisma-media-cleanup-job-queue.prisma.test.ts`.
+- `package.json` `test:db` now uses `vitest.db.config.ts`, which includes all `src/**/*.prisma.test.ts` files.
 - `src/data/media-cleanup-job-repo.ts` has been removed.
 - `src/services/media-cleanup-worker.ts` remains as the compatibility entrypoint that wires logger, `PrismaMediaCleanupJobQueue`, and Cloudinary infrastructure.
 - `src/services/media-cleanup-targets.ts` remains as a compatibility re-export.
 - Listing image replacement and hard-delete cleanup now pass listing/seller source context and stage `PRODUCT` media cleanup rows via `stageListingMediaForCleanup` and `PrismaListingMediaCleanupStaging`.
 - Newly uploaded listing images that fail before persistence still use immediate best-effort Cloudinary deletion because cleanup jobs require persisted source metadata.
 
-## Current Verification
+## Current Slice 9 State
+
+- Remaining route files under `src/routes/api`:
+  - `src/routes/api/auth.signin.ts` -> keep temporarily; it owns HTTP/session-cookie sign-in delivery and delegates account behavior to `signInAccountService`.
+  - `src/routes/api/auth.signup.ts` -> keep temporarily; it owns HTTP/session-cookie sign-up delivery and delegates account behavior to `signUpAccountService`.
+  - `src/routes/api/auth.signout.ts` -> keep temporarily; it owns HTTP/session clearing.
+- `src/lib/tanstack-query/fetch.ts` / `src/lib/tanstack-query/auth-queries.ts` are now auth-only API wrappers.
+- No upload image route remains under `src/routes/api`; listing image upload currently flows through listing server functions and listing/media infrastructure.
+
+## Latest Verification
+
+- Focused media queue non-DB run passed with bundled Node on `PATH`: `bun run test:unit -- src/domains/media/infrastructure/prisma-media-cleanup-job-queue.test.ts src/domains/media/infrastructure/prisma-media-cleanup-job-queue.prisma.test.ts` -> 7 passed, 10 DB tests skipped.
+- DB config collection passed with bundled Node on `PATH`: `./node_modules/.bin/vitest run --config vitest.db.config.ts` -> 9 DB files skipped, 51 DB tests skipped without `RUN_DB_TESTS`.
+- Touched-file Biome passed with bundled Node on `PATH`: `bun run check -- package.json vitest.db.config.ts src/domains/media/infrastructure/prisma-media-cleanup-job-queue.prisma.test.ts`.
+- `bun run typecheck` passed with bundled Node on `PATH`.
+- `git diff --check` passed.
+- Canonical `bun run test:db` passed with bundled Node on `PATH` and sandbox escalation after Docker/Postgres was running: 9 DB files passed, 51 DB tests passed.
+
+## Previous Verification History
 
 - Focused media unit run passed: `bun run test:unit -- src/domains/media/domain/media-cleanup-job.test.ts src/services/media-cleanup-worker.test.ts`.
 - `bun run typecheck` passed after the media boundary extraction.
@@ -100,6 +120,7 @@ Clean slate started: 2026-06-11
   - `src/domains/media/infrastructure/prisma-listing-media-cleanup-staging.ts`
   - `src/domains/media/infrastructure/prisma-listing-media-cleanup-staging.test.ts`
   - `src/domains/media/infrastructure/prisma-media-cleanup-job-queue.ts`
+  - `src/domains/media/infrastructure/prisma-media-cleanup-job-queue.prisma.test.ts`
   - `src/domains/listings/application/manage-listing.ts`
   - `src/domains/listings/application/manage-listing.test.ts`
   - `src/domains/listings/infrastructure/listing-image-assets.ts`
@@ -180,18 +201,16 @@ Clean slate started: 2026-06-11
 
 ## Exact Next Recommended Task
 
-Continue Slice `8` Media from `ddd/migration-plan.md`:
+Continue Slice `9` API route cleanup from `ddd/migration-plan.md`:
 
-1. Decide whether Slice `8` needs gated DB coverage for `PrismaMediaCleanupJobQueue` claiming/marking and listing cleanup job staging, or whether focused unit coverage plus prior worker behavior coverage is enough for this migration slice.
-2. If no DB coverage is added, mark Slice `8` complete and move to Slice `9` API route cleanup.
-3. Start Slice `9` by enumerating remaining `/api/*` routes and classifying each as removed, kept temporarily, or HTTP-specific.
+1. Decide whether auth sign-in/sign-up/sign-out should stay as HTTP/session-specific routes or move behind server-function delivery.
+2. If they stay, document the session-cookie justification and decide whether to keep `apiFetch` as an auth-only wrapper or replace it with narrower auth functions.
+3. Run focused auth/sign-in/sign-up/sign-out checks after any Slice `9` code changes, then `bun run typecheck` and `bun run test:db`.
 
 Useful first inspection targets:
 
-- `src/domains/media/infrastructure/prisma-media-cleanup-job-queue.ts`
-- `src/domains/media/infrastructure/prisma-listing-media-cleanup-staging.ts`
-- `src/domains/media/application/stage-listing-media-cleanup.ts`
-- `src/domains/listings/application/manage-listing.ts`
-- `src/domains/listings/infrastructure/listing-image-assets.ts`
-- `src/server/listing-service.ts`
-- `src/services/media-cleanup-worker.ts`
+- `src/routes/api/auth.signin.ts`
+- `src/routes/api/auth.signup.ts`
+- `src/routes/api/auth.signout.ts`
+- `src/lib/tanstack-query/auth-queries.ts`
+- `src/lib/tanstack-query/fetch.ts`
