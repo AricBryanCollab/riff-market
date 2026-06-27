@@ -4,11 +4,11 @@ import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { getCartListingsProductApiFn } from "@/server/listing-read.functions";
 import { useCartStore } from "@/store/cart";
 
-type ProductReadError = {
+type ListingReadError = {
 	readonly error: string;
 };
 
-function unwrapProductReadResult<T>(result: T | ProductReadError): T {
+function unwrapListingReadResult<T>(result: T | ListingReadError): T {
 	if (
 		typeof result === "object" &&
 		result !== null &&
@@ -31,7 +31,7 @@ export const cartDetailsQueryOpt = (productIds: string[]) =>
 				},
 			});
 
-			return unwrapProductReadResult(result) as ListingReadDto[];
+			return unwrapListingReadResult(result) as ListingReadDto[];
 		},
 		staleTime: 1000 * 60 * 2,
 	});

@@ -3,11 +3,11 @@ import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { getPendingModerationListingsProductApiFn } from "@/server/listing-read.functions";
 
-type ProductReadError = {
+type ListingReadError = {
 	readonly error: string;
 };
 
-function unwrapProductReadResult<T>(result: T | ProductReadError): T {
+function unwrapListingReadResult<T>(result: T | ListingReadError): T {
 	if (
 		typeof result === "object" &&
 		result !== null &&
@@ -25,7 +25,7 @@ export const pendingProductsQueryOpt = queryOptions<ListingReadDto[]>({
 	queryFn: async () => {
 		const result = await getPendingModerationListingsProductApiFn();
 
-		return unwrapProductReadResult(result) as ListingReadDto[];
+		return unwrapListingReadResult(result) as ListingReadDto[];
 	},
 	retry: false,
 	staleTime: 30000,

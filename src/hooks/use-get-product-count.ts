@@ -4,11 +4,11 @@ import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { getListingCategoryCountsProductApiFn } from "@/server/listing-read.functions";
 import { transformProductCategoryCount } from "@/utils/transform-product-category-count";
 
-type ProductReadError = {
+type ListingReadError = {
 	readonly error: string;
 };
 
-function unwrapProductReadResult<T>(result: T | ProductReadError): T {
+function unwrapListingReadResult<T>(result: T | ListingReadError): T {
 	if (
 		typeof result === "object" &&
 		result !== null &&
@@ -26,7 +26,7 @@ export const productCountByCategoryOptions = queryOptions({
 	queryFn: async () => {
 		const result = await getListingCategoryCountsProductApiFn();
 
-		return unwrapProductReadResult(result) as ListingCategoryCountData[];
+		return unwrapListingReadResult(result) as ListingCategoryCountData[];
 	},
 	select: (data: ListingCategoryCountData[]) =>
 		transformProductCategoryCount(data),

@@ -6,17 +6,17 @@ import {
 	publicServerFunctionMiddleware,
 } from "@/server/function-middleware";
 import {
-	getApprovedListingsForProductApi,
-	getCartListingsForProductApi,
-	getListingCategoryCountsForProductApi,
-	getListingDetailsForProductApi,
-	getListingStatusCountForProductApi,
-	getPendingModerationListingsForProductApi,
-	getRecentListingsForProductApi,
-	getSellerListingsForProductApi,
+	getListingCategoryCountDtos,
+	getListingDetailsReadDto,
+	getListingStatusCountDto,
+	listCartListingReadDtos,
+	listPendingModerationListingReadDtos,
+	listRecentListingReadDtos,
+	listSellerListingReadDtos,
+	searchApprovedListingReadDtos,
 } from "@/server/listing-read-service";
 
-const productApiQueryInputSchema = z.object({
+const approvedListingSearchServerInputSchema = z.object({
 	limit: z.string().nullable(),
 	offset: z.string().nullable(),
 	random: z.string().nullable(),
@@ -28,11 +28,11 @@ const productApiQueryInputSchema = z.object({
 	priceMax: z.string().nullable().optional(),
 });
 
-const productDetailInputSchema = z.object({
+const listingDetailsServerInputSchema = z.object({
 	listingId: z.string().trim().min(1, "Listing ID is required"),
 });
 
-const productCountStatusInputSchema = z.object({
+const listingCountStatusServerInputSchema = z.object({
 	status: z.enum(["approved", "pending"]),
 });
 
@@ -44,53 +44,55 @@ const cartListingDetailsInputSchema = z.object({
 	ids: z.array(z.string()),
 });
 
-export type ProductApiQueryInput = z.infer<typeof productApiQueryInputSchema>;
+export type ApprovedListingSearchServerInput = z.infer<
+	typeof approvedListingSearchServerInputSchema
+>;
 
 export const getListingDetailsProductApiFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
-	.inputValidator((data) => productDetailInputSchema.parse(data))
-	.handler(async ({ data }) => getListingDetailsForProductApi(data.listingId));
+	.inputValidator((data) => listingDetailsServerInputSchema.parse(data))
+	.handler(async ({ data }) => getListingDetailsReadDto(data.listingId));
 
 export const getApprovedListingsProductApiFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
-	.inputValidator((data) => productApiQueryInputSchema.parse(data))
-	.handler(async ({ data }) => getApprovedListingsForProductApi(data));
+	.inputValidator((data) => approvedListingSearchServerInputSchema.parse(data))
+	.handler(async ({ data }) => searchApprovedListingReadDtos(data));
 
 export const getPendingModerationListingsProductApiFn = createServerFn({
 	method: "GET",
 })
 	.middleware(createRoleServerFunctionMiddleware(["ADMIN"]))
-	.handler(async () => getPendingModerationListingsForProductApi());
+	.handler(async () => listPendingModerationListingReadDtos());
 
 export const getSellerListingsProductApiFn = createServerFn({ method: "GET" })
 	.middleware(authenticatedServerFunctionMiddleware)
 	.handler(async ({ context }) =>
-		getSellerListingsForProductApi(context.user.id, context.user.role),
+		listSellerListingReadDtos(context.user.id, context.user.role),
 	);
 
 export const getListingCategoryCountsProductApiFn = createServerFn({
 	method: "GET",
 })
 	.middleware(publicServerFunctionMiddleware)
-	.handler(async () => getListingCategoryCountsForProductApi());
+	.handler(async () => getListingCategoryCountDtos());
 
 export const getListingStatusCountProductApiFn = createServerFn({
 	method: "GET",
 })
 	.middleware(publicServerFunctionMiddleware)
-	.inputValidator((data) => productCountStatusInputSchema.parse(data))
+	.inputValidator((data) => listingCountStatusServerInputSchema.parse(data))
 	.handler(async ({ data }) =>
-		getListingStatusCountForProductApi(data.status === "approved"),
+		getListingStatusCountDto(data.status === "approved"),
 	);
 
 export const getRecentListingsProductApiFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => recentListingsInputSchema.parse(data))
-	.handler(async ({ data }) => getRecentListingsForProductApi(data.limit));
+	.handler(async ({ data }) => listRecentListingReadDtos(data.limit));
 
 export const getCartListingsProductApiFn = createServerFn({ method: "GET" })
 	.middleware(authenticatedServerFunctionMiddleware)
 	.inputValidator((data) => cartListingDetailsInputSchema.parse(data))
 	.handler(async ({ context, data }) =>
-		getCartListingsForProductApi(context.user.role, data),
+		listCartListingReadDtos(context.user.role, data),
 	);

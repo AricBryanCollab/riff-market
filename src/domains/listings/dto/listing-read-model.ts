@@ -133,7 +133,7 @@ const optionalPriceCentsSchema = z
 		}
 	});
 
-export const approvedListingProductApiQuerySchema = z
+export const approvedListingSearchInputSchema = z
 	.object({
 		limit: z
 			.string()
@@ -165,17 +165,17 @@ export const approvedListingProductApiQuerySchema = z
 		priceMaxCents: priceMax,
 	}));
 
-export type ApprovedListingProductApiQuery = z.infer<
-	typeof approvedListingProductApiQuerySchema
+export type ApprovedListingSearchInput = z.infer<
+	typeof approvedListingSearchInputSchema
 >;
 
-export const listingCartDetailsProductApiQuerySchema = z.object({
+export const cartListingDetailsInputSchema = z.object({
 	ids: z
 		.array(z.string().trim().min(1, "Product ID is required"))
 		.min(1, "At least one product ID is required")
 		.max(100, "Maximum 100 product IDs are allowed"),
 });
 
-export type ListingCartDetailsProductApiQuery = z.infer<
-	typeof listingCartDetailsProductApiQuerySchema
+export type CartListingDetailsInput = z.infer<
+	typeof cartListingDetailsInputSchema
 >;

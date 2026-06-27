@@ -8,20 +8,20 @@ import type {
 } from "@/domains/listings/dto/listing-read-model";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import {
+	type ApprovedListingSearchServerInput,
 	getApprovedListingsProductApiFn,
 	getListingDetailsProductApiFn,
 	getListingStatusCountProductApiFn,
-	type ProductApiQueryInput,
 } from "@/server/listing-read.functions";
 
-type ProductReadError = {
+type ListingReadError = {
 	readonly error: string;
 	readonly details?: unknown;
 };
 
-function toProductApiQueryInput(
+function toApprovedListingSearchServerInput(
 	filters: ApprovedListingSearchFilterQuery,
-): ProductApiQueryInput {
+): ApprovedListingSearchServerInput {
 	return {
 		limit: filters?.limit !== undefined ? filters.limit.toString() : null,
 		offset: filters?.offset !== undefined ? filters.offset.toString() : null,
@@ -41,15 +41,15 @@ function toNullableQueryString(value: string | undefined): string | null {
 	return value ? value : null;
 }
 
-function unwrapProductReadResult<T>(result: T | ProductReadError): T {
-	if (isProductReadError(result)) {
+function unwrapListingReadResult<T>(result: T | ListingReadError): T {
+	if (isListingReadError(result)) {
 		throw new Error(result.error);
 	}
 
 	return result;
 }
 
-function isProductReadError(value: unknown): value is ProductReadError {
+function isListingReadError(value: unknown): value is ListingReadError {
 	return (
 		typeof value === "object" &&
 		value !== null &&
@@ -65,10 +65,10 @@ export const approvedProductsQueryOpt = (
 		queryKey: queryKeys.products.approved(filters),
 		queryFn: async () => {
 			const result = await getApprovedListingsProductApiFn({
-				data: toProductApiQueryInput(filters),
+				data: toApprovedListingSearchServerInput(filters),
 			});
 
-			return unwrapProductReadResult(result) as ListingReadDto[];
+			return unwrapListingReadResult(result) as ListingReadDto[];
 		},
 		staleTime: 1000 * 60 * 5,
 	});
@@ -78,12 +78,12 @@ export const featuredProductsQueryOpt = queryOptions<ListingReadDto[]>({
 	queryFn: async () => {
 		const result = await getApprovedListingsProductApiFn({
 			data: {
-				...toProductApiQueryInput({ limit: 5 }),
+				...toApprovedListingSearchServerInput({ limit: 5 }),
 				random: "true",
 			},
 		});
 
-		return unwrapProductReadResult(result) as ListingReadDto[];
+		return unwrapListingReadResult(result) as ListingReadDto[];
 	},
 	staleTime: 1000 * 60 * 5,
 });
@@ -96,7 +96,7 @@ export const productbyIdQueryOpt = (id: string) =>
 				data: { listingId: id },
 			});
 
-			return unwrapProductReadResult(result) as ListingReadDto;
+			return unwrapListingReadResult(result) as ListingReadDto;
 		},
 		retry: false,
 	});
@@ -109,7 +109,7 @@ export const productCountByStatusQueryOpt = (status: ListingCountStatusQuery) =>
 				data: { status },
 			});
 
-			return unwrapProductReadResult(result) as
+			return unwrapListingReadResult(result) as
 				| ApprovedListingCount
 				| PendingListingCount;
 		},

@@ -25,7 +25,7 @@ Clean slate started: 2026-06-11
 | `7` Reviews | Complete for active server-function behavior. Review domain/use cases, Prisma adapter, server functions, and gated DB coverage are in place. |
 | `8` Media | Complete. Media cleanup behavior, queue persistence, account/listing staging, and gated Prisma queue coverage are in place and verified. |
 | `9` API route cleanup | Complete for current delivery. Auth sign-in/sign-up/sign-out moved to TanStack server functions; no `/api/*` routes remain under `src/routes/api`; obsolete auth API wrappers are removed. |
-| `10` Naming and polish | In progress. First low-risk DTO naming cleanup moved listing form validation into the listings context; Product-to-Listing persistence rename remains future work. |
+| `10` Naming and polish | In progress. Low-risk DTO and read-compatibility internals now use listing vocabulary where compatibility allows; Product-to-Listing persistence rename remains future work. |
 
 ## Current Slice 7 State
 
@@ -98,10 +98,23 @@ Clean slate started: 2026-06-11
 - `src/types/product.ts` was removed; product-named hooks import listing-owned DTOs while keeping hook names and returned UI shape unchanged.
 - Listing read status aliases the canonical domain `ListingStatus` instead of duplicating a status union in the read DTO module.
 - Product cache keys, route paths, hook names, and component filenames were intentionally left unchanged in this DTO move.
+- Listing read server-function internals now use listing vocabulary where possible:
+  - `src/server/listing-read-service.ts` exposes listing-named primary helpers such as `getListingDetailsReadDto`, `searchApprovedListingReadDtos`, and `listCartListingReadDtos`.
+  - `src/server/listing-read.functions.ts` keeps the exported `*ProductApiFn` server-function compatibility names but calls listing-named service helpers and validators internally.
+  - Listing read DTO schemas now use listing-oriented names such as `approvedListingSearchInputSchema` and `cartListingDetailsInputSchema`.
+  - Private read-hook error unwrap/query-input helpers now use listing read names while hook exports, returned UI names, query key strings, and component/route filenames remain unchanged.
+- Existing `*ForProductApi` service names remain only as compatibility aliases for current service tests and any transitional imports; they should not be used for new code.
 - Larger persistence rename remains separate: `prisma/schema.prisma` still exposes `model Product`, `User.products`, `Favorite.productId`, legacy `OrderItem.productId`, generated Prisma `Product` types, and Prisma adapters using `db.product` / `Prisma.Product*`.
 
 ## Latest Verification
 
+- Branch sync before this cleanup: fetched `origin/codex/ddd-map`, confirmed `origin/codex/ddd-map`, local `codex/ddd-map`, and this delegated worktree are all at `ae65768`; the checked-out local branch worktree `/Users/aricjiang/dev/apps/riff-market-ddd-map` was fast-forwarded after preserving its pre-existing dirty diff as `stash@{0}` (`before updating codex/ddd-map to origin ae65768`).
+- Slice 10 read compatibility internal-name scan passed: `rg -n "ProductReadError|unwrapProductReadResult|isProductReadError|toProductApiQueryInput|ProductApiQueryInput|approvedListingProductApiQuerySchema|listingCartDetailsProductApiQuerySchema|ProductApiReadError|toProductApiListingReadModel|isPublicProductApiListingVisible|productApiQueryInputSchema|productDetailInputSchema|productCountStatusInputSchema" src/hooks src/server src/domains/listings/dto/listing-read-model.ts` returned no matches.
+- Slice 10 read compatibility touched-file Biome passed after formatting: `bun run check -- src/domains/listings/dto/listing-read-model.ts src/server/listing-read-service.ts src/server/listing-read.functions.ts src/hooks/use-get-products.ts src/hooks/use-get-recent-products.ts src/hooks/use-get-product-count.ts src/hooks/use-get-pending-products.ts src/hooks/use-cart-details.ts`.
+- Slice 10 read compatibility focused read-service tests passed after sandbox escalation for Vite cache writes through the shared `node_modules` symlink: `bun run test:unit -- src/server/listing-read-service.test.ts` -> 1 file passed, 2 tests passed.
+- `bun run typecheck` passed after regenerating the local Prisma client with `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate bun run db:generate`.
+- Route guard scan passed: `find src/routes -path '*/api*' -print` returned no files.
+- `git diff --check` passed after the read compatibility cleanup and progress update.
 - Slice 10 command/status compatibility DTO cleanup removed the remaining `@/types/product` imports: `rg -n "@/types/product" src` returned no matches.
 - Slice 10 command/status compatibility DTO stale-name scan passed: `rg -n "\bCreateProductRequest\b|\bUpdateProductForm\b|\bUpdateProductRequest\b|\bMutateProductResponse\b|\bProductResponse\b|\bDeleteProductResponse\b|\bUpdateProductStatusRequest\b|\bUpdateProductStatusResult\b" src` returned no matches.
 - Slice 10 command/status compatibility DTO touched-file Biome passed: `bun run check -- src/domains/listings/dto/listing-command.ts src/domains/listings/dto/listing-read-model.ts src/server/listing-service.ts src/hooks/use-create-product.ts src/hooks/use-update-product.ts src/hooks/use-delete-product.ts src/hooks/use-update-product-status.ts`.
@@ -263,7 +276,7 @@ Continue Slice `10` Naming and Polish with another low-risk cleanup before the P
 
 Recommended next step:
 
-1. Pick the next low-risk naming cleanup now that listing read/query DTOs and command/status compatibility DTOs have moved: rename product-named listing read server-function compatibility internals in a focused pass if it can be done without changing route paths, cache key strings, hook names, or component filenames.
-2. Keep cache key names, route paths, hook names, and component filenames unchanged until the next naming cleanup compiles cleanly.
+1. Pick the next low-risk naming cleanup now that listing read/query DTOs, command/status compatibility DTOs, and read server-function internals have moved: likely private hook/component variable names or other non-contract internals that can move to listing vocabulary without changing route paths, cache key strings, hook exports, component filenames, serialized response shapes, or UI copy.
+2. Keep cache key names, route paths, hook exports, component filenames, serialized response shapes, and Prisma/database `Product` vocabulary unchanged unless a later slice intentionally scopes one of those compatibility surfaces.
 3. Keep Prisma/database persistence rename separate unless the session intentionally scopes the full schema/generation/migration work.
 4. Before PR handoff, either run an auth browser smoke for sign-in/sign-up/sign-out or explicitly keep the current no-browser-smoke risk noted.
