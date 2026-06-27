@@ -103,11 +103,20 @@ Clean slate started: 2026-06-11
   - `src/server/listing-read.functions.ts` keeps the exported `*ProductApiFn` server-function compatibility names but calls listing-named service helpers and validators internally.
   - Listing read DTO schemas now use listing-oriented names such as `approvedListingSearchInputSchema` and `cartListingDetailsInputSchema`.
   - Private read-hook error unwrap/query-input helpers now use listing read names while hook exports, returned UI names, query key strings, and component/route filenames remain unchanged.
+- Component and cart-detail local aliases now use listing vocabulary where possible:
+  - Home grid, recent listings, pending approval list, and shop display loops use `listing` callback/local aliases while preserving `ProductCard` / `FeaturedProductCard` `product` prop compatibility.
+  - `HeroCarousel` uses a private `listing` alias for the current carousel item while preserving the `products` prop and `/product/$id` route links.
+  - `useCartDetails` aliases fetched cart detail rows as `listings` / `listingsById` internally while preserving `productId` cart/query inputs and the returned cart item `product` shape.
 - Existing `*ForProductApi` service names remain only as compatibility aliases for current service tests and any transitional imports; they should not be used for new code.
 - Larger persistence rename remains separate: `prisma/schema.prisma` still exposes `model Product`, `User.products`, `Favorite.productId`, legacy `OrderItem.productId`, generated Prisma `Product` types, and Prisma adapters using `db.product` / `Prisma.Product*`.
 
 ## Latest Verification
 
+- Slice 10 component/cart local alias cleanup touched-file Biome passed after adding the ignored delegated-worktree `node_modules` symlink to `/Users/aricjiang/dev/apps/riff-market-ddd-map/node_modules`: `bun run check -- src/components/home/product-grid.tsx src/components/home/recent-listings.tsx src/components/pending-product-list.tsx src/routes/shop/index.tsx src/components/home/hero-carousel.tsx src/hooks/use-cart-details.ts`. The first attempt failed with `biome: command not found` before the symlink existed.
+- `bun run typecheck` passed after regenerating the local Prisma client with `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate bun run db:generate`. The first attempt failed because `generated/prisma` was absent in this delegated worktree.
+- Slice 10 component/cart stale local-name scan passed: `rg -n "products\.map\(\(product\)|recentProducts\.map\(\(product\)|pendingProducts\.slice\(0, 5\)\.map\(\(product\)|displayProducts|const product = products\[currentIndex\]|productsById|data: products = \[\]|Product Image|Product Details" src/components/home/product-grid.tsx src/components/home/recent-listings.tsx src/components/pending-product-list.tsx src/routes/shop/index.tsx src/components/home/hero-carousel.tsx src/hooks/use-cart-details.ts` returned no matches.
+- Route guard scan passed: `find src/routes -path '*/api*' -print` returned no files.
+- `git diff --check` passed after the component/cart local alias cleanup and progress update.
 - Branch sync before this cleanup: fetched `origin/codex/ddd-map`, confirmed `origin/codex/ddd-map`, local `codex/ddd-map`, and this delegated worktree are all at `ae65768`; the checked-out local branch worktree `/Users/aricjiang/dev/apps/riff-market-ddd-map` was fast-forwarded after preserving its pre-existing dirty diff as `stash@{0}` (`before updating codex/ddd-map to origin ae65768`).
 - Slice 10 read compatibility internal-name scan passed: `rg -n "ProductReadError|unwrapProductReadResult|isProductReadError|toProductApiQueryInput|ProductApiQueryInput|approvedListingProductApiQuerySchema|listingCartDetailsProductApiQuerySchema|ProductApiReadError|toProductApiListingReadModel|isPublicProductApiListingVisible|productApiQueryInputSchema|productDetailInputSchema|productCountStatusInputSchema" src/hooks src/server src/domains/listings/dto/listing-read-model.ts` returned no matches.
 - Slice 10 read compatibility touched-file Biome passed after formatting: `bun run check -- src/domains/listings/dto/listing-read-model.ts src/server/listing-read-service.ts src/server/listing-read.functions.ts src/hooks/use-get-products.ts src/hooks/use-get-recent-products.ts src/hooks/use-get-product-count.ts src/hooks/use-get-pending-products.ts src/hooks/use-cart-details.ts`.
@@ -276,7 +285,7 @@ Continue Slice `10` Naming and Polish with another low-risk cleanup before the P
 
 Recommended next step:
 
-1. Pick the next low-risk naming cleanup now that listing read/query DTOs, command/status compatibility DTOs, and read server-function internals have moved: likely private hook/component variable names or other non-contract internals that can move to listing vocabulary without changing route paths, cache key strings, hook exports, component filenames, serialized response shapes, or UI copy.
+1. Pick the next low-risk naming cleanup now that listing read/query DTOs, command/status compatibility DTOs, read server-function internals, and several component/cart local aliases have moved: likely remaining private route or hook aliases that can move to listing vocabulary without changing route paths, cache key strings, hook exports, component filenames, serialized response shapes, or UI copy.
 2. Keep cache key names, route paths, hook exports, component filenames, serialized response shapes, and Prisma/database `Product` vocabulary unchanged unless a later slice intentionally scopes one of those compatibility surfaces.
 3. Keep Prisma/database persistence rename separate unless the session intentionally scopes the full schema/generation/migration work.
 4. Before PR handoff, either run an auth browser smoke for sign-in/sign-up/sign-out or explicitly keep the current no-browser-smoke risk noted.

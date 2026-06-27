@@ -30,7 +30,7 @@ const HeroCarousel = ({
 		return () => clearInterval(timer);
 	}, [goToNext, autoPlayInterval]);
 
-	const product = products[currentIndex];
+	const listing = products[currentIndex];
 
 	return (
 		<section className="py-16">
@@ -38,15 +38,15 @@ const HeroCarousel = ({
 				{/* Image Section */}
 				<div className="relative">
 					<Link
-						to={`/product/${product.id} ` as `/product/$id`}
-						params={{ id: product.id }}
+						to={`/product/${listing.id} ` as `/product/$id`}
+						params={{ id: listing.id }}
 						className="block relative aspect-square bg-muted rounded-2xl overflow-hidden"
 					>
 						<div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
-							{product.images && product.images.length > 0 ? (
+							{listing.images && listing.images.length > 0 ? (
 								<img
-									src={product.images[0]}
-									alt={product.name}
+									src={listing.images[0]}
+									alt={listing.name}
 									className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
 								/>
 							) : (
@@ -55,7 +55,7 @@ const HeroCarousel = ({
 								</div>
 							)}
 						</div>
-						<ConditionBadge condition={product.condition} />
+						<ConditionBadge condition={listing.condition} />
 					</Link>
 
 					<Button
@@ -78,7 +78,7 @@ const HeroCarousel = ({
 						<ChevronRight className="w-5 h-5" />
 					</Button>
 
-					{/* Product Details: Right Side */}
+					{/* Listing Details: Right Side */}
 					<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
 						{products.map((_, index) => (
 							<button
@@ -99,24 +99,24 @@ const HeroCarousel = ({
 						Featured
 					</p>
 					<h1 className="text-4xl md:text-5xl font-semibold text-foreground mt-2 leading-tight">
-						{product.name}
+						{listing.name}
 					</h1>
 					<p className="text-muted-foreground mt-4">
-						{product.brand} · {product.model}
+						{listing.brand} · {listing.model}
 					</p>
 					<p className="text-3xl font-semibold text-foreground mt-6">
 						$
-						{product.price.toLocaleString("en-US", {
+						{listing.price.toLocaleString("en-US", {
 							minimumFractionDigits: 2,
 						})}
 					</p>
 					<p className="text-sm text-muted-foreground mt-2">
-						Sold by {product.seller.firstName}{" "}
+						Sold by {listing.seller.firstName}{" "}
 					</p>
 
 					<Link
-						to={`/product/${product.id} ` as `/product/$id`}
-						params={{ id: product.id }}
+						to={`/product/${listing.id} ` as `/product/$id`}
+						params={{ id: listing.id }}
 						className={buttonVariants({ size: "lg", className: "mt-8 w-fit" })}
 					>
 						View Listing

@@ -52,7 +52,7 @@ const useCartDetails = (options: UseCartDetailsOptions = {}) => {
 	const shouldFetchCartDetails = enabled && uniqueProductIds.length > 0;
 
 	const {
-		data: products = [],
+		data: listings = [],
 		isPending: isLoadingProducts,
 		isError: isErrorProducts,
 	} = useQuery({
@@ -60,21 +60,21 @@ const useCartDetails = (options: UseCartDetailsOptions = {}) => {
 		enabled: shouldFetchCartDetails,
 	});
 
-	const productsById = new Map(
-		products.map((product) => [product.id, product]),
+	const listingsById = new Map(
+		listings.map((listing) => [listing.id, listing]),
 	);
 
 	const cartWithDetails = cartItems.map((cartItem) => {
-		const product = productsById.get(cartItem.productId);
+		const listing = listingsById.get(cartItem.productId);
 
 		return {
 			...cartItem,
-			product,
-			isLoading: shouldFetchCartDetails && isLoadingProducts && !product,
+			product: listing,
+			isLoading: shouldFetchCartDetails && isLoadingProducts && !listing,
 			isError:
 				shouldFetchCartDetails &&
 				!isLoadingProducts &&
-				(isErrorProducts || !product),
+				(isErrorProducts || !listing),
 		};
 	});
 

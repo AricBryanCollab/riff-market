@@ -68,28 +68,28 @@ const PendingProductList = ({
 
 				{!isEmptyPendingProducts && (
 					<ul className="space-y-2">
-						{pendingProducts.slice(0, 5).map((product) => (
+						{pendingProducts.slice(0, 5).map((listing) => (
 							<li
-								key={product.id}
+								key={listing.id}
 								className="p-3 rounded-lg transition-colors hover:bg-accent/50 border border-border"
 							>
 								<div className="flex gap-3">
-									{/* Product Image */}
-									{product.images?.[0] && (
+									{/* Listing Image */}
+									{listing.images?.[0] && (
 										<div className="relative size-16 shrink-0 rounded-md overflow-hidden bg-muted border border-border">
 											<img
-												src={product.images[0]}
-												alt={product.name}
+												src={listing.images[0]}
+												alt={listing.name}
 												className="w-full h-full object-cover"
 											/>
 										</div>
 									)}
 
-									{/* Product Details */}
+									{/* Listing Details */}
 									<div className="flex-1 min-w-0 space-y-1.5">
 										<div className="flex items-start justify-between gap-2">
 											<h6 className="text-sm font-medium text-foreground truncate">
-												{product.name}
+												{listing.name}
 											</h6>
 											<Badge className="flex items-center px-1 py-0.5 rounded-md text-xs shrink-0 bg-yellow-500/10 text-yellow-700 border-yellow-500/20">
 												<Clock className="size-3 mr-1" />
@@ -99,19 +99,19 @@ const PendingProductList = ({
 
 										<div className="space-y-0.5">
 											<p className="text-xs text-muted-foreground truncate">
-												{product.brand} • {product.model}
+												{listing.brand} • {listing.model}
 											</p>
 											<p className="text-xs text-muted-foreground">
-												{product.category}
+												{listing.category}
 											</p>
 										</div>
 
 										<div className="flex items-center justify-between pt-0.5">
 											<span className="text-sm font-semibold text-foreground">
-												${product.price.toFixed(2)}
+												${listing.price.toFixed(2)}
 											</span>
 											<span className="text-xs text-muted-foreground">
-												{formatRelativeTime(product?.createdAt || "NaN")}
+												{formatRelativeTime(listing?.createdAt || "NaN")}
 											</span>
 										</div>
 									</div>

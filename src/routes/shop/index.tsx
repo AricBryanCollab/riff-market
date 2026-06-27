@@ -61,7 +61,7 @@ function RouteComponent() {
 		refetch: refetchPendingProducts,
 	} = useGetPendingProducts({ isAdmin });
 
-	const displayProducts = showPending ? pendingProducts : products;
+	const displayListings = showPending ? pendingProducts : products;
 	const displayIsLoading = showPending ? isLoadingPendingProducts : isLoading;
 	const displayIsError = showPending ? isErrorPendingProducts : isError;
 	const displayRefetch = showPending ? refetchPendingProducts : refetchProducts;
@@ -75,11 +75,11 @@ function RouteComponent() {
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-h-200">
 				{displayIsLoading ? (
 					<ProductLoadingState />
-				) : displayIsError || !displayProducts ? (
+				) : displayIsError || !displayListings ? (
 					<ProductErrorState refetch={displayRefetch} />
-				) : displayProducts.length > 0 ? (
-					displayProducts.map((product) => (
-						<ProductCard key={product.id} product={product} />
+				) : displayListings.length > 0 ? (
+					displayListings.map((listing) => (
+						<ProductCard key={listing.id} product={listing} />
 					))
 				) : (
 					<div className="col-span-full flex flex-col justify-center items-center gap-4 text-center py-8 text-muted-foreground">
