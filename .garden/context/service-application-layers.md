@@ -11,6 +11,8 @@ tags:
 
 In this repo, `src/server/*-service.ts` is the server/request adapter layer. It owns incoming request concerns: Zod/FormData validation, `ServerUserContext` to `Actor` mapping, command/response DTO shaping, wiring real infrastructure, and translating application `Result` errors into request errors and statuses.
 
+Server functions should execute service-owned validators at the untrusted input boundary. After that, server services should accept typed, validated input and should not repeat the same transport/schema validation; application use cases still enforce business validation and invariants.
+
 `src/domains/*/application/*` is the use-case layer. It owns application workflows: authorization in domain language, command validation that is not transport-specific, port definitions, transaction orchestration, domain object coordination, domain event handling, and application error codes.
 
 `src/domains/*/domain/*` owns pure business invariants, value objects, entity lifecycle behavior, and domain events. Keep framework, Prisma, request, and session concerns out of domain code.
