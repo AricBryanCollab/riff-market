@@ -107,11 +107,20 @@ Clean slate started: 2026-06-11
   - Home grid, recent listings, pending approval list, and shop display loops use `listing` callback/local aliases while preserving `ProductCard` / `FeaturedProductCard` `product` prop compatibility.
   - `HeroCarousel` uses a private `listing` alias for the current carousel item while preserving the `products` prop and `/product/$id` route links.
   - `useCartDetails` aliases fetched cart detail rows as `listings` / `listingsById` internally while preserving `productId` cart/query inputs and the returned cart item `product` shape.
+- Create/update listing hook internals now use listing draft vocabulary where compatibility allows:
+  - `useCreateProduct` uses private `initialListingDraft`, `listingDraft`, `setListingDraft`, `listingPayload`, and `prepareListingFormData` names while preserving the hook export, returned `product` key, cache invalidation, toast copy, and route navigation.
+  - `useUpdateProduct` uses private `listingDraft`, `setListingDraft`, `listingData`, and `prepareListingFormData` names while preserving the hook export, returned `product` key, existing loading/error return keys, cache invalidation, toast copy, and route navigation.
 - Existing `*ForProductApi` service names remain only as compatibility aliases for current service tests and any transitional imports; they should not be used for new code.
 - Larger persistence rename remains separate: `prisma/schema.prisma` still exposes `model Product`, `User.products`, `Favorite.productId`, legacy `OrderItem.productId`, generated Prisma `Product` types, and Prisma adapters using `db.product` / `Prisma.Product*`.
 
 ## Latest Verification
 
+- Slice 10 create/update hook private draft cleanup touched-file Biome passed after adding the ignored delegated-worktree `node_modules` symlink to `/Users/aricjiang/dev/apps/riff-market-ddd-map/node_modules`: `bun run check -- src/hooks/use-create-product.ts src/hooks/use-update-product.ts`. The first attempt failed with `biome: command not found` before the symlink existed.
+- `bun run typecheck` passed after regenerating the local Prisma client with `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate bun run db:generate`. The first attempt failed because `generated/prisma` was absent in this delegated worktree.
+- Slice 10 create/update hook stale private-name scan passed: `rg -n "initialProduct|prepareProductFormData|const \[product, setProduct\]|productData|productPayload|setProduct\(" src/hooks/use-create-product.ts src/hooks/use-update-product.ts` returned no matches.
+- Route guard scan passed: `find src/routes -path '*/api*' -print` returned no files.
+- `git diff --check` passed after the create/update hook private draft cleanup.
+- The verified create/update hook cleanup patch was applied cleanly to the canonical `/Users/aricjiang/dev/apps/riff-market-ddd-map` branch worktree on `codex/ddd-map`; focused Biome, stale-name scan, route guard scan, `git diff --check`, and `bun run typecheck` passed there as well.
 - Slice 10 component/cart local alias cleanup touched-file Biome passed after adding the ignored delegated-worktree `node_modules` symlink to `/Users/aricjiang/dev/apps/riff-market-ddd-map/node_modules`: `bun run check -- src/components/home/product-grid.tsx src/components/home/recent-listings.tsx src/components/pending-product-list.tsx src/routes/shop/index.tsx src/components/home/hero-carousel.tsx src/hooks/use-cart-details.ts`. The first attempt failed with `biome: command not found` before the symlink existed.
 - `bun run typecheck` passed after regenerating the local Prisma client with `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate bun run db:generate`. The first attempt failed because `generated/prisma` was absent in this delegated worktree.
 - Slice 10 component/cart stale local-name scan passed: `rg -n "products\.map\(\(product\)|recentProducts\.map\(\(product\)|pendingProducts\.slice\(0, 5\)\.map\(\(product\)|displayProducts|const product = products\[currentIndex\]|productsById|data: products = \[\]|Product Image|Product Details" src/components/home/product-grid.tsx src/components/home/recent-listings.tsx src/components/pending-product-list.tsx src/routes/shop/index.tsx src/components/home/hero-carousel.tsx src/hooks/use-cart-details.ts` returned no matches.
@@ -285,7 +294,7 @@ Continue Slice `10` Naming and Polish with another low-risk cleanup before the P
 
 Recommended next step:
 
-1. Pick the next low-risk naming cleanup now that listing read/query DTOs, command/status compatibility DTOs, read server-function internals, and several component/cart local aliases have moved: likely remaining private route or hook aliases that can move to listing vocabulary without changing route paths, cache key strings, hook exports, component filenames, serialized response shapes, or UI copy.
+1. Pick the next low-risk naming cleanup now that listing read/query DTOs, command/status compatibility DTOs, read server-function internals, several component/cart local aliases, and create/update hook draft internals have moved: likely remaining private route aliases in `src/routes/product/$id.tsx`, `src/routes/product/new.tsx`, or `src/routes/product/edit.$id.tsx` that can alias hook-returned `product` values to listing vocabulary without changing route paths, cache key strings, hook exports, hook return keys, component filenames, serialized response shapes, or UI copy.
 2. Keep cache key names, route paths, hook exports, component filenames, serialized response shapes, and Prisma/database `Product` vocabulary unchanged unless a later slice intentionally scopes one of those compatibility surfaces.
 3. Keep Prisma/database persistence rename separate unless the session intentionally scopes the full schema/generation/migration work.
 4. Before PR handoff, either run an auth browser smoke for sign-in/sign-up/sign-out or explicitly keep the current no-browser-smoke risk noted.

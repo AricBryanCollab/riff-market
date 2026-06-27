@@ -13,7 +13,7 @@ import { createListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
 
-const initialProduct = {
+const initialListingDraft = {
 	name: "",
 	category: "ELECTRIC" as ProductCategory,
 	condition: "NEW" as ProductCondition,
@@ -24,7 +24,7 @@ const initialProduct = {
 	stock: 0,
 };
 
-function prepareProductFormData(data: CreateListingFormInput): FormData {
+function prepareListingFormData(data: CreateListingFormInput): FormData {
 	const formData = new FormData();
 
 	formData.append("name", data.name);
@@ -44,8 +44,8 @@ function prepareProductFormData(data: CreateListingFormInput): FormData {
 }
 
 const useCreateProduct = () => {
-	const [product, setProduct] =
-		useState<ListingProductFormDraftFields>(initialProduct);
+	const [listingDraft, setListingDraft] =
+		useState<ListingProductFormDraftFields>(initialListingDraft);
 	const [images, setImages] = useState<ImageFile[]>([]);
 	const queryClient = useQueryClient();
 	const { showToast } = useToastStore();
@@ -54,7 +54,7 @@ const useCreateProduct = () => {
 	const { mutate, isPending, isError } = useMutation({
 		mutationFn: (data: CreateListingFormInput) =>
 			createListingFn({
-				data: prepareProductFormData(data),
+				data: prepareListingFormData(data),
 			}) as Promise<ProductListingMutationResponse>,
 		onSuccess: async () => {
 			await invalidateProductCache(queryClient);
@@ -78,17 +78,17 @@ const useCreateProduct = () => {
 	) => {
 		const value =
 			e.target.type === "number" ? Number(e.target.value) : e.target.value;
-		setProduct({ ...product, [e.target.id]: value });
+		setListingDraft({ ...listingDraft, [e.target.id]: value });
 	};
 
 	const onSelectChange = <T extends ProductCategory | ProductCondition>(
 		field: "category" | "condition",
 		value: T,
 	) => {
-		setProduct({ ...product, [field]: value });
+		setListingDraft({ ...listingDraft, [field]: value });
 	};
 	const onQuantityChange = (stock: number) => {
-		setProduct((prev) =>
+		setListingDraft((prev) =>
 			prev
 				? {
 						...prev,
@@ -103,28 +103,28 @@ const useCreateProduct = () => {
 	};
 
 	const clearCreateProductForm = () => {
-		setProduct(initialProduct);
+		setListingDraft(initialListingDraft);
 		setImages([]);
 	};
 
-	const productPayload = {
-		...product,
+	const listingPayload = {
+		...listingDraft,
 		images: images.map((img) => img.file),
 	};
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (product.stock === 0) {
+		if (listingDraft.stock === 0) {
 			showToast("Stock must not be equal to zero", "default");
 			return;
 		}
 
-		mutate(productPayload);
+		mutate(listingPayload);
 	};
 
 	return {
-		product,
+		product: listingDraft,
 		loading: isPending,
 		isError,
 		images,

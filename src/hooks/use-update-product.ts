@@ -14,7 +14,7 @@ import { updateListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
 import type { ProductCategory, ProductCondition } from "@/types/enum";
 
-function prepareProductFormData(data: UpdateListingFormInput): FormData {
+function prepareListingFormData(data: UpdateListingFormInput): FormData {
 	const formData = new FormData();
 
 	if (data.name !== undefined) formData.append("name", data.name);
@@ -38,38 +38,37 @@ function prepareProductFormData(data: UpdateListingFormInput): FormData {
 }
 
 const useUpdateProduct = (id: string) => {
-	const [product, setProduct] = useState<UpdateListingProductFormDraft | null>(
-		null,
-	);
+	const [listingDraft, setListingDraft] =
+		useState<UpdateListingProductFormDraft | null>(null);
 	const [images, setImages] = useState<ImageFile[]>([]);
 	const queryClient = useQueryClient();
 	const { showToast } = useToastStore();
 	const navigate = useNavigate();
 
 	const {
-		product: productData,
+		product: listingData,
 		loadingProduct,
 		isErrorProduct,
 		refetchProductDetails,
 	} = useProductById(id);
 
 	useEffect(() => {
-		if (!productData) return;
+		if (!listingData) return;
 
-		setProduct({
-			name: productData.name,
-			brand: productData.brand,
-			model: productData.model,
-			condition: productData.condition,
-			description: productData.description,
-			images: productData.images,
-			category: productData.category,
-			price: productData.price,
-			stock: productData.stock,
+		setListingDraft({
+			name: listingData.name,
+			brand: listingData.brand,
+			model: listingData.model,
+			condition: listingData.condition,
+			description: listingData.description,
+			images: listingData.images,
+			category: listingData.category,
+			price: listingData.price,
+			stock: listingData.stock,
 		});
 
-		if (productData.images && Array.isArray(productData.images)) {
-			const initialImages: ImageFile[] = productData.images.map(
+		if (listingData.images && Array.isArray(listingData.images)) {
+			const initialImages: ImageFile[] = listingData.images.map(
 				(url: string) => ({
 					file: new File([], `${url}`, { type: "image/jpeg" }),
 					preview: url,
@@ -77,14 +76,14 @@ const useUpdateProduct = (id: string) => {
 			);
 			setImages(initialImages);
 		}
-	}, [productData]);
+	}, [listingData]);
 
 	const onChange = (
 		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
 	) => {
 		const { id, value, type } = e.target;
 
-		setProduct((prev) =>
+		setListingDraft((prev) =>
 			prev
 				? {
 						...prev,
@@ -98,11 +97,11 @@ const useUpdateProduct = (id: string) => {
 		field: "category" | "condition",
 		value: T,
 	) => {
-		setProduct((prev) => (prev ? { ...prev, [field]: value } : prev));
+		setListingDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
 	};
 
 	const onQuantityChange = (stock: number) => {
-		setProduct((prev) =>
+		setListingDraft((prev) =>
 			prev
 				? {
 						...prev,
@@ -128,7 +127,7 @@ const useUpdateProduct = (id: string) => {
 			id: string;
 			data: UpdateListingFormInput;
 		}) => {
-			const formData = prepareProductFormData(data);
+			const formData = prepareListingFormData(data);
 			formData.append("listingId", id);
 
 			return updateListingFn({
@@ -155,21 +154,21 @@ const useUpdateProduct = (id: string) => {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (!product) return;
+		if (!listingDraft) return;
 
 		const newFiles = images
 			.filter((img) => !img.file.name.startsWith("https://res.cloudinary.com"))
 			.map((img) => img.file);
 
 		const payload: UpdateListingFormInput = {
-			name: product.name,
-			brand: product.brand,
-			model: product.model,
-			condition: product.condition,
-			description: product.description,
-			category: product.category,
-			price: product.price,
-			stock: product.stock,
+			name: listingDraft.name,
+			brand: listingDraft.brand,
+			model: listingDraft.model,
+			condition: listingDraft.condition,
+			description: listingDraft.description,
+			category: listingDraft.category,
+			price: listingDraft.price,
+			stock: listingDraft.stock,
 			...(newFiles.length ? { images: newFiles } : {}),
 		};
 
@@ -177,7 +176,7 @@ const useUpdateProduct = (id: string) => {
 	};
 
 	return {
-		product,
+		product: listingDraft,
 		images,
 		loadingProduct,
 		isErrorProduct,
