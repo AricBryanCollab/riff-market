@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type {
 	AccountCredentialsReadPort,
 	AccountPasswordPort,
@@ -10,91 +11,112 @@ import {
 import type { AccountAuthUser } from "@/domains/accounts/dto/account-auth";
 import { bcryptAccountPasswords } from "@/domains/accounts/infrastructure/bcrypt-passwords";
 import { PrismaAccountAuth } from "@/domains/accounts/infrastructure/prisma-account-auth";
-import type { AppError } from "@/domains/shared/domain/result";
 import {
+	type SignInInput,
 	type SignUpInput,
 	signInSchema,
 	signUpSchema,
 } from "@/lib/zod/auth-validation";
-import type { SignInRequest, SignUpRequest } from "@/types/auth";
+import { RequestError, toRequestError } from "@/server/request-error";
 
-type AccountAuthServiceError = {
-	readonly error: string;
-	readonly details?: unknown;
+type AuthSessionData = {
+	readonly userId: string;
+	readonly role: AccountAuthUser["role"];
 };
 
-export type AccountAuthServiceResult =
-	| {
-			readonly success: true;
-			readonly user: AccountAuthUser;
-	  }
-	| AccountAuthServiceError;
+export type AuthSession = {
+	readonly update: (data: AuthSessionData) => Promise<unknown>;
+	readonly clear: () => Promise<unknown>;
+};
 
-export async function signUpAccountService(
-	rawData: SignUpRequest,
-	accounts?: AccountRegistrationPort,
-	passwords?: AccountPasswordPort,
-): Promise<AccountAuthServiceResult> {
-	const parsed = signUpSchema.safeParse(rawData);
+export type AuthSessionProvider = () => Promise<AuthSession>;
+
+export function validateSignInRequest(data: unknown): SignInInput {
+	const parsed = signInSchema.safeParse(data);
 
 	if (!parsed.success) {
-		return {
-			error: "Invalid sign up data",
-			details: parsed.error,
-		};
+		throw new RequestError("Invalid sign in data", {
+			details: z.flattenError(parsed.error),
+		});
 	}
 
-	const result = await signUpAccount(
-		toSignUpCommand(parsed.data),
-		accounts ?? (await createPrismaAccountAuth()),
-		passwords ?? bcryptAccountPasswords,
-	);
-
-	if (!result.ok) {
-		return toAccountAuthServiceError(result.error);
-	}
-
-	return { success: true, user: result.value };
+	return parsed.data;
 }
 
-export async function signInAccountService(
-	rawData: SignInRequest,
-	accounts?: AccountCredentialsReadPort,
-	passwords?: AccountPasswordPort,
-): Promise<AccountAuthServiceResult> {
-	const parsed = signInSchema.safeParse(rawData);
+export function validateSignUpRequest(data: unknown): SignUpInput {
+	const parsed = signUpSchema.safeParse(data);
 
 	if (!parsed.success) {
-		return {
-			error: "Invalid sign in data",
-			details: parsed.error,
-		};
+		throw new RequestError("Invalid sign up data", {
+			details: z.flattenError(parsed.error),
+		});
 	}
 
-	const result = await signInAccount(
-		parsed.data,
-		accounts ?? (await createPrismaAccountAuth()),
-		passwords ?? bcryptAccountPasswords,
-	);
-
-	if (!result.ok) {
-		return toAccountAuthServiceError(result.error);
-	}
-
-	return { success: true, user: result.value };
+	return parsed.data;
 }
 
-export function toPublicAuthResponse(result: {
-	readonly success: true;
-	readonly user: AccountAuthUser;
-}) {
+export async function establishAuthSession(
+	user: AccountAuthUser,
+	getSession: AuthSessionProvider,
+) {
+	const session = await getSession();
+
+	await session.update({
+		userId: user.id,
+		role: user.role,
+	});
+
 	return {
 		success: true,
 		user: {
-			id: result.user.id,
-			email: result.user.email,
+			id: user.id,
+			email: user.email,
 		},
 	};
+}
+
+export async function clearAuthSession(getSession: AuthSessionProvider) {
+	const session = await getSession();
+
+	await session.clear();
+
+	return { message: "Sign out is successful" };
+}
+
+export async function signUpAccountService(
+	data: SignUpInput,
+	accounts?: AccountRegistrationPort,
+	passwords?: AccountPasswordPort,
+): Promise<AccountAuthUser> {
+	const result = await signUpAccount(
+		toSignUpCommand(data),
+		accounts ?? (await createPrismaAccountAuth()),
+		passwords ?? bcryptAccountPasswords,
+	);
+
+	if (!result.ok) {
+		throw toRequestError(result.error);
+	}
+
+	return result.value;
+}
+
+export async function signInAccountService(
+	data: SignInInput,
+	accounts?: AccountCredentialsReadPort,
+	passwords?: AccountPasswordPort,
+): Promise<AccountAuthUser> {
+	const result = await signInAccount(
+		data,
+		accounts ?? (await createPrismaAccountAuth()),
+		passwords ?? bcryptAccountPasswords,
+	);
+
+	if (!result.ok) {
+		throw toRequestError(result.error);
+	}
+
+	return result.value;
 }
 
 function toSignUpCommand(data: SignUpInput) {
@@ -104,13 +126,6 @@ function toSignUpCommand(data: SignUpInput) {
 		email: data.email,
 		password: data.password,
 		role: data.role,
-	};
-}
-
-function toAccountAuthServiceError(error: AppError): AccountAuthServiceError {
-	return {
-		error: error.message,
-		...(error.details === undefined ? {} : { details: error.details }),
 	};
 }
 

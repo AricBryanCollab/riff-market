@@ -1,14 +1,18 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useState } from "react";
 import { clientLogger } from "@/lib/client-logger";
-import { signUp } from "@/lib/tanstack-query/auth-queries";
 import { refreshAuthUser } from "@/lib/tanstack-query/auth-user-query";
+import { signUpFn } from "@/server/auth.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { SignUpRequest } from "@/types/auth";
 import type { UserRole } from "@/types/enum";
 
-const initialSignUp = {
+type SignUpFormState = Omit<SignUpRequest, "role"> & {
+	readonly role: UserRole | null;
+};
+
+const initialSignUp: SignUpFormState = {
 	firstName: "",
 	lastName: "",
 	email: "",
@@ -18,13 +22,13 @@ const initialSignUp = {
 };
 
 const useSignUp = () => {
-	const [signUpData, setSignUpData] = useState<SignUpRequest>(initialSignUp);
+	const [signUpData, setSignUpData] = useState<SignUpFormState>(initialSignUp);
 	const queryClient = useQueryClient();
 	const { showToast } = useToastStore();
 
 	const { setCloseDialog } = useDialogStore();
 	const { mutate, isPending, isError } = useMutation({
-		mutationFn: signUp,
+		mutationFn: (data: SignUpRequest) => signUpFn({ data }),
 		onSuccess: async () => {
 			await refreshAuthUser(queryClient);
 			showToast("You have successfully signed up", "success");
@@ -50,7 +54,12 @@ const useSignUp = () => {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		mutate({ ...signUpData, role: signUpData.role ?? "CUSTOMER" });
+		const request: SignUpRequest = {
+			...signUpData,
+			role: signUpData.role ?? "CUSTOMER",
+		};
+
+		mutate(request);
 	};
 
 	return {

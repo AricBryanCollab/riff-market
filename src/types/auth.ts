@@ -11,16 +11,7 @@ export interface SignUpRequest {
 	email: string;
 	password: string;
 	confirmPassword: string;
-	role: UserRole | null;
-}
-
-export interface AuthResponse {
-	success: boolean;
-	user: { id: string; email: string };
-}
-
-export interface SignOutResponse {
-	message: string;
+	role: UserRole;
 }
 
 export type SessionData = {

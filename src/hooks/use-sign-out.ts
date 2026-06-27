@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { clearAuthenticatedClientState } from "@/lib/client-account-state";
-import { signOut } from "@/lib/tanstack-query/auth-queries";
+import { signOutFn } from "@/server/auth.functions";
 import { useToastStore } from "@/store/toast";
 
 export const useSignOut = () => {
@@ -8,7 +8,7 @@ export const useSignOut = () => {
 	const { showToast } = useToastStore();
 
 	const { mutate, isPending, isError } = useMutation({
-		mutationFn: signOut,
+		mutationFn: () => signOutFn(),
 		onSuccess: () => {
 			clearAuthenticatedClientState(queryClient);
 			showToast("You have logged out", "success");

@@ -36,16 +36,13 @@ describeDb("account auth service Prisma integration", () => {
 		);
 
 		expect(result).toMatchObject({
-			success: true,
-			user: {
-				email: "angus@example.com",
-				role: "CUSTOMER",
-			},
+			email: "angus@example.com",
+			role: "CUSTOMER",
 		});
 		await expect(
 			db.userSettings.findUnique({
 				where: {
-					userId: "success" in result ? result.user.id : "missing",
+					userId: result.id,
 				},
 				select: {
 					theme: true,
@@ -83,11 +80,8 @@ describeDb("account auth service Prisma integration", () => {
 				new FakePasswords(),
 			),
 		).resolves.toMatchObject({
-			success: true,
-			user: {
-				email: "angus@example.com",
-				role: "SELLER",
-			},
+			email: "angus@example.com",
+			role: "SELLER",
 		});
 	});
 
@@ -105,12 +99,13 @@ describeDb("account auth service Prisma integration", () => {
 		await expect(
 			signUpAccountService(request, accounts, passwords),
 		).resolves.toMatchObject({
-			success: true,
+			email: "angus@example.com",
 		});
 		await expect(
 			signUpAccountService(request, accounts, passwords),
-		).resolves.toEqual({
-			error: "User already exists",
+		).rejects.toMatchObject({
+			message: "User already exists",
+			status: 400,
 		});
 	});
 });

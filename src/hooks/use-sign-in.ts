@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useState } from "react";
 import { clientLogger } from "@/lib/client-logger";
-import { signIn } from "@/lib/tanstack-query/auth-queries";
 import { refreshAuthUser } from "@/lib/tanstack-query/auth-user-query";
+import { signInFn } from "@/server/auth.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { SignInRequest } from "@/types/auth";
@@ -23,7 +23,7 @@ const useSignIn = () => {
 	};
 
 	const { mutate, isPending, isError } = useMutation({
-		mutationFn: signIn,
+		mutationFn: (data: SignInRequest) => signInFn({ data }),
 		onSuccess: async () => {
 			await refreshAuthUser(queryClient);
 			showToast("You are logged in", "success");

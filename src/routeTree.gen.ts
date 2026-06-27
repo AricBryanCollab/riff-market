@@ -23,9 +23,6 @@ import { Route as ReviewsIndexRouteImport } from './routes/reviews/index'
 import { Route as ProductNewRouteImport } from './routes/product/new'
 import { Route as ProductIdRouteImport } from './routes/product/$id'
 import { Route as ProductEditIdRouteImport } from './routes/product/edit.$id'
-import { Route as ApiAuthSignupRouteImport } from './routes/api/auth.signup'
-import { Route as ApiAuthSignoutRouteImport } from './routes/api/auth.signout'
-import { Route as ApiAuthSigninRouteImport } from './routes/api/auth.signin'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
@@ -97,21 +94,6 @@ const ProductEditIdRoute = ProductEditIdRouteImport.update({
   path: '/product/edit/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthSignupRoute = ApiAuthSignupRouteImport.update({
-  id: '/api/auth/signup',
-  path: '/api/auth/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthSignoutRoute = ApiAuthSignoutRouteImport.update({
-  id: '/api/auth/signout',
-  path: '/api/auth/signout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthSigninRoute = ApiAuthSigninRouteImport.update({
-  id: '/api/auth/signin',
-  path: '/api/auth/signin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -127,9 +109,6 @@ export interface FileRoutesByFullPath {
   '/product/new': typeof ProductNewRoute
   '/reviews': typeof ReviewsIndexRoute
   '/shop/': typeof ShopIndexRoute
-  '/api/auth/signin': typeof ApiAuthSigninRoute
-  '/api/auth/signout': typeof ApiAuthSignoutRoute
-  '/api/auth/signup': typeof ApiAuthSignupRoute
   '/product/edit/$id': typeof ProductEditIdRoute
 }
 export interface FileRoutesByTo {
@@ -145,9 +124,6 @@ export interface FileRoutesByTo {
   '/product/new': typeof ProductNewRoute
   '/reviews': typeof ReviewsIndexRoute
   '/shop': typeof ShopIndexRoute
-  '/api/auth/signin': typeof ApiAuthSigninRoute
-  '/api/auth/signout': typeof ApiAuthSignoutRoute
-  '/api/auth/signup': typeof ApiAuthSignupRoute
   '/product/edit/$id': typeof ProductEditIdRoute
 }
 export interface FileRoutesById {
@@ -165,9 +141,6 @@ export interface FileRoutesById {
   '/product/new': typeof ProductNewRoute
   '/reviews/': typeof ReviewsIndexRoute
   '/shop/': typeof ShopIndexRoute
-  '/api/auth/signin': typeof ApiAuthSigninRoute
-  '/api/auth/signout': typeof ApiAuthSignoutRoute
-  '/api/auth/signup': typeof ApiAuthSignupRoute
   '/product/edit/$id': typeof ProductEditIdRoute
 }
 export interface FileRouteTypes {
@@ -186,9 +159,6 @@ export interface FileRouteTypes {
     | '/product/new'
     | '/reviews'
     | '/shop/'
-    | '/api/auth/signin'
-    | '/api/auth/signout'
-    | '/api/auth/signup'
     | '/product/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -204,9 +174,6 @@ export interface FileRouteTypes {
     | '/product/new'
     | '/reviews'
     | '/shop'
-    | '/api/auth/signin'
-    | '/api/auth/signout'
-    | '/api/auth/signup'
     | '/product/edit/$id'
   id:
     | '__root__'
@@ -223,9 +190,6 @@ export interface FileRouteTypes {
     | '/product/new'
     | '/reviews/'
     | '/shop/'
-    | '/api/auth/signin'
-    | '/api/auth/signout'
-    | '/api/auth/signup'
     | '/product/edit/$id'
   fileRoutesById: FileRoutesById
 }
@@ -242,9 +206,6 @@ export interface RootRouteChildren {
   ProductIdRoute: typeof ProductIdRoute
   ProductNewRoute: typeof ProductNewRoute
   ReviewsIndexRoute: typeof ReviewsIndexRoute
-  ApiAuthSigninRoute: typeof ApiAuthSigninRoute
-  ApiAuthSignoutRoute: typeof ApiAuthSignoutRoute
-  ApiAuthSignupRoute: typeof ApiAuthSignupRoute
   ProductEditIdRoute: typeof ProductEditIdRoute
 }
 
@@ -348,27 +309,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductEditIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/signup': {
-      id: '/api/auth/signup'
-      path: '/api/auth/signup'
-      fullPath: '/api/auth/signup'
-      preLoaderRoute: typeof ApiAuthSignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/signout': {
-      id: '/api/auth/signout'
-      path: '/api/auth/signout'
-      fullPath: '/api/auth/signout'
-      preLoaderRoute: typeof ApiAuthSignoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/signin': {
-      id: '/api/auth/signin'
-      path: '/api/auth/signin'
-      fullPath: '/api/auth/signin'
-      preLoaderRoute: typeof ApiAuthSigninRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -397,9 +337,6 @@ const rootRouteChildren: RootRouteChildren = {
   ProductIdRoute: ProductIdRoute,
   ProductNewRoute: ProductNewRoute,
   ReviewsIndexRoute: ReviewsIndexRoute,
-  ApiAuthSigninRoute: ApiAuthSigninRoute,
-  ApiAuthSignoutRoute: ApiAuthSignoutRoute,
-  ApiAuthSignupRoute: ApiAuthSignupRoute,
   ProductEditIdRoute: ProductEditIdRoute,
 }
 export const routeTree = rootRouteImport

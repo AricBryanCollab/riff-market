@@ -4,7 +4,11 @@ export const signUpSchema = z
 	.object({
 		firstName: z.string().trim().min(1, "First name is required"),
 		lastName: z.string().trim().min(1, "Last name is required"),
-		email: z.string().trim().min(1, "Email is required"),
+		email: z
+			.string()
+			.trim()
+			.min(1, "Email is required")
+			.email("Invalid email address"),
 		password: z.string().min(4, "Password must be at least 4 characters"),
 		confirmPassword: z.string().min(4),
 		role: z
@@ -18,7 +22,11 @@ export const signUpSchema = z
 	});
 
 export const signInSchema = z.object({
-	email: z.string().trim().min(1, "Email is required"),
+	email: z
+		.string()
+		.trim()
+		.min(1, "Email is required")
+		.email("Invalid email address"),
 	password: z.string().trim().min(1, "Password is required"),
 });
 
