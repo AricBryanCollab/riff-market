@@ -148,22 +148,34 @@ export const useApprovedProductCount = () => {
 	};
 };
 
-export const useProductById = (id?: string | null) => {
+export const useListingById = (id?: string | null) => {
 	const {
-		data: product,
-		isPending: loadingProduct,
-		isError: isErrorProduct,
-		refetch: refetchProductDetails,
+		data: listing,
+		isPending: isListingLoading,
+		isError: isListingError,
+		refetch: refetchListingDetails,
 	} = useQuery({
 		...productbyIdQueryOpt(id ?? ""),
 		enabled: !!id,
 	});
 
 	return {
-		product,
-		loadingProduct,
-		isErrorProduct,
-		refetchProductDetails,
+		listing,
+		isListingLoading,
+		isListingError,
+		refetchListingDetails,
+	};
+};
+
+export const useProductById = (id?: string | null) => {
+	const { listing, isListingLoading, isListingError, refetchListingDetails } =
+		useListingById(id);
+
+	return {
+		product: listing,
+		loadingProduct: isListingLoading,
+		isErrorProduct: isListingError,
+		refetchProductDetails: refetchListingDetails,
 	};
 };
 

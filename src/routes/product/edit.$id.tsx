@@ -31,25 +31,25 @@ function RouteComponent() {
 	const navigate = useNavigate();
 
 	const {
-		product,
+		listingDraft,
 		images,
-		loadingProduct,
-		loadingUpdateProduct,
-		isErrorProduct,
+		isListingLoading,
+		isListingUpdateLoading,
+		isListingError,
 		onChange,
 		onSelectChange,
 		onQuantityChange,
 		onImagesChange,
 		handleSubmit,
-		refetchProductDetails,
+		refetchListingDetails,
 	} = useUpdateProduct(id);
 
-	if (loadingProduct) {
+	if (isListingLoading) {
 		return <ProductLoadingState />;
 	}
 
-	if (!product || isErrorProduct) {
-		return <ProductDetailErrorState refetch={refetchProductDetails} />;
+	if (!listingDraft || isListingError) {
+		return <ProductDetailErrorState refetch={refetchListingDetails} />;
 	}
 
 	return (
@@ -74,7 +74,7 @@ function RouteComponent() {
 						id="name"
 						label="Product Name"
 						onChange={onChange}
-						value={product?.name || ""}
+						value={listingDraft.name || ""}
 					/>
 
 					<FormField
@@ -82,7 +82,7 @@ function RouteComponent() {
 						label="Product Brand"
 						placeholder="eg. Fender, Gibson, Yamaha, Taylor"
 						onChange={onChange}
-						value={product?.brand || ""}
+						value={listingDraft.brand || ""}
 					/>
 
 					<FormField
@@ -90,7 +90,7 @@ function RouteComponent() {
 						label="Model Specification"
 						placeholder="eg. American Standard, Jimi Hendrix Special Edition"
 						onChange={onChange}
-						value={product?.model || ""}
+						value={listingDraft.model || ""}
 					/>
 
 					<SearchableSelect
@@ -98,7 +98,7 @@ function RouteComponent() {
 							label: p.label,
 							value: p.value,
 						}))}
-						value={product.category || "OTHERS"}
+						value={listingDraft.category || "OTHERS"}
 						onValueChange={(value: string) =>
 							onSelectChange("category", value as ProductCategory)
 						}
@@ -108,7 +108,7 @@ function RouteComponent() {
 					<FormTextArea
 						id="description"
 						label="Product Description"
-						value={product.description || ""}
+						value={listingDraft.description || ""}
 						onChange={onChange}
 						placeholder="Please provide a description for the product you want to sell. This gives the customer insights about the instrument/gear/accessory you want to sell."
 						maxLength={200}
@@ -120,7 +120,7 @@ function RouteComponent() {
 						<Counter
 							inputId="stock"
 							label="Stock Quantity"
-							value={product.stock || 0}
+							value={listingDraft.stock || 0}
 							onChange={onQuantityChange}
 							min={0}
 							max={10}
@@ -130,7 +130,7 @@ function RouteComponent() {
 						<NumberField
 							id="price"
 							label="Product Price Per Unit"
-							value={product.price || 0}
+							value={listingDraft.price || 0}
 							onChange={onChange}
 						/>
 					</div>
@@ -150,14 +150,14 @@ function RouteComponent() {
 
 				<div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start md:justify-end">
 					<LoadingButton
-						loading={loadingUpdateProduct}
+						loading={isListingUpdateLoading}
 						variant="outline"
 						type="button"
 						onClick={() => navigate({ to: `/shop` })}
 					>
 						Go Back
 					</LoadingButton>
-					<LoadingButton loading={loadingUpdateProduct} type="submit">
+					<LoadingButton loading={isListingUpdateLoading} type="submit">
 						Update My Product
 					</LoadingButton>
 				</div>

@@ -124,8 +124,11 @@ const useCreateProduct = () => {
 	};
 
 	return {
+		listingDraft,
 		product: listingDraft,
+		isListingCreating: isPending,
 		loading: isPending,
+		isListingCreateError: isError,
 		isError,
 		images,
 		onChange,

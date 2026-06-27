@@ -25,9 +25,9 @@ export const Route = createFileRoute("/product/new")({
 
 function RouteComponent() {
 	const {
-		product,
+		listingDraft,
 		images,
-		loading,
+		isListingCreating,
 		onChange,
 		onSelectChange,
 		onQuantityChange,
@@ -52,7 +52,7 @@ function RouteComponent() {
 						id="name"
 						label="Product Name"
 						onChange={onChange}
-						value={product.name}
+						value={listingDraft.name}
 					/>
 
 					<FormField
@@ -60,7 +60,7 @@ function RouteComponent() {
 						label="Product Brand"
 						placeholder="eg. Fender, Gibson, Yamaha, Taylor"
 						onChange={onChange}
-						value={product.brand}
+						value={listingDraft.brand}
 					/>
 
 					<FormField
@@ -68,13 +68,13 @@ function RouteComponent() {
 						label="Model Specification"
 						placeholder="eg. American Standard, Jimi Hendrix Special Edition"
 						onChange={onChange}
-						value={product.model}
+						value={listingDraft.model}
 					/>
 
 					<FormTextArea
 						id="description"
 						label="Product Description"
-						value={product.description}
+						value={listingDraft.description}
 						onChange={onChange}
 						placeholder="Please provide a description for the product you want to sell. This gives the customer insights about the instrument/gear/accessory you want to sell."
 						maxLength={200}
@@ -88,7 +88,7 @@ function RouteComponent() {
 								label: p.label,
 								value: p.value,
 							}))}
-							value={product.category}
+							value={listingDraft.category}
 							onValueChange={(value: string) =>
 								onSelectChange("category", value as ProductCategory)
 							}
@@ -100,7 +100,7 @@ function RouteComponent() {
 								label: p.label,
 								value: p.value,
 							}))}
-							value={product.condition}
+							value={listingDraft.condition}
 							onValueChange={(value: string) =>
 								onSelectChange("condition", value as ProductCondition)
 							}
@@ -112,7 +112,7 @@ function RouteComponent() {
 						<Counter
 							inputId="stock"
 							label="Stock Quantity"
-							value={product.stock}
+							value={listingDraft.stock}
 							onChange={onQuantityChange}
 							min={0}
 							max={10}
@@ -122,7 +122,7 @@ function RouteComponent() {
 						<NumberField
 							id="price"
 							label="Product Price Per Unit"
-							value={product.price}
+							value={listingDraft.price}
 							onChange={onChange}
 						/>
 					</div>
@@ -142,14 +142,14 @@ function RouteComponent() {
 
 				<div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start md:justify-end">
 					<LoadingButton
-						disabled={loading}
+						disabled={isListingCreating}
 						variant="outline"
 						type="button"
 						onClick={clearCreateProductForm}
 					>
 						Clear
 					</LoadingButton>
-					<LoadingButton loading={loading} type="submit">
+					<LoadingButton loading={isListingCreating} type="submit">
 						Add Product
 					</LoadingButton>
 				</div>

@@ -2,17 +2,20 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import type {
-	ProductListingMutationResponse,
-	UpdateListingProductFormDraft,
+	ProductListingMutationResponse as ListingMutationResponse,
+	UpdateListingProductFormDraft as UpdateListingFormDraft,
 } from "@/domains/listings/dto/listing-command";
 import type { UpdateListingFormInput } from "@/domains/listings/dto/listing-form";
-import { useProductById } from "@/hooks/use-get-products";
+import { useListingById } from "@/hooks/use-get-products";
 import type { ImageFile } from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
-import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
+import { invalidateProductCache as invalidateListingCompatibilityCache } from "@/lib/tanstack-query/cache-policy";
 import { updateListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
-import type { ProductCategory, ProductCondition } from "@/types/enum";
+import type {
+	ProductCategory as ListingCategory,
+	ProductCondition as ListingCondition,
+} from "@/types/enum";
 
 function prepareListingFormData(data: UpdateListingFormInput): FormData {
 	const formData = new FormData();
@@ -39,18 +42,18 @@ function prepareListingFormData(data: UpdateListingFormInput): FormData {
 
 const useUpdateProduct = (id: string) => {
 	const [listingDraft, setListingDraft] =
-		useState<UpdateListingProductFormDraft | null>(null);
+		useState<UpdateListingFormDraft | null>(null);
 	const [images, setImages] = useState<ImageFile[]>([]);
 	const queryClient = useQueryClient();
 	const { showToast } = useToastStore();
 	const navigate = useNavigate();
 
 	const {
-		product: listingData,
-		loadingProduct,
-		isErrorProduct,
-		refetchProductDetails,
-	} = useProductById(id);
+		listing: listingData,
+		isListingLoading,
+		isListingError,
+		refetchListingDetails,
+	} = useListingById(id);
 
 	useEffect(() => {
 		if (!listingData) return;
@@ -93,7 +96,7 @@ const useUpdateProduct = (id: string) => {
 		);
 	};
 
-	const onSelectChange = <T extends ProductCategory | ProductCondition>(
+	const onSelectChange = <T extends ListingCategory | ListingCondition>(
 		field: "category" | "condition",
 		value: T,
 	) => {
@@ -117,8 +120,8 @@ const useUpdateProduct = (id: string) => {
 
 	const {
 		mutate,
-		isPending: loadingUpdateProduct,
-		isError: errorUpdateProduct,
+		isPending: isListingUpdateLoading,
+		isError: errorUpdateListing,
 	} = useMutation({
 		mutationFn: ({
 			id,
@@ -132,10 +135,10 @@ const useUpdateProduct = (id: string) => {
 
 			return updateListingFn({
 				data: formData,
-			}) as Promise<ProductListingMutationResponse>;
+			}) as Promise<ListingMutationResponse>;
 		},
 		onSuccess: async () => {
-			await invalidateProductCache(queryClient);
+			await invalidateListingCompatibilityCache(queryClient);
 			showToast(
 				"The product has been updated. Please wait again for admin approval",
 				"success",
@@ -176,18 +179,18 @@ const useUpdateProduct = (id: string) => {
 	};
 
 	return {
-		product: listingDraft,
+		listingDraft,
 		images,
-		loadingProduct,
-		isErrorProduct,
-		loadingUpdateProduct,
-		errorUpdateProduct,
+		isListingLoading,
+		isListingError,
+		isListingUpdateLoading,
+		errorUpdateListing,
 		handleSubmit,
 		onChange,
 		onSelectChange,
 		onQuantityChange,
 		onImagesChange,
-		refetchProductDetails,
+		refetchListingDetails,
 	};
 };
 
