@@ -38,7 +38,7 @@ const listingModerationSelect = {
 			lastName: true,
 		},
 	},
-} satisfies Prisma.ProductSelect;
+} satisfies Prisma.ListingSelect;
 
 export class PrismaListingModerationRepository
 	implements ListingModerationRepositoryPort
@@ -48,7 +48,7 @@ export class PrismaListingModerationRepository
 	async findListingForModeration(
 		listingId: string,
 	): Promise<ListingSnapshot | null> {
-		const listing = await this.db.product.findUnique({
+		const listing = await this.db.listing.findUnique({
 			where: { id: listingId },
 			select: listingModerationSelect,
 		});
@@ -83,7 +83,7 @@ export class PrismaListingModerationRepository
 		status: ListingStatus,
 		expectedStatus: ListingStatus,
 	): Promise<ListingModerationResult | null> {
-		const updated = await this.db.product.updateMany({
+		const updated = await this.db.listing.updateMany({
 			where: {
 				id: listingId,
 				listingStatus: expectedStatus,
@@ -98,7 +98,7 @@ export class PrismaListingModerationRepository
 			return null;
 		}
 
-		const listing = await this.db.product.findUnique({
+		const listing = await this.db.listing.findUnique({
 			where: { id: listingId },
 			select: {
 				id: true,

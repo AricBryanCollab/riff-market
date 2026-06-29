@@ -16,7 +16,7 @@ import {
 	type ReservedSellerListingGroup,
 } from "../application/place-purchase";
 
-type ProductForPurchase = {
+type ListingForPurchase = {
 	readonly id: string;
 	readonly sellerId: string;
 	readonly name: string;
@@ -43,7 +43,7 @@ export class PrismaListingsForPurchase
 		items: PlacePurchaseItem[],
 	) {
 		const requestedItems = aggregateRequestedItems(items);
-		const products = await context.product.findMany({
+		const listings = await context.listing.findMany({
 			where: {
 				id: {
 					in: requestedItems.map((item) => item.listingId),
@@ -70,14 +70,14 @@ export class PrismaListingsForPurchase
 				},
 			},
 		});
-		const productsById = new Map(
-			products.map((product) => [product.id, product]),
+		const listingsById = new Map(
+			listings.map((listing) => [listing.id, listing]),
 		);
 
 		for (const requestedItem of requestedItems) {
-			const product = productsById.get(requestedItem.listingId);
+			const listing = listingsById.get(requestedItem.listingId);
 
-			if (!product) {
+			if (!listing) {
 				return err(
 					placePurchaseError(
 						"PLACE_PURCHASE_LISTING_NOT_FOUND",
@@ -87,7 +87,7 @@ export class PrismaListingsForPurchase
 				);
 			}
 
-			const listingOrError = toListing(product);
+			const listingOrError = toListing(listing);
 			if (!listingOrError.ok) {
 				return err(listingOrError.error);
 			}
@@ -102,7 +102,7 @@ export class PrismaListingsForPurchase
 		const reservedGroups = new Map<string, ReservedSellerListingGroup>();
 
 		for (const requestedItem of requestedItems) {
-			const updateResult = await context.product.updateMany({
+			const updateResult = await context.listing.updateMany({
 				where: {
 					id: requestedItem.listingId,
 					listingStatus: "APPROVED",
@@ -127,8 +127,8 @@ export class PrismaListingsForPurchase
 				);
 			}
 
-			const product = productsById.get(requestedItem.listingId);
-			if (!product) {
+			const listing = listingsById.get(requestedItem.listingId);
+			if (!listing) {
 				return err(
 					placePurchaseError(
 						"PLACE_PURCHASE_LISTING_NOT_FOUND",
@@ -138,7 +138,7 @@ export class PrismaListingsForPurchase
 				);
 			}
 
-			const listingOrError = toListing(product);
+			const listingOrError = toListing(listing);
 			if (!listingOrError.ok) {
 				return err(listingOrError.error);
 			}
@@ -178,23 +178,23 @@ function aggregateRequestedItems(items: PlacePurchaseItem[]) {
 	}));
 }
 
-function toListing(product: ProductForPurchase) {
-	if (product.priceCents === null) {
+function toListing(listing: ListingForPurchase) {
+	if (listing.priceCents === null) {
 		return err(
 			placePurchaseError(
 				"PLACE_PURCHASE_INVARIANT_FAILED",
-				`Listing ${product.id} is missing cent-based price data`,
+				`Listing ${listing.id} is missing cent-based price data`,
 				"invariant",
 			),
 		);
 	}
 
-	const primaryImageUrl = getPrimaryImageUrl(product.images);
+	const primaryImageUrl = getPrimaryImageUrl(listing.images);
 	if (!primaryImageUrl) {
 		return err(
 			placePurchaseError(
 				"PLACE_PURCHASE_INVARIANT_FAILED",
-				`Listing ${product.id} is missing a primary image snapshot`,
+				`Listing ${listing.id} is missing a primary image snapshot`,
 				"invariant",
 			),
 		);
@@ -202,20 +202,20 @@ function toListing(product: ProductForPurchase) {
 
 	return ok(
 		Listing.reconstitute({
-			id: product.id,
-			sellerId: product.sellerId,
-			sellerDisplayName: [product.seller.firstName, product.seller.lastName]
+			id: listing.id,
+			sellerId: listing.sellerId,
+			sellerDisplayName: [listing.seller.firstName, listing.seller.lastName]
 				.join(" ")
 				.trim(),
-			name: product.name,
-			brand: product.brand,
-			model: product.model,
-			category: product.category,
-			condition: product.condition,
+			name: listing.name,
+			brand: listing.brand,
+			model: listing.model,
+			category: listing.category,
+			condition: listing.condition,
 			primaryImageUrl,
-			price: Money.fromCents(product.priceCents, product.currencyCode),
-			stock: product.stock,
-			status: product.listingStatus,
+			price: Money.fromCents(listing.priceCents, listing.currencyCode),
+			stock: listing.stock,
+			status: listing.listingStatus,
 		}),
 	);
 }

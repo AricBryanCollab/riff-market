@@ -13,7 +13,7 @@ describe("PrismaAccountMediaCleanupStaging", () => {
 				publicId: " avatars/user-1 ",
 			},
 		});
-		db.product.findMany.mockResolvedValue([
+		db.listing.findMany.mockResolvedValue([
 			{
 				id: "product-1",
 				images: [
@@ -53,7 +53,7 @@ describe("PrismaAccountMediaCleanupStaging", () => {
 				profilePic: true,
 			},
 		});
-		expect(db.product.findMany).toHaveBeenCalledWith({
+		expect(db.listing.findMany).toHaveBeenCalledWith({
 			where: { sellerId: "user-1" },
 			select: {
 				id: true,
@@ -99,7 +99,7 @@ function createDb() {
 		mediaCleanupJob: {
 			createMany: vi.fn(),
 		},
-		product: {
+		listing: {
 			findMany: vi.fn(),
 		},
 		userSettings: {

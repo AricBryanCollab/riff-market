@@ -25,7 +25,8 @@ Clean slate started: 2026-06-11
 | `7` Reviews | Complete for active server-function behavior. Review domain/use cases, Prisma adapter, server functions, and gated DB coverage are in place. |
 | `8` Media | Complete. Media cleanup behavior, queue persistence, account/listing staging, and gated Prisma queue coverage are in place and verified. |
 | `9` API route cleanup | Complete for current delivery. Auth sign-in/sign-up/sign-out moved to TanStack server functions; no `/api/*` routes remain under `src/routes/api`; obsolete auth API wrappers are removed. |
-| `10` Naming and polish | Complete for the non-persistence naming scope pending final review. DTO, application, infrastructure-helper, route internals, hooks, utilities, UI components, store files, constants, and visible copy now use listing vocabulary where compatibility allows. Product-to-Listing persistence/schema rename remains future work. |
+| `10` Naming and polish | Complete for the non-persistence naming scope. DTO, application, infrastructure-helper, route internals, hooks, utilities, UI components, store files, constants, and visible copy now use listing vocabulary where compatibility allows. Product-to-Listing persistence/schema rename remains future work. |
+| `11` Product-to-Listing Prisma schema bridge | In progress. Generated Prisma vocabulary now exposes `Listing`/`ListingCategory`/`ListingCondition` mapped to existing physical Product table/enum names; physical database renames remain future work. |
 
 ## Current Slice 7 State
 
@@ -140,16 +141,33 @@ Clean slate started: 2026-06-11
   - shop and home components moved from product filenames/props to listing filenames/props: `listing-card`, `listing-filter-badges`, `pending-listing-list`, `featured-listing-card`, `listing-grid`, and `featured-listings`.
   - empty/error/loading state exports, listing category/condition options, listing category metadata, local enum types, and visible marketplace copy now use listing vocabulary.
   - cart detail hydration exposes `listing` for fetched listing details while intentionally preserving persisted cart `productId` state.
-- Existing `*ProductApiFn`, `invalidateProductCache`, and `ProductCategory`/`ProductCondition` generated Prisma names remain only behind listing-named compatibility aliases; they should not be used directly for new app-facing code.
-- Remaining Product vocabulary is now limited to explicit compatibility/persistence boundaries: `/product/*` route paths, query key strings, serialized response/request fields such as `product`, `productId`, and `pendingProductCount`, generated Prisma `Product` model/client/enums, Cloudinary folder names, current database field/table names, and order/cart shapes that must survive the compatibility window.
-- Larger persistence rename remains separate: `prisma/schema.prisma` still exposes `model Product`, `User.products`, `Favorite.productId`, legacy `OrderItem.productId`, generated Prisma `Product` types, and Prisma adapters using `db.product` / `Prisma.Product*`.
+- Existing `*ProductApiFn`, `invalidateProductCache`, product cache key strings, and serialized `product` response/request fields remain only as compatibility aliases; they should not be used directly for new app-facing code.
+- Remaining Product vocabulary is now limited to explicit compatibility/persistence boundaries: `/product/*` route paths, query key strings, serialized response/request fields such as `product`, `productId`, and `pendingProductCount`, Cloudinary folder names, media cleanup source names, physical database table/enum/constraint names, and order/cart shapes that must survive the compatibility window.
+- Larger physical persistence rename remains separate: `prisma/schema.prisma` maps generated `Listing` / `ListingCategory` / `ListingCondition` vocabulary to the existing `Product` table and `ProductCategory` / `ProductCondtion` enum names, while legacy `productId` columns remain mapped through listing-named Prisma fields where possible.
 - Final thermo-nuclear review follow-up removed the last non-compatibility naming leaks found in this worktree:
   - app-facing listing files now import `ListingCategory` from the local enum boundary instead of aliasing generated Prisma `ProductCategory` directly.
   - `HeroCarousel` now links to `/product/$id` through the typed route pattern instead of a casted interpolated path with a trailing space.
   - listing money and listing read DTO validation messages now say `Listing price` rather than `Product price`.
 
+## Current Slice 11 State
+
+- The next slice after Slice 10 is the Product-to-Listing persistence/schema bridge.
+- `prisma/schema.prisma` now exposes generated Prisma `Listing`, `ListingCategory`, and `ListingCondition` names while preserving the existing physical `Product`, `ProductCategory`, and misspelled `ProductCondtion` database enum/table names through Prisma mapping.
+- Generated Prisma relations now expose `User.listings`, `OrderItem.listingId`, `Review.listingId`, and `Favorite.listingId` where possible, with legacy `productId` column and constraint names mapped for compatibility.
+- Listing command/read/moderation infrastructure, purchase stock reservation, account media cleanup staging, Prisma seed helpers, and DB-facing test assertions now use `db.listing` and `Prisma.Listing*` generated APIs.
+- No SQL migration was added in this step. Physical table, enum, column, and constraint renames remain the follow-up persistence migration.
+
 ## Latest Verification
 
+- Slice 11 Prisma schema validation passed with the Codex-bundled Node runtime because the local `node` on PATH is too old for Prisma 7 WASM: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js validate --schema prisma/schema.prisma`.
+- Slice 11 Prisma schema formatting passed with the Codex-bundled Node runtime: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js format --schema prisma/schema.prisma`.
+- Slice 11 Prisma client generation passed: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js generate --schema prisma/schema.prisma`.
+- `bun run typecheck` passed after the Slice 11 Prisma schema bridge.
+- Slice 11 touched-file Biome passed: `bun run check -- prisma/schema.prisma src/domains/listings/infrastructure/prisma-listing-commands.ts src/domains/listings/infrastructure/prisma-listing-read-models.ts src/domains/listings/infrastructure/prisma-listing-moderation.ts src/domains/ordering/infrastructure/prisma-listings-for-purchase.ts src/domains/media/infrastructure/prisma-account-media-cleanup-staging.ts src/domains/media/infrastructure/prisma-account-media-cleanup-staging.test.ts src/test/prisma-test-data.ts src/server/listing-service.prisma.test.ts`.
+- Slice 11 focused unit run passed with the Codex-bundled Node runtime and sandbox-safe Vite config loading: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/vitest/vitest.mjs run --config vitest.config.ts --configLoader runner src/domains/media/infrastructure/prisma-account-media-cleanup-staging.test.ts src/server/listing-service.prisma.test.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts src/domains/ordering/application/place-purchase.prisma.test.ts` -> 1 file passed, 3 DB-backed files skipped; 1 test passed, 27 DB-backed tests skipped. The plain `bun run test:unit -- ...` attempt failed because the local `node` on PATH is too old for current Vite.
+- Slice 11 stale generated-Prisma scan passed: `rg -n "db\\.product|context\\.product|this\\.db\\.product|Prisma\\.Product|ProductCategory|ProductCondtion" src --glob '!routeTree.gen.ts'` returned no matches.
+- Slice 11 schema stale generated-name scan passed: `rg -n "^(model Product|enum ProductCategory|enum ProductCondtion)\\b|\\bproduct\\s+Product\\b|\\bProduct\\[\\]" prisma/schema.prisma` returned no matches.
+- `git diff --check` passed after the Slice 11 Prisma schema bridge.
 - Final thermo-nuclear review focused Biome passed: `bun run check -- src/components/listing-filter-badges.tsx src/components/home/hero-carousel.tsx 'src/routes/product/edit.$id.tsx' src/domains/listings/application/listing-money.ts src/domains/listings/application/listing-money.test.ts src/domains/listings/dto/listing-read-model.ts`.
 - Final thermo-nuclear review focused money unit test passed with sandbox-safe Vite config loading: `bunx vitest run --config vitest.config.ts --configLoader runner src/domains/listings/application/listing-money.test.ts` -> 1 file passed, 9 tests passed. The plain `bun run test:unit -- src/domains/listings/application/listing-money.test.ts` attempt hit the known Vite temp-file write issue under the shared `node_modules` symlink, and unsandboxed rerun was policy-rejected.
 - `bun run typecheck` passed after the final thermo-nuclear review fixes.

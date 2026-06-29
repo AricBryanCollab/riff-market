@@ -19,18 +19,22 @@ enum Role {
   CUSTOMER
 }
 
-enum ProductCategory {
+enum ListingCategory {
   ELECTRIC
   ACOUSTIC
   KEYBOARD
   PEDALS
   ACCESSORY
+
+  @@map("ProductCategory")
 }
 
-enum ProductCondtion {
+enum ListingCondition {
   NEW
   USED
   MINT
+
+  @@map("ProductCondtion")
 }
 
 enum PaymentMethod {
@@ -96,29 +100,29 @@ enum MediaCleanupJobSourceType {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String @id @default(uuid())
+  email     String @unique
   firstName String
   lastName  String
   password  String
-  role      Role     @default(CUSTOMER)
+  role      Role   @default(CUSTOMER)
 
   settings      UserSettings?
-  products       Product[]
+  listings      Listing[]
   orders        Order[]
   purchases     Purchase[]
   sellerOrders  SellerOrder[]
   reviews       Review[]
   notifications Notification[]
-  favorites Favorite[]
+  favorites     Favorite[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model UserSettings {
-  id        String @id @default(uuid())
-  userId    String @unique
+  id     String @id @default(uuid())
+  userId String @unique
 
   theme      String
   phone      String?
@@ -129,23 +133,23 @@ model UserSettings {
 }
 
 model AppSettings {
-  id Int @id @default(1)
-  currency String @default("USD")
+  id        Int      @id @default(1)
+  currency  String   @default("USD")
   updatedAt DateTime @updatedAt
 }
 
 model Order {
-  id               String @id @default(uuid())
-  userId           String
-  orderDate        DateTime
-  totalAmount      Float
-  shippingAddress  String
-  paymentMethod    PaymentMethod
-  trackingNumber   String
-  status OrderStatus @default(PENDING)
+  id              String        @id @default(uuid())
+  userId          String
+  orderDate       DateTime
+  totalAmount     Float
+  shippingAddress String
+  paymentMethod   PaymentMethod
+  trackingNumber  String
+  status          OrderStatus   @default(PENDING)
 
-  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items        OrderItem[]
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items         OrderItem[]
   notifications Notification[]
 
   @@index([userId])
@@ -154,35 +158,35 @@ model Order {
 
 model OrderItem {
   id        String @id @default(uuid())
-  orderId  String
-  productId String
+  orderId   String
+  listingId String @map("productId")
 
   quantity  Int
   unitPrice Float
   subTotal  Float
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade, map: "OrderItem_productId_fkey")
 
   @@index([orderId])
-  @@index([productId])
+  @@index([listingId], map: "OrderItem_productId_idx")
 }
 
 model Purchase {
-  id               String @id @default(uuid())
+  id                 String         @id @default(uuid())
   customerId         String?
   customerIdSnapshot String
-  purchaseNumber     String @unique
+  purchaseNumber     String         @unique
   totalAmountCents   Int
-  currencyCode       String @default("USD")
-  paymentStatus      PaymentStatus @default(MANUALLY_CONFIRMED)
+  currencyCode       String         @default("USD")
+  paymentStatus      PaymentStatus  @default(MANUALLY_CONFIRMED)
   status             PurchaseStatus @default(OPEN)
   buyerName          String
   buyerEmail         String
   buyerPhone         String?
   shippingAddress    String
 
-  customer      User?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customer      User?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
   sellerOrders  SellerOrder[]
   notifications Notification[]
 
@@ -195,12 +199,12 @@ model Purchase {
 }
 
 model SellerOrder {
-  id               String @id @default(uuid())
+  id               String            @id @default(uuid())
   purchaseId       String
   sellerId         String?
   sellerIdSnapshot String
   subtotalCents    Int
-  currencyCode     String @default("USD")
+  currencyCode     String            @default("USD")
   status           SellerOrderStatus @default(NEW)
   trackingNumber   String?
 
@@ -245,48 +249,49 @@ model SellerOrderItem {
   @@index([sellerId])
 }
 
-model Product {
-  id          String @id @default(uuid())
-  sellerId    String
-  name        String
-  category    ProductCategory
-  condition   ProductCondtion
-  brand       String
-  model       String
-  images      Json
-  description String
-  price       Float
-  priceCents  Int?
-  currencyCode String @default("USD")
-  stock       Int
-  isApproved Boolean
-  listingStatus ListingStatus @default(PENDING)
-  favoritedBy Favorite[]
+model Listing {
+  id            String           @id @default(uuid())
+  sellerId      String
+  name          String
+  category      ListingCategory
+  condition     ListingCondition
+  brand         String
+  model         String
+  images        Json
+  description   String
+  price         Float
+  priceCents    Int?
+  currencyCode  String           @default("USD")
+  stock         Int
+  isApproved    Boolean
+  listingStatus ListingStatus    @default(PENDING)
+  favoritedBy   Favorite[]
 
-  seller User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  seller     User        @relation(fields: [sellerId], references: [id], onDelete: Cascade, map: "Product_sellerId_fkey")
   orderItems OrderItem[]
   reviews    Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([sellerId])
-  @@index([category])
-  @@index([isApproved])
-  @@index([listingStatus])
+  @@index([sellerId], map: "Product_sellerId_idx")
+  @@index([category], map: "Product_category_idx")
+  @@index([isApproved], map: "Product_isApproved_idx")
+  @@index([listingStatus], map: "Product_listingStatus_idx")
+  @@map("Product")
 }
 
 model ChatBotSession {
-  id        String @id @default(uuid())
+  id       String    @id @default(uuid())
   messages Message[]
 
   createdAt DateTime @default(now())
 }
 
 model Message {
-  id        String @id @default(uuid())
+  id        String   @id @default(uuid())
   sessionId String
-  role ChatRole
+  role      ChatRole
   content   String
 
   session ChatBotSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
@@ -304,7 +309,7 @@ model Review {
   comment   String
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  listing Product @relation(fields: [listingId], references: [id], onDelete: Cascade, map: "Review_productId_fkey")
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade, map: "Review_productId_fkey")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -315,28 +320,28 @@ model Review {
 }
 
 model Favorite {
-  id String @id @default(uuid())
-  userId String
-  productId String
+  id        String @id @default(uuid())
+  userId    String
+  listingId String @map("productId")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade, map: "Favorite_productId_fkey")
 
   createdAt DateTime @default(now())
 
-  @@unique([userId, productId])
+  @@unique([userId, listingId], map: "Favorite_userId_productId_key")
   @@index([userId])
-  @@index([productId])
+  @@index([listingId], map: "Favorite_productId_idx")
 }
 
 model Notification {
-  id      String @id @default(uuid())
-  userId  String
-  orderId String?
-  purchaseId String?
+  id            String  @id @default(uuid())
+  userId        String
+  orderId       String?
+  purchaseId    String?
   sellerOrderId String?
-  message String
-  isRead  Boolean @default(false)
+  message       String
+  isRead        Boolean @default(false)
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   order       Order?       @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -351,23 +356,23 @@ model Notification {
 }
 
 model MediaCleanupJob {
-  id           String                    @id @default(uuid())
-  cleanupBatchId String
-  provider     String
-  assetType    String
+  id              String                    @id @default(uuid())
+  cleanupBatchId  String
+  provider        String
+  assetType       String
   providerAssetId String
-  sourceType   MediaCleanupJobSourceType
-  sourceId     String
-  sourceUserId String
-  status       MediaCleanupJobStatus     @default(PENDING)
-  attempts     Int                       @default(0)
-  maxAttempts  Int                       @default(5)
-  runAt        DateTime                  @default(now())
-  lockedUntil  DateTime?
-  lockedBy     String?
-  completedAt  DateTime?
-  failedAt     DateTime?
-  lastError    String?
+  sourceType      MediaCleanupJobSourceType
+  sourceId        String
+  sourceUserId    String
+  status          MediaCleanupJobStatus     @default(PENDING)
+  attempts        Int                       @default(0)
+  maxAttempts     Int                       @default(5)
+  runAt           DateTime                  @default(now())
+  lockedUntil     DateTime?
+  lockedBy        String?
+  completedAt     DateTime?
+  failedAt        DateTime?
+  lastError       String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

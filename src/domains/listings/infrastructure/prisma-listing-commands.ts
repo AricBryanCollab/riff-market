@@ -1,8 +1,8 @@
 import type {
+	ListingCategory,
+	ListingCondition,
 	Prisma,
 	PrismaClient,
-	ProductCategory,
-	ProductCondtion,
 } from "generated/prisma/client";
 import type {
 	ListingCommandRepositoryPort,
@@ -49,9 +49,9 @@ const listingCommandSelect = {
 			favoritedBy: true,
 		},
 	},
-} satisfies Prisma.ProductSelect;
+} satisfies Prisma.ListingSelect;
 
-type ListingCommandRow = Prisma.ProductGetPayload<{
+type ListingCommandRow = Prisma.ListingGetPayload<{
 	select: typeof listingCommandSelect;
 }>;
 
@@ -67,12 +67,12 @@ export class PrismaListingCommandRepository
 			return null;
 		}
 
-		const listing = await this.db.product.create({
+		const listing = await this.db.listing.create({
 			data: {
 				sellerId: input.sellerId,
 				name: input.name ?? "",
-				category: input.category as ProductCategory,
-				condition: input.condition as ProductCondtion,
+				category: input.category as ListingCategory,
+				condition: input.condition as ListingCondition,
 				brand: input.brand ?? "",
 				model: input.model ?? "",
 				images: input.images as unknown as Prisma.InputJsonValue,
@@ -93,7 +93,7 @@ export class PrismaListingCommandRepository
 	async findListingForMutation(
 		listingId: string,
 	): Promise<ListingRemovalSnapshot | null> {
-		const listing = await this.db.product.findUnique({
+		const listing = await this.db.listing.findUnique({
 			where: { id: listingId },
 			select: listingCommandSelect,
 		});
@@ -113,7 +113,7 @@ export class PrismaListingCommandRepository
 		listingId: string,
 		input: ListingMutationPersistenceInput,
 	): Promise<ListingMutationResult | null> {
-		const listing = await this.db.product.update({
+		const listing = await this.db.listing.update({
 			where: { id: listingId },
 			data: toUpdateData(input),
 			select: listingCommandSelect,
@@ -123,7 +123,7 @@ export class PrismaListingCommandRepository
 	}
 
 	async deleteListing(listingId: string): Promise<boolean> {
-		await this.db.product.delete({
+		await this.db.listing.delete({
 			where: { id: listingId },
 		});
 
@@ -134,7 +134,7 @@ export class PrismaListingCommandRepository
 		listingId: string,
 		status: ListingStatus,
 	): Promise<ListingMutationResult | null> {
-		const listing = await this.db.product.update({
+		const listing = await this.db.listing.update({
 			where: { id: listingId },
 			data: {
 				listingStatus: status,
@@ -149,14 +149,14 @@ export class PrismaListingCommandRepository
 
 function toUpdateData(
 	input: ListingMutationPersistenceInput,
-): Prisma.ProductUpdateInput {
+): Prisma.ListingUpdateInput {
 	return {
 		...(input.name !== undefined && { name: input.name }),
 		...(input.category !== undefined && {
-			category: input.category as ProductCategory,
+			category: input.category as ListingCategory,
 		}),
 		...(input.condition !== undefined && {
-			condition: input.condition as ProductCondtion,
+			condition: input.condition as ListingCondition,
 		}),
 		...(input.brand !== undefined && { brand: input.brand }),
 		...(input.model !== undefined && { model: input.model }),

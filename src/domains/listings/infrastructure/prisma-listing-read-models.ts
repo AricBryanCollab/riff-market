@@ -20,7 +20,7 @@ import type {
 } from "@/domains/listings/dto/listing-read-model";
 import { toImageAssetUrls } from "@/utils/image-asset-ref";
 
-type ListingReadPrisma = Pick<PrismaClient, "product">;
+type ListingReadPrisma = Pick<PrismaClient, "listing">;
 
 const listingReadSelect = {
 	id: true,
@@ -46,9 +46,9 @@ const listingReadSelect = {
 			email: true,
 		},
 	},
-} satisfies Prisma.ProductSelect;
+} satisfies Prisma.ListingSelect;
 
-type ListingReadRow = Prisma.ProductGetPayload<{
+type ListingReadRow = Prisma.ListingGetPayload<{
 	select: typeof listingReadSelect;
 }>;
 
@@ -65,7 +65,7 @@ export class PrismaListingReadModels
 	constructor(private readonly db: ListingReadPrisma) {}
 
 	async findById(listingId: string): Promise<ListingReadModel | null> {
-		const listing = await this.db.product.findFirst({
+		const listing = await this.db.listing.findFirst({
 			where: {
 				id: listingId,
 			},
@@ -82,11 +82,11 @@ export class PrismaListingReadModels
 		const where = toApprovedListingWhere(query);
 
 		if (random) {
-			const total = await this.db.product.count({ where });
+			const total = await this.db.listing.count({ where });
 			const randomSkip =
 				total > limit ? Math.floor(Math.random() * (total - limit)) : 0;
 
-			const listings = await this.db.product.findMany({
+			const listings = await this.db.listing.findMany({
 				where,
 				select: listingReadSelect,
 				take: limit,
@@ -96,7 +96,7 @@ export class PrismaListingReadModels
 			return toListingReadModels(listings);
 		}
 
-		const listings = await this.db.product.findMany({
+		const listings = await this.db.listing.findMany({
 			where,
 			orderBy: {
 				createdAt: "desc",
@@ -110,7 +110,7 @@ export class PrismaListingReadModels
 	}
 
 	async listForSeller(sellerId: string): Promise<ListingReadModel[]> {
-		const listings = await this.db.product.findMany({
+		const listings = await this.db.listing.findMany({
 			where: { sellerId },
 			orderBy: {
 				createdAt: "desc",
@@ -122,7 +122,7 @@ export class PrismaListingReadModels
 	}
 
 	async listPendingModeration(): Promise<ListingReadModel[]> {
-		const listings = await this.db.product.findMany({
+		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "PENDING" },
 			orderBy: {
 				createdAt: "desc",
@@ -134,7 +134,7 @@ export class PrismaListingReadModels
 	}
 
 	async countApprovedByCategory(): Promise<ListingCategoryCount[]> {
-		const groupedListings = await this.db.product.groupBy({
+		const groupedListings = await this.db.listing.groupBy({
 			by: ["category"],
 			where: {
 				listingStatus: "APPROVED",
@@ -151,7 +151,7 @@ export class PrismaListingReadModels
 	}
 
 	async countByStatus(status: ListingCountStatus): Promise<number> {
-		return await this.db.product.count({
+		return await this.db.listing.count({
 			where: {
 				listingStatus: status,
 			},
@@ -159,7 +159,7 @@ export class PrismaListingReadModels
 	}
 
 	async listRecentApproved(limit: number): Promise<ListingReadModel[]> {
-		const listings = await this.db.product.findMany({
+		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "APPROVED" },
 			orderBy: { updatedAt: "desc" },
 			select: listingReadSelect,
@@ -170,7 +170,7 @@ export class PrismaListingReadModels
 	}
 
 	async findByIds(listingIds: string[]): Promise<ListingReadModel[]> {
-		const listings = await this.db.product.findMany({
+		const listings = await this.db.listing.findMany({
 			where: {
 				id: {
 					in: listingIds,
@@ -185,7 +185,7 @@ export class PrismaListingReadModels
 
 function toApprovedListingWhere(
 	query: ApprovedListingSearchQuery,
-): Prisma.ProductWhereInput {
+): Prisma.ListingWhereInput {
 	const priceRange = toListingPriceRangePersistence({
 		priceMinCents: query.priceMinCents,
 		priceMaxCents: query.priceMaxCents,

@@ -15,7 +15,7 @@ import {
 
 type AccountMediaCleanupPrisma = {
 	readonly mediaCleanupJob: Pick<PrismaClient["mediaCleanupJob"], "createMany">;
-	readonly product: Pick<PrismaClient["product"], "findMany">;
+	readonly listing: Pick<PrismaClient["listing"], "findMany">;
 	readonly userSettings: Pick<PrismaClient["userSettings"], "findUnique">;
 };
 
@@ -27,7 +27,7 @@ export class PrismaAccountMediaCleanupStaging
 	async loadAccountMediaInventory(
 		accountId: string,
 	): Promise<AccountMediaInventory> {
-		const [settings, products] = await Promise.all([
+		const [settings, listings] = await Promise.all([
 			this.db.userSettings.findUnique({
 				where: { userId: accountId },
 				select: {
@@ -35,7 +35,7 @@ export class PrismaAccountMediaCleanupStaging
 					profilePic: true,
 				},
 			}),
-			this.db.product.findMany({
+			this.db.listing.findMany({
 				where: { sellerId: accountId },
 				select: {
 					id: true,
@@ -51,9 +51,9 @@ export class PrismaAccountMediaCleanupStaging
 						profilePic: toCleanupImageAssetRef(settings.profilePic),
 					}
 				: null,
-			products: products.map((product) => ({
-				productId: product.id,
-				images: toCleanupImageAssetRefs(product.images),
+			products: listings.map((listing) => ({
+				productId: listing.id,
+				images: toCleanupImageAssetRefs(listing.images),
 			})),
 		};
 	}

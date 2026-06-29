@@ -1,10 +1,10 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import {
+	type ListingCategory,
+	type ListingCondition,
 	type ListingStatus,
 	type PaymentStatus,
 	PrismaClient,
-	type ProductCategory,
-	type ProductCondtion,
 	type PurchaseStatus,
 	type Role,
 	type SellerOrderStatus,
@@ -77,7 +77,7 @@ export async function cleanDatabase(db: PrismaClient) {
 	await db.review.deleteMany();
 	await db.orderItem.deleteMany();
 	await db.order.deleteMany();
-	await db.product.deleteMany();
+	await db.listing.deleteMany();
 	await db.userSettings.deleteMany();
 	await db.user.deleteMany();
 	await db.message.deleteMany();
@@ -145,8 +145,8 @@ type TestListingSeed = {
 	readonly id: string;
 	readonly sellerId?: string;
 	readonly name?: string;
-	readonly category?: ProductCategory;
-	readonly condition?: ProductCondtion;
+	readonly category?: ListingCategory;
+	readonly condition?: ListingCondition;
 	readonly brand?: string;
 	readonly model?: string;
 	readonly images?: readonly ImageAssetRef[];
@@ -168,7 +168,7 @@ export async function seedListing(db: PrismaClient, listing: TestListingSeed) {
 		listing.price ??
 		(typeof priceCents === "number" ? priceCents / 100 : 199.95);
 
-	await db.product.create({
+	await db.listing.create({
 		data: {
 			id: listing.id,
 			sellerId: listing.sellerId ?? "seller-1",
@@ -199,12 +199,12 @@ export async function seedListing(db: PrismaClient, listing: TestListingSeed) {
 export const seedProduct = seedListing;
 
 export async function productStock(db: PrismaClient, id: string) {
-	const product = await db.product.findUniqueOrThrow({
+	const listing = await db.listing.findUniqueOrThrow({
 		where: { id },
 		select: { stock: true },
 	});
 
-	return product.stock;
+	return listing.stock;
 }
 
 type TestSellerOrderItemSeed = {

@@ -80,7 +80,7 @@ describeDb("listing service Prisma integration", () => {
 		});
 		expect(imageManager.uploadedFileNames).toEqual(["listing.jpg"]);
 
-		const listing = await db.product.findUniqueOrThrow({
+		const listing = await db.listing.findUniqueOrThrow({
 			where: { id: response.product.id },
 		});
 		expect(listing).toMatchObject({
@@ -129,7 +129,7 @@ describeDb("listing service Prisma integration", () => {
 			},
 		]);
 
-		const listing = await db.product.findUniqueOrThrow({
+		const listing = await db.listing.findUniqueOrThrow({
 			where: { id: "listing-1" },
 		});
 		expect(listing).toMatchObject({
@@ -159,7 +159,7 @@ describeDb("listing service Prisma integration", () => {
 			commandDependencies(db, imageManager),
 		);
 
-		const listing = await db.product.findUniqueOrThrow({
+		const listing = await db.listing.findUniqueOrThrow({
 			where: { id: "listing-1" },
 		});
 		expect(listing).toMatchObject({
@@ -195,10 +195,10 @@ describeDb("listing service Prisma integration", () => {
 			moderationDependencies(db),
 		);
 
-		const approved = await db.product.findUniqueOrThrow({
+		const approved = await db.listing.findUniqueOrThrow({
 			where: { id: "listing-approve" },
 		});
-		const declined = await db.product.findUniqueOrThrow({
+		const declined = await db.listing.findUniqueOrThrow({
 			where: { id: "listing-decline" },
 		});
 		expect(approved).toMatchObject({
@@ -236,7 +236,7 @@ describeDb("listing service Prisma integration", () => {
 			),
 		).rejects.toThrow("Notification write failed");
 
-		const listing = await db.product.findUniqueOrThrow({
+		const listing = await db.listing.findUniqueOrThrow({
 			where: { id: "listing-rollback" },
 		});
 		expect(listing).toMatchObject({
@@ -301,7 +301,7 @@ describeDb("listing service Prisma integration", () => {
 			message: "Product deleted successfully",
 		});
 		await expect(
-			db.product.findUnique({ where: { id: "listing-1" } }),
+			db.listing.findUnique({ where: { id: "listing-1" } }),
 		).resolves.toBeNull();
 		expect(imageManager.cleanedImages).toEqual([
 			{
@@ -332,7 +332,7 @@ describeDb("listing service Prisma integration", () => {
 			message: "Product withdrawn successfully",
 		});
 
-		const listing = await db.product.findUniqueOrThrow({
+		const listing = await db.listing.findUniqueOrThrow({
 			where: { id: "listing-1" },
 		});
 		expect(listing).toMatchObject({
@@ -367,7 +367,7 @@ describeDb("listing service Prisma integration", () => {
 			code: "LISTING_COMMAND_UNAUTHORIZED",
 		} satisfies Partial<RequestError>);
 
-		const listing = await db.product.findUniqueOrThrow({
+		const listing = await db.listing.findUniqueOrThrow({
 			where: { id: "listing-1" },
 		});
 		expect(listing).toMatchObject({
@@ -479,7 +479,7 @@ class StaleStatusListingModerationRepository
 		status: ListingModerationResult["status"],
 		expectedStatus: ListingModerationResult["status"],
 	) {
-		await this.db.product.update({
+		await this.db.listing.update({
 			where: { id: listingId },
 			data: {
 				isApproved: true,
