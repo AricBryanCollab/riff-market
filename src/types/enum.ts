@@ -1,13 +1,13 @@
 export type UserRole = "ADMIN" | "SELLER" | "CUSTOMER";
 
-export type ProductCategory =
+export type ListingCategory =
 	| "ELECTRIC"
 	| "ACOUSTIC"
 	| "KEYBOARD"
 	| "PEDALS"
 	| "ACCESSORY";
 
-export type ProductCondition = "NEW" | "USED" | "MINT";
+export type ListingCondition = "NEW" | "USED" | "MINT";
 
 export type PaymentMethod = "CASH" | "PAYPAL" | "VISA";
 
@@ -45,7 +45,7 @@ export type OrderStatus = LegacyOrderStatus;
 export type DialogType =
 	| "signin"
 	| "signup"
-	| "deleteProduct"
+	| "deleteListing"
 	| "updateUser"
 	| "updateProfilePic"
 	| "deleteUser";

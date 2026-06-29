@@ -13,7 +13,7 @@ import type {
 import type { ListingStatus } from "@/domains/listings/domain/listing";
 import { Money } from "@/domains/shared/domain/money";
 import { toImageAssetRefs, toImageAssetUrls } from "@/utils/image-asset-ref";
-import { normalizeProductMoney } from "../application/product-money";
+import { normalizeListingMoney } from "../application/listing-money";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -51,7 +51,7 @@ const listingCommandSelect = {
 	},
 } satisfies Prisma.ProductSelect;
 
-type ListingCommandProduct = Prisma.ProductGetPayload<{
+type ListingCommandRow = Prisma.ProductGetPayload<{
 	select: typeof listingCommandSelect;
 }>;
 
@@ -67,7 +67,7 @@ export class PrismaListingCommandRepository
 			return null;
 		}
 
-		const product = await this.db.product.create({
+		const listing = await this.db.product.create({
 			data: {
 				sellerId: input.sellerId,
 				name: input.name ?? "",
@@ -87,18 +87,18 @@ export class PrismaListingCommandRepository
 			select: listingCommandSelect,
 		});
 
-		return toMutationResult(product);
+		return toMutationResult(listing);
 	}
 
 	async findListingForMutation(
 		listingId: string,
 	): Promise<ListingRemovalSnapshot | null> {
-		const product = await this.db.product.findUnique({
+		const listing = await this.db.product.findUnique({
 			where: { id: listingId },
 			select: listingCommandSelect,
 		});
 
-		if (!product) {
+		if (!listing) {
 			return null;
 		}
 
@@ -106,20 +106,20 @@ export class PrismaListingCommandRepository
 			where: { listingId },
 		});
 
-		return toRemovalSnapshot(product, sellerOrderItems);
+		return toRemovalSnapshot(listing, sellerOrderItems);
 	}
 
 	async updateListing(
 		listingId: string,
 		input: ListingMutationPersistenceInput,
 	): Promise<ListingMutationResult | null> {
-		const product = await this.db.product.update({
+		const listing = await this.db.product.update({
 			where: { id: listingId },
 			data: toUpdateData(input),
 			select: listingCommandSelect,
 		});
 
-		return toMutationResult(product);
+		return toMutationResult(listing);
 	}
 
 	async deleteListing(listingId: string): Promise<boolean> {
@@ -134,7 +134,7 @@ export class PrismaListingCommandRepository
 		listingId: string,
 		status: ListingStatus,
 	): Promise<ListingMutationResult | null> {
-		const product = await this.db.product.update({
+		const listing = await this.db.product.update({
 			where: { id: listingId },
 			data: {
 				listingStatus: status,
@@ -143,7 +143,7 @@ export class PrismaListingCommandRepository
 			select: listingCommandSelect,
 		});
 
-		return toMutationResult(product);
+		return toMutationResult(listing);
 	}
 }
 
@@ -175,59 +175,57 @@ function toUpdateData(
 	};
 }
 
-function toMutationResult(
-	product: ListingCommandProduct,
-): ListingMutationResult {
-	const normalized = normalizeProductMoney(product);
+function toMutationResult(listing: ListingCommandRow): ListingMutationResult {
+	const normalized = normalizeListingMoney(listing);
 
 	return {
-		id: product.id,
-		sellerId: product.sellerId,
-		name: product.name,
-		category: product.category,
-		condition: product.condition,
-		brand: product.brand,
-		model: product.model,
-		images: toImageAssetRefs(product.images),
-		description: product.description,
+		id: listing.id,
+		sellerId: listing.sellerId,
+		name: listing.name,
+		category: listing.category,
+		condition: listing.condition,
+		brand: listing.brand,
+		model: listing.model,
+		images: toImageAssetRefs(listing.images),
+		description: listing.description,
 		price: normalized.price,
-		priceCents: product.priceCents,
-		currencyCode: product.currencyCode,
-		stock: product.stock,
-		isApproved: product.isApproved,
-		listingStatus: product.listingStatus,
-		createdAt: product.createdAt,
-		updatedAt: product.updatedAt,
+		priceCents: listing.priceCents,
+		currencyCode: listing.currencyCode,
+		stock: listing.stock,
+		isApproved: listing.isApproved,
+		listingStatus: listing.listingStatus,
+		createdAt: listing.createdAt,
+		updatedAt: listing.updatedAt,
 	};
 }
 
 function toRemovalSnapshot(
-	product: ListingCommandProduct,
+	listing: ListingCommandRow,
 	sellerOrderItems: number,
 ): ListingRemovalSnapshot {
-	const imageRefs = toImageAssetRefs(product.images);
-	const imageUrls = toImageAssetUrls(product.images);
-	const priceCents = product.priceCents ?? Math.round(product.price * 100);
+	const imageRefs = toImageAssetRefs(listing.images);
+	const imageUrls = toImageAssetUrls(listing.images);
+	const priceCents = listing.priceCents ?? Math.round(listing.price * 100);
 
 	return {
-		id: product.id,
-		sellerId: product.sellerId,
-		sellerDisplayName: getSellerDisplayName(product.seller),
-		name: product.name,
-		brand: product.brand,
-		model: product.model,
-		category: product.category,
-		condition: product.condition,
+		id: listing.id,
+		sellerId: listing.sellerId,
+		sellerDisplayName: getSellerDisplayName(listing.seller),
+		name: listing.name,
+		brand: listing.brand,
+		model: listing.model,
+		category: listing.category,
+		condition: listing.condition,
 		primaryImageUrl: imageUrls[0] ?? "missing-image",
-		price: Money.fromCents(priceCents, product.currencyCode ?? "USD"),
-		stock: product.stock,
-		status: product.listingStatus,
+		price: Money.fromCents(priceCents, listing.currencyCode ?? "USD"),
+		stock: listing.stock,
+		status: listing.listingStatus,
 		images: imageRefs,
 		referenceCounts: {
-			legacyOrderItems: product._count.orderItems,
+			legacyOrderItems: listing._count.orderItems,
 			sellerOrderItems,
-			reviews: product._count.reviews,
-			favorites: product._count.favoritedBy,
+			reviews: listing._count.reviews,
+			favorites: listing._count.favoritedBy,
 		},
 	};
 }

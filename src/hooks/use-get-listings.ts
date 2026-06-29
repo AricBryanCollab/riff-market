@@ -9,9 +9,9 @@ import type {
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import {
 	type ApprovedListingSearchServerInput,
-	getApprovedListingsProductApiFn,
-	getListingDetailsProductApiFn,
-	getListingStatusCountProductApiFn,
+	getApprovedListingsProductApiFn as getApprovedListingsCompatibilityFn,
+	getListingDetailsProductApiFn as getListingDetailsCompatibilityFn,
+	getListingStatusCountProductApiFn as getListingStatusCountCompatibilityFn,
 } from "@/server/listing-read.functions";
 
 type ListingReadError = {
@@ -58,13 +58,13 @@ function isListingReadError(value: unknown): value is ListingReadError {
 	);
 }
 
-export const approvedProductsQueryOpt = (
+export const approvedListingsQueryOpt = (
 	filters: ApprovedListingSearchFilterQuery,
 ) =>
 	queryOptions<ListingReadDto[]>({
 		queryKey: queryKeys.products.approved(filters),
 		queryFn: async () => {
-			const result = await getApprovedListingsProductApiFn({
+			const result = await getApprovedListingsCompatibilityFn({
 				data: toApprovedListingSearchServerInput(filters),
 			});
 
@@ -73,10 +73,10 @@ export const approvedProductsQueryOpt = (
 		staleTime: 1000 * 60 * 5,
 	});
 
-export const featuredProductsQueryOpt = queryOptions<ListingReadDto[]>({
+export const featuredListingsQueryOpt = queryOptions<ListingReadDto[]>({
 	queryKey: queryKeys.products.featured,
 	queryFn: async () => {
-		const result = await getApprovedListingsProductApiFn({
+		const result = await getApprovedListingsCompatibilityFn({
 			data: {
 				...toApprovedListingSearchServerInput({ limit: 5 }),
 				random: "true",
@@ -88,11 +88,11 @@ export const featuredProductsQueryOpt = queryOptions<ListingReadDto[]>({
 	staleTime: 1000 * 60 * 5,
 });
 
-export const productbyIdQueryOpt = (id: string) =>
+export const listingByIdQueryOpt = (id: string) =>
 	queryOptions<ListingReadDto>({
 		queryKey: queryKeys.products.detail(id),
 		queryFn: async () => {
-			const result = await getListingDetailsProductApiFn({
+			const result = await getListingDetailsCompatibilityFn({
 				data: { listingId: id },
 			});
 
@@ -101,11 +101,11 @@ export const productbyIdQueryOpt = (id: string) =>
 		retry: false,
 	});
 
-export const productCountByStatusQueryOpt = (status: ListingCountStatusQuery) =>
+export const listingCountByStatusQueryOpt = (status: ListingCountStatusQuery) =>
 	queryOptions<ApprovedListingCount | PendingListingCount>({
 		queryKey: queryKeys.products.countByStatus(status),
 		queryFn: async () => {
-			const result = await getListingStatusCountProductApiFn({
+			const result = await getListingStatusCountCompatibilityFn({
 				data: { status },
 			});
 
@@ -115,36 +115,36 @@ export const productCountByStatusQueryOpt = (status: ListingCountStatusQuery) =>
 		},
 	});
 
-export const useApprovedProducts = (
+export const useApprovedListings = (
 	filters: ApprovedListingSearchFilterQuery,
 ) => {
 	const {
-		data: products,
-		isPending: isLoadingProducts,
-		isError: isErrorProducts,
-		refetch: refetchProducts,
-	} = useQuery(approvedProductsQueryOpt(filters));
+		data: listings,
+		isPending: isLoadingListings,
+		isError: isErrorListings,
+		refetch: refetchListings,
+	} = useQuery(approvedListingsQueryOpt(filters));
 
 	return {
-		products,
-		isLoadingProducts,
-		isErrorProducts,
-		refetchProducts,
+		listings,
+		isLoadingListings,
+		isErrorListings,
+		refetchListings,
 		filters,
 	};
 };
 
-export const useApprovedProductCount = () => {
+export const useApprovedListingCount = () => {
 	const {
-		data: productCount,
-		isError: isErrorProductCount,
-		isPending: loadingProductCount,
-	} = useQuery(productCountByStatusQueryOpt("approved"));
+		data: listingCount,
+		isError: isErrorListingCount,
+		isPending: loadingListingCount,
+	} = useQuery(listingCountByStatusQueryOpt("approved"));
 
 	return {
-		productCount,
-		isErrorProductCount,
-		loadingProductCount,
+		listingCount,
+		isErrorListingCount,
+		loadingListingCount,
 	};
 };
 
@@ -155,7 +155,7 @@ export const useListingById = (id?: string | null) => {
 		isError: isListingError,
 		refetch: refetchListingDetails,
 	} = useQuery({
-		...productbyIdQueryOpt(id ?? ""),
+		...listingByIdQueryOpt(id ?? ""),
 		enabled: !!id,
 	});
 
@@ -167,30 +167,18 @@ export const useListingById = (id?: string | null) => {
 	};
 };
 
-export const useProductById = (id?: string | null) => {
-	const { listing, isListingLoading, isListingError, refetchListingDetails } =
-		useListingById(id);
-
-	return {
-		product: listing,
-		loadingProduct: isListingLoading,
-		isErrorProduct: isListingError,
-		refetchProductDetails: refetchListingDetails,
-	};
-};
-
-export const useFeaturedProducts = () => {
+export const useFeaturedListings = () => {
 	const {
-		data: featuredProducts,
-		isPending: loadingFeatured,
-		isError: isErrorFeatured,
-		refetch: refetchFeatured,
-	} = useQuery(featuredProductsQueryOpt);
+		data: featuredListings,
+		isPending: loadingFeaturedListings,
+		isError: isErrorFeaturedListings,
+		refetch: refetchFeaturedListings,
+	} = useQuery(featuredListingsQueryOpt);
 
 	return {
-		featuredProducts,
-		loadingFeatured,
-		isErrorFeatured,
-		refetchFeatured,
+		featuredListings,
+		loadingFeaturedListings,
+		isErrorFeaturedListings,
+		refetchFeaturedListings,
 	};
 };

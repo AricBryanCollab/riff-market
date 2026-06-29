@@ -68,10 +68,10 @@ const settingsOrdersCopy = {
 	},
 	seller: {
 		sectionTitle: "Recent Sales",
-		sectionDescription: "Recent orders that include your listed products.",
+		sectionDescription: "Recent orders that include your listings.",
 		emptyTitle: "No sales yet",
 		emptyDescription:
-			"Sales orders will appear here when customers buy your products.",
+			"Sales orders will appear here when customers buy your listings.",
 		errorTitle: "Unable to load sales",
 	},
 } satisfies Record<

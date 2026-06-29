@@ -10,14 +10,17 @@ import {
 	type RoleActionVariant,
 } from "@/constants/role-action-configs";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import useUpdateProductStatus from "@/hooks/use-update-product-status";
+import useModerateListing from "@/hooks/use-moderate-listing";
 import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { UserRole } from "@/types/enum";
-import { canModifyProduct, isActionDisabled } from "@/utils/can-modify-product";
+import {
+	canModifyListing,
+	isListingActionDisabled,
+} from "@/utils/can-modify-listing";
 
-const productActionButtonVariants = cva(
+const listingActionButtonVariants = cva(
 	"rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors",
 	{
 		variants: {
@@ -46,16 +49,16 @@ const productActionButtonVariants = cva(
 	},
 );
 
-//  Shop Page Actions at the right side of the header
-interface ShopPageProductActionsProps {
+// Shop page actions at the right side of the header
+interface ShopPageListingActionsProps {
 	searchTerm: string;
 	handleSearchTerm: (value: string) => void;
 }
 
-export function ShopPageProductActions({
+export function ShopPageListingActions({
 	searchTerm,
 	handleSearchTerm,
-}: ShopPageProductActionsProps) {
+}: ShopPageListingActionsProps) {
 	const { data: user } = useAuthUser();
 	const navigate = useNavigate();
 	const { setOpenDialog } = useDialogStore();
@@ -69,7 +72,7 @@ export function ShopPageProductActions({
 					<Button onClick={() => navigate({ from: "/product/new" })}>
 						<div className="flex items-center gap-2">
 							<Plus className="size-4" />
-							<BodySmall>Add Product</BodySmall>
+							<BodySmall>Add Listing</BodySmall>
 						</div>
 					</Button>
 				);
@@ -99,7 +102,7 @@ export function ShopPageProductActions({
 					type="text"
 					value={searchTerm}
 					onChange={(e) => handleSearchTerm(e.target.value)}
-					placeholder="Search products"
+					placeholder="Search listings"
 					className="outline-none text-sm text-slate-700 placeholder:text-slate-400 bg-transparent w-48"
 				/>
 			</div>
@@ -108,8 +111,8 @@ export function ShopPageProductActions({
 	);
 }
 
-// Product Details Actions Button By Role and Permissions
-interface ProductDetailsActionsProps {
+// Listing details actions by role and permissions
+interface ListingDetailsActionsProps {
 	quantity: number;
 	stock: number;
 	sellerId: string;
@@ -117,13 +120,13 @@ interface ProductDetailsActionsProps {
 	handleQuantityChange: (value: number) => void;
 }
 
-export function ProductDetailsActions({
+export function ListingDetailsActions({
 	quantity,
 	stock,
 	sellerId,
 	handleQuantityChange,
 	isApproved,
-}: ProductDetailsActionsProps) {
+}: ListingDetailsActionsProps) {
 	const { data: user } = useAuthUser();
 	const { showToast } = useToastStore();
 	const { addItem } = useCartStore();
@@ -132,17 +135,18 @@ export function ProductDetailsActions({
 	const { id } = useParams({ strict: false });
 	const navigate = useNavigate();
 
-	const { handleUpdateProductStatus, isPending } = useUpdateProductStatus();
+	const { handleModerateListing, isListingModerationPending } =
+		useModerateListing();
 
 	const role: UserRole = user?.role ?? "CUSTOMER";
 
-	const canEditOrDelete = canModifyProduct(user, sellerId);
+	const canEditOrDelete = canModifyListing(user, sellerId);
 
 	const actions = RoleActionConfigs[role] ?? RoleActionConfigs.CUSTOMER;
 
 	const handleAddToCart = () => {
 		if (!id) {
-			showToast("Product ID not found", "error");
+			showToast("Listing ID not found", "error");
 			return;
 		}
 
@@ -157,7 +161,7 @@ export function ProductDetailsActions({
 
 	const handleAction = (actionKey: string) => {
 		if (!id) {
-			showToast("Product ID not found", "error");
+			showToast("Listing ID not found", "error");
 			return;
 		}
 
@@ -165,14 +169,14 @@ export function ProductDetailsActions({
 			case "edit":
 			case "delete":
 				if (!canEditOrDelete) {
-					showToast("You are not allowed to modify this product", "error");
+					showToast("You are not allowed to modify this listing", "error");
 					return;
 				}
 
 				if (actionKey === "edit") {
 					navigate({ from: "/product/edit/$id" });
 				} else {
-					setOpenDialog("deleteProduct");
+					setOpenDialog("deleteListing");
 				}
 				break;
 
@@ -185,11 +189,11 @@ export function ProductDetailsActions({
 				break;
 
 			case "approve":
-				handleUpdateProductStatus(id, true);
+				handleModerateListing(id, true);
 				break;
 
 			case "decline":
-				handleUpdateProductStatus(id, false);
+				handleModerateListing(id, false);
 				break;
 
 			default:
@@ -216,10 +220,10 @@ export function ProductDetailsActions({
 
 					const isOutOfStock = action.requiresStock && stock === 0;
 
-					const permissionDisabled = isActionDisabled(
+					const permissionDisabled = isListingActionDisabled(
 						action.onClickKey,
 						canEditOrDelete,
-						isPending,
+						isListingModerationPending,
 						isApproved,
 					);
 
@@ -233,14 +237,14 @@ export function ProductDetailsActions({
 							title={
 								!canEditOrDelete &&
 								(action.onClickKey === "edit" || action.onClickKey === "delete")
-									? "You can only modify your own products"
+									? "You can only modify your own listings"
 									: isApproved &&
 											(action.onClickKey === "approve" ||
 												action.onClickKey === "decline")
-										? "Product is already approved"
+										? "Listing is already approved"
 										: undefined
 							}
-							className={productActionButtonVariants({
+							className={listingActionButtonVariants({
 								variant: action.variant as RoleActionVariant,
 								width: isSecondary ? "secondary" : "primary",
 								disabled: isButtonDisabled,
@@ -255,14 +259,14 @@ export function ProductDetailsActions({
 					<div className="absolute right-0 top-6 flex gap-4">
 						<IconButton
 							icon={Pencil}
-							disabled={isPending || !canEditOrDelete}
+							disabled={isListingModerationPending || !canEditOrDelete}
 							onClick={() => navigate({ from: "/product/edit/$id" })}
 							backgroundColor="bg-primary hover:bg-accent hover:text-primary"
 						/>
 						<IconButton
 							icon={Trash2}
-							disabled={isPending || !canEditOrDelete}
-							onClick={() => setOpenDialog("deleteProduct")}
+							disabled={isListingModerationPending || !canEditOrDelete}
+							onClick={() => setOpenDialog("deleteListing")}
 							backgroundColor="bg-destructive hover:bg-rose-400"
 						/>
 					</div>

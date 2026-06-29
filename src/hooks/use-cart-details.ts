@@ -1,7 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import { getCartListingsProductApiFn } from "@/server/listing-read.functions";
+import { getCartListingsProductApiFn as getCartListingsCompatibilityFn } from "@/server/listing-read.functions";
 import { useCartStore } from "@/store/cart";
 
 type ListingReadError = {
@@ -21,13 +21,13 @@ function unwrapListingReadResult<T>(result: T | ListingReadError): T {
 	return result as T;
 }
 
-export const cartDetailsQueryOpt = (productIds: string[]) =>
+export const cartDetailsQueryOpt = (listingIds: string[]) =>
 	queryOptions<ListingReadDto[]>({
-		queryKey: queryKeys.products.cartDetails(productIds),
+		queryKey: queryKeys.products.cartDetails(listingIds),
 		queryFn: async () => {
-			const result = await getCartListingsProductApiFn({
+			const result = await getCartListingsCompatibilityFn({
 				data: {
-					ids: productIds,
+					ids: listingIds,
 				},
 			});
 
@@ -46,17 +46,17 @@ const useCartDetails = (options: UseCartDetailsOptions = {}) => {
 	const removeItem = useCartStore((state) => state.removeItem);
 	const enabled = options.enabled ?? true;
 
-	const uniqueProductIds = Array.from(
+	const uniqueListingIds = Array.from(
 		new Set(cartItems.map((item) => item.productId)),
 	).sort();
-	const shouldFetchCartDetails = enabled && uniqueProductIds.length > 0;
+	const shouldFetchCartDetails = enabled && uniqueListingIds.length > 0;
 
 	const {
 		data: listings = [],
-		isPending: isLoadingProducts,
-		isError: isErrorProducts,
+		isPending: isLoadingListings,
+		isError: isErrorListings,
 	} = useQuery({
-		...cartDetailsQueryOpt(uniqueProductIds),
+		...cartDetailsQueryOpt(uniqueListingIds),
 		enabled: shouldFetchCartDetails,
 	});
 
@@ -69,21 +69,21 @@ const useCartDetails = (options: UseCartDetailsOptions = {}) => {
 
 		return {
 			...cartItem,
-			product: listing,
-			isLoading: shouldFetchCartDetails && isLoadingProducts && !listing,
+			listing,
+			isLoading: shouldFetchCartDetails && isLoadingListings && !listing,
 			isError:
 				shouldFetchCartDetails &&
-				!isLoadingProducts &&
-				(isErrorProducts || !listing),
+				!isLoadingListings &&
+				(isErrorListings || !listing),
 		};
 	});
 
 	const isCartEmpty = cartItems.length === 0;
-	const isLoading = shouldFetchCartDetails && isLoadingProducts;
+	const isLoading = shouldFetchCartDetails && isLoadingListings;
 
 	const totalPrice = cartWithDetails.reduce((sum, item) => {
-		if (item.product) {
-			return sum + item.quantity * item.product.price;
+		if (item.listing) {
+			return sum + item.quantity * item.listing.price;
 		}
 		return sum;
 	}, 0);
@@ -94,8 +94,8 @@ const useCartDetails = (options: UseCartDetailsOptions = {}) => {
 		removeItem(id);
 	};
 
-	const handleQuantityChange = (quantity: number, productId: string) => {
-		updateQuantity(productId, quantity);
+	const handleQuantityChange = (quantity: number, listingId: string) => {
+		updateQuantity(listingId, quantity);
 	};
 
 	return {

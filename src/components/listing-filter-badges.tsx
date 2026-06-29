@@ -1,12 +1,12 @@
 import { cva } from "class-variance-authority";
-import type { ProductCategory } from "generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";
-import { productCategoryOptions } from "@/constants/select-options";
+import { listingCategoryOptions } from "@/constants/select-options";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import useShopSearchFilters from "@/hooks/use-shop-search-filters";
-import { usePendingProductStore } from "@/store/pending-product";
+import { usePendingListingStore } from "@/store/pending-listing";
+import type { ListingCategory } from "@/types/enum";
 
-const productFilterBadgeVariants = cva(
+const listingFilterBadgeVariants = cva(
 	"px-5 py-4 rounded-full border-2 font-medium transition-all",
 	{
 		variants: {
@@ -22,12 +22,12 @@ const productFilterBadgeVariants = cva(
 	},
 );
 
-const ProductFilterBadges = () => {
+const ListingFilterBadges = () => {
 	const { data: user } = useAuthUser();
 	const isAdmin = user?.role === "ADMIN";
 
 	const { searchParams, setCategory, resetFilters } = useShopSearchFilters();
-	const { showPending, setShowPending } = usePendingProductStore();
+	const { showPending, setShowPending } = usePendingListingStore();
 	const selectedCategory = searchParams.category;
 
 	const handleShowAll = () => {
@@ -37,7 +37,7 @@ const ProductFilterBadges = () => {
 		}
 	};
 
-	const handleCategorySelect = (category: ProductCategory) => {
+	const handleCategorySelect = (category: ListingCategory) => {
 		if (selectedCategory === category) {
 			setCategory(undefined);
 		} else {
@@ -48,7 +48,7 @@ const ProductFilterBadges = () => {
 		}
 	};
 
-	const handlePendingProduct = () => {
+	const handlePendingListing = () => {
 		setShowPending();
 		if (!showPending && selectedCategory) {
 			setCategory(undefined);
@@ -60,18 +60,18 @@ const ProductFilterBadges = () => {
 			{/* All Categories */}
 			<Badge
 				onClick={handleShowAll}
-				className={productFilterBadgeVariants({
+				className={listingFilterBadgeVariants({
 					active: !selectedCategory && !showPending,
 				})}
 			>
 				All
 			</Badge>
 
-			{/* Pending Products */}
+			{/* Pending Listings */}
 			{isAdmin && (
 				<Badge
-					onClick={handlePendingProduct}
-					className={productFilterBadgeVariants({
+					onClick={handlePendingListing}
+					className={listingFilterBadgeVariants({
 						active: showPending,
 					})}
 				>
@@ -80,14 +80,14 @@ const ProductFilterBadges = () => {
 			)}
 
 			{/* Category Filters */}
-			{productCategoryOptions.map((category) => {
+			{listingCategoryOptions.map((category) => {
 				const isSelected = selectedCategory === category.value;
 
 				return (
 					<Badge
 						key={category.value}
 						onClick={() => handleCategorySelect(category.value)}
-						className={productFilterBadgeVariants({
+						className={listingFilterBadgeVariants({
 							active: isSelected,
 						})}
 					>
@@ -99,4 +99,4 @@ const ProductFilterBadges = () => {
 	);
 };
 
-export default ProductFilterBadges;
+export default ListingFilterBadges;

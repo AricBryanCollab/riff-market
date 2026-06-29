@@ -1,8 +1,8 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { ListingCategoryCountData } from "@/domains/listings/dto/listing-read-model";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import { getListingCategoryCountsProductApiFn } from "@/server/listing-read.functions";
-import { transformProductCategoryCount } from "@/utils/transform-product-category-count";
+import { getListingCategoryCountsProductApiFn as getListingCategoryCountsCompatibilityFn } from "@/server/listing-read.functions";
+import { transformListingCategoryCount } from "@/utils/transform-listing-category-count";
 
 type ListingReadError = {
 	readonly error: string;
@@ -21,25 +21,25 @@ function unwrapListingReadResult<T>(result: T | ListingReadError): T {
 	return result as T;
 }
 
-export const productCountByCategoryOptions = queryOptions({
+export const listingCountByCategoryOptions = queryOptions({
 	queryKey: queryKeys.products.countByCategory,
 	queryFn: async () => {
-		const result = await getListingCategoryCountsProductApiFn();
+		const result = await getListingCategoryCountsCompatibilityFn();
 
 		return unwrapListingReadResult(result) as ListingCategoryCountData[];
 	},
 	select: (data: ListingCategoryCountData[]) =>
-		transformProductCategoryCount(data),
+		transformListingCategoryCount(data),
 	staleTime: 5 * 60 * 1000,
 });
 
-const useGetProductCount = () => {
+const useGetListingCount = () => {
 	const {
 		data: categoryCounts = [],
 		isPending: loadingCategoryCounts,
 		isError: isErrorCategoryCounts,
 		refetch: refetchCategoryCounts,
-	} = useQuery(productCountByCategoryOptions);
+	} = useQuery(listingCountByCategoryOptions);
 
 	return {
 		categoryCounts,
@@ -49,4 +49,4 @@ const useGetProductCount = () => {
 	};
 };
 
-export default useGetProductCount;
+export default useGetListingCount;

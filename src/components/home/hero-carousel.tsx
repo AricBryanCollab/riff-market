@@ -7,30 +7,30 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 
 interface HeroCarouselProps {
-	products: ListingReadDto[];
+	listings: ListingReadDto[];
 	autoPlayInterval?: number;
 }
 
 const HeroCarousel = ({
-	products,
+	listings,
 	autoPlayInterval = 5000,
 }: HeroCarouselProps) => {
 	const [currentIndex, setCurrentIndex] = useState(0);
 
 	const goToNext = useCallback(() => {
-		setCurrentIndex((prev) => (prev + 1) % products.length);
-	}, [products.length]);
+		setCurrentIndex((prev) => (prev + 1) % listings.length);
+	}, [listings.length]);
 
 	const goToPrev = useCallback(() => {
-		setCurrentIndex((prev) => (prev - 1 + products.length) % products.length);
-	}, [products.length]);
+		setCurrentIndex((prev) => (prev - 1 + listings.length) % listings.length);
+	}, [listings.length]);
 
 	useEffect(() => {
 		const timer = setInterval(goToNext, autoPlayInterval);
 		return () => clearInterval(timer);
 	}, [goToNext, autoPlayInterval]);
 
-	const listing = products[currentIndex];
+	const listing = listings[currentIndex];
 
 	return (
 		<section className="py-16">
@@ -38,7 +38,7 @@ const HeroCarousel = ({
 				{/* Image Section */}
 				<div className="relative">
 					<Link
-						to={`/product/${listing.id} ` as `/product/$id`}
+						to="/product/$id"
 						params={{ id: listing.id }}
 						className="block relative aspect-square bg-muted rounded-2xl overflow-hidden"
 					>
@@ -80,9 +80,9 @@ const HeroCarousel = ({
 
 					{/* Listing Details: Right Side */}
 					<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-						{products.map((_, index) => (
+						{listings.map((_, index) => (
 							<button
-								key={products[index].id}
+								key={listings[index].id}
 								type="button"
 								onClick={() => setCurrentIndex(index)}
 								className={`w-2 h-2 rounded-full transition-colors ${
@@ -115,7 +115,7 @@ const HeroCarousel = ({
 					</p>
 
 					<Link
-						to={`/product/${listing.id} ` as `/product/$id`}
+						to="/product/$id"
 						params={{ id: listing.id }}
 						className={buttonVariants({ size: "lg", className: "mt-8 w-fit" })}
 					>

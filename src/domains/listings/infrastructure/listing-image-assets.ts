@@ -15,8 +15,8 @@ import { tryDeleteCloudinaryImageAssets } from "@/utils/cloudinary-assets";
 import { compressImage } from "@/utils/compress-image";
 import { toCleanupImageAssetRefFromImage } from "@/utils/image-asset-ref";
 
-const MAX_PRODUCT_IMAGE_UPLOADS = 3;
-const productImageOptions = {
+const MAX_LISTING_IMAGE_UPLOADS = 3;
+const listingImageOptions = {
 	maxSize: 2400,
 	quality: 85,
 	format: "jpeg",
@@ -79,10 +79,10 @@ function getMissingUploadMetadataMessage(
 	return `Image upload did not return required ${missingFields.join(" and ")}`;
 }
 
-async function uploadProductImage(imageFile: File): Promise<ImageAssetRef> {
+async function uploadListingImage(imageFile: File): Promise<ImageAssetRef> {
 	const compressedImage = await compressImage({
 		file: imageFile,
-		options: productImageOptions,
+		options: listingImageOptions,
 	});
 
 	const uploadResult = (await unsignedUploadImage({
@@ -104,7 +104,7 @@ async function uploadProductImage(imageFile: File): Promise<ImageAssetRef> {
 	};
 }
 
-async function uploadProductImages(
+async function uploadListingImages(
 	imageFiles: File[],
 ): Promise<ImageAssetRef[]> {
 	const uploadedImages: ImageAssetRef[] = [];
@@ -112,9 +112,9 @@ async function uploadProductImages(
 	try {
 		const images = await mapWithConcurrency(
 			imageFiles,
-			MAX_PRODUCT_IMAGE_UPLOADS,
+			MAX_LISTING_IMAGE_UPLOADS,
 			async (imageFile) => {
-				const image = await uploadProductImage(imageFile);
+				const image = await uploadListingImage(imageFile);
 				uploadedImages.push(image);
 				return image;
 			},
@@ -122,12 +122,12 @@ async function uploadProductImages(
 
 		return images;
 	} catch (error) {
-		await cleanupProductImagesBestEffort(uploadedImages);
+		await cleanupListingImagesBestEffort(uploadedImages);
 		throw error;
 	}
 }
 
-async function cleanupProductImagesBestEffort(images: ImageAssetRef[]) {
+async function cleanupListingImagesBestEffort(images: ImageAssetRef[]) {
 	if (images.length === 0) {
 		return;
 	}
@@ -135,7 +135,7 @@ async function cleanupProductImagesBestEffort(images: ImageAssetRef[]) {
 	await tryDeleteCloudinaryImageAssets(images);
 }
 
-function toProductCleanupImageAssetRefs(
+function toListingCleanupImageAssetRefs(
 	images: readonly ImageAssetRef[],
 ): CleanupImageAssetRef[] {
 	return images
@@ -149,13 +149,13 @@ export class CloudinaryListingImageManager implements ListingImageManagerPort {
 	) {}
 
 	async uploadImages(imageFiles: File[]): Promise<ImageAssetRef[]> {
-		return uploadProductImages(imageFiles);
+		return uploadListingImages(imageFiles);
 	}
 
 	async cleanupUploadedImagesBestEffort(
 		images: ImageAssetRef[],
 	): Promise<void> {
-		await cleanupProductImagesBestEffort(images);
+		await cleanupListingImagesBestEffort(images);
 	}
 
 	async cleanupPersistedImagesBestEffort(
@@ -169,17 +169,17 @@ export class CloudinaryListingImageManager implements ListingImageManagerPort {
 						cleanupBatchId: randomUUID(),
 						listingId: source.listingId,
 						sellerId: source.sellerId,
-						assets: toProductCleanupImageAssetRefs(images),
+						assets: toListingCleanupImageAssetRefs(images),
 					},
 					this.cleanupStaging,
 				);
 				return;
 			} catch {
-				await cleanupProductImagesBestEffort(images);
+				await cleanupListingImagesBestEffort(images);
 				return;
 			}
 		}
 
-		await cleanupProductImagesBestEffort(images);
+		await cleanupListingImagesBestEffort(images);
 	}
 }

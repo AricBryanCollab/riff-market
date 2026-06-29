@@ -38,27 +38,27 @@ const OrderItemCard = ({
 					<div className="space-y-4">
 						{cartWithDetails.map((item) => (
 							<div
-								key={item.product?.id}
+								key={item.listing?.id}
 								className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"
 							>
 								<div className="size-20 bg-muted rounded-md flex items-center justify-center">
 									<img
-										src={item.product?.images?.[0]}
-										alt={item.product?.name}
+										src={item.listing?.images?.[0]}
+										alt={item.listing?.name}
 										className="w-full h-full object-cover"
 									/>
 								</div>
 								<div className="grid grid-cols-2">
 									<div className="flex flex-col gap-2">
-										<h4 className="font-medium">{item.product?.name}</h4>
+										<h4 className="font-medium">{item.listing?.name}</h4>
 										<p className="text-sm text-muted-foreground">
 											Quantity: {item.quantity}
 										</p>
 									</div>
 									<div className="flex flex-col items-end gap-2">
-										<p className="font-semibold">{item.product?.price}</p>
+										<p className="font-semibold">{item.listing?.price}</p>
 										<p className="text-sm text-muted-foreground">
-											{(item.product?.price || 1) * item?.quantity}
+											{(item.listing?.price || 1) * item?.quantity}
 										</p>
 									</div>
 								</div>

@@ -32,7 +32,7 @@ const getOptionalPage = (value: unknown): number | undefined => {
 	return Math.max(0, Math.floor(parsed));
 };
 
-export function validateProductSearch(
+export function validateListingSearch(
 	search: Record<string, unknown>,
 ): ListingShopSearch {
 	return {

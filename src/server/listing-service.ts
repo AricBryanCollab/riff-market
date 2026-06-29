@@ -17,8 +17,8 @@ import {
 	moderateListing,
 } from "@/domains/listings/application/moderate-listing";
 import type {
-	ProductListingMutationResponse,
-	ProductListingRemovalResponse,
+	ListingMutationResponseDto,
+	ListingRemovalResponseDto,
 } from "@/domains/listings/dto/listing-command";
 import {
 	createListingFormSchema,
@@ -46,8 +46,8 @@ export type RemoveListingInput = {
 	readonly listingId: string;
 };
 
-export type ListingMutationResponse = ProductListingMutationResponse;
-export type RemoveListingResponse = ProductListingRemovalResponse;
+export type ListingMutationResponse = ListingMutationResponseDto;
+export type RemoveListingResponse = ListingRemovalResponseDto;
 
 export type ListingCommandServiceDependencies = ListingCommandDependencies;
 
@@ -182,7 +182,7 @@ export async function createListingForCurrentUser(
 	const result = await createListing(actor, command, commandDependencies);
 	const listing = unwrapResultOrThrowRequestError(result);
 
-	return toMutationResponse("New product has been added", listing);
+	return toMutationResponse("New listing has been added", listing);
 }
 
 export async function updateListingForCurrentUser(
@@ -197,7 +197,7 @@ export async function updateListingForCurrentUser(
 	const result = await updateListing(actor, command, commandDependencies);
 	const listing = unwrapResultOrThrowRequestError(result);
 
-	return toMutationResponse("Product has been updated", listing);
+	return toMutationResponse("Listing has been updated", listing);
 }
 
 export async function removeListingForCurrentUser(

@@ -1,7 +1,7 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import { getPendingModerationListingsProductApiFn } from "@/server/listing-read.functions";
+import { getPendingModerationListingsProductApiFn as getPendingModerationListingsCompatibilityFn } from "@/server/listing-read.functions";
 
 type ListingReadError = {
 	readonly error: string;
@@ -20,10 +20,10 @@ function unwrapListingReadResult<T>(result: T | ListingReadError): T {
 	return result as T;
 }
 
-export const pendingProductsQueryOpt = queryOptions<ListingReadDto[]>({
+export const pendingListingsQueryOpt = queryOptions<ListingReadDto[]>({
 	queryKey: queryKeys.products.pending,
 	queryFn: async () => {
-		const result = await getPendingModerationListingsProductApiFn();
+		const result = await getPendingModerationListingsCompatibilityFn();
 
 		return unwrapListingReadResult(result) as ListingReadDto[];
 	},
@@ -31,42 +31,42 @@ export const pendingProductsQueryOpt = queryOptions<ListingReadDto[]>({
 	staleTime: 30000,
 });
 
-interface UseGetPendingProductsOptions {
+interface UseGetPendingListingsOptions {
 	enabled?: boolean;
 	isAdmin?: boolean;
 }
 
-const useGetPendingProducts = (options: UseGetPendingProductsOptions = {}) => {
+const useGetPendingListings = (options: UseGetPendingListingsOptions = {}) => {
 	const queryClient = useQueryClient();
 	const enabled = options.enabled ?? true;
 	const isAdmin = options.isAdmin ?? false;
 
 	const {
 		data,
-		isLoading: isLoadingPendingProducts,
-		isError: isErrorPendingProducts,
+		isLoading: isLoadingPendingListings,
+		isError: isErrorPendingListings,
 	} = useQuery({
-		...pendingProductsQueryOpt,
+		...pendingListingsQueryOpt,
 		enabled: enabled && isAdmin,
 	});
 
-	const pendingProducts = data ?? [];
-	const pendingProductCount = pendingProducts.length;
+	const pendingListings = data ?? [];
+	const pendingListingCount = pendingListings.length;
 
-	const isEmptyPendingProducts = pendingProducts.length === 0;
+	const isEmptyPendingListings = pendingListings.length === 0;
 
 	const refetch = () => {
 		queryClient.invalidateQueries({ queryKey: queryKeys.products.pending });
 	};
 
 	return {
-		pendingProducts,
-		pendingProductCount,
-		isLoadingPendingProducts,
-		isErrorPendingProducts,
-		isEmptyPendingProducts,
+		pendingListings,
+		pendingListingCount,
+		isLoadingPendingListings,
+		isErrorPendingListings,
+		isEmptyPendingListings,
 		refetch,
 	};
 };
 
-export default useGetPendingProducts;
+export default useGetPendingListings;

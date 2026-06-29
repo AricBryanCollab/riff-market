@@ -3,21 +3,21 @@ import {
 	useNavigate,
 	useParams,
 } from "@tanstack/react-router";
-import type { ProductCategory } from "generated/prisma/enums";
 import { Camera } from "lucide-react";
 import Counter from "@/components/counter";
-import { ProductDetailErrorState } from "@/components/error-states";
+import { ListingDetailErrorState } from "@/components/error-states";
 import { FormField } from "@/components/form-field";
 import { FormTextArea } from "@/components/form-text-area";
 import ImageUploader from "@/components/image-uploader";
-import { ProductLoadingState } from "@/components/loading-states";
+import { ListingLoadingState } from "@/components/loading-states";
 import { NumberField } from "@/components/number-field";
 import { SearchableSelect } from "@/components/searchable-select";
 import SectionContainer from "@/components/section-container";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Body, H4 } from "@/components/ui/typography";
-import { productCategoryOptions } from "@/constants/select-options";
-import useUpdateProduct from "@/hooks/use-update-product";
+import { listingCategoryOptions } from "@/constants/select-options";
+import useUpdateListing from "@/hooks/use-update-listing";
+import type { ListingCategory } from "@/types/enum";
 import { requireRole } from "@/utils/require-role";
 
 export const Route = createFileRoute("/product/edit/$id")({
@@ -42,28 +42,28 @@ function RouteComponent() {
 		onImagesChange,
 		handleSubmit,
 		refetchListingDetails,
-	} = useUpdateProduct(id);
+	} = useUpdateListing(id);
 
 	if (isListingLoading) {
-		return <ProductLoadingState />;
+		return <ListingLoadingState />;
 	}
 
 	if (!listingDraft || isListingError) {
-		return <ProductDetailErrorState refetch={refetchListingDetails} />;
+		return <ListingDetailErrorState refetch={refetchListingDetails} />;
 	}
 
 	return (
 		<SectionContainer>
 			<div className="my-4 max-w-6xl flex flex-col gap-3">
-				<H4>Edit Your Product Information</H4>
+				<H4>Edit Your Listing Information</H4>
 				<Body>
-					Fill up the form to edit your product. Please note that after
-					submitting your changes, your product will be set to pending status
+					Fill up the form to edit your listing. Please note that after
+					submitting your changes, your listing will be set to pending status
 					and will require approval from the RiffMarket App admin before it
 					becomes visible in the marketplace again.
 				</Body>
 				<Body className="text-accent font-semibold">
-					Important Note: If you upload new images, your previous product photos
+					Important Note: If you upload new images, your previous listing photos
 					will be permanently deleted and replaced with the new ones.
 				</Body>
 			</div>
@@ -72,14 +72,14 @@ function RouteComponent() {
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 					<FormField
 						id="name"
-						label="Product Name"
+						label="Listing Name"
 						onChange={onChange}
 						value={listingDraft.name || ""}
 					/>
 
 					<FormField
 						id="brand"
-						label="Product Brand"
+						label="Listing Brand"
 						placeholder="eg. Fender, Gibson, Yamaha, Taylor"
 						onChange={onChange}
 						value={listingDraft.brand || ""}
@@ -94,23 +94,23 @@ function RouteComponent() {
 					/>
 
 					<SearchableSelect
-						options={productCategoryOptions.map((p) => ({
+						options={listingCategoryOptions.map((p) => ({
 							label: p.label,
 							value: p.value,
 						}))}
 						value={listingDraft.category || "OTHERS"}
 						onValueChange={(value: string) =>
-							onSelectChange("category", value as ProductCategory)
+							onSelectChange("category", value as ListingCategory)
 						}
-						label="Product Classification"
+						label="Listing Classification"
 					/>
 
 					<FormTextArea
 						id="description"
-						label="Product Description"
+						label="Listing Description"
 						value={listingDraft.description || ""}
 						onChange={onChange}
-						placeholder="Please provide a description for the product you want to sell. This gives the customer insights about the instrument/gear/accessory you want to sell."
+						placeholder="Please provide a description for the listing. This gives the customer insights about the instrument, gear, or accessory you want to sell."
 						maxLength={200}
 						showCounter
 						rows={5}
@@ -129,7 +129,7 @@ function RouteComponent() {
 
 						<NumberField
 							id="price"
-							label="Product Price Per Unit"
+							label="Listing Price Per Unit"
 							value={listingDraft.price || 0}
 							onChange={onChange}
 						/>
@@ -139,7 +139,7 @@ function RouteComponent() {
 				<div className="mt-6 ">
 					<ImageUploader
 						inputId="images"
-						label="Product Photos"
+						label="Listing Photos"
 						images={images}
 						onChange={onImagesChange}
 						maxImages={5}
@@ -158,7 +158,7 @@ function RouteComponent() {
 						Go Back
 					</LoadingButton>
 					<LoadingButton loading={isListingUpdateLoading} type="submit">
-						Update My Product
+						Update My Listing
 					</LoadingButton>
 				</div>
 			</form>

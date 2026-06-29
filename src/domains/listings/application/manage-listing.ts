@@ -8,7 +8,7 @@ import type { Actor } from "@/domains/shared/domain/actor";
 import type { AppError, Result } from "@/domains/shared/domain/result";
 import { err, ok } from "@/domains/shared/domain/result";
 import type { ImageAssetRef } from "@/types/image-asset";
-import { toProductMoneyPersistence } from "./product-money";
+import { toListingMoneyPersistence } from "./listing-money";
 
 export type ListingMutationFields = {
 	readonly name?: string;
@@ -341,7 +341,7 @@ function toPersistenceFields(
 	readonly currencyCode?: string;
 } {
 	const priceData =
-		fields.price !== undefined ? toProductMoneyPersistence(fields.price) : {};
+		fields.price !== undefined ? toListingMoneyPersistence(fields.price) : {};
 
 	return {
 		...(fields.name !== undefined && { name: fields.name }),

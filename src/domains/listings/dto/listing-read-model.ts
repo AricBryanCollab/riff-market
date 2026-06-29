@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { parseOptionalProductPriceInputToCents } from "@/domains/listings/application/product-money";
+import { parseOptionalListingPriceInputToCents } from "@/domains/listings/application/listing-money";
 import type { ListingStatus } from "@/domains/listings/domain/listing";
-import type { ProductCategory, ProductCondition } from "@/types/enum";
+import type { ListingCategory, ListingCondition } from "@/types/enum";
 
 export type ListingReadStatus = ListingStatus;
 export type ListingCountStatus = Extract<
@@ -9,8 +9,8 @@ export type ListingCountStatus = Extract<
 	"APPROVED" | "PENDING"
 >;
 
-export type ListingReadCategory = ProductCategory;
-export type ListingReadCondition = ProductCondition;
+export type ListingReadCategory = ListingCategory;
+export type ListingReadCondition = ListingCondition;
 
 export type ListingReadSellerDto = {
 	readonly firstName: string;
@@ -121,12 +121,12 @@ const optionalPriceCentsSchema = z
 	.optional()
 	.transform((value, ctx) => {
 		try {
-			return parseOptionalProductPriceInputToCents(value);
+			return parseOptionalListingPriceInputToCents(value);
 		} catch (error) {
 			ctx.addIssue({
 				code: "custom",
 				message:
-					error instanceof Error ? error.message : "Invalid product price",
+					error instanceof Error ? error.message : "Invalid listing price",
 			});
 
 			return z.NEVER;

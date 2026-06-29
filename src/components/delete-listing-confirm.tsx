@@ -1,27 +1,27 @@
 import { Box, Settings } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { BodySmall } from "@/components/ui/typography";
-import useDeleteProduct from "@/hooks/use-delete-product";
+import useDeleteListing from "@/hooks/use-delete-listing";
 import { useDialogStore } from "@/store/dialog";
 
-interface DeleteProductConfirmProps {
+interface DeleteListingConfirmProps {
 	id: string;
 	name: string;
 	model: string;
 }
 
-const DeleteProductConfirm = ({
+const DeleteListingConfirm = ({
 	id,
 	name,
 	model,
-}: DeleteProductConfirmProps) => {
+}: DeleteListingConfirmProps) => {
 	const { setCloseDialog } = useDialogStore();
 
-	const { handleDeleteProduct, loadingDeleteProduct } = useDeleteProduct();
+	const { handleDeleteListing, loadingDeleteListing } = useDeleteListing();
 
 	return (
 		<div className="my-4 flex flex-col gap-2">
-			<BodySmall>Are you sure you want to delete this product?</BodySmall>
+			<BodySmall>Are you sure you want to delete this listing?</BodySmall>
 
 			<div className="flex flex-col justify-between gap-2">
 				<div className="flex items-center gap-1">
@@ -39,14 +39,14 @@ const DeleteProductConfirm = ({
 
 			<div className="flex justify-end items-center gap-2 my-4">
 				<LoadingButton
-					loading={loadingDeleteProduct}
-					onClick={() => handleDeleteProduct(id)}
+					loading={loadingDeleteListing}
+					onClick={() => handleDeleteListing(id)}
 					variant="destructive"
 				>
 					Confirm Delete
 				</LoadingButton>
 				<LoadingButton
-					loading={loadingDeleteProduct}
+					loading={loadingDeleteListing}
 					onClick={setCloseDialog}
 					variant="outline"
 				>
@@ -57,4 +57,4 @@ const DeleteProductConfirm = ({
 	);
 };
 
-export default DeleteProductConfirm;
+export default DeleteListingConfirm;

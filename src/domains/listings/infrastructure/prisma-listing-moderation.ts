@@ -48,33 +48,33 @@ export class PrismaListingModerationRepository
 	async findListingForModeration(
 		listingId: string,
 	): Promise<ListingSnapshot | null> {
-		const product = await this.db.product.findUnique({
+		const listing = await this.db.product.findUnique({
 			where: { id: listingId },
 			select: listingModerationSelect,
 		});
 
-		if (!product) {
+		if (!listing) {
 			return null;
 		}
 
-		const imageUrls = toImageAssetUrls(product.images);
-		const priceCents = product.priceCents ?? Math.round(product.price * 100);
+		const imageUrls = toImageAssetUrls(listing.images);
+		const priceCents = listing.priceCents ?? Math.round(listing.price * 100);
 
 		return {
-			id: product.id,
-			sellerId: product.sellerId,
-			sellerDisplayName: [product.seller.firstName, product.seller.lastName]
+			id: listing.id,
+			sellerId: listing.sellerId,
+			sellerDisplayName: [listing.seller.firstName, listing.seller.lastName]
 				.filter(Boolean)
 				.join(" "),
-			name: product.name,
-			brand: product.brand,
-			model: product.model,
-			category: product.category,
-			condition: product.condition,
+			name: listing.name,
+			brand: listing.brand,
+			model: listing.model,
+			category: listing.category,
+			condition: listing.condition,
 			primaryImageUrl: imageUrls[0] ?? "",
-			price: Money.fromCents(priceCents, product.currencyCode ?? "USD"),
-			stock: product.stock,
-			status: product.listingStatus,
+			price: Money.fromCents(priceCents, listing.currencyCode ?? "USD"),
+			stock: listing.stock,
+			status: listing.listingStatus,
 		};
 	}
 
@@ -98,7 +98,7 @@ export class PrismaListingModerationRepository
 			return null;
 		}
 
-		const product = await this.db.product.findUnique({
+		const listing = await this.db.product.findUnique({
 			where: { id: listingId },
 			select: {
 				id: true,
@@ -109,16 +109,16 @@ export class PrismaListingModerationRepository
 			},
 		});
 
-		if (!product) {
+		if (!listing) {
 			return null;
 		}
 
 		return {
-			id: product.id,
-			name: product.name,
-			sellerId: product.sellerId,
-			status: product.listingStatus,
-			isApproved: product.isApproved,
+			id: listing.id,
+			name: listing.name,
+			sellerId: listing.sellerId,
+			status: listing.listingStatus,
+			isApproved: listing.isApproved,
 		};
 	}
 }

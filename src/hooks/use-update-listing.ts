@@ -2,20 +2,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import type {
-	ProductListingMutationResponse as ListingMutationResponse,
-	UpdateListingProductFormDraft as UpdateListingFormDraft,
+	ListingMutationResponseDto,
+	UpdateListingFormDraft,
 } from "@/domains/listings/dto/listing-command";
 import type { UpdateListingFormInput } from "@/domains/listings/dto/listing-form";
-import { useListingById } from "@/hooks/use-get-products";
+import { useListingById } from "@/hooks/use-get-listings";
 import type { ImageFile } from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
 import { invalidateProductCache as invalidateListingCompatibilityCache } from "@/lib/tanstack-query/cache-policy";
 import { updateListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
-import type {
-	ProductCategory as ListingCategory,
-	ProductCondition as ListingCondition,
-} from "@/types/enum";
+import type { ListingCategory, ListingCondition } from "@/types/enum";
 
 function prepareListingFormData(data: UpdateListingFormInput): FormData {
 	const formData = new FormData();
@@ -40,7 +37,7 @@ function prepareListingFormData(data: UpdateListingFormInput): FormData {
 	return formData;
 }
 
-const useUpdateProduct = (id: string) => {
+const useUpdateListing = (id: string) => {
 	const [listingDraft, setListingDraft] =
 		useState<UpdateListingFormDraft | null>(null);
 	const [images, setImages] = useState<ImageFile[]>([]);
@@ -119,7 +116,7 @@ const useUpdateProduct = (id: string) => {
 	};
 
 	const {
-		mutate,
+		mutate: updateListing,
 		isPending: isListingUpdateLoading,
 		isError: errorUpdateListing,
 	} = useMutation({
@@ -135,20 +132,20 @@ const useUpdateProduct = (id: string) => {
 
 			return updateListingFn({
 				data: formData,
-			}) as Promise<ListingMutationResponse>;
+			}) as Promise<ListingMutationResponseDto>;
 		},
 		onSuccess: async () => {
 			await invalidateListingCompatibilityCache(queryClient);
 			showToast(
-				"The product has been updated. Please wait again for admin approval",
+				"The listing has been updated. Please wait again for admin approval",
 				"success",
 			);
 			navigate({ to: "/shop" });
 		},
 		onError: (error) => {
-			clientLogger.error("Failed to update the product", error);
+			clientLogger.error("Failed to update the listing", error);
 			const message =
-				error instanceof Error ? error.message : "Failed to update the product";
+				error instanceof Error ? error.message : "Failed to update the listing";
 
 			showToast(message, "error");
 		},
@@ -175,7 +172,7 @@ const useUpdateProduct = (id: string) => {
 			...(newFiles.length ? { images: newFiles } : {}),
 		};
 
-		mutate({ id, data: payload });
+		updateListing({ id, data: payload });
 	};
 
 	return {
@@ -194,4 +191,4 @@ const useUpdateProduct = (id: string) => {
 	};
 };
 
-export default useUpdateProduct;
+export default useUpdateListing;

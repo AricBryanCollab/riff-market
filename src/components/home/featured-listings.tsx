@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { featuredProducts } from "./mocks";
-import ProductGrid from "./product-grid";
+import ListingGrid from "./listing-grid";
+import { featuredListings } from "./mocks";
 
-const FeaturedProducts = () => {
+const FeaturedListings = () => {
 	return (
 		<section className="py-12">
 			<div className="flex items-center justify-between mb-6">
@@ -16,9 +16,9 @@ const FeaturedProducts = () => {
 					View all →
 				</Link>
 			</div>
-			<ProductGrid products={featuredProducts} />
+			<ListingGrid listings={featuredListings} />
 		</section>
 	);
 };
 
-export default FeaturedProducts;
+export default FeaturedListings;

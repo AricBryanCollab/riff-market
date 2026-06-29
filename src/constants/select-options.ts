@@ -3,7 +3,7 @@ export const roleOptions = [
 	{ value: "CUSTOMER", label: "Customer" },
 ] as const;
 
-export const productCategoryOptions = [
+export const listingCategoryOptions = [
 	{ value: "ELECTRIC", label: "Electric Guitar" },
 	{ value: "ACOUSTIC", label: "Acoustic Guitar" },
 	{ value: "KEYBOARD", label: "Keyboard/Piano" },
@@ -11,7 +11,7 @@ export const productCategoryOptions = [
 	{ value: "ACCESSORY", label: "Accessories" },
 ] as const;
 
-export const productConditionOptions = [
+export const listingConditionOptions = [
 	{ value: "NEW", label: "Brand New" },
 	{ value: "MINT", label: "Mint Condition" },
 	{ value: "USED", label: "Used" },

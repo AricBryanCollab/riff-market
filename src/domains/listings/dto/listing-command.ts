@@ -1,10 +1,10 @@
 import type { ListingStatus } from "@/domains/listings/domain/listing";
-import type { ProductCategory, ProductCondition } from "@/types/enum";
+import type { ListingCategory, ListingCondition } from "@/types/enum";
 
-export type ListingProductFormDraftFields = {
+export type ListingFormDraftFields = {
 	readonly name: string;
-	readonly category: ProductCategory;
-	readonly condition: ProductCondition;
+	readonly category: ListingCategory;
+	readonly condition: ListingCondition;
 	readonly brand: string;
 	readonly model: string;
 	readonly description: string;
@@ -12,11 +12,11 @@ export type ListingProductFormDraftFields = {
 	readonly stock: number;
 };
 
-export type UpdateListingProductFormDraft = ListingProductFormDraftFields & {
+export type UpdateListingFormDraft = ListingFormDraftFields & {
 	readonly images: (File | string)[];
 };
 
-export type ListingMutationProductDto = {
+export type ListingMutationDto = {
 	readonly id: string;
 	readonly sellerId: string;
 	readonly name: string;
@@ -36,12 +36,12 @@ export type ListingMutationProductDto = {
 	readonly updatedAt?: string;
 };
 
-export type ProductListingMutationResponse = {
+export type ListingMutationResponseDto = {
 	readonly message: string;
-	readonly product: ListingMutationProductDto;
+	readonly product: ListingMutationDto;
 };
 
-export type ProductListingRemovalResponse = {
+export type ListingRemovalResponseDto = {
 	readonly message: string;
 	readonly product: {
 		readonly listingId: string;
@@ -50,12 +50,12 @@ export type ProductListingRemovalResponse = {
 	};
 };
 
-export type ProductListingModerationRequest = {
-	readonly id: string;
-	readonly isApproved: boolean;
+export type ListingModerationRequestDto = {
+	readonly listingId: string;
+	readonly shouldApproveListing: boolean;
 };
 
-export type ProductListingModerationResult = {
+export type ListingModerationResultDto = {
 	readonly id: string;
 	readonly name: string;
 	readonly isApproved: boolean;

@@ -7,19 +7,19 @@ import { BodySmall, H5 } from "@/components/ui/typography";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { formatRelativeTime } from "@/utils/format-date";
 
-interface PendingProductListProps {
-	pendingProducts: ListingReadDto[];
-	pendingProductCount: number;
+interface PendingListingListProps {
+	pendingListings: ListingReadDto[];
+	pendingListingCount: number;
 	isLoading: boolean;
-	isEmptyPendingProducts: boolean;
+	isEmptyPendingListings: boolean;
 }
 
-const PendingProductList = ({
-	pendingProducts,
-	pendingProductCount,
+const PendingListingList = ({
+	pendingListings,
+	pendingListingCount,
 	isLoading,
-	isEmptyPendingProducts,
-}: PendingProductListProps) => {
+	isEmptyPendingListings,
+}: PendingListingListProps) => {
 	if (isLoading) {
 		return (
 			<div className="w-80 max-w-sm bg-background">
@@ -42,33 +42,33 @@ const PendingProductList = ({
 		<div className="w-80 max-w-sm bg-background">
 			<div className="px-4 py-3 border-b border-border">
 				<H5 className="font-semibold text-foreground">Pending Approval</H5>
-				{!isEmptyPendingProducts && (
+				{!isEmptyPendingListings && (
 					<BodySmall className="text-muted-foreground mt-0.5">
-						{pendingProductCount}{" "}
-						{pendingProductCount === 1 ? "product" : "products"} awaiting
+						{pendingListingCount}{" "}
+						{pendingListingCount === 1 ? "listing" : "listings"} awaiting
 						approval
 					</BodySmall>
 				)}
 			</div>
 
 			<div className="max-h-96 overflow-y-auto px-4 py-3">
-				{isEmptyPendingProducts && (
+				{isEmptyPendingListings && (
 					<div className="flex flex-col items-center justify-center py-12 text-center">
 						<div className="rounded-full bg-muted p-4 mb-3">
 							<Package className="size-8 text-muted-foreground" />
 						</div>
 						<BodySmall className="text-muted-foreground">
-							No pending products
+							No pending listings
 						</BodySmall>
 						<BodySmall className="text-muted-foreground/70 text-xs mt-1">
-							All your products have been reviewed
+							All your listings have been reviewed
 						</BodySmall>
 					</div>
 				)}
 
-				{!isEmptyPendingProducts && (
+				{!isEmptyPendingListings && (
 					<ul className="space-y-2">
-						{pendingProducts.slice(0, 5).map((listing) => (
+						{pendingListings.slice(0, 5).map((listing) => (
 							<li
 								key={listing.id}
 								className="p-3 rounded-lg transition-colors hover:bg-accent/50 border border-border"
@@ -119,11 +119,11 @@ const PendingProductList = ({
 							</li>
 						))}
 
-						{pendingProductCount > 5 && (
+						{pendingListingCount > 5 && (
 							<div className="text-center pt-2 pb-1">
 								<BodySmall className="text-muted-foreground/80 text-xs">
-									+{pendingProductCount - 5} more{" "}
-									{pendingProductCount - 5 === 1 ? "product" : "products"}
+									+{pendingListingCount - 5} more{" "}
+									{pendingListingCount - 5 === 1 ? "listing" : "listings"}
 								</BodySmall>
 							</div>
 						)}
@@ -131,14 +131,14 @@ const PendingProductList = ({
 				)}
 			</div>
 
-			{!isEmptyPendingProducts && (
+			{!isEmptyPendingListings && (
 				<div className="px-4 py-3 border-t border-border bg-muted/30">
 					<Button variant="ghost" className="w-full text-sm group">
 						<Link
 							to="/shop"
 							className="flex items-center justify-center gap-2 w-full"
 						>
-							<span>View All Pending Products</span>
+							<span>View All Pending Listings</span>
 							<ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
 						</Link>
 					</Button>
@@ -148,4 +148,4 @@ const PendingProductList = ({
 	);
 };
 
-export default PendingProductList;
+export default PendingListingList;

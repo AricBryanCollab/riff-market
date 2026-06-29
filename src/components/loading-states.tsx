@@ -1,7 +1,7 @@
 import AnimatedLoader from "@/components/animated-loader";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function HeroFeaturedProductLoading() {
+export function HeroFeaturedListingLoading() {
 	return (
 		<section className="py-16">
 			<div className="grid md:grid-cols-2 gap-12 items-center">
@@ -35,7 +35,7 @@ export function CategoryGridLoading() {
 	);
 }
 
-export function RecentProductsLoading() {
+export function RecentListingsLoading() {
 	return (
 		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 			{Array.from({ length: 8 }).map((_, i) => (
@@ -49,7 +49,7 @@ export function RecentProductsLoading() {
 	);
 }
 
-export function ProductLoadingState() {
+export function ListingLoadingState() {
 	return (
 		<div className="col-span-full flex w-full justify-center items-center py-12">
 			<AnimatedLoader text="Gathering available instruments" />
@@ -57,10 +57,10 @@ export function ProductLoadingState() {
 	);
 }
 
-export function ProductDetailsLoadingState() {
+export function ListingDetailsLoadingState() {
 	return (
 		<div className="flex justify-center items-center min-h-screen">
-			<AnimatedLoader text="Loading Product Details" />
+			<AnimatedLoader text="Loading Listing Details" />
 		</div>
 	);
 }

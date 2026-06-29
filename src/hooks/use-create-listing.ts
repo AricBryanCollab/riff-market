@@ -2,21 +2,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import type {
-	ListingProductFormDraftFields,
-	ProductListingMutationResponse,
+	ListingFormDraftFields,
+	ListingMutationResponseDto,
 } from "@/domains/listings/dto/listing-command";
 import type { CreateListingFormInput } from "@/domains/listings/dto/listing-form";
 import type { ImageFile } from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
-import { invalidateProductCache } from "@/lib/tanstack-query/cache-policy";
+import { invalidateProductCache as invalidateListingCompatibilityCache } from "@/lib/tanstack-query/cache-policy";
 import { createListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
-import type { ProductCategory, ProductCondition } from "@/types/enum";
+import type { ListingCategory, ListingCondition } from "@/types/enum";
 
 const initialListingDraft = {
 	name: "",
-	category: "ELECTRIC" as ProductCategory,
-	condition: "NEW" as ProductCondition,
+	category: "ELECTRIC" as ListingCategory,
+	condition: "NEW" as ListingCondition,
 	brand: "",
 	model: "",
 	description: "",
@@ -43,31 +43,35 @@ function prepareListingFormData(data: CreateListingFormInput): FormData {
 	return formData;
 }
 
-const useCreateProduct = () => {
+const useCreateListing = () => {
 	const [listingDraft, setListingDraft] =
-		useState<ListingProductFormDraftFields>(initialListingDraft);
+		useState<ListingFormDraftFields>(initialListingDraft);
 	const [images, setImages] = useState<ImageFile[]>([]);
 	const queryClient = useQueryClient();
 	const { showToast } = useToastStore();
 	const navigate = useNavigate();
 
-	const { mutate, isPending, isError } = useMutation({
+	const {
+		mutate: createListing,
+		isPending,
+		isError,
+	} = useMutation({
 		mutationFn: (data: CreateListingFormInput) =>
 			createListingFn({
 				data: prepareListingFormData(data),
-			}) as Promise<ProductListingMutationResponse>,
+			}) as Promise<ListingMutationResponseDto>,
 		onSuccess: async () => {
-			await invalidateProductCache(queryClient);
+			await invalidateListingCompatibilityCache(queryClient);
 			showToast(
-				"You have successfully added your product. Please wait for admin approval",
+				"You have successfully added your listing. Please wait for admin approval",
 				"success",
 			);
 			navigate({ to: "/shop" });
 		},
 		onError: (error) => {
-			clientLogger.error("Failed to add a product", error);
+			clientLogger.error("Failed to add a listing", error);
 			const message =
-				error instanceof Error ? error.message : "Failed to add a product";
+				error instanceof Error ? error.message : "Failed to add a listing";
 
 			showToast(message, "error");
 		},
@@ -81,7 +85,7 @@ const useCreateProduct = () => {
 		setListingDraft({ ...listingDraft, [e.target.id]: value });
 	};
 
-	const onSelectChange = <T extends ProductCategory | ProductCondition>(
+	const onSelectChange = <T extends ListingCategory | ListingCondition>(
 		field: "category" | "condition",
 		value: T,
 	) => {
@@ -102,7 +106,7 @@ const useCreateProduct = () => {
 		setImages(newImages);
 	};
 
-	const clearCreateProductForm = () => {
+	const clearCreateListingForm = () => {
 		setListingDraft(initialListingDraft);
 		setImages([]);
 	};
@@ -120,24 +124,21 @@ const useCreateProduct = () => {
 			return;
 		}
 
-		mutate(listingPayload);
+		createListing(listingPayload);
 	};
 
 	return {
 		listingDraft,
-		product: listingDraft,
 		isListingCreating: isPending,
-		loading: isPending,
 		isListingCreateError: isError,
-		isError,
 		images,
 		onChange,
 		onSelectChange,
 		onQuantityChange,
 		onImagesChange,
-		clearCreateProductForm,
+		clearCreateListingForm,
 		handleSubmit,
 	};
 };
 
-export default useCreateProduct;
+export default useCreateListing;

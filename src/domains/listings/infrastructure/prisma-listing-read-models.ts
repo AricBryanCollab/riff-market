@@ -1,4 +1,8 @@
 import type { Prisma, PrismaClient } from "generated/prisma/client";
+import {
+	normalizeListingMoney,
+	toListingPriceRangePersistence,
+} from "@/domains/listings/application/listing-money";
 import type {
 	ApprovedListingSearchPort,
 	ApprovedListingSearchQuery,
@@ -9,11 +13,6 @@ import type {
 	RecentApprovedListingReadPort,
 	SellerListingReadPort,
 } from "@/domains/listings/application/listing-read-models";
-import {
-	normalizeProductMoney,
-	type ProductMoneySource,
-	toProductPriceRangePersistence,
-} from "@/domains/listings/application/product-money";
 import type {
 	ListingCategoryCount,
 	ListingCountStatus,
@@ -187,7 +186,7 @@ export class PrismaListingReadModels
 function toApprovedListingWhere(
 	query: ApprovedListingSearchQuery,
 ): Prisma.ProductWhereInput {
-	const priceRange = toProductPriceRangePersistence({
+	const priceRange = toListingPriceRangePersistence({
 		priceMinCents: query.priceMinCents,
 		priceMaxCents: query.priceMaxCents,
 	});
@@ -235,9 +234,7 @@ function toListingReadModels(listings: ListingReadRow[]) {
 }
 
 function toListingReadModel(listing: ListingReadRow): ListingReadModel {
-	const normalized = normalizeProductMoney(
-		listing as ProductMoneySource & ListingReadRow,
-	);
+	const normalized = normalizeListingMoney(listing);
 
 	return {
 		...normalized,

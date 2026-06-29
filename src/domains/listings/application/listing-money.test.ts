@@ -1,37 +1,37 @@
 import { describe, expect, it } from "vitest";
 import {
-	DEFAULT_PRODUCT_CURRENCY_CODE,
+	DEFAULT_LISTING_CURRENCY_CODE,
 	legacyFloatPriceToCents,
-	normalizeProductMoney,
-	parseOptionalProductPriceInputToCents,
-	parseProductPriceInputToCents,
+	normalizeListingMoney,
+	parseListingPriceInputToCents,
+	parseOptionalListingPriceInputToCents,
 	priceCentsToDecimalPrice,
-	toProductMoneyPersistence,
-	toProductPriceRangePersistence,
-} from "./product-money";
+	toListingMoneyPersistence,
+	toListingPriceRangePersistence,
+} from "./listing-money";
 
-describe("product money mapping", () => {
+describe("listing money mapping", () => {
 	it("parses create/update price inputs as integer cents", () => {
-		expect(parseProductPriceInputToCents("19")).toBe(1900);
-		expect(parseProductPriceInputToCents("19.9")).toBe(1990);
-		expect(parseProductPriceInputToCents("19.99")).toBe(1999);
-		expect(parseProductPriceInputToCents(19.99)).toBe(1999);
+		expect(parseListingPriceInputToCents("19")).toBe(1900);
+		expect(parseListingPriceInputToCents("19.9")).toBe(1990);
+		expect(parseListingPriceInputToCents("19.99")).toBe(1999);
+		expect(parseListingPriceInputToCents(19.99)).toBe(1999);
 	});
 
 	it("rejects live price inputs with more than two decimal places", () => {
-		expect(() => parseProductPriceInputToCents("19.999")).toThrow(
-			"Product price must use at most two decimal places",
+		expect(() => parseListingPriceInputToCents("19.999")).toThrow(
+			"Listing price must use at most two decimal places",
 		);
-		expect(() => parseProductPriceInputToCents(-1)).toThrow(
-			"Product price must be a non-negative finite number",
+		expect(() => parseListingPriceInputToCents(-1)).toThrow(
+			"Listing price must be a non-negative finite number",
 		);
 	});
 
 	it("parses optional query prices only when present", () => {
-		expect(parseOptionalProductPriceInputToCents(undefined)).toBeUndefined();
-		expect(parseOptionalProductPriceInputToCents(null)).toBeUndefined();
-		expect(parseOptionalProductPriceInputToCents("")).toBeUndefined();
-		expect(parseOptionalProductPriceInputToCents("19.99")).toBe(1999);
+		expect(parseOptionalListingPriceInputToCents(undefined)).toBeUndefined();
+		expect(parseOptionalListingPriceInputToCents(null)).toBeUndefined();
+		expect(parseOptionalListingPriceInputToCents("")).toBeUndefined();
+		expect(parseOptionalListingPriceInputToCents("19.99")).toBe(1999);
 	});
 
 	it("rounds legacy float prices deterministically for backfill compatibility", () => {
@@ -40,24 +40,24 @@ describe("product money mapping", () => {
 		expect(legacyFloatPriceToCents(0.1)).toBe(10);
 	});
 
-	it("creates dual-write persistence values for product prices", () => {
-		expect(toProductMoneyPersistence("49.90")).toEqual({
+	it("creates dual-write persistence values for listing prices", () => {
+		expect(toListingMoneyPersistence("49.90")).toEqual({
 			price: 49.9,
 			priceCents: 4990,
-			currencyCode: DEFAULT_PRODUCT_CURRENCY_CODE,
+			currencyCode: DEFAULT_LISTING_CURRENCY_CODE,
 		});
 	});
 
 	it("prefers persisted cents over legacy float values on reads", () => {
 		expect(
-			normalizeProductMoney({
-				id: "prod-1",
+			normalizeListingMoney({
+				id: "listing-1",
 				price: 19.99,
 				priceCents: 2000,
 				currencyCode: "USD",
 			}),
 		).toMatchObject({
-			id: "prod-1",
+			id: "listing-1",
 			price: 20,
 			priceCents: 2000,
 			currencyCode: "USD",
@@ -66,8 +66,8 @@ describe("product money mapping", () => {
 
 	it("falls back to legacy float prices only when cents are absent", () => {
 		expect(
-			normalizeProductMoney({
-				id: "prod-1",
+			normalizeListingMoney({
+				id: "listing-1",
 				price: 19.995,
 				priceCents: null,
 				currencyCode: null,
@@ -75,13 +75,13 @@ describe("product money mapping", () => {
 		).toMatchObject({
 			price: 20,
 			priceCents: 2000,
-			currencyCode: DEFAULT_PRODUCT_CURRENCY_CODE,
+			currencyCode: DEFAULT_LISTING_CURRENCY_CODE,
 		});
 	});
 
 	it("builds cent-based price ranges with legacy float fallback ranges", () => {
 		expect(
-			toProductPriceRangePersistence({
+			toListingPriceRangePersistence({
 				priceMinCents: 1050,
 				priceMaxCents: 2099,
 			}),

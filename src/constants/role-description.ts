@@ -12,10 +12,10 @@ export const RoleDescription: Record<UserRole, RoleInfo> = {
 	},
 	SELLER: {
 		label: "Seller",
-		description: "Lists and sells products on the marketplace",
+		description: "Creates listings and sells gear on the marketplace",
 	},
 	CUSTOMER: {
 		label: "Buyer",
-		description: "Browses and buys products",
+		description: "Browses and buys listed gear",
 	},
 };

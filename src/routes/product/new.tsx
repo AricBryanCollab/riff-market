@@ -10,11 +10,11 @@ import SectionContainer from "@/components/section-container";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Body, H4 } from "@/components/ui/typography";
 import {
-	productCategoryOptions,
-	productConditionOptions,
+	listingCategoryOptions,
+	listingConditionOptions,
 } from "@/constants/select-options";
-import useCreateProduct from "@/hooks/use-create-product";
-import type { ProductCategory, ProductCondition } from "@/types/enum";
+import useCreateListing from "@/hooks/use-create-listing";
+import type { ListingCategory, ListingCondition } from "@/types/enum";
 import { requireRole } from "@/utils/require-role";
 
 export const Route = createFileRoute("/product/new")({
@@ -32,17 +32,17 @@ function RouteComponent() {
 		onSelectChange,
 		onQuantityChange,
 		onImagesChange,
-		clearCreateProductForm,
+		clearCreateListingForm,
 		handleSubmit,
-	} = useCreateProduct();
+	} = useCreateListing();
 
 	return (
 		<SectionContainer>
 			<div className="my-4 max-w-6xl flex flex-col gap-3">
-				<H4>Add A New Product To Sell</H4>
+				<H4>Add A New Listing To Sell</H4>
 				<Body>
-					Fill up the form to add the product. RiffMarket App admin would check
-					and approve the product if it is valid to be sold in our community
+					Fill up the form to add the listing. RiffMarket App admin would check
+					and approve the listing if it is valid to be sold in our community
 					marketplace.
 				</Body>
 			</div>
@@ -50,14 +50,14 @@ function RouteComponent() {
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 					<FormField
 						id="name"
-						label="Product Name"
+						label="Listing Name"
 						onChange={onChange}
 						value={listingDraft.name}
 					/>
 
 					<FormField
 						id="brand"
-						label="Product Brand"
+						label="Listing Brand"
 						placeholder="eg. Fender, Gibson, Yamaha, Taylor"
 						onChange={onChange}
 						value={listingDraft.brand}
@@ -73,10 +73,10 @@ function RouteComponent() {
 
 					<FormTextArea
 						id="description"
-						label="Product Description"
+						label="Listing Description"
 						value={listingDraft.description}
 						onChange={onChange}
-						placeholder="Please provide a description for the product you want to sell. This gives the customer insights about the instrument/gear/accessory you want to sell."
+						placeholder="Please provide a description for the listing. This gives the customer insights about the instrument, gear, or accessory you want to sell."
 						maxLength={200}
 						showCounter
 						rows={5}
@@ -84,27 +84,27 @@ function RouteComponent() {
 
 					<div className="lg:col-span-1">
 						<SearchableSelect
-							options={productCategoryOptions.map((p) => ({
+							options={listingCategoryOptions.map((p) => ({
 								label: p.label,
 								value: p.value,
 							}))}
 							value={listingDraft.category}
 							onValueChange={(value: string) =>
-								onSelectChange("category", value as ProductCategory)
+								onSelectChange("category", value as ListingCategory)
 							}
-							label="Product Classification"
+							label="Listing Classification"
 						/>
 
 						<SearchableSelect
-							options={productConditionOptions.map((p) => ({
+							options={listingConditionOptions.map((p) => ({
 								label: p.label,
 								value: p.value,
 							}))}
 							value={listingDraft.condition}
 							onValueChange={(value: string) =>
-								onSelectChange("condition", value as ProductCondition)
+								onSelectChange("condition", value as ListingCondition)
 							}
-							label="Product Condition"
+							label="Listing Condition"
 						/>
 					</div>
 
@@ -121,7 +121,7 @@ function RouteComponent() {
 
 						<NumberField
 							id="price"
-							label="Product Price Per Unit"
+							label="Listing Price Per Unit"
 							value={listingDraft.price}
 							onChange={onChange}
 						/>
@@ -131,7 +131,7 @@ function RouteComponent() {
 				<div className="mt-6 ">
 					<ImageUploader
 						inputId="images"
-						label="Product Photos"
+						label="Listing Photos"
 						images={images}
 						onChange={onImagesChange}
 						maxImages={5}
@@ -145,12 +145,12 @@ function RouteComponent() {
 						disabled={isListingCreating}
 						variant="outline"
 						type="button"
-						onClick={clearCreateProductForm}
+						onClick={clearCreateListingForm}
 					>
 						Clear
 					</LoadingButton>
 					<LoadingButton loading={isListingCreating} type="submit">
-						Add Product
+						Add Listing
 					</LoadingButton>
 				</div>
 			</form>

@@ -96,7 +96,7 @@ const OrderList = ({
 						<BodySmall className="text-muted-foreground/70 text-xs mt-1">
 							{userRole === "CUSTOMER"
 								? "Start shopping to see your orders here"
-								: "Orders will appear here when customers buy your products"}
+								: "Orders will appear here when customers buy your listings"}
 						</BodySmall>
 					</div>
 				)}

@@ -622,6 +622,8 @@ Purpose: finish the migration language and remove compatibility leftovers.
 Work:
 
 - Rename domain-facing product language to listing.
+- Converge UI and delivery vocabulary on `Listing` as well: route-local variables, hook return fields, component props/state, form labels, and user-facing copy should use listing language unless intentionally preserving a legacy URL, external contract, or migration bridge.
+- Treat remaining `Product` names as legacy compatibility only: Prisma/database schema, generated Prisma types before the schema slice, old route paths, cache keys, and serialized response shapes during the compatibility window.
 - Ensure database/Prisma naming has converged from product to listing.
 - Remove compatibility wrappers from `src/actions` and `src/data` where possible.
 - Move remaining DTO/type imports away from global `src/types` into context DTOs.

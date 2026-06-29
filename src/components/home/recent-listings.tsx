@@ -1,34 +1,34 @@
-import { EmptyRecentProducts } from "@/components/empty-states";
-import { RecentProductsError } from "@/components/error-states";
-import { RecentProductsLoading } from "@/components/loading-states";
-import ProductCard from "@/components/product-card";
+import { EmptyRecentListings } from "@/components/empty-states";
+import { RecentListingsError } from "@/components/error-states";
+import ListingCard from "@/components/listing-card";
+import { RecentListingsLoading } from "@/components/loading-states";
 
-import useGetRecentProducts from "@/hooks/use-get-recent-products";
+import useGetRecentListings from "@/hooks/use-get-recent-listings";
 
 const RecentListings = () => {
 	const {
-		recentProducts,
-		isLoadingRecentProducts,
-		isErrorRecentProducts,
-		refetchRecentProducts,
-	} = useGetRecentProducts();
+		recentListings,
+		isLoadingRecentListings,
+		isErrorRecentListings,
+		refetchRecentListings,
+	} = useGetRecentListings();
 
-	if (isLoadingRecentProducts) {
-		return <RecentProductsLoading />;
+	if (isLoadingRecentListings) {
+		return <RecentListingsLoading />;
 	}
 
-	if (isErrorRecentProducts) {
-		return <RecentProductsError refetch={refetchRecentProducts} />;
+	if (isErrorRecentListings) {
+		return <RecentListingsError refetch={refetchRecentListings} />;
 	}
 
-	if (!recentProducts || recentProducts.length === 0) {
-		return <EmptyRecentProducts />;
+	if (!recentListings || recentListings.length === 0) {
+		return <EmptyRecentListings />;
 	}
 
 	return (
 		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-			{recentProducts.map((listing) => (
-				<ProductCard key={listing.id} product={listing} />
+			{recentListings.map((listing) => (
+				<ListingCard key={listing.id} listing={listing} />
 			))}
 		</div>
 	);

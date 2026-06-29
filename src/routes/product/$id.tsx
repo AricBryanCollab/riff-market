@@ -7,20 +7,20 @@ import {
 import { ArrowLeft, Package } from "lucide-react";
 import { useState } from "react";
 import { AppDialog } from "@/components/app-dialog";
-import DeleteProductConfirm from "@/components/delete-product-confirm";
-import { ProductDetailsLoadingState } from "@/components/loading-states";
-import { ProductDetailsActions } from "@/components/product-actions";
+import DeleteListingConfirm from "@/components/delete-listing-confirm";
+import { ListingDetailsActions } from "@/components/listing-actions";
+import { ListingDetailsLoadingState } from "@/components/loading-states";
 import Rating from "@/components/rating";
 import ReviewSection from "@/components/review-section";
 import SectionContainer from "@/components/section-container";
-import { productCategoryOptions } from "@/constants/select-options";
+import { listingCategoryOptions } from "@/constants/select-options";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
-import { productbyIdQueryOpt } from "@/hooks/use-get-products";
+import { listingByIdQueryOpt } from "@/hooks/use-get-listings";
 
 export const Route = createFileRoute("/product/$id")({
 	beforeLoad: async ({ context, params }) => {
 		await context.queryClient
-			.ensureQueryData(productbyIdQueryOpt(params.id))
+			.ensureQueryData(listingByIdQueryOpt(params.id))
 			.catch(() => undefined);
 	},
 	component: RouteComponent,
@@ -31,13 +31,13 @@ function RouteComponent() {
 	const navigate = useNavigate();
 
 	const {
-		data: product,
+		data: listing,
 		isPending,
 		isError,
-	} = useQuery(productbyIdQueryOpt(id));
+	} = useQuery(listingByIdQueryOpt(id));
 
 	const getCategoryDisplay = (category: string) => {
-		const option = productCategoryOptions.find((opt) => opt.value === category);
+		const option = listingCategoryOptions.find((opt) => opt.value === category);
 		return option || { value: category, label: category, icon: Package };
 	};
 
@@ -45,13 +45,13 @@ function RouteComponent() {
 	const [selectedImage, setSelectedImage] = useState(0);
 
 	if (isPending) {
-		return <ProductDetailsLoadingState />;
+		return <ListingDetailsLoadingState />;
 	}
 
-	if (isError || !product || !isPublicProductVisible(product)) {
+	if (isError || !listing || !isPublicListingVisible(listing)) {
 		return (
 			<div className="flex flex-col justify-center items-center min-h-screen">
-				<p className="text-lg text-gray-500">Product not found</p>
+				<p className="text-lg text-gray-500">Listing not found</p>
 				<button
 					type="button"
 					onClick={() => navigate({ to: "/shop" })}
@@ -88,13 +88,13 @@ function RouteComponent() {
 					<div className="rounded-2xl bg-white p-6">
 						<div className="h-96 w-full rounded-xl bg-slate-200 mb-4 overflow-hidden">
 							<img
-								src={product.images[selectedImage] || product.images[0]}
-								alt={product.name}
+								src={listing.images[selectedImage] || listing.images[0]}
+								alt={listing.name}
 								className="w-full h-full object-cover"
 							/>
 						</div>
 						<div className="grid grid-cols-4 gap-3">
-							{product.images.slice(0, 4).map((img, idx) => (
+							{listing.images.slice(0, 4).map((img, idx) => (
 								<button
 									type="button"
 									key={img}
@@ -107,7 +107,7 @@ function RouteComponent() {
 								>
 									<img
 										src={img}
-										alt={`${product.name} ${idx + 1}`}
+										alt={`${listing.name} ${idx + 1}`}
 										className="w-full h-full object-cover"
 									/>
 								</button>
@@ -120,10 +120,10 @@ function RouteComponent() {
 						<div className="flex items-start justify-between gap-4">
 							<div className="flex-1">
 								<h1 className="text-3xl font-bold text-gray-900 mb-2">
-									{product.name}
+									{listing.name}
 								</h1>
 								<p className="text-lg text-gray-600">
-									{product.brand} {product.model && `• ${product.model}`}
+									{listing.brand} {listing.model && `• ${listing.model}`}
 								</p>
 							</div>
 						</div>
@@ -133,7 +133,7 @@ function RouteComponent() {
 						{/* CATEGORY & STOCK */}
 						<div className="flex items-center gap-3">
 							{(() => {
-								const categoryDisplay = getCategoryDisplay(product.category);
+								const categoryDisplay = getCategoryDisplay(listing.category);
 								return (
 									<span className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
 										{categoryDisplay.label}
@@ -142,14 +142,14 @@ function RouteComponent() {
 							})()}
 							<span
 								className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${
-									product.stock > 0
+									listing.stock > 0
 										? "bg-green-100 text-green-700"
 										: "bg-red-100 text-red-700"
 								}`}
 							>
 								<Package size={16} />
-								{product.stock > 0
-									? `${product.stock} in stock`
+								{listing.stock > 0
+									? `${listing.stock} in stock`
 									: "Out of stock"}
 							</span>
 						</div>
@@ -157,17 +157,17 @@ function RouteComponent() {
 						{/* PRICE */}
 						<div className="rounded-xl bg-slate-50 p-6 border-2 border-slate-200">
 							<p className="text-4xl font-bold text-gray-900">
-								${product.price.toFixed(2)}
+								${listing.price.toFixed(2)}
 							</p>
 							<p className="text-sm text-gray-500 mt-1">Price per unit</p>
 						</div>
 
 						{/* ACTIONS */}
-						<ProductDetailsActions
+						<ListingDetailsActions
 							quantity={quantity}
-							sellerId={product.sellerId}
-							stock={product.stock}
-							isApproved={product.isApproved}
+							sellerId={listing.sellerId}
+							stock={listing.stock}
+							isApproved={listing.isApproved}
 							handleQuantityChange={handleQuantityChange}
 						/>
 
@@ -177,24 +177,24 @@ function RouteComponent() {
 								Description
 							</h3>
 							<p className="text-gray-600 leading-relaxed">
-								{product.description}
+								{listing.description}
 							</p>
 						</div>
 
 						{/* SELLER INFO */}
 						<div className="rounded-xl bg-blue-50 p-5 border border-blue-200">
 							<h4 className="font-semibold text-blue-900 mb-1">
-								Sold by {product.seller.firstName} {product.seller.lastName}
+								Sold by {listing.seller.firstName} {listing.seller.lastName}
 							</h4>
-							<p className="text-sm text-blue-700">{product.seller.email}</p>
+							<p className="text-sm text-blue-700">{listing.seller.email}</p>
 						</div>
 					</div>
 
-					<AppDialog type="deleteProduct" title="Delete Product Confirmation">
-						<DeleteProductConfirm
+					<AppDialog type="deleteListing" title="Delete Listing Confirmation">
+						<DeleteListingConfirm
 							id={id}
-							name={product.name}
-							model={product.model}
+							name={listing.name}
+							model={listing.model}
 						/>
 					</AppDialog>
 				</div>
@@ -205,8 +205,8 @@ function RouteComponent() {
 	);
 }
 
-function isPublicProductVisible(product: ListingReadDto) {
-	return product.listingStatus === undefined
-		? product.isApproved
-		: product.listingStatus === "APPROVED";
+function isPublicListingVisible(listing: ListingReadDto) {
+	return listing.listingStatus === undefined
+		? listing.isApproved
+		: listing.listingStatus === "APPROVED";
 }

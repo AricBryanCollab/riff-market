@@ -68,14 +68,14 @@ const CartList = ({
 					<ul className="space-y-3">
 						{cartWithDetails.slice(0, 3).map((cart) => (
 							<li
-								key={cart.product?.id}
+								key={cart.listing?.id}
 								className="flex gap-3 p-2.5 rounded-lg hover:bg-accent/50 transition-colors group"
 							>
-								{cart.product?.images?.[0] && (
+								{cart.listing?.images?.[0] && (
 									<div className="relative size-20 shrink-0 rounded-md overflow-hidden bg-muted border border-border">
 										<img
-											src={cart.product?.images?.[0]}
-											alt={cart.product.name}
+											src={cart.listing?.images?.[0]}
+											alt={cart.listing.name}
 											className="w-full h-full object-cover"
 										/>
 									</div>
@@ -83,10 +83,10 @@ const CartList = ({
 								<div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
 									<div>
 										<p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-											{cart.product?.name}
+											{cart.listing?.name}
 										</p>
 										<p className="text-xs text-muted-foreground mt-0.5 truncate">
-											{cart.product?.brand} • {cart.product?.model}
+											{cart.listing?.brand} • {cart.listing?.model}
 										</p>
 									</div>
 									<div className="flex items-center justify-between mt-1">
@@ -94,7 +94,7 @@ const CartList = ({
 											Qty: {cart.quantity}
 										</BodySmall>
 										<p className="text-sm font-semibold text-foreground">
-											${cart.product?.price.toFixed(2)}
+											${cart.listing?.price.toFixed(2)}
 										</p>
 									</div>
 								</div>

@@ -3,7 +3,7 @@ import type {
 	ListingReadDto,
 } from "@/domains/listings/dto/listing-read-model";
 
-export const mockProducts: ListingReadDto[] = [
+export const mockListings: ListingReadDto[] = [
 	{
 		id: "prod-001",
 		name: "American Professional II Stratocaster",
@@ -213,5 +213,5 @@ export const mockCategories: ListingCategoryMeta[] = [
 	},
 ];
 
-export const featuredProducts = mockProducts.slice(0, 4);
-export const recentProducts = mockProducts.slice(4, 10);
+export const featuredListings = mockListings.slice(0, 4);
+export const recentListings = mockListings.slice(4, 10);

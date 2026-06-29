@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import { getRecentListingsProductApiFn } from "@/server/listing-read.functions";
+import { getRecentListingsProductApiFn as getRecentListingsCompatibilityFn } from "@/server/listing-read.functions";
 
 type ListingReadError = {
 	readonly error: string;
@@ -20,16 +20,16 @@ function unwrapListingReadResult<T>(result: T | ListingReadError): T {
 	return result as T;
 }
 
-const useGetRecentProducts = () => {
+const useGetRecentListings = () => {
 	const {
-		data: recentProducts,
-		isPending: isLoadingRecentProducts,
-		isError: isErrorRecentProducts,
-		refetch: refetchRecentProducts,
+		data: recentListings,
+		isPending: isLoadingRecentListings,
+		isError: isErrorRecentListings,
+		refetch: refetchRecentListings,
 	} = useQuery({
 		queryKey: queryKeys.products.recent,
 		queryFn: async () => {
-			const result = await getRecentListingsProductApiFn({
+			const result = await getRecentListingsCompatibilityFn({
 				data: { limit: 8 },
 			});
 
@@ -39,11 +39,11 @@ const useGetRecentProducts = () => {
 	});
 
 	return {
-		recentProducts,
-		isLoadingRecentProducts,
-		isErrorRecentProducts,
-		refetchRecentProducts,
+		recentListings,
+		isLoadingRecentListings,
+		isErrorRecentListings,
+		refetchRecentListings,
 	};
 };
 
-export default useGetRecentProducts;
+export default useGetRecentListings;
