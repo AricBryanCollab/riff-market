@@ -61,7 +61,7 @@ function makeListing(overrides: Partial<ListingSnapshot> = {}) {
 		category: "ELECTRIC",
 		condition: "USED",
 		primaryImageUrl: "https://cdn.example.com/listing-1.jpg",
-		price: Money.fromCents(100_00, "USD"),
+		price: Money.fromMinor(100_00, "USD"),
 		stock: 5,
 		status: "APPROVED",
 		...overrides,
@@ -239,7 +239,7 @@ describe("PlacePurchase", () => {
 			id: "listing-1",
 			sellerId: "seller-1",
 			sellerDisplayName: "A Seller",
-			price: Money.fromCents(100_00, "USD"),
+			price: Money.fromMinor(100_00, "USD"),
 			stock: 5,
 		});
 		const listingTwo = makeListing({
@@ -247,7 +247,7 @@ describe("PlacePurchase", () => {
 			sellerId: "seller-2",
 			sellerDisplayName: "B Seller",
 			name: "Jazzmaster",
-			price: Money.fromCents(50_00, "USD"),
+			price: Money.fromMinor(50_00, "USD"),
 			stock: 5,
 		});
 		const {
@@ -275,7 +275,7 @@ describe("PlacePurchase", () => {
 			value: {
 				purchaseId: "purchase-1",
 				purchaseNumber: "RM-1001",
-				total: Money.fromCents(200_00, "USD"),
+				total: Money.fromMinor(200_00, "USD"),
 				paymentStatus: "MANUALLY_CONFIRMED",
 				status: "OPEN",
 				sellerOrderIds: ["seller-order-1", "seller-order-2"],
@@ -296,7 +296,7 @@ describe("PlacePurchase", () => {
 		expect(purchasePort.saved).toMatchObject({
 			customerId: "customer-1",
 			purchaseNumber: "RM-1001",
-			total: Money.fromCents(200_00, "USD"),
+			total: Money.fromMinor(200_00, "USD"),
 			paymentStatus: "MANUALLY_CONFIRMED",
 			status: "OPEN",
 			sellerOrderCount: 2,
@@ -306,14 +306,14 @@ describe("PlacePurchase", () => {
 			expect.objectContaining({
 				purchaseId: purchasePort.saved?.id,
 				sellerId: "seller-1",
-				subtotal: Money.fromCents(100_00, "USD"),
+				subtotal: Money.fromMinor(100_00, "USD"),
 				status: "NEW",
 				trackingNumber: null,
 			}),
 			expect.objectContaining({
 				purchaseId: purchasePort.saved?.id,
 				sellerId: "seller-2",
-				subtotal: Money.fromCents(100_00, "USD"),
+				subtotal: Money.fromMinor(100_00, "USD"),
 				status: "NEW",
 				trackingNumber: null,
 			}),

@@ -27,7 +27,7 @@ const listingCommandSelect = {
 	model: true,
 	images: true,
 	description: true,
-	priceCents: true,
+	priceAmountMinor: true,
 	currencyCode: true,
 	stock: true,
 	isApproved: true,
@@ -62,7 +62,11 @@ export class PrismaListingCommandRepository
 	async createListing(
 		input: ListingMutationPersistenceInput,
 	): Promise<ListingMutationResult | null> {
-		if (!input.sellerId || !input.images || input.priceCents === undefined) {
+		if (
+			!input.sellerId ||
+			!input.images ||
+			input.priceAmountMinor === undefined
+		) {
 			return null;
 		}
 
@@ -76,7 +80,7 @@ export class PrismaListingCommandRepository
 				model: input.model ?? "",
 				images: input.images as unknown as Prisma.InputJsonValue,
 				description: input.description ?? "",
-				priceCents: input.priceCents,
+				priceAmountMinor: input.priceAmountMinor,
 				currencyCode: input.currencyCode ?? "USD",
 				stock: input.stock ?? 0,
 				isApproved: input.isApproved,
@@ -159,7 +163,9 @@ function toUpdateData(
 		...(input.brand !== undefined && { brand: input.brand }),
 		...(input.model !== undefined && { model: input.model }),
 		...(input.description !== undefined && { description: input.description }),
-		...(input.priceCents !== undefined && { priceCents: input.priceCents }),
+		...(input.priceAmountMinor !== undefined && {
+			priceAmountMinor: input.priceAmountMinor,
+		}),
 		...(input.currencyCode !== undefined && {
 			currencyCode: input.currencyCode,
 		}),
@@ -186,7 +192,8 @@ function toMutationResult(listing: ListingCommandRow): ListingMutationResult {
 		images: toImageAssetRefs(listing.images),
 		description: listing.description,
 		price: normalized.price,
-		priceCents: listing.priceCents,
+		priceAmountMinor: listing.priceAmountMinor,
+		priceCents: listing.priceAmountMinor,
 		currencyCode: listing.currencyCode,
 		stock: listing.stock,
 		isApproved: listing.isApproved,
@@ -213,7 +220,7 @@ function toRemovalSnapshot(
 		category: listing.category,
 		condition: listing.condition,
 		primaryImageUrl: imageUrls[0] ?? "missing-image",
-		price: Money.fromCents(listing.priceCents, listing.currencyCode),
+		price: Money.fromMinor(listing.priceAmountMinor, listing.currencyCode),
 		stock: listing.stock,
 		status: listing.listingStatus,
 		images: imageRefs,

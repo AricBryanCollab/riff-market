@@ -45,7 +45,7 @@ export type ListingMutationPersistenceInput = Omit<
 > & {
 	readonly sellerId?: string;
 	readonly images?: ImageAssetRef[];
-	readonly priceCents?: number;
+	readonly priceAmountMinor?: number;
 	readonly currencyCode?: string;
 	readonly status: ListingStatus;
 	readonly isApproved: boolean;
@@ -62,6 +62,7 @@ export type ListingMutationResult = {
 	readonly images: ImageAssetRef[];
 	readonly description: string;
 	readonly price: number;
+	readonly priceAmountMinor: number;
 	readonly priceCents: number;
 	readonly currencyCode: string;
 	readonly stock: number;
@@ -341,7 +342,7 @@ function toPersistenceFields(fields: ListingMutationFields): Omit<
 	ListingMutationFields,
 	"price"
 > & {
-	readonly priceCents?: number;
+	readonly priceAmountMinor?: number;
 	readonly currencyCode?: string;
 } {
 	const priceData =

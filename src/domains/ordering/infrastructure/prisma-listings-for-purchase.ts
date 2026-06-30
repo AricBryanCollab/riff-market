@@ -25,7 +25,7 @@ type ListingForPurchase = {
 	readonly brand: string;
 	readonly model: string;
 	readonly images: Prisma.JsonValue;
-	readonly priceCents: number;
+	readonly priceAmountMinor: number;
 	readonly currencyCode: string;
 	readonly stock: number;
 	readonly listingStatus: ListingStatus;
@@ -58,7 +58,7 @@ export class PrismaListingsForPurchase
 				brand: true,
 				model: true,
 				images: true,
-				priceCents: true,
+				priceAmountMinor: true,
 				currencyCode: true,
 				stock: true,
 				listingStatus: true,
@@ -203,7 +203,7 @@ function toListing(listing: ListingForPurchase) {
 			category: listing.category,
 			condition: listing.condition,
 			primaryImageUrl,
-			price: Money.fromCents(listing.priceCents, listing.currencyCode),
+			price: Money.fromMinor(listing.priceAmountMinor, listing.currencyCode),
 			stock: listing.stock,
 			status: listing.listingStatus,
 		}),

@@ -26,7 +26,7 @@ const listingModerationSelect = {
 	category: true,
 	condition: true,
 	images: true,
-	priceCents: true,
+	priceAmountMinor: true,
 	currencyCode: true,
 	stock: true,
 	isApproved: true,
@@ -70,7 +70,7 @@ export class PrismaListingModerationRepository
 			category: listing.category,
 			condition: listing.condition,
 			primaryImageUrl: imageUrls[0] ?? "",
-			price: Money.fromCents(listing.priceCents, listing.currencyCode),
+			price: Money.fromMinor(listing.priceAmountMinor, listing.currencyCode),
 			stock: listing.stock,
 			status: listing.listingStatus,
 		};

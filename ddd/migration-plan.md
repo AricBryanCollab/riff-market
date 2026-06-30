@@ -82,7 +82,7 @@ Approved domain decisions:
 - Declined listings become `DECLINED`, not deleted.
 - Listings with transactional history are `WITHDRAWN` rather than hard-deleted.
 - Fix touched authorization gaps during the migration instead of preserving known bugs.
-- Target money storage is integer minor units/cents plus a domain `Money` value object.
+- Target money storage is integer minor units plus a domain `Money` value object.
 - Future real payment integration should introduce `Payment` / `PaymentAttempt`; `Purchase` stores only normalized provider-neutral payment state.
 - Persistence vocabulary should converge on `Listing`; `Product` model/table/foreign keys should be renamed in a planned schema slice.
 
@@ -100,7 +100,7 @@ Approved domain decisions:
 - Cart remains client-side draft state for this migration.
 - Use cases receive an explicit `Actor`; delivery adapters authenticate and build that actor.
 - Server functions remain delivery adapters only. They authenticate, parse DTOs, build `Actor`, call use cases, and map typed errors.
-- Money is represented as `Money(amountCents, currencyCode)` in the domain and integer cent columns in persistence.
+- Money is represented as `Money(amountMinor, currencyCode)` in the domain. New listing price persistence uses `priceAmountMinor`; older order snapshot columns may retain cent-named fields until a dedicated payment snapshot rename.
 - Floating-point money fields are migration bridges only, not the final model.
 
 ## Slice -1: Characterization And Risk Tests
@@ -141,7 +141,7 @@ Work:
 - Add shared typed error/result convention for server-function adapters and use cases.
 - Add mandatory `src/domains/shared/application/unit-of-work.ts` or transaction runner abstraction.
 - The unit of work must allow `PlacePurchase` to create purchase, seller orders, guarded stock updates, and notification rows in one transaction.
-- Add `src/domains/shared/domain/money.ts` with integer cents and currency code.
+- Add `src/domains/shared/domain/money.ts` with integer minor amount and currency code.
 - Add folder structure for accepted contexts.
 - Add enforceable import protection for server-only infrastructure where appropriate.
 
@@ -164,24 +164,24 @@ Purpose: stop building the new listing/domain model on inexact money storage wit
 
 Work:
 
-- Add cent columns alongside existing listing/product Float fields:
-  - `Listing.priceCents` after the product/listing schema rename, or `Product.priceCents` as a transitional column if the money slice happens first
+- Add minor-amount columns alongside existing listing/product Float fields:
+  - `Listing.priceAmountMinor` after the product/listing schema rename, or a transitional cent-named column if the money slice happens first
 - Add `currencyCode` where needed for listing prices. Use `USD` initially unless multi-currency is explicitly added.
-- Backfill cent columns from Float fields with audited rounding.
+- Backfill minor-amount columns from Float fields with audited rounding.
 - Add explicit dual-write/read-fallback policy:
-  - before cutover, live writers must write both Float and cents or be replaced
-  - reads prefer cents when present and fall back to Float only during migration
-  - non-null cent constraints wait until all live write paths are migrated
+  - before cutover, live writers must write both Float and minor amount or be replaced
+  - reads prefer minor amount when present and fall back to Float only during migration
+  - non-null minor-amount constraints wait until all live write paths are migrated
 - Add non-null/non-negative constraints only after dual-write/read cutover is complete.
 - Update validation to parse price as a decimal string with max two USD fractional digits.
-- Convert price filters to cents at DTO/application boundaries.
-- Switch new DDD code to cents only.
+- Convert price filters to minor amounts at DTO/application boundaries.
+- Switch new DDD listing code to minor amounts only.
 - Keep old Float fields only as temporary compatibility until all consumers are migrated.
 - Drop old Float fields only after verified cents cutover:
-  - cent fields added
-  - cent fields backfilled
+  - minor-amount fields added
+  - minor-amount fields backfilled
   - compatibility dual-write complete where needed
-  - reads switched to cents
+  - reads switched to minor amounts
   - no live code reads/writes old Float fields
 - Do not migrate old fake `Order` / `OrderItem` Float money fields unless temporary compatibility absolutely requires it.
 - Create new `Purchase` / `SellerOrder` / seller-order item schema with cent fields from the start in Slice 1.

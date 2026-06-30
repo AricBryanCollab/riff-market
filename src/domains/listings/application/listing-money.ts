@@ -1,18 +1,18 @@
 export const DEFAULT_LISTING_CURRENCY_CODE = "USD";
 
 export type ListingMoneyPersistence = {
-	priceCents: number;
+	priceAmountMinor: number;
 	currencyCode: string;
 };
 
 export type ListingMoneySource = {
-	priceCents: number;
+	priceAmountMinor: number;
 	currencyCode: string;
 };
 
 type ListingPriceRangeInput = {
-	priceMinCents?: number;
-	priceMaxCents?: number;
+	priceMinAmountMinor?: number;
+	priceMaxAmountMinor?: number;
 };
 
 type ListingPriceRangePersistence = {
@@ -22,71 +22,83 @@ type ListingPriceRangePersistence = {
 
 const decimalPricePattern = /^(\d+)(?:\.(\d+))?$/;
 
-export function parseListingPriceInputToCents(price: string | number): number {
+export function parseListingPriceInputToAmountMinor(
+	price: string | number,
+): number {
 	const value = normalizePriceInput(price);
 
-	return decimalPriceStringToCents(value, 2);
+	return decimalPriceStringToAmountMinor(value, 2);
 }
 
-export function parseOptionalListingPriceInputToCents(
+export function parseOptionalListingPriceInputToAmountMinor(
 	price: string | null | undefined,
 ): number | undefined {
 	if (price === undefined || price === null || price.trim() === "") {
 		return undefined;
 	}
 
-	return parseListingPriceInputToCents(price);
+	return parseListingPriceInputToAmountMinor(price);
 }
 
-export function priceCentsToDecimalPrice(priceCents: number): number {
-	assertSafeNonNegativeInteger(priceCents, "Listing price cents");
+export function priceAmountMinorToDecimalPrice(
+	priceAmountMinor: number,
+): number {
+	assertSafeNonNegativeInteger(priceAmountMinor, "Listing price minor amount");
 
-	return priceCents / 100;
+	return priceAmountMinor / 100;
 }
 
 export function toListingMoneyPersistence(
 	price: string | number,
 ): ListingMoneyPersistence {
-	const priceCents = parseListingPriceInputToCents(price);
+	const priceAmountMinor = parseListingPriceInputToAmountMinor(price);
 
 	return {
-		priceCents,
+		priceAmountMinor,
 		currencyCode: DEFAULT_LISTING_CURRENCY_CODE,
 	};
 }
 
 export function normalizeListingMoney<T extends ListingMoneySource>(
 	listing: T,
-): Omit<T, "price" | "priceCents" | "currencyCode"> & {
+): Omit<T, "price" | "priceAmountMinor" | "priceCents" | "currencyCode"> & {
 	price: number;
+	priceAmountMinor: number;
 	priceCents: number;
 	currencyCode: string;
 } {
 	return {
 		...listing,
-		price: priceCentsToDecimalPrice(listing.priceCents),
+		price: priceAmountMinorToDecimalPrice(listing.priceAmountMinor),
+		priceCents: listing.priceAmountMinor,
 	};
 }
 
 export function toListingPriceRangePersistence({
-	priceMinCents,
-	priceMaxCents,
+	priceMinAmountMinor,
+	priceMaxAmountMinor,
 }: ListingPriceRangeInput): ListingPriceRangePersistence | undefined {
-	if (priceMinCents === undefined && priceMaxCents === undefined) {
+	if (priceMinAmountMinor === undefined && priceMaxAmountMinor === undefined) {
 		return undefined;
 	}
 
-	if (priceMinCents !== undefined) {
-		assertSafeNonNegativeInteger(priceMinCents, "Minimum listing price cents");
+	if (priceMinAmountMinor !== undefined) {
+		assertSafeNonNegativeInteger(
+			priceMinAmountMinor,
+			"Minimum listing price minor amount",
+		);
 	}
 
-	if (priceMaxCents !== undefined) {
-		assertSafeNonNegativeInteger(priceMaxCents, "Maximum listing price cents");
+	if (priceMaxAmountMinor !== undefined) {
+		assertSafeNonNegativeInteger(
+			priceMaxAmountMinor,
+			"Maximum listing price minor amount",
+		);
 	}
 
 	return {
-		...(priceMinCents !== undefined && { gte: priceMinCents }),
-		...(priceMaxCents !== undefined && { lte: priceMaxCents }),
+		...(priceMinAmountMinor !== undefined && { gte: priceMinAmountMinor }),
+		...(priceMaxAmountMinor !== undefined && { lte: priceMaxAmountMinor }),
 	};
 }
 
@@ -105,7 +117,7 @@ function normalizePriceInput(price: string | number): string {
 	return value;
 }
 
-function decimalPriceStringToCents(
+function decimalPriceStringToAmountMinor(
 	value: string,
 	maxFractionDigits?: number,
 ): number {
@@ -115,21 +127,22 @@ function decimalPriceStringToCents(
 		throw new Error("Listing price must be a non-negative decimal amount");
 	}
 
-	const dollars = Number(match[1]);
+	const wholeUnits = Number(match[1]);
 	const fraction = match[2] ?? "";
 
 	if (maxFractionDigits !== undefined && fraction.length > maxFractionDigits) {
 		throw new Error("Listing price must use at most two decimal places");
 	}
 
-	const dollarCents = dollars * 100;
-	const centsFromFraction = Number(fraction.slice(0, 2).padEnd(2, "0"));
+	const wholeUnitMinorAmount = wholeUnits * 100;
+	const minorAmountFromFraction = Number(fraction.slice(0, 2).padEnd(2, "0"));
 	const shouldRound = Number(fraction[2] ?? "0") >= 5;
-	const priceCents = dollarCents + centsFromFraction + (shouldRound ? 1 : 0);
+	const priceAmountMinor =
+		wholeUnitMinorAmount + minorAmountFromFraction + (shouldRound ? 1 : 0);
 
-	assertSafeNonNegativeInteger(priceCents, "Listing price cents");
+	assertSafeNonNegativeInteger(priceAmountMinor, "Listing price minor amount");
 
-	return priceCents;
+	return priceAmountMinor;
 }
 
 function assertFiniteNonNegativeNumber(value: number) {

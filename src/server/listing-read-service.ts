@@ -200,11 +200,11 @@ function toListingSearchQuery(
 		...(query.condition && { condition: query.condition }),
 		...(query.brand && { brand: query.brand }),
 		...(query.search && { search: query.search }),
-		...(query.priceMinCents !== undefined && {
-			priceMinCents: query.priceMinCents,
+		...(query.priceMinAmountMinor !== undefined && {
+			priceMinAmountMinor: query.priceMinAmountMinor,
 		}),
-		...(query.priceMaxCents !== undefined && {
-			priceMaxCents: query.priceMaxCents,
+		...(query.priceMaxAmountMinor !== undefined && {
+			priceMaxAmountMinor: query.priceMaxAmountMinor,
 		}),
 	};
 }
@@ -221,6 +221,7 @@ function toListingReadDto(listing: ListingReadModel): ListingReadDto {
 		images: listing.images,
 		description: listing.description,
 		price: listing.price,
+		priceAmountMinor: listing.priceAmountMinor,
 		priceCents: listing.priceCents,
 		currencyCode: listing.currencyCode,
 		stock: listing.stock,

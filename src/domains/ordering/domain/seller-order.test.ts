@@ -49,7 +49,7 @@ describe("SellerOrder", () => {
 			purchaseId: "purchase-1",
 			sellerId: "seller-1",
 			items: [makeItem()],
-			subtotal: Money.fromCents(250_00, "USD"),
+			subtotal: Money.fromMinor(250_00, "USD"),
 			status: "NEW",
 			trackingNumber: null,
 		});

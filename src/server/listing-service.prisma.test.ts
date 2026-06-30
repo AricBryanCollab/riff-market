@@ -70,6 +70,7 @@ describeDb("listing service Prisma integration", () => {
 				sellerId: "seller-1",
 				name: "Smoke Telecaster",
 				price: 199.95,
+				priceAmountMinor: 19995,
 				priceCents: 19995,
 				currencyCode: "USD",
 				stock: 3,
@@ -86,7 +87,7 @@ describeDb("listing service Prisma integration", () => {
 		expect(listing).toMatchObject({
 			sellerId: "seller-1",
 			name: "Smoke Telecaster",
-			priceCents: 19995,
+			priceAmountMinor: 19995,
 			currencyCode: "USD",
 			isApproved: false,
 			listingStatus: "PENDING",
@@ -116,6 +117,7 @@ describeDb("listing service Prisma integration", () => {
 			id: "listing-1",
 			name: "Updated Telecaster",
 			price: 249.5,
+			priceAmountMinor: 24950,
 			priceCents: 24950,
 			isApproved: false,
 			listingStatus: "PENDING",
@@ -133,7 +135,7 @@ describeDb("listing service Prisma integration", () => {
 		});
 		expect(listing).toMatchObject({
 			name: "Updated Telecaster",
-			priceCents: 24950,
+			priceAmountMinor: 24950,
 			isApproved: false,
 			listingStatus: "PENDING",
 		});

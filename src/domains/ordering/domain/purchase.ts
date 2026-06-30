@@ -100,7 +100,7 @@ export class Purchase implements RecordsDomainEvents {
 					purchaseId: purchase.id,
 					customerId: purchase.customerId,
 					purchaseNumber: purchase.purchaseNumber,
-					totalAmountCents: purchase.total.amountCents,
+					totalAmountCents: purchase.total.amountMinor,
 					currencyCode: purchase.total.currencyCode,
 				},
 			}),
@@ -128,7 +128,7 @@ function assertSellerOrderCount(sellerOrderCount: number) {
 }
 
 function assertPositiveTotal(total: Money) {
-	if (total.amountCents <= 0) {
+	if (total.amountMinor <= 0) {
 		throw new Error("Purchase total must be greater than zero");
 	}
 }

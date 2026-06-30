@@ -30,8 +30,8 @@ export type ApprovedListingSearchQuery = {
 	readonly condition?: ListingReadCondition;
 	readonly brand?: string;
 	readonly search?: string;
-	readonly priceMinCents?: number;
-	readonly priceMaxCents?: number;
+	readonly priceMinAmountMinor?: number;
+	readonly priceMaxAmountMinor?: number;
 };
 
 export interface ApprovedListingSearchPort {

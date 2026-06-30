@@ -1,30 +1,34 @@
 const currencyCodePattern = /^[A-Z]{3}$/;
 
 export class Money {
-	readonly amountCents: number;
+	readonly amountMinor: number;
 	readonly currencyCode: string;
 
-	private constructor(amountCents: number, currencyCode: string) {
-		this.amountCents = amountCents;
+	private constructor(amountMinor: number, currencyCode: string) {
+		this.amountMinor = amountMinor;
 		this.currencyCode = currencyCode;
 	}
 
-	static fromCents(amountCents: number, currencyCode: string): Money {
-		assertValidAmountCents(amountCents);
+	static fromMinor(amountMinor: number, currencyCode: string): Money {
+		assertValidAmountMinor(amountMinor);
 		assertValidCurrencyCode(currencyCode);
 
-		return new Money(amountCents, currencyCode);
+		return new Money(amountMinor, currencyCode);
+	}
+
+	static fromCents(amountCents: number, currencyCode: string): Money {
+		return Money.fromMinor(amountCents, currencyCode);
 	}
 
 	static zero(currencyCode: string): Money {
-		return Money.fromCents(0, currencyCode);
+		return Money.fromMinor(0, currencyCode);
 	}
 
 	add(addend: Money): Money {
 		this.assertSameCurrency(addend);
 
-		return Money.fromCents(
-			this.amountCents + addend.amountCents,
+		return Money.fromMinor(
+			this.amountMinor + addend.amountMinor,
 			this.currencyCode,
 		);
 	}
@@ -32,8 +36,8 @@ export class Money {
 	subtract(subtrahend: Money): Money {
 		this.assertSameCurrency(subtrahend);
 
-		return Money.fromCents(
-			this.amountCents - subtrahend.amountCents,
+		return Money.fromMinor(
+			this.amountMinor - subtrahend.amountMinor,
 			this.currencyCode,
 		);
 	}
@@ -43,12 +47,12 @@ export class Money {
 			throw new Error("Money quantity must be a non-negative safe integer");
 		}
 
-		return Money.fromCents(this.amountCents * quantity, this.currencyCode);
+		return Money.fromMinor(this.amountMinor * quantity, this.currencyCode);
 	}
 
 	equals(other: Money): boolean {
 		return (
-			this.amountCents === other.amountCents &&
+			this.amountMinor === other.amountMinor &&
 			this.currencyCode === other.currencyCode
 		);
 	}
@@ -56,18 +60,22 @@ export class Money {
 	isGreaterThan(other: Money): boolean {
 		this.assertSameCurrency(other);
 
-		return this.amountCents > other.amountCents;
+		return this.amountMinor > other.amountMinor;
 	}
 
 	isLessThan(other: Money): boolean {
 		this.assertSameCurrency(other);
 
-		return this.amountCents < other.amountCents;
+		return this.amountMinor < other.amountMinor;
+	}
+
+	get amountCents() {
+		return this.amountMinor;
 	}
 
 	toJSON() {
 		return {
-			amountCents: this.amountCents,
+			amountMinor: this.amountMinor,
 			currencyCode: this.currencyCode,
 		};
 	}
@@ -81,12 +89,14 @@ export class Money {
 	}
 }
 
-function assertValidAmountCents(amountCents: number) {
-	if (!Number.isSafeInteger(amountCents)) {
-		throw new Error("Money amount must be integer cents within safe range");
+function assertValidAmountMinor(amountMinor: number) {
+	if (!Number.isSafeInteger(amountMinor)) {
+		throw new Error(
+			"Money amount must be integer minor units within safe range",
+		);
 	}
 
-	if (amountCents < 0) {
+	if (amountMinor < 0) {
 		throw new Error("Money amount cannot be negative");
 	}
 }

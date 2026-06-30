@@ -132,7 +132,7 @@ export class SellerOrder implements RecordsDomainEvents {
 					sellerOrderId: sellerOrder.id,
 					purchaseId: sellerOrder.purchaseId,
 					sellerId: sellerOrder.sellerId,
-					subtotalCents: sellerOrder.subtotal.amountCents,
+					subtotalCents: sellerOrder.subtotal.amountMinor,
 					currencyCode: sellerOrder.subtotal.currencyCode,
 				},
 			}),
@@ -226,7 +226,7 @@ function calculateSubtotal(items: readonly SellerOrderItemSnapshot[]) {
 
 	return items.reduce(
 		(total, item) =>
-			total.add(Money.fromCents(item.subTotalCents, item.currencyCode)),
+			total.add(Money.fromMinor(item.subTotalCents, item.currencyCode)),
 		Money.zero(firstItem.currencyCode),
 	);
 }
@@ -268,8 +268,8 @@ function assertItems(
 			);
 		}
 
-		Money.fromCents(item.unitPriceCents, item.currencyCode);
-		Money.fromCents(item.subTotalCents, item.currencyCode);
+		Money.fromMinor(item.unitPriceCents, item.currencyCode);
+		Money.fromMinor(item.subTotalCents, item.currencyCode);
 
 		const expectedSubtotal = item.unitPriceCents * item.quantity;
 		if (item.subTotalCents !== expectedSubtotal) {

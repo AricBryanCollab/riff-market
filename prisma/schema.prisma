@@ -246,21 +246,21 @@ model SellerOrderItem {
 }
 
 model Listing {
-  id            String           @id @default(uuid())
-  sellerId      String
-  name          String
-  category      ListingCategory
-  condition     ListingCondition
-  brand         String
-  model         String
-  images        Json
-  description   String
-  priceCents    Int
-  currencyCode  String           @default("USD")
-  stock         Int
-  isApproved    Boolean
-  listingStatus ListingStatus    @default(PENDING)
-  favoritedBy   Favorite[]
+  id               String           @id @default(uuid())
+  sellerId         String
+  name             String
+  category         ListingCategory
+  condition        ListingCondition
+  brand            String
+  model            String
+  images           Json
+  description      String
+  priceAmountMinor Int
+  currencyCode     String           @default("USD")
+  stock            Int
+  isApproved       Boolean
+  listingStatus    ListingStatus    @default(PENDING)
+  favoritedBy      Favorite[]
 
   seller     User        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
@@ -271,7 +271,7 @@ model Listing {
 
   @@index([sellerId])
   @@index([category])
-  @@index([priceCents])
+  @@index([priceAmountMinor])
   @@index([isApproved])
   @@index([listingStatus])
 }

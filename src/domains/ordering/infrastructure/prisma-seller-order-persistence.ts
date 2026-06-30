@@ -16,7 +16,7 @@ export class PrismaSellerOrderPersistence
 					purchaseId: sellerOrder.purchaseId,
 					sellerId: sellerOrder.sellerId,
 					sellerIdSnapshot: sellerOrder.sellerId,
-					subtotalCents: sellerOrder.subtotal.amountCents,
+					subtotalCents: sellerOrder.subtotal.amountMinor,
 					currencyCode: sellerOrder.subtotal.currencyCode,
 					status: sellerOrder.status,
 					trackingNumber: sellerOrder.trackingNumber,

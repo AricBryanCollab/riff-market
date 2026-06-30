@@ -30,7 +30,7 @@ export class PrismaPurchasePlacedNotificationCreator
 						id: input.purchase.id,
 						customerId: input.purchase.customerId,
 						purchaseNumber: input.purchase.purchaseNumber,
-						totalAmountCents: input.purchase.total.amountCents,
+						totalAmountCents: input.purchase.total.amountMinor,
 						currencyCode: input.purchase.total.currencyCode,
 					},
 					sellerOrders: input.sellerOrders.map((sellerOrder) => ({
@@ -38,7 +38,7 @@ export class PrismaPurchasePlacedNotificationCreator
 						purchaseId: sellerOrder.purchaseId,
 						sellerId: sellerOrder.sellerId,
 						listingNames: sellerOrder.items.map((item) => item.listingName),
-						subtotalCents: sellerOrder.subtotal.amountCents,
+						subtotalCents: sellerOrder.subtotal.amountMinor,
 						currencyCode: sellerOrder.subtotal.currencyCode,
 					})),
 					domainEvents: input.domainEvents,

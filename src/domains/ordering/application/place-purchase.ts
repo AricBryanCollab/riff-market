@@ -313,9 +313,9 @@ function toSellerOrderItemSnapshot(
 		primaryImageUrl: item.primaryImageUrl,
 		sellerId: item.sellerId,
 		sellerDisplayName: item.sellerDisplayName,
-		unitPriceCents: item.unitPrice.amountCents,
+		unitPriceCents: item.unitPrice.amountMinor,
 		quantity: item.quantity,
-		subTotalCents: subTotal.amountCents,
+		subTotalCents: subTotal.amountMinor,
 		currencyCode: item.unitPrice.currencyCode,
 	};
 }

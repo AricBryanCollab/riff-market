@@ -10,7 +10,7 @@ function placePurchase(
 		id: "purchase-1",
 		customerId: "customer-1",
 		purchaseNumber: "RM-1001",
-		total: Money.fromCents(250_00, "USD"),
+		total: Money.fromMinor(250_00, "USD"),
 		buyerSnapshot: {
 			buyerName: "Pat Buyer",
 			buyerEmail: "pat@example.com",
@@ -32,7 +32,7 @@ describe("Purchase", () => {
 			id: "purchase-1",
 			customerId: "customer-1",
 			purchaseNumber: "RM-1001",
-			total: Money.fromCents(250_00, "USD"),
+			total: Money.fromMinor(250_00, "USD"),
 			paymentStatus: "MANUALLY_CONFIRMED",
 			status: "OPEN",
 			buyerSnapshot: {

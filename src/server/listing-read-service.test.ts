@@ -56,6 +56,7 @@ describe("listing read product behavior", () => {
 				name: "Telecaster",
 				isApproved: true,
 				listingStatus: "APPROVED",
+				priceAmountMinor: 19995,
 				priceCents: 19995,
 				createdAt: "2026-06-18T00:00:00.000Z",
 			},
@@ -78,8 +79,8 @@ function makeDependencies(
 				query.condition === "USED" &&
 				query.brand === "Fender" &&
 				query.search === "tele" &&
-				query.priceMinCents === 19995 &&
-				query.priceMaxCents === 50000
+				query.priceMinAmountMinor === 19995 &&
+				query.priceMaxAmountMinor === 50000
 					? listings.filter((listing) => listing.listingStatus === "APPROVED")
 					: [],
 			listForSeller: async () => [],
@@ -110,6 +111,7 @@ function makeListing({
 		images: [`https://cdn.example.com/${id}.jpg`],
 		description: "A test listing",
 		price: 199.95,
+		priceAmountMinor: 19995,
 		priceCents: 19995,
 		currencyCode: "USD",
 		stock: 2,

@@ -37,14 +37,14 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceCents: 125_00,
+			priceAmountMinor: 125_00,
 			stock: 2,
 		});
 		await seedProduct(db, {
 			id: "listing-2",
 			sellerId: "seller-2",
 			name: "Jazzmaster",
-			priceCents: 75_00,
+			priceAmountMinor: 75_00,
 			stock: 3,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(
@@ -71,7 +71,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 			value: expect.objectContaining({
 				purchaseNumber: "RM-1",
 				total: expect.objectContaining({
-					amountCents: 275_00,
+					amountMinor: 275_00,
 					currencyCode: "USD",
 				}),
 				paymentStatus: "MANUALLY_CONFIRMED",
@@ -156,7 +156,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedProduct(db, {
 			id: "listing-approved-status",
 			sellerId: "seller-1",
-			priceCents: 125_00,
+			priceAmountMinor: 125_00,
 			stock: 1,
 			listingStatus: "APPROVED",
 			isApproved: false,
@@ -192,7 +192,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedProduct(db, {
 			id: "listing-withdrawn-status",
 			sellerId: "seller-1",
-			priceCents: 125_00,
+			priceAmountMinor: 125_00,
 			stock: 1,
 			listingStatus: "WITHDRAWN",
 			isApproved: true,
@@ -229,14 +229,14 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceCents: 125_00,
+			priceAmountMinor: 125_00,
 			stock: 2,
 		});
 		await seedProduct(db, {
 			id: "listing-2",
 			sellerId: "seller-2",
 			name: "Jazzmaster",
-			priceCents: 75_00,
+			priceAmountMinor: 75_00,
 			stock: 3,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(
@@ -430,7 +430,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceCents: 125_00,
+			priceAmountMinor: 125_00,
 			stock: 2,
 		});
 		const placePurchase = createPlacePurchaseRunner(
@@ -519,7 +519,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceCents: 125_00,
+			priceAmountMinor: 125_00,
 			stock: 3,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(
@@ -574,7 +574,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceCents: 125_00,
+			priceAmountMinor: 125_00,
 			stock: 1,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(
@@ -646,7 +646,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceCents: 125_00,
+			priceAmountMinor: 125_00,
 			stock: 1,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(
@@ -683,7 +683,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedProduct(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceCents: 125_00,
+			priceAmountMinor: 125_00,
 			stock: 1,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(

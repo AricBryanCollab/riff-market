@@ -34,7 +34,7 @@ describe("placePurchaseForCurrentUser", () => {
 			ok({
 				purchaseId: "purchase-1",
 				purchaseNumber: "RIFF-1001",
-				total: Money.fromCents(250_00, "USD"),
+				total: Money.fromMinor(250_00, "USD"),
 				paymentStatus: "MANUALLY_CONFIRMED",
 				status: "OPEN",
 				sellerOrderIds: ["seller-order-1"],

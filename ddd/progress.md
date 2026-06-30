@@ -15,7 +15,7 @@ Clean slate started: 2026-06-11
 | --- | --- |
 | `-1` Characterization and risk tests | Complete. Customer order-read ownership gap was fixed; old fake-order schema details are not compatibility requirements. |
 | `0` Foundation | Complete. Shared DDD folders, `Actor`, domain events, result/errors, unit-of-work boundary, and `Money` are in place. |
-| `0.5` Money persistence | Complete. Listing price persistence is cents-only: `Listing.priceCents` is required, `currencyCode` remains required, and the old Float `price` column has a drop migration. |
+| `0.5` Money persistence | Complete. Listing price persistence is minor-unit based: `Listing.priceAmountMinor` is required, `currencyCode` remains required, and the old Float `price` column has a drop migration. |
 | `1` Place Purchase | Complete for current path. Checkout goes through `placePurchaseFn` -> `PlacePurchase`, with real Prisma transaction, guarded stock, `Purchase`, `SellerOrder`, and same-transaction notifications. |
 | `2` Purchase and SellerOrder lifecycle | Complete for active delivery. Order list/detail/status flows use TanStack server functions and target read/status modules; old `/api/orders` route family and fake order repo/action code are removed. |
 | `3` Listing lifecycle | Complete for active listing commands. Create/update/delete/withdraw/moderate use listing server functions; decline retains `DECLINED`; referenced removal marks `WITHDRAWN`; old product command routes/actions/repos are removed. |
@@ -155,19 +155,26 @@ Clean slate started: 2026-06-11
 - `prisma/schema.prisma` now exposes generated Prisma `Listing`, `ListingCategory`, and `ListingCondition` names without Product bridge mapping.
 - `prisma/migrations/20260629130000_rename_product_persistence_to_listing/migration.sql` renames the physical `Product` table to `Listing`, `ProductCategory` to `ListingCategory`, and misspelled `ProductCondtion` to `ListingCondition`.
 - The same migration renames legacy `productId` columns on `OrderItem`, `Review`, and `Favorite` to `listingId`, plus related foreign key constraints, unique indexes, and lookup indexes.
-- Listing-owned physical indexes now use listing names, including the existing `priceCents` index, which is now declared in the Prisma schema as `@@index([priceCents])`.
+- Listing-owned physical indexes now use listing names. Listing price lookup uses `@@index([priceAmountMinor])` after the money naming follow-up.
 - Listing command/read/moderation infrastructure, purchase stock reservation, account media cleanup staging, Prisma seed helpers, and DB-facing test assertions now use `db.listing` and `Prisma.Listing*` generated APIs.
 - Remaining product vocabulary is compatibility-only: `/product/*` URLs, product cache key strings, serialized `product` / `productId` fields used by cart/order API shapes, Cloudinary folder names, and media cleanup `PRODUCT` source names.
 
 ## Current Money Cutover State
 
-- The approved deferred money work is complete in code: `prisma/schema.prisma` removed the legacy Float `Listing.price` column, made `Listing.priceCents` required, and keeps `currencyCode` required.
-- `prisma/migrations/20260630090000_drop_listing_float_price/migration.sql` backfills any null cents from the old Float column, sets `priceCents` non-null, adds a non-negative check constraint, and drops `price`.
+- The approved deferred money work is complete in code: `prisma/schema.prisma` removed the legacy Float `Listing.price` column, made `Listing.priceAmountMinor` required, and keeps `currencyCode` required.
+- `prisma/migrations/20260630090000_drop_listing_float_price/migration.sql` backfills any null cents from the old Float column, sets the then-current `priceCents` column non-null, adds a non-negative check constraint, and drops `price`; `20260630110000_rename_listing_price_cents_to_amount_minor` then renames the listing price column, index, and check constraint to `priceAmountMinor`.
 - Listing command, read-model, moderation, purchase-reservation, and test fixture code no longer writes, selects, filters, or falls back to a persisted Float listing price.
-- UI/read DTOs still expose decimal `price` as a compatibility presentation field derived from `priceCents`.
+- UI/read DTOs still expose decimal `price` as a compatibility presentation field derived from `priceAmountMinor`; `priceCents` remains a serialized compatibility alias during the current UI transition.
 
 ## Latest Verification
 
+- Listing price minor-unit rename Prisma schema formatting passed with the Codex-bundled Node runtime: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js format --schema prisma/schema.prisma`.
+- Listing price minor-unit rename Prisma schema validation passed with the Codex-bundled Node runtime: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js validate --schema prisma/schema.prisma`.
+- Listing price minor-unit rename Prisma client generation passed with the Codex-bundled Node runtime: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js generate --schema prisma/schema.prisma`.
+- Listing price minor-unit rename touched-file Biome passed after formatting: `bun run check:fix -- ...` over the changed TypeScript files.
+- `bun run typecheck` passed after the listing price minor-unit rename.
+- Listing price minor-unit rename focused unit run passed with the Codex-bundled Node runtime and sandbox-safe Vite config loading: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/vitest/vitest.mjs run --config vitest.config.ts --configLoader runner src/domains/shared/domain/money.test.ts src/domains/listings/application/listing-money.test.ts src/domains/listings/application/manage-listing.test.ts src/server/listing-read-service.test.ts src/domains/ordering/domain/purchase.test.ts src/domains/ordering/domain/seller-order.test.ts src/domains/ordering/application/place-purchase.test.ts src/server/place-purchase-service.test.ts src/server/listing-service.prisma.test.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts src/domains/ordering/application/place-purchase.prisma.test.ts` -> 8 files passed, 3 DB-backed files skipped; 67 tests passed, 27 DB-backed tests skipped.
+- `git diff --check` passed after the listing price minor-unit rename.
 - Money Float cutover Prisma schema formatting passed with the Codex-bundled Node runtime: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js format --schema prisma/schema.prisma`.
 - Money Float cutover Prisma schema validation passed with the Codex-bundled Node runtime: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js validate --schema prisma/schema.prisma`.
 - Money Float cutover Prisma client generation passed: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js generate --schema prisma/schema.prisma`.

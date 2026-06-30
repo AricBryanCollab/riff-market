@@ -73,8 +73,8 @@ describeDb("Prisma listing read models", () => {
 			limit: 10,
 			offset: 0,
 			random: false,
-			priceMinCents: undefined,
-			priceMaxCents: undefined,
+			priceMinAmountMinor: undefined,
+			priceMaxAmountMinor: undefined,
 		});
 
 		expect(listings.map((listing) => listing.id)).toEqual([
@@ -86,31 +86,31 @@ describeDb("Prisma listing read models", () => {
 		]);
 	});
 
-	it("applies cent-based price filters for approved listings", async () => {
+	it("applies minor-amount price filters for approved listings", async () => {
 		await seedProduct(db, {
-			id: "cent-priced",
-			name: "Cent Priced",
+			id: "minor-priced",
+			name: "Minor Priced",
 			listingStatus: "APPROVED",
 			isApproved: true,
-			priceCents: 19995,
+			priceAmountMinor: 19995,
 		});
 		await seedProduct(db, {
 			id: "outside-range",
 			name: "Outside Range",
 			listingStatus: "APPROVED",
 			isApproved: true,
-			priceCents: 35000,
+			priceAmountMinor: 35000,
 		});
 
 		const listings = await readModels.searchApproved({
 			limit: 10,
 			offset: 0,
 			random: false,
-			priceMinCents: 19995,
-			priceMaxCents: 19995,
+			priceMinAmountMinor: 19995,
+			priceMaxAmountMinor: 19995,
 		});
 
-		expect(listings.map((listing) => listing.id)).toEqual(["cent-priced"]);
+		expect(listings.map((listing) => listing.id)).toEqual(["minor-priced"]);
 	});
 
 	it("applies category, condition, brand, and search filters to approved listings", async () => {

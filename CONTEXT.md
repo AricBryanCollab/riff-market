@@ -27,3 +27,15 @@ _Avoid_: vendor
 **Admin**:
 A User who moderates listings and handles platform-level oversight.
 _Avoid_: moderator
+
+**Money**:
+A currency amount represented by a non-negative minor amount and a currency code.
+_Avoid_: cents-only amount
+
+**Minor Amount**:
+The integer amount in a currency's smallest supported unit for marketplace pricing and snapshots.
+_Avoid_: cents, float price
+
+**Listing Price**:
+The Seller's asking price for a Listing, held in the Listing's currency.
+_Avoid_: product price

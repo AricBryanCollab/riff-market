@@ -32,7 +32,7 @@ const listingReadSelect = {
 	model: true,
 	images: true,
 	description: true,
-	priceCents: true,
+	priceAmountMinor: true,
 	currencyCode: true,
 	stock: true,
 	listingStatus: true,
@@ -186,8 +186,8 @@ function toApprovedListingWhere(
 	query: ApprovedListingSearchQuery,
 ): Prisma.ListingWhereInput {
 	const priceRange = toListingPriceRangePersistence({
-		priceMinCents: query.priceMinCents,
-		priceMaxCents: query.priceMaxCents,
+		priceMinAmountMinor: query.priceMinAmountMinor,
+		priceMaxAmountMinor: query.priceMaxAmountMinor,
 	});
 
 	return {
@@ -212,7 +212,7 @@ function toApprovedListingWhere(
 				{ model: { contains: query.search, mode: "insensitive" } },
 			],
 		}),
-		...(priceRange && { priceCents: priceRange }),
+		...(priceRange && { priceAmountMinor: priceRange }),
 	};
 }
 

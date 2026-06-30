@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseOptionalListingPriceInputToCents } from "@/domains/listings/application/listing-money";
+import { parseOptionalListingPriceInputToAmountMinor } from "@/domains/listings/application/listing-money";
 import type { ListingStatus } from "@/domains/listings/domain/listing";
 import type { ListingCategory, ListingCondition } from "@/types/enum";
 
@@ -29,6 +29,7 @@ export type ListingReadModel = {
 	readonly images: string[];
 	readonly description: string;
 	readonly price: number;
+	readonly priceAmountMinor: number;
 	readonly priceCents: number;
 	readonly currencyCode: string;
 	readonly stock: number;
@@ -49,6 +50,7 @@ export type ListingReadDto = {
 	readonly images: string[];
 	readonly description: string;
 	readonly price: number;
+	readonly priceAmountMinor: number;
 	readonly priceCents: number;
 	readonly currencyCode: string;
 	readonly stock: number;
@@ -115,13 +117,13 @@ const listingCategorySchema = z.enum([
 ]);
 const listingConditionSchema = z.enum(["NEW", "USED", "MINT"]);
 
-const optionalPriceCentsSchema = z
+const optionalPriceAmountMinorSchema = z
 	.string()
 	.nullable()
 	.optional()
 	.transform((value, ctx) => {
 		try {
-			return parseOptionalListingPriceInputToCents(value);
+			return parseOptionalListingPriceInputToAmountMinor(value);
 		} catch (error) {
 			ctx.addIssue({
 				code: "custom",
@@ -156,13 +158,13 @@ export const approvedListingSearchInputSchema = z
 		condition: listingConditionSchema.nullable().optional(),
 		brand: z.string().nullable().optional(),
 		search: z.string().nullable().optional(),
-		priceMin: optionalPriceCentsSchema,
-		priceMax: optionalPriceCentsSchema,
+		priceMin: optionalPriceAmountMinorSchema,
+		priceMax: optionalPriceAmountMinorSchema,
 	})
 	.transform(({ priceMin, priceMax, ...query }) => ({
 		...query,
-		priceMinCents: priceMin,
-		priceMaxCents: priceMax,
+		priceMinAmountMinor: priceMin,
+		priceMaxAmountMinor: priceMax,
 	}));
 
 export type ApprovedListingSearchInput = z.infer<

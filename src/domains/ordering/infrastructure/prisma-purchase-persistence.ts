@@ -12,7 +12,7 @@ export class PrismaPurchasePersistence
 				customerId: purchase.customerId,
 				customerIdSnapshot: purchase.customerId,
 				purchaseNumber: purchase.purchaseNumber,
-				totalAmountCents: purchase.total.amountCents,
+				totalAmountCents: purchase.total.amountMinor,
 				currencyCode: purchase.total.currencyCode,
 				paymentStatus: purchase.paymentStatus,
 				status: purchase.status,

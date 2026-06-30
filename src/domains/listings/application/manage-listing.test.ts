@@ -45,6 +45,7 @@ function makeMutationResult(
 		images: [image("https://cdn.example.com/current.jpg")],
 		description: "A listing",
 		price: 199.95,
+		priceAmountMinor: 19995,
 		priceCents: 19995,
 		currencyCode: "USD",
 		stock: 2,
@@ -67,7 +68,7 @@ function makeRemovalSnapshot(
 		category: "ELECTRIC",
 		condition: "NEW",
 		primaryImageUrl: "https://cdn.example.com/current.jpg",
-		price: Money.fromCents(19995, "USD"),
+		price: Money.fromMinor(19995, "USD"),
 		stock: 2,
 		status: "APPROVED",
 		images: [image("https://cdn.example.com/current.jpg")],
@@ -114,7 +115,7 @@ function createFakes() {
 }
 
 describe("listing command use cases", () => {
-	it("creates seller listings as pending with cent-based price persistence", async () => {
+	it("creates seller listings as pending with minor-amount price persistence", async () => {
 		const { repository, images, dependencies } = createFakes();
 
 		const result = await createListing(
@@ -140,7 +141,7 @@ describe("listing command use cases", () => {
 				sellerId: "seller-1",
 				status: "PENDING",
 				isApproved: false,
-				priceCents: 19995,
+				priceAmountMinor: 19995,
 				currencyCode: "USD",
 				images: [image("https://cdn.example.com/new.jpg")],
 			}),

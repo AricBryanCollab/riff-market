@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
-	parseListingPriceInputToCents,
-	priceCentsToDecimalPrice,
+	parseListingPriceInputToAmountMinor,
+	priceAmountMinorToDecimalPrice,
 } from "@/domains/listings/application/listing-money";
 
 const fileSchema = z
@@ -22,7 +22,9 @@ const listingPriceSchema = z
 	.union([z.string(), z.number()])
 	.transform((value, ctx) =>
 		parseWithListingPriceIssue(ctx, () =>
-			priceCentsToDecimalPrice(parseListingPriceInputToCents(value)),
+			priceAmountMinorToDecimalPrice(
+				parseListingPriceInputToAmountMinor(value),
+			),
 		),
 	);
 

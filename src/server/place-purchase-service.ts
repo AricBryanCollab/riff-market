@@ -103,7 +103,7 @@ function toResponse(result: PlacePurchaseResult): PlacePurchaseResponse {
 		purchase: {
 			id: result.purchaseId,
 			purchaseNumber: result.purchaseNumber,
-			totalAmountCents: result.total.amountCents,
+			totalAmountCents: result.total.amountMinor,
 			currencyCode: result.total.currencyCode,
 			paymentStatus: result.paymentStatus,
 			status: result.status,
