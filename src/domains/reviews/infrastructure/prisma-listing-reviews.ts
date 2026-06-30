@@ -86,5 +86,5 @@ function toListingReview(review: ListingReviewRow): ListingReview {
 }
 
 function isUniqueReviewConflict(error: unknown) {
-	return isPrismaUniqueConflict(error, ["listingId", "productId"]);
+	return isPrismaUniqueConflict(error, ["listingId"]);
 }

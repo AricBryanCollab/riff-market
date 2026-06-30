@@ -26,13 +26,13 @@ Clean slate started: 2026-06-11
 | `8` Media | Complete. Media cleanup behavior, queue persistence, account/listing staging, and gated Prisma queue coverage are in place and verified. |
 | `9` API route cleanup | Complete for current delivery. Auth sign-in/sign-up/sign-out moved to TanStack server functions; no `/api/*` routes remain under `src/routes/api`; obsolete auth API wrappers are removed. |
 | `10` Naming and polish | Complete for the non-persistence naming scope. DTO, application, infrastructure-helper, route internals, hooks, utilities, UI components, store files, constants, and visible copy now use listing vocabulary where compatibility allows. Product-to-Listing persistence/schema rename remains future work. |
-| `11` Product-to-Listing Prisma schema bridge | In progress. Generated Prisma vocabulary now exposes `Listing`/`ListingCategory`/`ListingCondition` mapped to existing physical Product table/enum names; physical database renames remain future work. |
+| `11` Product-to-Listing persistence rename | Complete for listing-owned persistence names. Generated Prisma vocabulary exposes `Listing`/`ListingCategory`/`ListingCondition`, and the new SQL migration renames the physical Product table/enums/productId columns, constraints, and indexes in place. |
 
 ## Current Slice 7 State
 
 - Review DTOs, use cases, domain review validation, and Prisma adapter now live under `src/domains/reviews`.
 - `Review` domain vocabulary uses `listingId`.
-- `prisma/schema.prisma` exposes `Review.listingId @map("productId")`, keeping the existing physical database column and constraint names until the later Product-to-Listing persistence rename.
+- `prisma/schema.prisma` now exposes `Review.listingId` directly; the Slice 11 physical persistence rename removed the old `productId` column bridge.
 - `src/server/review-service.ts` composes review use cases over `PrismaListingReviews(prisma)`.
 - `src/server/review.functions.ts` exposes `listListingReviewsFn` and `createListingReviewFn` for app delivery.
 - `/api/reviews` has been deleted; do not reintroduce it without a concrete external HTTP compatibility requirement.
@@ -142,8 +142,8 @@ Clean slate started: 2026-06-11
   - empty/error/loading state exports, listing category/condition options, listing category metadata, local enum types, and visible marketplace copy now use listing vocabulary.
   - cart detail hydration exposes `listing` for fetched listing details while intentionally preserving persisted cart `productId` state.
 - Existing `*ProductApiFn`, `invalidateProductCache`, product cache key strings, and serialized `product` response/request fields remain only as compatibility aliases; they should not be used directly for new app-facing code.
-- Remaining Product vocabulary is now limited to explicit compatibility/persistence boundaries: `/product/*` route paths, query key strings, serialized response/request fields such as `product`, `productId`, and `pendingProductCount`, Cloudinary folder names, media cleanup source names, physical database table/enum/constraint names, and order/cart shapes that must survive the compatibility window.
-- Larger physical persistence rename remains separate: `prisma/schema.prisma` maps generated `Listing` / `ListingCategory` / `ListingCondition` vocabulary to the existing `Product` table and `ProductCategory` / `ProductCondtion` enum names, while legacy `productId` columns remain mapped through listing-named Prisma fields where possible.
+- Remaining Product vocabulary is now limited to explicit compatibility boundaries: `/product/*` route paths, query key strings, serialized response/request fields such as `product`, `productId`, and `pendingProductCount`, Cloudinary folder names, media cleanup source names, and order/cart shapes that must survive the compatibility window.
+- The larger physical persistence rename is complete for listing-owned tables, enums, columns, constraints, and indexes; `prisma/schema.prisma` no longer uses Product bridge mapping for Listing persistence.
 - Final thermo-nuclear review follow-up removed the last non-compatibility naming leaks found in this worktree:
   - app-facing listing files now import `ListingCategory` from the local enum boundary instead of aliasing generated Prisma `ProductCategory` directly.
   - `HeroCarousel` now links to `/product/$id` through the typed route pattern instead of a casted interpolated path with a trailing space.
@@ -152,13 +152,24 @@ Clean slate started: 2026-06-11
 ## Current Slice 11 State
 
 - The next slice after Slice 10 is the Product-to-Listing persistence/schema bridge.
-- `prisma/schema.prisma` now exposes generated Prisma `Listing`, `ListingCategory`, and `ListingCondition` names while preserving the existing physical `Product`, `ProductCategory`, and misspelled `ProductCondtion` database enum/table names through Prisma mapping.
-- Generated Prisma relations now expose `User.listings`, `OrderItem.listingId`, `Review.listingId`, and `Favorite.listingId` where possible, with legacy `productId` column and constraint names mapped for compatibility.
+- `prisma/schema.prisma` now exposes generated Prisma `Listing`, `ListingCategory`, and `ListingCondition` names without Product bridge mapping.
+- `prisma/migrations/20260629130000_rename_product_persistence_to_listing/migration.sql` renames the physical `Product` table to `Listing`, `ProductCategory` to `ListingCategory`, and misspelled `ProductCondtion` to `ListingCondition`.
+- The same migration renames legacy `productId` columns on `OrderItem`, `Review`, and `Favorite` to `listingId`, plus related foreign key constraints, unique indexes, and lookup indexes.
+- Listing-owned physical indexes now use listing names, including the existing `priceCents` index, which is now declared in the Prisma schema as `@@index([priceCents])`.
 - Listing command/read/moderation infrastructure, purchase stock reservation, account media cleanup staging, Prisma seed helpers, and DB-facing test assertions now use `db.listing` and `Prisma.Listing*` generated APIs.
-- No SQL migration was added in this step. Physical table, enum, column, and constraint renames remain the follow-up persistence migration.
+- Remaining product vocabulary is compatibility-only: `/product/*` URLs, product cache key strings, serialized `product` / `productId` fields used by cart/order API shapes, Cloudinary folder names, and media cleanup `PRODUCT` source names.
 
 ## Latest Verification
 
+- Slice 11 physical persistence rename Prisma schema validation passed with the Codex-bundled Node runtime: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js validate --schema prisma/schema.prisma`.
+- Slice 11 physical persistence rename Prisma schema formatting passed with the Codex-bundled Node runtime: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js format --schema prisma/schema.prisma`.
+- Slice 11 physical persistence rename Prisma client generation passed: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js generate --schema prisma/schema.prisma`.
+- `bun run typecheck` passed after the Slice 11 physical persistence rename.
+- Slice 11 focused unit run passed with the Codex-bundled Node runtime and sandbox-safe Vite config loading: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/vitest/vitest.mjs run --config vitest.config.ts --configLoader runner src/domains/media/infrastructure/prisma-account-media-cleanup-staging.test.ts src/server/listing-service.prisma.test.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts src/domains/ordering/application/place-purchase.prisma.test.ts` -> 1 file passed, 3 DB-backed files skipped; 1 test passed, 27 DB-backed tests skipped.
+- Slice 11 schema stale bridge scan passed: `rg -n "@@map|@map\\(|ProductCategory|ProductCondtion|model Product|\\bproductId\\b|Product_sellerId|Product_category|Product_priceCents|Product_isApproved|Product_listingStatus|_productId_|productId_" prisma/schema.prisma` returned no matches.
+- Slice 11 stale generated-Prisma source scan passed: `rg -n "db\\.product|context\\.product|this\\.db\\.product|Prisma\\.Product|ProductCategory|ProductCondtion" src --glob '!routeTree.gen.ts'` returned no matches.
+- `bun run check -- prisma/schema.prisma prisma/migrations/20260629130000_rename_product_persistence_to_listing/migration.sql ddd/progress.md` processed no files because Biome ignores Prisma schema, SQL migrations, and `ddd` docs in this repo.
+- `git diff --check` passed after the Slice 11 physical persistence rename.
 - Slice 11 Prisma schema validation passed with the Codex-bundled Node runtime because the local `node` on PATH is too old for Prisma 7 WASM: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js validate --schema prisma/schema.prisma`.
 - Slice 11 Prisma schema formatting passed with the Codex-bundled Node runtime: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js format --schema prisma/schema.prisma`.
 - Slice 11 Prisma client generation passed: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js generate --schema prisma/schema.prisma`.
@@ -374,7 +385,7 @@ Clean slate started: 2026-06-11
 - Use account application `Result` contracts consistently across command branches; infrastructure persistence failures should not leak branch-specific exception behavior when the use case promises typed account errors.
 - Treat database unique constraints as the registration invariant boundary; sign-up may avoid a pre-check, but the adapter must map duplicate-email writes to the account auth error result.
 - Treat the review one-per-user/listing rule as a database-backed uniqueness invariant; the review adapter maps the unique constraint to `REVIEW_ALREADY_EXISTS`.
-- Keep `productId` out of review domain/application/service/server-function vocabulary; use `listingId` and let Prisma `@map("productId")` bridge the old column until Slice `10`.
+- Keep `productId` out of review domain/application/service/server-function vocabulary; review persistence now uses physical `listingId` after the Slice 11 persistence rename.
 - Queue persisted listing image cleanup as media cleanup jobs with `PRODUCT` source metadata; keep direct best-effort deletion for uploaded images that were never persisted because `MediaCleanupJob` requires a concrete source row identity.
 - Keep Product-to-Listing persistence rename separate from low-risk DTO/hook naming cleanup unless the session intentionally takes on the schema/generation slice.
 - Destructive DB tests require `RUN_DB_TESTS=1` and `TEST_DATABASE_URL`; do not use `DATABASE_URL` for this harness.
@@ -393,10 +404,10 @@ Clean slate started: 2026-06-11
 
 ## Exact Next Recommended Task
 
-Continue Slice `10` under the clarified UI vocabulary rule before calling it complete.
+Continue only compatibility-boundary cleanup that is explicitly scoped.
 
 Recommended next step:
 
-1. Audit remaining UI/delivery `Product` vocabulary that is not an explicit compatibility boundary, especially product-card/filter/pending-list components, cart-details local loading/error aliases, home mock/prop names, and shop/home empty/loading/error component names/copy.
-2. Keep Prisma/database Product-to-Listing schema/generation/migration work separate unless that schema slice is explicitly scoped.
+1. Run the gated DB suite against a disposable `TEST_DATABASE_URL` to exercise the physical Listing migration and DB-backed listing/order/review flows.
+2. If product-shaped serialized fields are intentionally retired later, handle them as a separate compatibility-breaking API/cart/order-shape slice.
 3. Before PR handoff, either run an auth browser smoke for sign-in/sign-up/sign-out or explicitly keep the current no-browser-smoke risk noted.
