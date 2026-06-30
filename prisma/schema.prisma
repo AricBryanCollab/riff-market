@@ -255,8 +255,7 @@ model Listing {
   model         String
   images        Json
   description   String
-  price         Float
-  priceCents    Int?
+  priceCents    Int
   currencyCode  String           @default("USD")
   stock         Int
   isApproved    Boolean

@@ -25,7 +25,7 @@ type ListingForPurchase = {
 	readonly brand: string;
 	readonly model: string;
 	readonly images: Prisma.JsonValue;
-	readonly priceCents: number | null;
+	readonly priceCents: number;
 	readonly currencyCode: string;
 	readonly stock: number;
 	readonly listingStatus: ListingStatus;
@@ -179,16 +179,6 @@ function aggregateRequestedItems(items: PlacePurchaseItem[]) {
 }
 
 function toListing(listing: ListingForPurchase) {
-	if (listing.priceCents === null) {
-		return err(
-			placePurchaseError(
-				"PLACE_PURCHASE_INVARIANT_FAILED",
-				`Listing ${listing.id} is missing cent-based price data`,
-				"invariant",
-			),
-		);
-	}
-
 	const primaryImageUrl = getPrimaryImageUrl(listing.images);
 	if (!primaryImageUrl) {
 		return err(

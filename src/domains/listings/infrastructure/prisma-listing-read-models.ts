@@ -32,7 +32,6 @@ const listingReadSelect = {
 	model: true,
 	images: true,
 	description: true,
-	price: true,
 	priceCents: true,
 	currencyCode: true,
 	stock: true,
@@ -213,19 +212,7 @@ function toApprovedListingWhere(
 				{ model: { contains: query.search, mode: "insensitive" } },
 			],
 		}),
-		...(priceRange && {
-			AND: [
-				{
-					OR: [
-						{ priceCents: priceRange.priceCents },
-						{
-							priceCents: null,
-							price: priceRange.legacyPrice,
-						},
-					],
-				},
-			],
-		}),
+		...(priceRange && { priceCents: priceRange }),
 	};
 }
 

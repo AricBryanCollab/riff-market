@@ -1,15 +1,13 @@
 export const DEFAULT_LISTING_CURRENCY_CODE = "USD";
 
 export type ListingMoneyPersistence = {
-	price: number;
 	priceCents: number;
 	currencyCode: string;
 };
 
 export type ListingMoneySource = {
-	price: number;
-	priceCents?: number | null;
-	currencyCode?: string | null;
+	priceCents: number;
+	currencyCode: string;
 };
 
 type ListingPriceRangeInput = {
@@ -18,14 +16,8 @@ type ListingPriceRangeInput = {
 };
 
 type ListingPriceRangePersistence = {
-	priceCents: {
-		gte?: number;
-		lte?: number;
-	};
-	legacyPrice: {
-		gte?: number;
-		lte?: number;
-	};
+	gte?: number;
+	lte?: number;
 };
 
 const decimalPricePattern = /^(\d+)(?:\.(\d+))?$/;
@@ -46,12 +38,6 @@ export function parseOptionalListingPriceInputToCents(
 	return parseListingPriceInputToCents(price);
 }
 
-export function legacyFloatPriceToCents(price: number): number {
-	assertFiniteNonNegativeNumber(price);
-
-	return decimalPriceStringToCents(String(price));
-}
-
 export function priceCentsToDecimalPrice(priceCents: number): number {
 	assertSafeNonNegativeInteger(priceCents, "Listing price cents");
 
@@ -64,7 +50,6 @@ export function toListingMoneyPersistence(
 	const priceCents = parseListingPriceInputToCents(price);
 
 	return {
-		price: priceCentsToDecimalPrice(priceCents),
 		priceCents,
 		currencyCode: DEFAULT_LISTING_CURRENCY_CODE,
 	};
@@ -77,14 +62,9 @@ export function normalizeListingMoney<T extends ListingMoneySource>(
 	priceCents: number;
 	currencyCode: string;
 } {
-	const priceCents =
-		listing.priceCents ?? legacyFloatPriceToCents(listing.price);
-
 	return {
 		...listing,
-		price: priceCentsToDecimalPrice(priceCents),
-		priceCents,
-		currencyCode: listing.currencyCode ?? DEFAULT_LISTING_CURRENCY_CODE,
+		price: priceCentsToDecimalPrice(listing.priceCents),
 	};
 }
 
@@ -105,18 +85,8 @@ export function toListingPriceRangePersistence({
 	}
 
 	return {
-		priceCents: {
-			...(priceMinCents !== undefined && { gte: priceMinCents }),
-			...(priceMaxCents !== undefined && { lte: priceMaxCents }),
-		},
-		legacyPrice: {
-			...(priceMinCents !== undefined && {
-				gte: priceCentsToDecimalPrice(priceMinCents),
-			}),
-			...(priceMaxCents !== undefined && {
-				lte: priceCentsToDecimalPrice(priceMaxCents),
-			}),
-		},
+		...(priceMinCents !== undefined && { gte: priceMinCents }),
+		...(priceMaxCents !== undefined && { lte: priceMaxCents }),
 	};
 }
 

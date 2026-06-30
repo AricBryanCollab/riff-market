@@ -86,29 +86,19 @@ describeDb("Prisma listing read models", () => {
 		]);
 	});
 
-	it("applies cent-based price filters with legacy float fallback for approved listings", async () => {
+	it("applies cent-based price filters for approved listings", async () => {
 		await seedProduct(db, {
 			id: "cent-priced",
 			name: "Cent Priced",
 			listingStatus: "APPROVED",
 			isApproved: true,
-			price: 199.95,
 			priceCents: 19995,
-		});
-		await seedProduct(db, {
-			id: "legacy-priced",
-			name: "Legacy Priced",
-			listingStatus: "APPROVED",
-			isApproved: true,
-			price: 199.95,
-			priceCents: null,
 		});
 		await seedProduct(db, {
 			id: "outside-range",
 			name: "Outside Range",
 			listingStatus: "APPROVED",
 			isApproved: true,
-			price: 350,
 			priceCents: 35000,
 		});
 
@@ -120,10 +110,7 @@ describeDb("Prisma listing read models", () => {
 			priceMaxCents: 19995,
 		});
 
-		expect(listings.map((listing) => listing.id).sort()).toEqual([
-			"cent-priced",
-			"legacy-priced",
-		]);
+		expect(listings.map((listing) => listing.id)).toEqual(["cent-priced"]);
 	});
 
 	it("applies category, condition, brand, and search filters to approved listings", async () => {

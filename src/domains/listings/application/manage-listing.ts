@@ -39,7 +39,10 @@ export type ListingImageCleanupSource = {
 	readonly sellerId: string;
 };
 
-export type ListingMutationPersistenceInput = ListingMutationFields & {
+export type ListingMutationPersistenceInput = Omit<
+	ListingMutationFields,
+	"price"
+> & {
 	readonly sellerId?: string;
 	readonly images?: ImageAssetRef[];
 	readonly priceCents?: number;
@@ -59,8 +62,8 @@ export type ListingMutationResult = {
 	readonly images: ImageAssetRef[];
 	readonly description: string;
 	readonly price: number;
-	readonly priceCents?: number | null;
-	readonly currencyCode?: string | null;
+	readonly priceCents: number;
+	readonly currencyCode: string;
 	readonly stock: number;
 	readonly isApproved: boolean;
 	readonly listingStatus: ListingStatus;
@@ -334,9 +337,10 @@ function hasReferences(snapshot: ListingRemovalSnapshot) {
 	return Object.values(snapshot.referenceCounts).some((count) => count > 0);
 }
 
-function toPersistenceFields(
-	fields: ListingMutationFields,
-): ListingMutationFields & {
+function toPersistenceFields(fields: ListingMutationFields): Omit<
+	ListingMutationFields,
+	"price"
+> & {
 	readonly priceCents?: number;
 	readonly currencyCode?: string;
 } {

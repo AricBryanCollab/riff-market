@@ -151,8 +151,7 @@ type TestListingSeed = {
 	readonly model?: string;
 	readonly images?: readonly ImageAssetRef[];
 	readonly description?: string;
-	readonly price?: number;
-	readonly priceCents?: number | null;
+	readonly priceCents?: number;
 	readonly currencyCode?: string;
 	readonly stock?: number;
 	readonly isApproved?: boolean;
@@ -164,9 +163,6 @@ type TestListingSeed = {
 export async function seedListing(db: PrismaClient, listing: TestListingSeed) {
 	const priceCents =
 		listing.priceCents === undefined ? 19995 : listing.priceCents;
-	const price =
-		listing.price ??
-		(typeof priceCents === "number" ? priceCents / 100 : 199.95);
 
 	await db.listing.create({
 		data: {
@@ -184,7 +180,6 @@ export async function seedListing(db: PrismaClient, listing: TestListingSeed) {
 				},
 			],
 			description: listing.description ?? "A test listing",
-			price,
 			priceCents,
 			currencyCode: listing.currencyCode ?? "USD",
 			stock: listing.stock ?? 2,

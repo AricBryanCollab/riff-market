@@ -15,7 +15,7 @@ Clean slate started: 2026-06-11
 | --- | --- |
 | `-1` Characterization and risk tests | Complete. Customer order-read ownership gap was fixed; old fake-order schema details are not compatibility requirements. |
 | `0` Foundation | Complete. Shared DDD folders, `Actor`, domain events, result/errors, unit-of-work boundary, and `Money` are in place. |
-| `0.5` Money persistence | Complete for current migration bridge. `Product.priceCents` / `currencyCode` exist, product writes dual-write, reads prefer cents. |
+| `0.5` Money persistence | Complete. Listing price persistence is cents-only: `Listing.priceCents` is required, `currencyCode` remains required, and the old Float `price` column has a drop migration. |
 | `1` Place Purchase | Complete for current path. Checkout goes through `placePurchaseFn` -> `PlacePurchase`, with real Prisma transaction, guarded stock, `Purchase`, `SellerOrder`, and same-transaction notifications. |
 | `2` Purchase and SellerOrder lifecycle | Complete for active delivery. Order list/detail/status flows use TanStack server functions and target read/status modules; old `/api/orders` route family and fake order repo/action code are removed. |
 | `3` Listing lifecycle | Complete for active listing commands. Create/update/delete/withdraw/moderate use listing server functions; decline retains `DECLINED`; referenced removal marks `WITHDRAWN`; old product command routes/actions/repos are removed. |
@@ -25,7 +25,7 @@ Clean slate started: 2026-06-11
 | `7` Reviews | Complete for active server-function behavior. Review domain/use cases, Prisma adapter, server functions, and gated DB coverage are in place. |
 | `8` Media | Complete. Media cleanup behavior, queue persistence, account/listing staging, and gated Prisma queue coverage are in place and verified. |
 | `9` API route cleanup | Complete for current delivery. Auth sign-in/sign-up/sign-out moved to TanStack server functions; no `/api/*` routes remain under `src/routes/api`; obsolete auth API wrappers are removed. |
-| `10` Naming and polish | Complete for the non-persistence naming scope. DTO, application, infrastructure-helper, route internals, hooks, utilities, UI components, store files, constants, and visible copy now use listing vocabulary where compatibility allows. Product-to-Listing persistence/schema rename remains future work. |
+| `10` Naming and polish | Complete for the non-persistence naming scope. DTO, application, infrastructure-helper, route internals, hooks, utilities, UI components, store files, constants, and visible copy now use listing vocabulary where compatibility allows. |
 | `11` Product-to-Listing persistence rename | Complete for listing-owned persistence names. Generated Prisma vocabulary exposes `Listing`/`ListingCategory`/`ListingCondition`, and the new SQL migration renames the physical Product table/enums/productId columns, constraints, and indexes in place. |
 
 ## Current Slice 7 State
@@ -159,8 +159,25 @@ Clean slate started: 2026-06-11
 - Listing command/read/moderation infrastructure, purchase stock reservation, account media cleanup staging, Prisma seed helpers, and DB-facing test assertions now use `db.listing` and `Prisma.Listing*` generated APIs.
 - Remaining product vocabulary is compatibility-only: `/product/*` URLs, product cache key strings, serialized `product` / `productId` fields used by cart/order API shapes, Cloudinary folder names, and media cleanup `PRODUCT` source names.
 
+## Current Money Cutover State
+
+- The approved deferred money work is complete in code: `prisma/schema.prisma` removed the legacy Float `Listing.price` column, made `Listing.priceCents` required, and keeps `currencyCode` required.
+- `prisma/migrations/20260630090000_drop_listing_float_price/migration.sql` backfills any null cents from the old Float column, sets `priceCents` non-null, adds a non-negative check constraint, and drops `price`.
+- Listing command, read-model, moderation, purchase-reservation, and test fixture code no longer writes, selects, filters, or falls back to a persisted Float listing price.
+- UI/read DTOs still expose decimal `price` as a compatibility presentation field derived from `priceCents`.
+
 ## Latest Verification
 
+- Money Float cutover Prisma schema formatting passed with the Codex-bundled Node runtime: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js format --schema prisma/schema.prisma`.
+- Money Float cutover Prisma schema validation passed with the Codex-bundled Node runtime: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js validate --schema prisma/schema.prisma`.
+- Money Float cutover Prisma client generation passed: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js generate --schema prisma/schema.prisma`.
+- Money Float cutover touched-file Biome passed: `bun run check -- src/domains/listings/application/listing-money.ts src/domains/listings/application/listing-money.test.ts src/domains/listings/application/manage-listing.ts src/domains/listings/application/manage-listing.test.ts src/domains/listings/dto/listing-command.ts src/domains/listings/dto/listing-read-model.ts src/domains/listings/infrastructure/prisma-listing-commands.ts src/domains/listings/infrastructure/prisma-listing-read-models.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts src/domains/listings/infrastructure/prisma-listing-moderation.ts src/domains/ordering/infrastructure/prisma-listings-for-purchase.ts src/components/home/mocks.ts src/test/prisma-test-data.ts src/server/listing-service.prisma.test.ts`.
+- Money Float cutover focused unit run passed with the Codex-bundled Node runtime and sandbox-safe Vite config loading: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/vitest/vitest.mjs run --config vitest.config.ts --configLoader runner src/domains/listings/application/listing-money.test.ts src/domains/listings/application/manage-listing.test.ts src/server/listing-read-service.test.ts src/server/listing-service.prisma.test.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts src/domains/ordering/application/place-purchase.prisma.test.ts` -> 3 files passed, 3 DB-backed files skipped; 20 tests passed, 27 DB-backed tests skipped.
+- `bun run typecheck` passed after the Money Float cutover.
+- Money Float stale bridge scan passed: `rg -n "\\bprice\\s+Float\\b|\\bprice:\\s*true\\b|legacyFloatPriceToCents|legacyPrice|priceCents:\\s*null|priceCents\\?: number \\| null|currencyCode\\?: string \\| null|missing cent-based price data" prisma/schema.prisma src --glob '!generated/**'` returned no production bridge matches.
+- Docker Desktop was started and the existing `riff-ddd-postgres` container was started to provide local Postgres on `localhost:5432`.
+- Money Float cutover migrations applied cleanly to the disposable `.env` `TEST_DATABASE_URL` database (`riff_market_test`) with Prisma migrate deploy; the applied migrations were `20260629130000_rename_product_persistence_to_listing` and `20260630090000_drop_listing_float_price`.
+- Full gated DB suite passed with the Codex-bundled Node runtime after Docker/Postgres startup: `bun --env-file=.env -e '...'` invoking `node_modules/vitest/vitest.mjs run --config vitest.db.config.ts --configLoader runner` with `RUN_DB_TESTS=1` -> 9 files passed, 51 tests passed.
 - Slice 11 physical persistence rename Prisma schema validation passed with the Codex-bundled Node runtime: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js validate --schema prisma/schema.prisma`.
 - Slice 11 physical persistence rename Prisma schema formatting passed with the Codex-bundled Node runtime: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js format --schema prisma/schema.prisma`.
 - Slice 11 physical persistence rename Prisma client generation passed: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js generate --schema prisma/schema.prisma`.

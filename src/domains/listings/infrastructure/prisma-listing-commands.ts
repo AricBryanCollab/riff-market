@@ -27,7 +27,6 @@ const listingCommandSelect = {
 	model: true,
 	images: true,
 	description: true,
-	price: true,
 	priceCents: true,
 	currencyCode: true,
 	stock: true,
@@ -63,7 +62,7 @@ export class PrismaListingCommandRepository
 	async createListing(
 		input: ListingMutationPersistenceInput,
 	): Promise<ListingMutationResult | null> {
-		if (!input.sellerId || !input.images) {
+		if (!input.sellerId || !input.images || input.priceCents === undefined) {
 			return null;
 		}
 
@@ -77,7 +76,6 @@ export class PrismaListingCommandRepository
 				model: input.model ?? "",
 				images: input.images as unknown as Prisma.InputJsonValue,
 				description: input.description ?? "",
-				price: input.price ?? 0,
 				priceCents: input.priceCents,
 				currencyCode: input.currencyCode ?? "USD",
 				stock: input.stock ?? 0,
@@ -161,7 +159,6 @@ function toUpdateData(
 		...(input.brand !== undefined && { brand: input.brand }),
 		...(input.model !== undefined && { model: input.model }),
 		...(input.description !== undefined && { description: input.description }),
-		...(input.price !== undefined && { price: input.price }),
 		...(input.priceCents !== undefined && { priceCents: input.priceCents }),
 		...(input.currencyCode !== undefined && {
 			currencyCode: input.currencyCode,
@@ -205,7 +202,6 @@ function toRemovalSnapshot(
 ): ListingRemovalSnapshot {
 	const imageRefs = toImageAssetRefs(listing.images);
 	const imageUrls = toImageAssetUrls(listing.images);
-	const priceCents = listing.priceCents ?? Math.round(listing.price * 100);
 
 	return {
 		id: listing.id,
@@ -217,7 +213,7 @@ function toRemovalSnapshot(
 		category: listing.category,
 		condition: listing.condition,
 		primaryImageUrl: imageUrls[0] ?? "missing-image",
-		price: Money.fromCents(priceCents, listing.currencyCode ?? "USD"),
+		price: Money.fromCents(listing.priceCents, listing.currencyCode),
 		stock: listing.stock,
 		status: listing.listingStatus,
 		images: imageRefs,

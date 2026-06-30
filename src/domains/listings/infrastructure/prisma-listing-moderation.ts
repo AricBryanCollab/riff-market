@@ -26,7 +26,6 @@ const listingModerationSelect = {
 	category: true,
 	condition: true,
 	images: true,
-	price: true,
 	priceCents: true,
 	currencyCode: true,
 	stock: true,
@@ -58,7 +57,6 @@ export class PrismaListingModerationRepository
 		}
 
 		const imageUrls = toImageAssetUrls(listing.images);
-		const priceCents = listing.priceCents ?? Math.round(listing.price * 100);
 
 		return {
 			id: listing.id,
@@ -72,7 +70,7 @@ export class PrismaListingModerationRepository
 			category: listing.category,
 			condition: listing.condition,
 			primaryImageUrl: imageUrls[0] ?? "",
-			price: Money.fromCents(priceCents, listing.currencyCode ?? "USD"),
+			price: Money.fromCents(listing.priceCents, listing.currencyCode),
 			stock: listing.stock,
 			status: listing.listingStatus,
 		};

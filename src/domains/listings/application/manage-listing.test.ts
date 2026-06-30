@@ -114,7 +114,7 @@ function createFakes() {
 }
 
 describe("listing command use cases", () => {
-	it("creates seller listings as pending and dual-writes product money", async () => {
+	it("creates seller listings as pending with cent-based price persistence", async () => {
 		const { repository, images, dependencies } = createFakes();
 
 		const result = await createListing(
@@ -140,7 +140,6 @@ describe("listing command use cases", () => {
 				sellerId: "seller-1",
 				status: "PENDING",
 				isApproved: false,
-				price: 199.95,
 				priceCents: 19995,
 				currencyCode: "USD",
 				images: [image("https://cdn.example.com/new.jpg")],

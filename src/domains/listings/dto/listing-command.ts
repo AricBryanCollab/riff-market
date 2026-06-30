@@ -27,8 +27,8 @@ export type ListingMutationDto = {
 	readonly images: string[];
 	readonly description: string;
 	readonly price: number;
-	readonly priceCents?: number | null;
-	readonly currencyCode?: string | null;
+	readonly priceCents: number;
+	readonly currencyCode: string;
 	readonly stock: number;
 	readonly isApproved: boolean;
 	readonly listingStatus?: ListingStatus;

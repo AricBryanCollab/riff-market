@@ -65,7 +65,7 @@ describeDb("listing service Prisma integration", () => {
 		);
 
 		expect(response).toMatchObject({
-			message: "New product has been added",
+			message: "New listing has been added",
 			product: {
 				sellerId: "seller-1",
 				name: "Smoke Telecaster",
@@ -86,7 +86,6 @@ describeDb("listing service Prisma integration", () => {
 		expect(listing).toMatchObject({
 			sellerId: "seller-1",
 			name: "Smoke Telecaster",
-			price: 199.95,
 			priceCents: 19995,
 			currencyCode: "USD",
 			isApproved: false,
