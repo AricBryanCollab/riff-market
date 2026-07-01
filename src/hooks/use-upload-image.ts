@@ -1,15 +1,50 @@
 import { useRef, useState } from "react";
 
-export interface ImageFile {
-	file: File;
-	preview: string;
+export type ExistingImageFile = {
+	readonly kind: "existing";
+	readonly imageId: string;
+	readonly url: string;
+	readonly preview: string;
+};
+
+export type NewImageFile = {
+	readonly kind: "new";
+	readonly file: File;
+	readonly preview: string;
+};
+
+export type ImageFile = ExistingImageFile | NewImageFile;
+export type ImageFileChange<TImage extends ImageFile> = Array<
+	TImage | NewImageFile
+>;
+
+export function existingImageFile(image: {
+	readonly imageId: string;
+	readonly url: string;
+}): ExistingImageFile {
+	return {
+		kind: "existing",
+		imageId: image.imageId,
+		url: image.url,
+		preview: image.url,
+	};
 }
 
-const useUploadImage = (
-	images: ImageFile[],
+export function isNewImageFile(image: ImageFile): image is NewImageFile {
+	return image.kind === "new";
+}
+
+export function isExistingImageFile(
+	image: ImageFile,
+): image is ExistingImageFile {
+	return image.kind === "existing";
+}
+
+const useUploadImage = <TImage extends ImageFile>(
+	images: TImage[],
 	maxImages: number,
 	maxSizeMB: number,
-	onChange: (images: ImageFile[]) => void,
+	onChange: (images: ImageFileChange<TImage>) => void,
 ) => {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [dragActive, setDragActive] = useState(false);
@@ -27,7 +62,7 @@ const useUploadImage = (
 			return;
 		}
 
-		const newImages: ImageFile[] = [];
+		const newImages: NewImageFile[] = [];
 
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
@@ -45,7 +80,7 @@ const useUploadImage = (
 			}
 
 			const preview = URL.createObjectURL(file);
-			newImages.push({ file, preview });
+			newImages.push({ kind: "new", file, preview });
 		}
 
 		if (newImages.length > 0) {
@@ -59,10 +94,28 @@ const useUploadImage = (
 	};
 
 	const handleRemoveImage = (index: number) => {
-		URL.revokeObjectURL(images[index].preview);
+		const image = images[index];
 
-		const newImages = images.filter((_, i) => i !== index);
-		onChange(newImages);
+		if (image && isNewImageFile(image)) {
+			URL.revokeObjectURL(image.preview);
+		}
+
+		const remainingImages = images.filter((_, i) => i !== index);
+		onChange(remainingImages);
+		setError("");
+	};
+
+	const handleMoveImage = (index: number, direction: -1 | 1) => {
+		const targetIndex = index + direction;
+
+		if (targetIndex < 0 || targetIndex >= images.length) {
+			return;
+		}
+
+		const reorderedImages = [...images];
+		const [image] = reorderedImages.splice(index, 1);
+		reorderedImages.splice(targetIndex, 0, image);
+		onChange(reorderedImages);
 		setError("");
 	};
 
@@ -107,6 +160,7 @@ const useUploadImage = (
 		triggerFileInput,
 		handleDragEnter,
 		handleRemoveImage,
+		handleMoveImage,
 		handleDrop,
 		handleInputChange,
 		handleDragLeave,

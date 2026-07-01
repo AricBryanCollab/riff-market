@@ -17,7 +17,7 @@ const useShopPagination = () => {
 		useApprovedListings(approvedFilters);
 
 	const totalListings =
-		(listingCount as ApprovedListingCount | undefined)?.approvedProductCount ??
+		(listingCount as ApprovedListingCount | undefined)?.approvedListingCount ??
 		0;
 
 	const totalPages = Math.ceil(totalListings / pageSize);

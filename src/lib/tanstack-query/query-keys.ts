@@ -4,6 +4,21 @@ import type {
 } from "@/domains/listings/dto/listing-read-model";
 import type { UserRole } from "@/types/enum";
 
+const listingKeys = {
+	root: ["listings"] as const,
+	approved: (filters: ApprovedListingSearchFilterQuery) =>
+		["listings", "approved", filters] as const,
+	cartDetails: (listingIds: readonly string[]) =>
+		["listings", "cart-details", listingIds] as const,
+	countByCategory: ["listings", "count", "by-category"] as const,
+	countByStatus: (status: ListingCountStatusQuery) =>
+		["listings", "count", status] as const,
+	detail: (id: string) => ["listings", "detail", id] as const,
+	featured: ["listings", "featured"] as const,
+	pending: ["listings", "pending"] as const,
+	recent: ["listings", "recent"] as const,
+};
+
 export const queryKeys = {
 	auth: {
 		root: ["auth"] as const,
@@ -17,18 +32,5 @@ export const queryKeys = {
 		root: ["orders"] as const,
 		byRole: (userRole: UserRole) => ["orders", userRole] as const,
 	},
-	products: {
-		root: ["products"] as const,
-		approved: (filters: ApprovedListingSearchFilterQuery) =>
-			["products", "approved", filters] as const,
-		cartDetails: (productIds: readonly string[]) =>
-			["products", "cart-details", productIds] as const,
-		countByCategory: ["products", "count", "by-category"] as const,
-		countByStatus: (status: ListingCountStatusQuery) =>
-			["products", "count", status] as const,
-		detail: (id: string) => ["products", "detail", id] as const,
-		featured: ["products", "featured"] as const,
-		pending: ["products", "pending"] as const,
-		recent: ["products", "recent"] as const,
-	},
+	listings: listingKeys,
 };

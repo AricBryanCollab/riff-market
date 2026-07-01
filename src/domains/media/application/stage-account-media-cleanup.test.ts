@@ -8,19 +8,19 @@ import {
 } from "./stage-account-media-cleanup";
 
 describe("stageAccountMediaForCleanup", () => {
-	it("stages profile and product media cleanup jobs as one account media inventory", async () => {
+	it("stages profile and listing media cleanup jobs as one account media inventory", async () => {
 		const staging = new InMemoryAccountMediaCleanupStaging({
 			profile: {
 				settingsId: "settings-1",
 				profilePic: image("avatars/user-1"),
 			},
-			products: [
+			listings: [
 				{
-					productId: "product-1",
+					listingId: "listing-1",
 					images: [
-						image("products/one"),
-						image("products/two"),
-						image("products/two"),
+						image("listings/one"),
+						image("listings/two"),
+						image("listings/two"),
 						image(""),
 					],
 				},
@@ -44,14 +44,14 @@ describe("stageAccountMediaForCleanup", () => {
 			{
 				cleanupBatchId: "batch-1",
 				accountId: "user-1",
-				source: { kind: "product", id: "product-1" },
-				asset: image("products/one"),
+				source: { kind: "listing", id: "listing-1" },
+				asset: image("listings/one"),
 			},
 			{
 				cleanupBatchId: "batch-1",
 				accountId: "user-1",
-				source: { kind: "product", id: "product-1" },
-				asset: image("products/two"),
+				source: { kind: "listing", id: "listing-1" },
+				asset: image("listings/two"),
 			},
 		]);
 	});
@@ -59,9 +59,9 @@ describe("stageAccountMediaForCleanup", () => {
 	it("does not call the staging port when there are no cleanup jobs", async () => {
 		const staging = new InMemoryAccountMediaCleanupStaging({
 			profile: null,
-			products: [
+			listings: [
 				{
-					productId: "product-1",
+					listingId: "listing-1",
 					images: [image("")],
 				},
 			],

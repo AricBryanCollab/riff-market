@@ -81,8 +81,8 @@ export async function createListingModerationNotification(
 	const sellerId = input.event.payload.sellerId;
 	const message =
 		input.event.eventName === "ListingApproved"
-			? `Great News! Your product ${input.listingName} has been approved and live at the RiffMarket shop`
-			: `Your product ${input.listingName} has been declined by the admin`;
+			? `Great News! Your listing ${input.listingName} has been approved and live at the RiffMarket shop`
+			: `Your listing ${input.listingName} has been declined by the admin`;
 
 	await createOrThrow(notifications, {
 		userId: sellerId,

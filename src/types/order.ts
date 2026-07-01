@@ -1,11 +1,16 @@
 import type { OrderDisplayStatus, PaymentMethod } from "@/types/enum";
 
 export interface OrderItem {
-	productId: string;
+	listingId: string;
 	quantity: number;
 }
 
-export interface OrderItemWithPricing extends OrderItem {
+interface OrderDisplayItem {
+	listingId: string;
+	quantity: number;
+}
+
+export interface OrderItemWithPricing extends OrderDisplayItem {
 	unitPrice: number;
 	subTotal: number;
 }
@@ -29,7 +34,7 @@ interface SellerDetails {
 interface OrderItemResponse extends OrderItemWithPricing {
 	id: string;
 	orderId: string;
-	product: {
+	listing: {
 		id: string;
 		name: string;
 		images: string[];

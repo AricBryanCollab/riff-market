@@ -16,10 +16,6 @@ export class Money {
 		return new Money(amountMinor, currencyCode);
 	}
 
-	static fromCents(amountCents: number, currencyCode: string): Money {
-		return Money.fromMinor(amountCents, currencyCode);
-	}
-
 	static zero(currencyCode: string): Money {
 		return Money.fromMinor(0, currencyCode);
 	}
@@ -67,10 +63,6 @@ export class Money {
 		this.assertSameCurrency(other);
 
 		return this.amountMinor < other.amountMinor;
-	}
-
-	get amountCents() {
-		return this.amountMinor;
 	}
 
 	toJSON() {

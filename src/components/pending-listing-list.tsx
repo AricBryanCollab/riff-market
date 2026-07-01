@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { formatRelativeTime } from "@/utils/format-date";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 interface PendingListingListProps {
 	pendingListings: ListingReadDto[];
@@ -75,13 +76,13 @@ const PendingListingList = ({
 							>
 								<div className="flex gap-3">
 									{/* Listing Image */}
-									{listing.images?.[0] && (
-										<div className="relative size-16 shrink-0 rounded-md overflow-hidden bg-muted border border-border">
-											<img
-												src={listing.images[0]}
-												alt={listing.name}
-												className="w-full h-full object-cover"
-											/>
+										{listing.images?.[0] && (
+											<div className="relative size-16 shrink-0 rounded-md overflow-hidden bg-muted border border-border">
+												<img
+													src={listing.images[0].url}
+													alt={listing.name}
+													className="w-full h-full object-cover"
+												/>
 										</div>
 									)}
 
@@ -108,7 +109,10 @@ const PendingListingList = ({
 
 										<div className="flex items-center justify-between pt-0.5">
 											<span className="text-sm font-semibold text-foreground">
-												${listing.price.toFixed(2)}
+												{formatMoneyAmountMinor(
+													listing.priceAmountMinor,
+													listing.currencyCode,
+												)}
 											</span>
 											<span className="text-xs text-muted-foreground">
 												{formatRelativeTime(listing?.createdAt || "NaN")}

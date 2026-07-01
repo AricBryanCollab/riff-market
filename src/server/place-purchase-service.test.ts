@@ -23,7 +23,7 @@ const customer: ServerUserContext = {
 };
 
 const validInput: PlacePurchaseInput = {
-	items: [{ productId: "listing-1", quantity: 2 }],
+	items: [{ listingId: "listing-1", quantity: 2 }],
 	shippingAddress: "123 Market St",
 	paymentMethod: "CASH",
 };
@@ -96,16 +96,26 @@ describe("placePurchaseForCurrentUser", () => {
 
 	it("validates and trims the checkout input", () => {
 		const input = validatePlacePurchaseInput({
-			items: [{ productId: " listing-1 ", quantity: 1 }],
+			items: [{ listingId: " listing-1 ", quantity: 1 }],
 			shippingAddress: " 123 Market St ",
 			paymentMethod: "VISA",
 		});
 
 		expect(input).toEqual({
-			items: [{ productId: "listing-1", quantity: 1 }],
+			items: [{ listingId: "listing-1", quantity: 1 }],
 			shippingAddress: "123 Market St",
 			paymentMethod: "VISA",
 		});
+	});
+
+	it("rejects checkout items without listing IDs", () => {
+		expect(() =>
+			validatePlacePurchaseInput({
+				items: [{ productId: "listing-1", quantity: 1 }],
+				shippingAddress: "123 Market St",
+				paymentMethod: "VISA",
+			}),
+		).toThrow("Invalid order data");
 	});
 
 	it("rejects invalid checkout input before use-case execution", () => {

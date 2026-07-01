@@ -51,8 +51,8 @@ export class PrismaAccountMediaCleanupStaging
 						profilePic: toCleanupImageAssetRef(settings.profilePic),
 					}
 				: null,
-			products: listings.map((listing) => ({
-				productId: listing.id,
+			listings: listings.map((listing) => ({
+				listingId: listing.id,
 				images: toCleanupImageAssetRefs(listing.images),
 			})),
 		};
@@ -88,10 +88,10 @@ function toPrismaCleanupJobInput(
 function toPrismaSourceType(
 	sourceKind: StagedAccountMediaCleanupJob["source"]["kind"],
 ) {
-	switch (sourceKind) {
-		case "profile":
-			return MediaCleanupJobSourceType.USER_PROFILE;
-		case "product":
-			return MediaCleanupJobSourceType.PRODUCT;
+		switch (sourceKind) {
+			case "profile":
+				return MediaCleanupJobSourceType.USER_PROFILE;
+			case "listing":
+				return MediaCleanupJobSourceType.LISTING;
+		}
 	}
-}

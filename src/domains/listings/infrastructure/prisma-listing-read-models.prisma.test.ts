@@ -3,7 +3,7 @@ import { beforeEach, expect, it } from "vitest";
 import {
 	describeDb,
 	seedMarketplaceUsers,
-	seedListing as seedProduct,
+	seedListing,
 	setupPrismaTestDatabase,
 } from "@/test/prisma-vitest-support";
 import { PrismaListingReadModels } from "./prisma-listing-read-models";
@@ -35,34 +35,34 @@ describeDb("Prisma listing read models", () => {
 	});
 
 	it("searches only approved listings through the listing read model", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "approved-1",
 			name: "Approved Telecaster",
 			listingStatus: "APPROVED",
 			isApproved: true,
 			createdAt: new Date("2026-06-18T03:00:00.000Z"),
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "approved-status-only",
 			name: "Approved Status Only",
 			listingStatus: "APPROVED",
 			isApproved: false,
 			createdAt: new Date("2026-06-18T02:00:00.000Z"),
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "legacy-flag-only",
 			name: "Legacy Flag Only",
 			listingStatus: "WITHDRAWN",
 			isApproved: true,
 			createdAt: new Date("2026-06-18T01:00:00.000Z"),
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "declined-1",
 			name: "Declined Listing",
 			listingStatus: "DECLINED",
 			isApproved: false,
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "pending-1",
 			name: "Pending Listing",
 			listingStatus: "PENDING",
@@ -82,19 +82,22 @@ describeDb("Prisma listing read models", () => {
 			"approved-status-only",
 		]);
 		expect(listings[0]?.images).toEqual([
-			"https://cdn.example.com/approved-1.jpg",
+			{
+				imageId: "approved-1",
+				url: "https://cdn.example.com/approved-1.jpg",
+			},
 		]);
 	});
 
 	it("applies minor-amount price filters for approved listings", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "minor-priced",
 			name: "Minor Priced",
 			listingStatus: "APPROVED",
 			isApproved: true,
 			priceAmountMinor: 19995,
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "outside-range",
 			name: "Outside Range",
 			listingStatus: "APPROVED",
@@ -114,7 +117,7 @@ describeDb("Prisma listing read models", () => {
 	});
 
 	it("applies category, condition, brand, and search filters to approved listings", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "matching-tele",
 			name: "Road Worn Telecaster",
 			listingStatus: "APPROVED",
@@ -125,7 +128,7 @@ describeDb("Prisma listing read models", () => {
 			model: "Telecaster",
 			description: "Bright twang guitar",
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "wrong-category",
 			name: "Road Worn Telecaster",
 			listingStatus: "APPROVED",
@@ -136,7 +139,7 @@ describeDb("Prisma listing read models", () => {
 			model: "Telecaster",
 			description: "Bright twang guitar",
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "wrong-condition",
 			name: "Road Worn Telecaster",
 			listingStatus: "APPROVED",
@@ -147,7 +150,7 @@ describeDb("Prisma listing read models", () => {
 			model: "Telecaster",
 			description: "Bright twang guitar",
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "wrong-brand",
 			name: "Road Worn Telecaster",
 			listingStatus: "APPROVED",
@@ -158,7 +161,7 @@ describeDb("Prisma listing read models", () => {
 			model: "Telecaster",
 			description: "Bright twang guitar",
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "wrong-search",
 			name: "Offset Jazzmaster",
 			listingStatus: "APPROVED",
@@ -169,7 +172,7 @@ describeDb("Prisma listing read models", () => {
 			model: "Jazzmaster",
 			description: "Offset guitar",
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "pending-match",
 			name: "Road Worn Telecaster",
 			listingStatus: "PENDING",
@@ -195,7 +198,7 @@ describeDb("Prisma listing read models", () => {
 	});
 
 	it("reads listing details without applying public approval visibility", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "pending-detail",
 			name: "Pending Detail",
 			listingStatus: "PENDING",
@@ -207,26 +210,31 @@ describeDb("Prisma listing read models", () => {
 		expect(listing).toMatchObject({
 			id: "pending-detail",
 			listingStatus: "PENDING",
-			images: ["https://cdn.example.com/pending-detail.jpg"],
+			images: [
+				{
+					imageId: "pending-detail",
+					url: "https://cdn.example.com/pending-detail.jpg",
+				},
+			],
 		});
 	});
 
 	it("returns a seller's listings newest first without other sellers' listings", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "seller-older",
 			name: "Seller Older",
 			listingStatus: "PENDING",
 			isApproved: false,
 			createdAt: new Date("2026-06-18T01:00:00.000Z"),
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "seller-newer",
 			name: "Seller Newer",
 			listingStatus: "APPROVED",
 			isApproved: true,
 			createdAt: new Date("2026-06-18T03:00:00.000Z"),
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "other-seller",
 			name: "Other Seller",
 			sellerId: "seller-2",
@@ -243,40 +251,45 @@ describeDb("Prisma listing read models", () => {
 		]);
 		expect(listings[0]).toMatchObject({
 			id: "seller-newer",
-			images: ["https://cdn.example.com/seller-newer.jpg"],
+			images: [
+				{
+					imageId: "seller-newer",
+					url: "https://cdn.example.com/seller-newer.jpg",
+				},
+			],
 		});
 	});
 
 	it("returns pending moderation listings newest first without final-status listings", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "pending-older",
 			name: "Pending Older",
 			listingStatus: "PENDING",
 			isApproved: false,
 			createdAt: new Date("2026-06-18T01:00:00.000Z"),
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "pending-newer",
 			name: "Pending Newer",
 			listingStatus: "PENDING",
 			isApproved: false,
 			createdAt: new Date("2026-06-18T03:00:00.000Z"),
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "declined-listing",
 			name: "Declined Listing",
 			listingStatus: "DECLINED",
 			isApproved: false,
 			createdAt: new Date("2026-06-18T04:00:00.000Z"),
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "withdrawn-listing",
 			name: "Withdrawn Listing",
 			listingStatus: "WITHDRAWN",
 			isApproved: false,
 			createdAt: new Date("2026-06-18T05:00:00.000Z"),
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "approved-listing",
 			name: "Approved Listing",
 			listingStatus: "APPROVED",
@@ -293,33 +306,38 @@ describeDb("Prisma listing read models", () => {
 		expect(listings[0]).toMatchObject({
 			id: "pending-newer",
 			listingStatus: "PENDING",
-			images: ["https://cdn.example.com/pending-newer.jpg"],
+			images: [
+				{
+					imageId: "pending-newer",
+					url: "https://cdn.example.com/pending-newer.jpg",
+				},
+			],
 		});
 	});
 
 	it("counts listings from listing status instead of legacy approval flags", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "approved-electric",
 			name: "Approved Electric",
 			listingStatus: "APPROVED",
 			isApproved: true,
 			category: "ELECTRIC",
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "approved-acoustic-status-only",
 			name: "Approved Acoustic Status Only",
 			listingStatus: "APPROVED",
 			isApproved: false,
 			category: "ACOUSTIC",
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "pending-keyboard",
 			name: "Pending Keyboard",
 			listingStatus: "PENDING",
 			isApproved: false,
 			category: "KEYBOARD",
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "withdrawn-legacy-approved",
 			name: "Withdrawn Legacy Approved",
 			listingStatus: "WITHDRAWN",
@@ -340,21 +358,21 @@ describeDb("Prisma listing read models", () => {
 	});
 
 	it("returns recent approved listings by latest update", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "approved-newer",
 			name: "Approved Newer",
 			listingStatus: "APPROVED",
 			isApproved: true,
 			updatedAt: new Date("2026-06-18T03:00:00.000Z"),
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "withdrawn-latest",
 			name: "Withdrawn Latest",
 			listingStatus: "WITHDRAWN",
 			isApproved: true,
 			updatedAt: new Date("2026-06-18T04:00:00.000Z"),
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "approved-older",
 			name: "Approved Older",
 			listingStatus: "APPROVED",
@@ -370,24 +388,29 @@ describeDb("Prisma listing read models", () => {
 		]);
 		expect(listings[0]).toMatchObject({
 			id: "approved-newer",
-			images: ["https://cdn.example.com/approved-newer.jpg"],
+			images: [
+				{
+					imageId: "approved-newer",
+					url: "https://cdn.example.com/approved-newer.jpg",
+				},
+			],
 		});
 	});
 
 	it("returns cart listings for requested ids with image URLs", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "cart-approved",
 			name: "Cart Approved",
 			listingStatus: "APPROVED",
 			isApproved: true,
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "cart-pending",
 			name: "Cart Pending",
 			listingStatus: "PENDING",
 			isApproved: false,
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "cart-unrequested",
 			name: "Cart Unrequested",
 			listingStatus: "APPROVED",
@@ -404,12 +427,22 @@ describeDb("Prisma listing read models", () => {
 		).toMatchObject([
 			{
 				id: "cart-approved",
-				images: ["https://cdn.example.com/cart-approved.jpg"],
+				images: [
+					{
+						imageId: "cart-approved",
+						url: "https://cdn.example.com/cart-approved.jpg",
+					},
+				],
 				seller: { email: "seller@example.com" },
 			},
 			{
 				id: "cart-pending",
-				images: ["https://cdn.example.com/cart-pending.jpg"],
+				images: [
+					{
+						imageId: "cart-pending",
+						url: "https://cdn.example.com/cart-pending.jpg",
+					},
+				],
 				seller: { email: "seller@example.com" },
 			},
 		]);

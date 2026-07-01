@@ -66,7 +66,7 @@ describe("media cleanup worker adapter", () => {
 			id: "job-1",
 			provider: "cloudinary",
 			assetType: "image",
-			providerAssetId: "products/one",
+			providerAssetId: "listings/one",
 			attempts: 1,
 			maxAttempts: 5,
 		});
@@ -94,7 +94,7 @@ describe("media cleanup worker adapter", () => {
 			{
 				provider: "cloudinary",
 				assetType: "image",
-				providerAssetId: "products/one",
+				providerAssetId: "listings/one",
 			},
 			{ timeoutMs: DEFAULT_MEDIA_CLEANUP_DELETE_TIMEOUT_MS },
 		);

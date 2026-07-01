@@ -20,9 +20,9 @@ import { Route as SettingsRouteRouteImport } from './routes/settings/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopIndexRouteImport } from './routes/shop/index'
 import { Route as ReviewsIndexRouteImport } from './routes/reviews/index'
-import { Route as ProductNewRouteImport } from './routes/product/new'
-import { Route as ProductIdRouteImport } from './routes/product/$id'
-import { Route as ProductEditIdRouteImport } from './routes/product/edit.$id'
+import { Route as ListingNewRouteImport } from './routes/listing/new'
+import { Route as ListingIdRouteImport } from './routes/listing/$id'
+import { Route as ListingEditIdRouteImport } from './routes/listing/edit.$id'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
@@ -79,19 +79,19 @@ const ReviewsIndexRoute = ReviewsIndexRouteImport.update({
   path: '/reviews/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProductNewRoute = ProductNewRouteImport.update({
-  id: '/product/new',
-  path: '/product/new',
+const ListingNewRoute = ListingNewRouteImport.update({
+  id: '/listing/new',
+  path: '/listing/new',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProductIdRoute = ProductIdRouteImport.update({
-  id: '/product/$id',
-  path: '/product/$id',
+const ListingIdRoute = ListingIdRouteImport.update({
+  id: '/listing/$id',
+  path: '/listing/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProductEditIdRoute = ProductEditIdRouteImport.update({
-  id: '/product/edit/$id',
-  path: '/product/edit/$id',
+const ListingEditIdRoute = ListingEditIdRouteImport.update({
+  id: '/listing/edit/$id',
+  path: '/listing/edit/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -105,11 +105,11 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/notifications': typeof NotificationsRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/product/$id': typeof ProductIdRoute
-  '/product/new': typeof ProductNewRoute
+  '/listing/$id': typeof ListingIdRoute
+  '/listing/new': typeof ListingNewRoute
   '/reviews': typeof ReviewsIndexRoute
   '/shop/': typeof ShopIndexRoute
-  '/product/edit/$id': typeof ProductEditIdRoute
+  '/listing/edit/$id': typeof ListingEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -120,11 +120,11 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/notifications': typeof NotificationsRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/product/$id': typeof ProductIdRoute
-  '/product/new': typeof ProductNewRoute
+  '/listing/$id': typeof ListingIdRoute
+  '/listing/new': typeof ListingNewRoute
   '/reviews': typeof ReviewsIndexRoute
   '/shop': typeof ShopIndexRoute
-  '/product/edit/$id': typeof ProductEditIdRoute
+  '/listing/edit/$id': typeof ListingEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -137,11 +137,11 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/notifications': typeof NotificationsRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/product/$id': typeof ProductIdRoute
-  '/product/new': typeof ProductNewRoute
+  '/listing/$id': typeof ListingIdRoute
+  '/listing/new': typeof ListingNewRoute
   '/reviews/': typeof ReviewsIndexRoute
   '/shop/': typeof ShopIndexRoute
-  '/product/edit/$id': typeof ProductEditIdRoute
+  '/listing/edit/$id': typeof ListingEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -155,11 +155,11 @@ export interface FileRouteTypes {
     | '/community'
     | '/notifications'
     | '/unauthorized'
-    | '/product/$id'
-    | '/product/new'
+    | '/listing/$id'
+    | '/listing/new'
     | '/reviews'
     | '/shop/'
-    | '/product/edit/$id'
+    | '/listing/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -170,11 +170,11 @@ export interface FileRouteTypes {
     | '/community'
     | '/notifications'
     | '/unauthorized'
-    | '/product/$id'
-    | '/product/new'
+    | '/listing/$id'
+    | '/listing/new'
     | '/reviews'
     | '/shop'
-    | '/product/edit/$id'
+    | '/listing/edit/$id'
   id:
     | '__root__'
     | '/'
@@ -186,11 +186,11 @@ export interface FileRouteTypes {
     | '/community'
     | '/notifications'
     | '/unauthorized'
-    | '/product/$id'
-    | '/product/new'
+    | '/listing/$id'
+    | '/listing/new'
     | '/reviews/'
     | '/shop/'
-    | '/product/edit/$id'
+    | '/listing/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -203,10 +203,10 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   NotificationsRoute: typeof NotificationsRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
-  ProductIdRoute: typeof ProductIdRoute
-  ProductNewRoute: typeof ProductNewRoute
+  ListingIdRoute: typeof ListingIdRoute
+  ListingNewRoute: typeof ListingNewRoute
   ReviewsIndexRoute: typeof ReviewsIndexRoute
-  ProductEditIdRoute: typeof ProductEditIdRoute
+  ListingEditIdRoute: typeof ListingEditIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -288,25 +288,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/product/new': {
-      id: '/product/new'
-      path: '/product/new'
-      fullPath: '/product/new'
-      preLoaderRoute: typeof ProductNewRouteImport
+    '/listing/new': {
+      id: '/listing/new'
+      path: '/listing/new'
+      fullPath: '/listing/new'
+      preLoaderRoute: typeof ListingNewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/product/$id': {
-      id: '/product/$id'
-      path: '/product/$id'
-      fullPath: '/product/$id'
-      preLoaderRoute: typeof ProductIdRouteImport
+    '/listing/$id': {
+      id: '/listing/$id'
+      path: '/listing/$id'
+      fullPath: '/listing/$id'
+      preLoaderRoute: typeof ListingIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/product/edit/$id': {
-      id: '/product/edit/$id'
-      path: '/product/edit/$id'
-      fullPath: '/product/edit/$id'
-      preLoaderRoute: typeof ProductEditIdRouteImport
+    '/listing/edit/$id': {
+      id: '/listing/edit/$id'
+      path: '/listing/edit/$id'
+      fullPath: '/listing/edit/$id'
+      preLoaderRoute: typeof ListingEditIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -334,10 +334,10 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   NotificationsRoute: NotificationsRoute,
   UnauthorizedRoute: UnauthorizedRoute,
-  ProductIdRoute: ProductIdRoute,
-  ProductNewRoute: ProductNewRoute,
+  ListingIdRoute: ListingIdRoute,
+  ListingNewRoute: ListingNewRoute,
   ReviewsIndexRoute: ReviewsIndexRoute,
-  ProductEditIdRoute: ProductEditIdRoute,
+  ListingEditIdRoute: ListingEditIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

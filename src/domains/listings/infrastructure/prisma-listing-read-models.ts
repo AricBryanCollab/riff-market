@@ -1,8 +1,5 @@
 import type { Prisma, PrismaClient } from "generated/prisma/client";
-import {
-	normalizeListingMoney,
-	toListingPriceRangePersistence,
-} from "@/domains/listings/application/listing-money";
+import { toListingPriceRangePersistence } from "@/domains/listings/application/listing-money";
 import type {
 	ApprovedListingSearchPort,
 	ApprovedListingSearchQuery,
@@ -18,7 +15,7 @@ import type {
 	ListingCountStatus,
 	ListingReadModel,
 } from "@/domains/listings/dto/listing-read-model";
-import { toImageAssetUrls } from "@/utils/image-asset-ref";
+import { toListingImageDtos } from "@/utils/image-asset-ref";
 
 type ListingReadPrisma = Pick<PrismaClient, "listing">;
 
@@ -221,10 +218,8 @@ function toListingReadModels(listings: ListingReadRow[]) {
 }
 
 function toListingReadModel(listing: ListingReadRow): ListingReadModel {
-	const normalized = normalizeListingMoney(listing);
-
 	return {
-		...normalized,
-		images: toImageAssetUrls(normalized.images),
+		...listing,
+		images: toListingImageDtos(listing.images),
 	};
 }

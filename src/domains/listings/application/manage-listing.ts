@@ -25,9 +25,24 @@ export type CreateListingCommand = Required<ListingMutationFields> & {
 	readonly imageFiles: File[];
 };
 
+export type ListingImageUpdateItem =
+	| {
+			readonly kind: "existing";
+			readonly imageId: string;
+	  }
+	| {
+			readonly kind: "new";
+			readonly index: number;
+	  };
+
+export type ListingImageUpdate = {
+	readonly items: ListingImageUpdateItem[];
+};
+
 export type UpdateListingCommand = ListingMutationFields & {
 	readonly listingId: string;
 	readonly imageFiles?: File[];
+	readonly imageUpdate?: ListingImageUpdate;
 };
 
 export type RemoveListingCommand = {
@@ -61,9 +76,7 @@ export type ListingMutationResult = {
 	readonly model: string;
 	readonly images: ImageAssetRef[];
 	readonly description: string;
-	readonly price: number;
 	readonly priceAmountMinor: number;
-	readonly priceCents: number;
 	readonly currencyCode: string;
 	readonly stock: number;
 	readonly isApproved: boolean;
@@ -75,7 +88,6 @@ export type ListingMutationResult = {
 export type ListingRemovalSnapshot = ListingSnapshot & {
 	readonly images: ImageAssetRef[];
 	readonly referenceCounts: {
-		readonly legacyOrderItems: number;
 		readonly sellerOrderItems: number;
 		readonly reviews: number;
 		readonly favorites: number;
@@ -93,6 +105,7 @@ export type ListingCommandErrorCode =
 	| "LISTING_COMMAND_NOT_FOUND"
 	| "LISTING_COMMAND_INVALID_TRANSITION"
 	| "LISTING_COMMAND_SAVE_FAILED"
+	| "LISTING_COMMAND_INVALID_IMAGES"
 	| "LISTING_COMMAND_IMAGE_UPLOAD_FAILED";
 
 export type ListingCommandError = AppError<ListingCommandErrorCode>;
@@ -186,40 +199,42 @@ export async function updateListing(
 		);
 	}
 
-	const uploadedImagesResult = await uploadReplacementImages(command, images);
-	if (!uploadedImagesResult.ok) {
-		return uploadedImagesResult;
+	const imageUpdateResult = await prepareImageUpdate(command, existing, images);
+	if (!imageUpdateResult.ok) {
+		return imageUpdateResult;
 	}
 
-	const uploadedImages = uploadedImagesResult.value;
+	const imageUpdate = imageUpdateResult.value;
 	const status = actor.role === "ADMIN" ? "APPROVED" : "PENDING";
 
 	try {
 		const listing = await listings.updateListing(command.listingId, {
 			...toPersistenceFields(command),
-			...(uploadedImages ? { images: uploadedImages } : {}),
+			...(imageUpdate.nextImages ? { images: imageUpdate.nextImages } : {}),
 			status,
 			isApproved: status === "APPROVED",
 		});
 
 		if (!listing) {
-			if (uploadedImages) {
-				await images.cleanupUploadedImagesBestEffort(uploadedImages);
+			if (imageUpdate.uploadedImages.length > 0) {
+				await images.cleanupUploadedImagesBestEffort(
+					imageUpdate.uploadedImages,
+				);
 			}
 			return err(saveFailedError("Failed to update listing"));
 		}
 
-		if (uploadedImages) {
+		if (imageUpdate.removedImages.length > 0) {
 			await images.cleanupPersistedImagesBestEffort(
-				existing.images,
+				imageUpdate.removedImages,
 				toImageCleanupSource(existing),
 			);
 		}
 
 		return ok(listing);
 	} catch (error) {
-		if (uploadedImages) {
-			await images.cleanupUploadedImagesBestEffort(uploadedImages);
+		if (imageUpdate.uploadedImages.length > 0) {
+			await images.cleanupUploadedImagesBestEffort(imageUpdate.uploadedImages);
 		}
 		throw error;
 	}
@@ -261,7 +276,7 @@ export async function removeListing(
 	return ok({
 		listingId: existing.id,
 		mode: "DELETED",
-		message: "Product deleted successfully",
+		message: "Listing deleted successfully",
 	});
 }
 
@@ -274,19 +289,129 @@ function toImageCleanupSource(
 	};
 }
 
-async function uploadReplacementImages(
+type ImageUpdatePlan = {
+	readonly nextImages?: ImageAssetRef[];
+	readonly uploadedImages: ImageAssetRef[];
+	readonly removedImages: ImageAssetRef[];
+};
+
+async function prepareImageUpdate(
 	command: UpdateListingCommand,
+	existing: ListingRemovalSnapshot,
 	images: ListingImageManagerPort,
-): Promise<Result<ImageAssetRef[] | undefined, ListingCommandError>> {
-	if (!command.imageFiles || command.imageFiles.length === 0) {
-		return ok(undefined);
+): Promise<Result<ImageUpdatePlan, ListingCommandError>> {
+	const hasNewImages = command.imageFiles && command.imageFiles.length > 0;
+	const imageUpdate =
+		command.imageUpdate ??
+		(hasNewImages
+			? {
+					items: command.imageFiles?.map((_, index) => ({
+						kind: "new" as const,
+						index,
+					})),
+				}
+			: undefined);
+
+	if (!hasNewImages && !imageUpdate) {
+		return ok({
+			uploadedImages: [],
+			removedImages: [],
+		});
 	}
 
+	let uploadedImages: ImageAssetRef[] = [];
+
 	try {
-		return ok(await images.uploadImages(command.imageFiles));
+		uploadedImages = hasNewImages
+			? await images.uploadImages(command.imageFiles ?? [])
+			: [];
 	} catch (error) {
 		return err(imageUploadError(error));
 	}
+
+	const nextImagesResult = getOrderedImages({
+		existingImages: existing.images,
+		uploadedImages,
+		imageUpdateItems: imageUpdate?.items ?? [],
+	});
+	if (!nextImagesResult.ok) {
+		await images.cleanupUploadedImagesBestEffort(uploadedImages);
+		return nextImagesResult;
+	}
+
+	const nextImages = nextImagesResult.value;
+
+	if (nextImages.length === 0) {
+		await images.cleanupUploadedImagesBestEffort(uploadedImages);
+		return err(invalidImagesError("Listing must keep at least one image"));
+	}
+
+	return ok({
+		nextImages,
+		uploadedImages,
+		removedImages: getRemovedImages(existing.images, nextImages),
+	});
+}
+
+function getOrderedImages({
+	existingImages,
+	uploadedImages,
+	imageUpdateItems,
+}: {
+	readonly existingImages: readonly ImageAssetRef[];
+	readonly uploadedImages: readonly ImageAssetRef[];
+	readonly imageUpdateItems: readonly ListingImageUpdateItem[];
+}): Result<ImageAssetRef[], ListingCommandError> {
+	const existingImagesById = new Map(
+		existingImages.map((image) => [image.publicId, image]),
+	);
+	const orderedImages: ImageAssetRef[] = [];
+	const usedExistingImageIds = new Set<string>();
+	const usedNewIndexes = new Set<number>();
+
+	for (const item of imageUpdateItems) {
+		if (item.kind === "existing") {
+			if (usedExistingImageIds.has(item.imageId)) {
+				return err(invalidImagesError("Listing image order has duplicates"));
+			}
+
+			const image = existingImagesById.get(item.imageId);
+			if (!image) {
+				return err(invalidImagesError("Retained listing image was not found"));
+			}
+
+			usedExistingImageIds.add(item.imageId);
+			orderedImages.push(image);
+			continue;
+		}
+
+		if (usedNewIndexes.has(item.index)) {
+			return err(invalidImagesError("Listing image order has duplicates"));
+		}
+
+		const image = uploadedImages[item.index];
+		if (!image) {
+			return err(invalidImagesError("Uploaded listing image was not found"));
+		}
+
+		usedNewIndexes.add(item.index);
+		orderedImages.push(image);
+	}
+
+	return ok(orderedImages);
+}
+
+function getRemovedImages(
+	existingImages: readonly ImageAssetRef[],
+	retainedImages: readonly ImageAssetRef[],
+) {
+	const retainedImageIds = new Set(
+		retainedImages.map((image) => image.publicId),
+	);
+
+	return existingImages.filter(
+		(image) => !retainedImageIds.has(image.publicId),
+	);
 }
 
 async function withdrawReferencedListing(
@@ -320,7 +445,7 @@ async function withdrawReferencedListing(
 	return ok({
 		listingId: listing.id,
 		mode: "WITHDRAWN",
-		message: "Product withdrawn successfully",
+		message: "Listing withdrawn successfully",
 	});
 }
 
@@ -382,6 +507,14 @@ function saveFailedError(message: string): ListingCommandError {
 	return {
 		kind: "unexpected",
 		code: "LISTING_COMMAND_SAVE_FAILED",
+		message,
+	};
+}
+
+function invalidImagesError(message: string): ListingCommandError {
+	return {
+		kind: "validation",
+		code: "LISTING_COMMAND_INVALID_IMAGES",
 		message,
 	};
 }

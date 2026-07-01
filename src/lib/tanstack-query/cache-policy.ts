@@ -29,6 +29,6 @@ export function invalidateOrdersCache(queryClient: QueryClient) {
 	return queryClient.invalidateQueries({ queryKey: queryKeys.orders.root });
 }
 
-export function invalidateProductCache(queryClient: QueryClient) {
-	return queryClient.invalidateQueries({ queryKey: queryKeys.products.root });
+export function invalidateListingCache(queryClient: QueryClient) {
+	return queryClient.invalidateQueries({ queryKey: queryKeys.listings.root });
 }

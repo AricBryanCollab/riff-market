@@ -99,14 +99,14 @@ describe("notification event handlers", () => {
 				purchaseId: null,
 				sellerOrderId: null,
 				message:
-					"Great News! Your product Telecaster has been approved and live at the RiffMarket shop",
+					"Great News! Your listing Telecaster has been approved and live at the RiffMarket shop",
 				isRead: false,
 			},
 			{
 				userId: "seller-2",
 				purchaseId: null,
 				sellerOrderId: null,
-				message: "Your product Jazzmaster has been declined by the admin",
+				message: "Your listing Jazzmaster has been declined by the admin",
 				isRead: false,
 			},
 		]);

@@ -40,9 +40,9 @@ vi.mock("@/components/navbar-icon-buttons", () => ({
 vi.mock("@/store/cart", () => ({
 	useCartStore: (
 		selector: (state: {
-			items: Array<{ quantity: number; productId: string }>;
+			items: Array<{ quantity: number; listingId: string }>;
 		}) => unknown,
-	) => selector({ items: [{ quantity: 3, productId: "prod-1" }] }),
+	) => selector({ items: [{ quantity: 3, listingId: "listing-1" }] }),
 }));
 
 vi.mock("@/hooks/use-notifications", () => ({

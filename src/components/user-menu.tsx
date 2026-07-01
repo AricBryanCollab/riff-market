@@ -67,15 +67,15 @@ const CustomerActions = () => {
 	);
 
 	const uniqueListingIds = useMemo(
-		() => Array.from(new Set(cartItems.map((item) => item.productId))).sort(),
+		() => Array.from(new Set(cartItems.map((item) => item.listingId))).sort(),
 		[cartItems],
 	);
 
 	const {
 		isCartEmpty,
 		isLoading: isCartLoading,
-		totalPrice,
-		cartWithDetails,
+		cartPricing,
+		cartLines,
 	} = useCartDetails({ enabled: isOpen });
 
 	const prefetchCart = useCallback(() => {
@@ -108,9 +108,9 @@ const CustomerActions = () => {
 					<CartList
 						isLoading={isCartLoading}
 						isCartEmpty={isCartEmpty}
-						totalPrice={totalPrice}
+						cartPricing={cartPricing}
 						cartCount={cartCount}
-						cartWithDetails={cartWithDetails}
+						cartLines={cartLines}
 					/>
 				</Suspense>
 			) : null}
@@ -171,8 +171,8 @@ const AdminActions = () => {
 		listingCountByStatusQueryOpt("pending"),
 	);
 	const pendingCount =
-		pendingListingCountData && "pendingProductCount" in pendingListingCountData
-			? pendingListingCountData.pendingProductCount
+		pendingListingCountData && "pendingListingCount" in pendingListingCountData
+			? pendingListingCountData.pendingListingCount
 			: 0;
 
 	const { pendingListings, isLoadingPendingListings, isEmptyPendingListings } =

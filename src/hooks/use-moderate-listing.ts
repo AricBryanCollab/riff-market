@@ -4,7 +4,7 @@ import type {
 	ListingModerationRequestDto,
 	ListingModerationResultDto,
 } from "@/domains/listings/dto/listing-command";
-import { invalidateProductCache as invalidateListingCompatibilityCache } from "@/lib/tanstack-query/cache-policy";
+import { invalidateListingCache } from "@/lib/tanstack-query/cache-policy";
 import { moderateListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
 
@@ -29,7 +29,7 @@ const useModerateListing = () => {
 				},
 			}) as Promise<ListingModerationResultDto>,
 		onSuccess: async (_, variables) => {
-			await invalidateListingCompatibilityCache(queryClient);
+			await invalidateListingCache(queryClient);
 			const message = variables.shouldApproveListing
 				? "Listing approved successfully"
 				: "Listing declined successfully";

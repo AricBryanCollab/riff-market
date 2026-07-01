@@ -11,9 +11,9 @@ import type {
 	ListingRemovalSnapshot,
 } from "@/domains/listings/application/manage-listing";
 import type { ListingStatus } from "@/domains/listings/domain/listing";
+import { MARKETPLACE_CURRENCY_CODE } from "@/domains/shared/domain/currency";
 import { Money } from "@/domains/shared/domain/money";
 import { toImageAssetRefs, toImageAssetUrls } from "@/utils/image-asset-ref";
-import { normalizeListingMoney } from "../application/listing-money";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -43,7 +43,6 @@ const listingCommandSelect = {
 	},
 	_count: {
 		select: {
-			orderItems: true,
 			reviews: true,
 			favoritedBy: true,
 		},
@@ -81,7 +80,7 @@ export class PrismaListingCommandRepository
 				images: input.images as unknown as Prisma.InputJsonValue,
 				description: input.description ?? "",
 				priceAmountMinor: input.priceAmountMinor,
-				currencyCode: input.currencyCode ?? "USD",
+				currencyCode: input.currencyCode ?? MARKETPLACE_CURRENCY_CODE,
 				stock: input.stock ?? 0,
 				isApproved: input.isApproved,
 				listingStatus: input.status,
@@ -179,8 +178,6 @@ function toUpdateData(
 }
 
 function toMutationResult(listing: ListingCommandRow): ListingMutationResult {
-	const normalized = normalizeListingMoney(listing);
-
 	return {
 		id: listing.id,
 		sellerId: listing.sellerId,
@@ -191,9 +188,7 @@ function toMutationResult(listing: ListingCommandRow): ListingMutationResult {
 		model: listing.model,
 		images: toImageAssetRefs(listing.images),
 		description: listing.description,
-		price: normalized.price,
 		priceAmountMinor: listing.priceAmountMinor,
-		priceCents: listing.priceAmountMinor,
 		currencyCode: listing.currencyCode,
 		stock: listing.stock,
 		isApproved: listing.isApproved,
@@ -225,7 +220,6 @@ function toRemovalSnapshot(
 		status: listing.listingStatus,
 		images: imageRefs,
 		referenceCounts: {
-			legacyOrderItems: listing._count.orderItems,
 			sellerOrderItems,
 			reviews: listing._count.reviews,
 			favorites: listing._count.favoritedBy,

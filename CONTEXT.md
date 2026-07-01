@@ -39,3 +39,7 @@ _Avoid_: cents, float price
 **Listing Price**:
 The Seller's asking price for a Listing, held in the Listing's currency.
 _Avoid_: product price
+
+**Listing Currency**:
+The currency in which a Listing Price is stated.
+_Avoid_: display currency, settlement currency

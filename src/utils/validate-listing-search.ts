@@ -1,4 +1,5 @@
 import type { ListingShopSearch } from "@/domains/listings/dto/listing-read-model";
+import { getOptionalListingPriceSearchInput } from "@/utils/shop-search";
 
 const getOptionalString = (value: unknown): string | undefined => {
 	if (typeof value !== "string" || value.length === 0) {
@@ -40,8 +41,8 @@ export function validateListingSearch(
 		brand: getOptionalString(search.brand),
 		condition: getOptionalString(search.condition),
 		search: getOptionalString(search.search),
-		priceMin: getOptionalNumber(search.priceMin),
-		priceMax: getOptionalNumber(search.priceMax),
+		priceMin: getOptionalListingPriceSearchInput(search.priceMin),
+		priceMax: getOptionalListingPriceSearchInput(search.priceMax),
 		page: getOptionalPage(search.page),
 	};
 }

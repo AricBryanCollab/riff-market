@@ -9,6 +9,7 @@ import {
 	type Role,
 	type SellerOrderStatus,
 } from "generated/prisma/client";
+import { MARKETPLACE_CURRENCY_CODE } from "@/domains/shared/domain/currency";
 import type { ImageAssetRef } from "@/types/image-asset";
 
 const databaseUrlSource = "TEST_DATABASE_URL";
@@ -152,7 +153,6 @@ type TestListingSeed = {
 	readonly images?: readonly ImageAssetRef[];
 	readonly description?: string;
 	readonly priceAmountMinor?: number;
-	readonly priceCents?: number;
 	readonly currencyCode?: string;
 	readonly stock?: number;
 	readonly isApproved?: boolean;
@@ -162,9 +162,6 @@ type TestListingSeed = {
 };
 
 export async function seedListing(db: PrismaClient, listing: TestListingSeed) {
-	const priceAmountMinor =
-		listing.priceAmountMinor ?? listing.priceCents ?? 19995;
-
 	await db.listing.create({
 		data: {
 			id: listing.id,
@@ -181,8 +178,8 @@ export async function seedListing(db: PrismaClient, listing: TestListingSeed) {
 				},
 			],
 			description: listing.description ?? "A test listing",
-			priceAmountMinor,
-			currencyCode: listing.currencyCode ?? "USD",
+			priceAmountMinor: listing.priceAmountMinor ?? 19995,
+			currencyCode: listing.currencyCode ?? MARKETPLACE_CURRENCY_CODE,
 			stock: listing.stock ?? 2,
 			isApproved: listing.isApproved ?? true,
 			listingStatus: listing.listingStatus ?? "APPROVED",
@@ -192,9 +189,7 @@ export async function seedListing(db: PrismaClient, listing: TestListingSeed) {
 	});
 }
 
-export const seedProduct = seedListing;
-
-export async function productStock(db: PrismaClient, id: string) {
+export async function listingStock(db: PrismaClient, id: string) {
 	const listing = await db.listing.findUniqueOrThrow({
 		where: { id },
 		select: { stock: true },
@@ -259,7 +254,7 @@ export async function seedPurchaseWithSellerOrders(
 			customerIdSnapshot: purchase.customerIdSnapshot ?? "customer-1",
 			purchaseNumber: purchase.purchaseNumber ?? "RM-1",
 			totalAmountCents: purchase.totalAmountCents,
-			currencyCode: purchase.currencyCode ?? "USD",
+			currencyCode: purchase.currencyCode ?? MARKETPLACE_CURRENCY_CODE,
 			paymentStatus: purchase.paymentStatus ?? "MANUALLY_CONFIRMED",
 			status: purchase.status ?? "OPEN",
 			buyerName: purchase.buyerName ?? "Pat Buyer",
@@ -283,7 +278,7 @@ function toSellerOrderCreate(order: TestSellerOrderSeed) {
 				: order.sellerId,
 		sellerIdSnapshot: order.sellerIdSnapshot ?? order.sellerId ?? "seller-1",
 		subtotalCents: order.subtotalCents,
-		currencyCode: order.currencyCode ?? "USD",
+		currencyCode: order.currencyCode ?? MARKETPLACE_CURRENCY_CODE,
 		status: order.status ?? "NEW",
 		trackingNumber:
 			order.trackingNumber === undefined ? null : order.trackingNumber,
@@ -315,6 +310,6 @@ function toSellerOrderItemCreate(
 		unitPriceCents: item.unitPriceCents,
 		quantity: item.quantity,
 		subTotalCents: item.subTotalCents ?? item.unitPriceCents * item.quantity,
-		currencyCode: item.currencyCode ?? "USD",
+		currencyCode: item.currencyCode ?? MARKETPLACE_CURRENCY_CODE,
 	};
 }

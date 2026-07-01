@@ -139,6 +139,10 @@ export function validateUpdateListingFormData(
 	if (images.length > 0) {
 		rawData.images = images;
 	}
+	if (data.has("imageUpdateMode")) {
+		rawData.imageUpdateMode = getRequiredString(data, "imageUpdateMode");
+		rawData.imageUpdateItems = getImageUpdateItems(data);
+	}
 
 	const parsed = updateListingFormSchema.safeParse(rawData);
 
@@ -214,7 +218,7 @@ export async function removeListingForCurrentUser(
 
 	return {
 		message: removal.message,
-		product: removal,
+		listing: removal,
 	};
 }
 
@@ -339,6 +343,11 @@ function toUpdateListingCommand(
 		...(input.data.price !== undefined && { price: input.data.price }),
 		...(input.data.stock !== undefined && { stock: input.data.stock }),
 		...(input.data.images !== undefined && { imageFiles: input.data.images }),
+		...(input.data.imageUpdateMode !== undefined && {
+			imageUpdate: {
+				items: input.data.imageUpdateItems ?? [],
+			},
+		}),
 	};
 }
 
@@ -356,9 +365,12 @@ function toMutationResponse(
 ): ListingMutationResponse {
 	return {
 		message,
-		product: {
+		listing: {
 			...listing,
-			images: listing.images.map((image) => image.url),
+			images: listing.images.map((image) => ({
+				imageId: image.publicId,
+				url: image.url,
+			})),
 			createdAt: listing.createdAt?.toISOString(),
 			updatedAt: listing.updatedAt?.toISOString(),
 		},
@@ -375,4 +387,21 @@ function getImageFiles(data: FormData) {
 	return data
 		.getAll("image")
 		.filter((value): value is File => value instanceof File);
+}
+
+function getImageUpdateItems(data: FormData) {
+	return data
+		.getAll("imageUpdateItem")
+		.filter((value): value is string => typeof value === "string")
+		.map(parseImageUpdateItem);
+}
+
+function parseImageUpdateItem(value: string) {
+	try {
+		return JSON.parse(value);
+	} catch (error) {
+		throw new RequestError("Invalid listing image order", {
+			details: error instanceof Error ? error.message : String(error),
+		});
+	}
 }

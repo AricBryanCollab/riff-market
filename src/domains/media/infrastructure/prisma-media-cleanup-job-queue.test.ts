@@ -16,7 +16,7 @@ function makeClaimedJob(
 		id: "job-1",
 		provider: "cloudinary",
 		assetType: "image",
-		providerAssetId: "products/one",
+		providerAssetId: "listings/one",
 		attempts: 1,
 		maxAttempts: 5,
 		...overrides,

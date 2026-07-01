@@ -44,10 +44,8 @@ function makeMutationResult(
 		model: "Player",
 		images: [image("https://cdn.example.com/current.jpg")],
 		description: "A listing",
-		price: 199.95,
 		priceAmountMinor: 19995,
-		priceCents: 19995,
-		currencyCode: "USD",
+		currencyCode: "TWD",
 		stock: 2,
 		isApproved: false,
 		listingStatus: "PENDING",
@@ -68,12 +66,11 @@ function makeRemovalSnapshot(
 		category: "ELECTRIC",
 		condition: "NEW",
 		primaryImageUrl: "https://cdn.example.com/current.jpg",
-		price: Money.fromMinor(19995, "USD"),
+		price: Money.fromMinor(19995, "TWD"),
 		stock: 2,
 		status: "APPROVED",
 		images: [image("https://cdn.example.com/current.jpg")],
 		referenceCounts: {
-			legacyOrderItems: 0,
 			sellerOrderItems: 0,
 			reviews: 0,
 			favorites: 0,
@@ -127,7 +124,7 @@ describe("listing command use cases", () => {
 				brand: "Fender",
 				model: "Player",
 				description: "A listing",
-				price: 199.95,
+				price: 19995,
 				stock: 2,
 				imageFiles: [imageFile("listing.jpg")],
 			},
@@ -142,7 +139,7 @@ describe("listing command use cases", () => {
 				status: "PENDING",
 				isApproved: false,
 				priceAmountMinor: 19995,
-				currencyCode: "USD",
+				currencyCode: "TWD",
 				images: [image("https://cdn.example.com/new.jpg")],
 			}),
 		);
@@ -160,7 +157,7 @@ describe("listing command use cases", () => {
 				brand: "Fender",
 				model: "Player",
 				description: "A listing",
-				price: 199.95,
+				price: 19995,
 				stock: 2,
 				imageFiles: [imageFile("listing.jpg")],
 			},
@@ -188,7 +185,7 @@ describe("listing command use cases", () => {
 				brand: "Fender",
 				model: "Player",
 				description: "A listing",
-				price: 199.95,
+				price: 19995,
 				stock: 2,
 				imageFiles: [imageFile("listing.jpg")],
 			},
@@ -234,6 +231,74 @@ describe("listing command use cases", () => {
 				sellerId: "seller-1",
 			},
 		);
+	});
+
+	it("saves image removal and reordering", async () => {
+		const { repository, images, dependencies } = createFakes();
+		const first = image("https://cdn.example.com/first.jpg");
+		const second = image("https://cdn.example.com/second.jpg");
+		const removed = image("https://cdn.example.com/remove.jpg");
+		const uploaded = image("https://cdn.example.com/new.jpg");
+
+		vi.mocked(repository.findListingForMutation).mockResolvedValue(
+			makeRemovalSnapshot({
+				images: [first, second, removed],
+			}),
+		);
+
+		const result = await updateListing(
+			sellerActor,
+			{
+				listingId: "listing-1",
+				imageUpdate: {
+					items: [
+						{ kind: "existing", imageId: second.publicId },
+						{ kind: "new", index: 0 },
+						{ kind: "existing", imageId: first.publicId },
+					],
+				},
+				imageFiles: [imageFile("new.jpg")],
+			},
+			dependencies,
+		);
+
+		expect(result.ok).toBe(true);
+		expect(repository.updateListing).toHaveBeenCalledWith(
+			"listing-1",
+			expect.objectContaining({
+				images: [second, uploaded, first],
+			}),
+		);
+		expect(images.cleanupPersistedImagesBestEffort).toHaveBeenCalledWith(
+			[removed],
+			{
+				listingId: "listing-1",
+				sellerId: "seller-1",
+			},
+		);
+	});
+
+	it("rejects listing updates that would remove every image", async () => {
+		const { repository, images, dependencies } = createFakes();
+
+		const result = await updateListing(
+			sellerActor,
+			{
+				listingId: "listing-1",
+				imageUpdate: { items: [] },
+			},
+			dependencies,
+		);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: {
+				code: "LISTING_COMMAND_INVALID_IMAGES",
+				message: "Listing must keep at least one image",
+			},
+		});
+		expect(repository.updateListing).not.toHaveBeenCalled();
+		expect(images.cleanupPersistedImagesBestEffort).not.toHaveBeenCalled();
 	});
 
 	it("cleans up uploaded replacement images when update persistence does not save", async () => {
@@ -317,7 +382,7 @@ describe("listing command use cases", () => {
 			value: {
 				listingId: "listing-1",
 				mode: "DELETED",
-				message: "Product deleted successfully",
+				message: "Listing deleted successfully",
 			},
 		});
 		expect(repository.deleteListing).toHaveBeenCalledWith("listing-1");
@@ -336,7 +401,6 @@ describe("listing command use cases", () => {
 		vi.mocked(repository.findListingForMutation).mockResolvedValue(
 			makeRemovalSnapshot({
 				referenceCounts: {
-					legacyOrderItems: 0,
 					sellerOrderItems: 1,
 					reviews: 0,
 					favorites: 0,
@@ -355,7 +419,7 @@ describe("listing command use cases", () => {
 			value: {
 				listingId: "listing-1",
 				mode: "WITHDRAWN",
-				message: "Product withdrawn successfully",
+				message: "Listing withdrawn successfully",
 			},
 		});
 		expect(repository.deleteListing).not.toHaveBeenCalled();
@@ -373,7 +437,6 @@ describe("listing command use cases", () => {
 			makeRemovalSnapshot({
 				status: "WITHDRAWN",
 				referenceCounts: {
-					legacyOrderItems: 0,
 					sellerOrderItems: 1,
 					reviews: 0,
 					favorites: 0,

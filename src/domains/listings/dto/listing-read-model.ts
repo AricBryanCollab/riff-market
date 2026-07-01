@@ -18,6 +18,11 @@ export type ListingReadSellerDto = {
 	readonly email: string;
 };
 
+export type ListingImageDto = {
+	readonly imageId: string;
+	readonly url: string;
+};
+
 export type ListingReadModel = {
 	readonly id: string;
 	readonly sellerId: string;
@@ -26,11 +31,9 @@ export type ListingReadModel = {
 	readonly condition: ListingReadCondition;
 	readonly brand: string;
 	readonly model: string;
-	readonly images: string[];
+	readonly images: ListingImageDto[];
 	readonly description: string;
-	readonly price: number;
 	readonly priceAmountMinor: number;
-	readonly priceCents: number;
 	readonly currencyCode: string;
 	readonly stock: number;
 	readonly listingStatus: ListingReadStatus;
@@ -47,11 +50,9 @@ export type ListingReadDto = {
 	readonly condition: ListingReadCondition;
 	readonly brand: string;
 	readonly model: string;
-	readonly images: string[];
+	readonly images: ListingImageDto[];
 	readonly description: string;
-	readonly price: number;
 	readonly priceAmountMinor: number;
-	readonly priceCents: number;
 	readonly currencyCode: string;
 	readonly stock: number;
 	readonly isApproved: boolean;
@@ -75,6 +76,9 @@ export type ListingCategoryMeta = {
 	readonly count: number;
 };
 
+// Human-entered listing price in marketplace currency, not minor units.
+export type ListingPriceInput = string;
+
 export type ApprovedListingSearchFilterQuery = {
 	readonly limit?: number;
 	readonly offset?: number;
@@ -82,8 +86,8 @@ export type ApprovedListingSearchFilterQuery = {
 	readonly brand?: string;
 	readonly search?: string;
 	readonly condition?: string;
-	readonly priceMin?: number;
-	readonly priceMax?: number;
+	readonly priceMin?: ListingPriceInput;
+	readonly priceMax?: ListingPriceInput;
 };
 
 export type ListingShopSearch = {
@@ -91,19 +95,19 @@ export type ListingShopSearch = {
 	readonly brand?: string;
 	readonly condition?: string;
 	readonly search?: string;
-	readonly priceMin?: number;
-	readonly priceMax?: number;
+	readonly priceMin?: ListingPriceInput;
+	readonly priceMax?: ListingPriceInput;
 	readonly page?: number;
 };
 
 export type ListingCountStatusQuery = "approved" | "pending";
 
 export type ApprovedListingCount = {
-	readonly approvedProductCount: number;
+	readonly approvedListingCount: number;
 };
 
 export type PendingListingCount = {
-	readonly pendingProductCount: number;
+	readonly pendingListingCount: number;
 };
 
 export type ListingStatusCount = ApprovedListingCount | PendingListingCount;
@@ -117,7 +121,7 @@ const listingCategorySchema = z.enum([
 ]);
 const listingConditionSchema = z.enum(["NEW", "USED", "MINT"]);
 
-const optionalPriceAmountMinorSchema = z
+const optionalListingPriceInputSchema = z
 	.string()
 	.nullable()
 	.optional()
@@ -158,8 +162,8 @@ export const approvedListingSearchInputSchema = z
 		condition: listingConditionSchema.nullable().optional(),
 		brand: z.string().nullable().optional(),
 		search: z.string().nullable().optional(),
-		priceMin: optionalPriceAmountMinorSchema,
-		priceMax: optionalPriceAmountMinorSchema,
+		priceMin: optionalListingPriceInputSchema,
+		priceMax: optionalListingPriceInputSchema,
 	})
 	.transform(({ priceMin, priceMax, ...query }) => ({
 		...query,
@@ -173,9 +177,9 @@ export type ApprovedListingSearchInput = z.infer<
 
 export const cartListingDetailsInputSchema = z.object({
 	ids: z
-		.array(z.string().trim().min(1, "Product ID is required"))
-		.min(1, "At least one product ID is required")
-		.max(100, "Maximum 100 product IDs are allowed"),
+		.array(z.string().trim().min(1, "Listing ID is required"))
+		.min(1, "At least one listing ID is required")
+		.max(100, "Maximum 100 listing IDs are allowed"),
 });
 
 export type CartListingDetailsInput = z.infer<

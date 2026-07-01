@@ -92,7 +92,7 @@ enum MediaCleanupJobStatus {
 
 enum MediaCleanupJobSourceType {
   USER_PROFILE
-  PRODUCT
+  LISTING
 }
 
 model User {
@@ -130,7 +130,7 @@ model UserSettings {
 
 model AppSettings {
   id        Int      @id @default(1)
-  currency  String   @default("USD")
+  currency  String   @default("TWD")
   updatedAt DateTime @updatedAt
 }
 
@@ -174,7 +174,7 @@ model Purchase {
   customerIdSnapshot String
   purchaseNumber     String         @unique
   totalAmountCents   Int
-  currencyCode       String         @default("USD")
+  currencyCode       String         @default("TWD")
   paymentStatus      PaymentStatus  @default(MANUALLY_CONFIRMED)
   status             PurchaseStatus @default(OPEN)
   buyerName          String
@@ -200,7 +200,7 @@ model SellerOrder {
   sellerId         String?
   sellerIdSnapshot String
   subtotalCents    Int
-  currencyCode     String            @default("USD")
+  currencyCode     String            @default("TWD")
   status           SellerOrderStatus @default(NEW)
   trackingNumber   String?
 
@@ -234,7 +234,7 @@ model SellerOrderItem {
   unitPriceCents    Int
   quantity          Int
   subTotalCents     Int
-  currencyCode      String @default("USD")
+  currencyCode      String @default("TWD")
 
   sellerOrder SellerOrder @relation(fields: [sellerOrderId], references: [id], onDelete: Cascade)
 
@@ -256,7 +256,7 @@ model Listing {
   images           Json
   description      String
   priceAmountMinor Int
-  currencyCode     String           @default("USD")
+  currencyCode     String           @default("TWD")
   stock            Int
   isApproved       Boolean
   listingStatus    ListingStatus    @default(PENDING)

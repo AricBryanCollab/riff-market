@@ -1,4 +1,5 @@
 import type { ListingStatus } from "@/domains/listings/domain/listing";
+import type { ListingImageDto } from "@/domains/listings/dto/listing-read-model";
 import type { ListingCategory, ListingCondition } from "@/types/enum";
 
 export type ListingFormDraftFields = {
@@ -13,7 +14,7 @@ export type ListingFormDraftFields = {
 };
 
 export type UpdateListingFormDraft = ListingFormDraftFields & {
-	readonly images: (File | string)[];
+	readonly images: ListingImageDto[];
 };
 
 export type ListingMutationDto = {
@@ -24,11 +25,9 @@ export type ListingMutationDto = {
 	readonly condition?: string;
 	readonly brand: string;
 	readonly model: string;
-	readonly images: string[];
+	readonly images: ListingImageDto[];
 	readonly description: string;
-	readonly price: number;
 	readonly priceAmountMinor: number;
-	readonly priceCents: number;
 	readonly currencyCode: string;
 	readonly stock: number;
 	readonly isApproved: boolean;
@@ -39,12 +38,12 @@ export type ListingMutationDto = {
 
 export type ListingMutationResponseDto = {
 	readonly message: string;
-	readonly product: ListingMutationDto;
+	readonly listing: ListingMutationDto;
 };
 
 export type ListingRemovalResponseDto = {
 	readonly message: string;
-	readonly product: {
+	readonly listing: {
 		readonly listingId: string;
 		readonly mode: "DELETED" | "WITHDRAWN";
 		readonly message: string;

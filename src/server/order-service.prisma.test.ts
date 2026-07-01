@@ -99,11 +99,11 @@ describeDb("order service Prisma integration", () => {
 			totalAmount: 275,
 			items: expect.arrayContaining([
 				expect.objectContaining({
-					productId: "listing-1",
+					listingId: "listing-1",
 					quantity: 1,
 				}),
 				expect.objectContaining({
-					productId: "listing-2",
+					listingId: "listing-2",
 					quantity: 2,
 				}),
 			]),

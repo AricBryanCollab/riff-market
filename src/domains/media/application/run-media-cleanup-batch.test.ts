@@ -27,7 +27,7 @@ function makeJob(overrides: Partial<StoredCleanupJob> = {}): StoredCleanupJob {
 		id: "job-1",
 		provider: "cloudinary",
 		assetType: "image",
-		providerAssetId: "products/one",
+		providerAssetId: "listings/one",
 		attempts: 0,
 		maxAttempts: 5,
 		status: MediaCleanupJobStatus.PENDING,
@@ -330,9 +330,9 @@ describe("runMediaCleanupBatchUseCase", () => {
 
 	it("stops after the configured limit even when more jobs are available", async () => {
 		const jobs = [
-			makeJob({ id: "job-1", providerAssetId: "products/one" }),
-			makeJob({ id: "job-2", providerAssetId: "products/two" }),
-			makeJob({ id: "job-3", providerAssetId: "products/three" }),
+			makeJob({ id: "job-1", providerAssetId: "listings/one" }),
+			makeJob({ id: "job-2", providerAssetId: "listings/two" }),
+			makeJob({ id: "job-3", providerAssetId: "listings/three" }),
 		];
 		const { deletedTargets, ports } = createFakeCleanupPorts({ jobs });
 
@@ -343,8 +343,8 @@ describe("runMediaCleanupBatchUseCase", () => {
 		});
 
 		expect(deletedTargets).toEqual([
-			"products/one:30000",
-			"products/two:30000",
+			"listings/one:30000",
+			"listings/two:30000",
 		]);
 		expect(jobs.map((job) => job.status)).toEqual([
 			MediaCleanupJobStatus.SUCCEEDED,
@@ -373,7 +373,7 @@ describe("runMediaCleanupBatchUseCase", () => {
 		});
 		const pendingJob = makeJob({
 			id: "pending",
-			providerAssetId: "products/pending",
+			providerAssetId: "listings/pending",
 		});
 		const { ports, events } = createFakeCleanupPorts({
 			jobs: [pendingJob],

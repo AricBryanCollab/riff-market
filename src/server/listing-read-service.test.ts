@@ -4,13 +4,13 @@ import type {
 	ListingReadStatus,
 } from "@/domains/listings/dto/listing-read-model";
 import {
-	getApprovedListingsForProductApi,
-	getListingDetailsForProductApi,
+	getListingDetailsReadDto,
+	searchApprovedListingReadDtos,
 	type ListingReadServiceDependencies,
 } from "./listing-read-service";
 
-describe("listing read product behavior", () => {
-	it("hides missing and non-public product details", async () => {
+describe("listing read behavior", () => {
+	it("hides missing and non-public listing details", async () => {
 		const dependencies = makeDependencies([
 			makeListing({ id: "pending-listing", listingStatus: "PENDING" }),
 			makeListing({ id: "declined-listing", listingStatus: "DECLINED" }),
@@ -18,24 +18,24 @@ describe("listing read product behavior", () => {
 		]);
 
 		await expect(
-			getListingDetailsForProductApi("missing-listing", dependencies),
+			getListingDetailsReadDto("missing-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsForProductApi("pending-listing", dependencies),
+			getListingDetailsReadDto("pending-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsForProductApi("declined-listing", dependencies),
+			getListingDetailsReadDto("declined-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsForProductApi("withdrawn-listing", dependencies),
+			getListingDetailsReadDto("withdrawn-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
 	});
 
-	it("searches approved listings from product filter input", async () => {
+	it("searches approved listings from listing filter input", async () => {
 		const telecaster = makeListing({ id: "telecaster" });
 		const dependencies = makeDependencies([telecaster]);
 
-		const result = await getApprovedListingsForProductApi(
+		const result = await searchApprovedListingReadDtos(
 			{
 				limit: "5",
 				offset: "10",
@@ -44,8 +44,8 @@ describe("listing read product behavior", () => {
 				condition: "USED",
 				brand: "Fender",
 				search: "tele",
-				priceMin: "199.95",
-				priceMax: "500",
+				priceMin: "19995",
+				priceMax: "50000",
 			},
 			dependencies,
 		);
@@ -57,7 +57,7 @@ describe("listing read product behavior", () => {
 				isApproved: true,
 				listingStatus: "APPROVED",
 				priceAmountMinor: 19995,
-				priceCents: 19995,
+				currencyCode: "TWD",
 				createdAt: "2026-06-18T00:00:00.000Z",
 			},
 		]);
@@ -108,12 +108,15 @@ function makeListing({
 		condition: "USED",
 		brand: "Fender",
 		model: "American Standard",
-		images: [`https://cdn.example.com/${id}.jpg`],
+		images: [
+			{
+				imageId: id,
+				url: `https://cdn.example.com/${id}.jpg`,
+			},
+		],
 		description: "A test listing",
-		price: 199.95,
 		priceAmountMinor: 19995,
-		priceCents: 19995,
-		currencyCode: "USD",
+		currencyCode: "TWD",
 		stock: 2,
 		listingStatus,
 		createdAt: new Date("2026-06-18T00:00:00.000Z"),

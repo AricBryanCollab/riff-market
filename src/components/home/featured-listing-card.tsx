@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import MusicNote from "@/assets/music-note";
 import ConditionBadge from "@/components/home/condition-badge";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 interface FeaturedListingCardProps {
 	listing: ListingReadDto;
@@ -10,7 +11,7 @@ interface FeaturedListingCardProps {
 const FeaturedListingCard = ({ listing }: FeaturedListingCardProps) => {
 	return (
 		<Link
-			to="/product/$id"
+			to="/listing/$id"
 			params={{ id: listing.id }}
 			className="group block rounded-xl overflow-hidden border border-border hover:border-foreground transition-colors"
 		>
@@ -29,7 +30,10 @@ const FeaturedListingCard = ({ listing }: FeaturedListingCardProps) => {
 					{listing.name}
 				</h3>
 				<p className="text-lg font-semibold text-foreground mt-2">
-					${listing.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+					{formatMoneyAmountMinor(
+						listing.priceAmountMinor,
+						listing.currencyCode,
+					)}
 				</p>
 			</div>
 		</Link>

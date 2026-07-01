@@ -12,6 +12,7 @@ Index:
 |IMPORTANT:Before editing a listed area, inspect all matching context cards
 |class-vs-functions.md:{src/domains/**,src/server/**}
 |garden-agent-context.md:{.garden/context/**,AGENTS.md}
+|listing-money-read-contract.md:{src/components/**,src/domains/listings/**,src/hooks/use-cart-details.*,src/hooks/use-update-listing.ts,src/routes/cart.tsx,src/routes/checkout.tsx,src/routes/product/**,src/server/listing-*}
 |service-application-layers.md:{src/domains/**,src/server/**}
 <!-- garden:index:end -->
 <!-- garden:agents:end -->

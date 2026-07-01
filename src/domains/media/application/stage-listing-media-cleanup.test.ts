@@ -16,9 +16,9 @@ describe("stageListingMediaForCleanup", () => {
 				listingId: "listing-1",
 				sellerId: "seller-1",
 				assets: [
-					cleanupImage("products/one"),
-					cleanupImage("products/two"),
-					cleanupImage("products/two"),
+					cleanupImage("listings/one"),
+					cleanupImage("listings/two"),
+					cleanupImage("listings/two"),
 					cleanupImage(""),
 				],
 			},
@@ -31,13 +31,13 @@ describe("stageListingMediaForCleanup", () => {
 				cleanupBatchId: "batch-1",
 				listingId: "listing-1",
 				sellerId: "seller-1",
-				asset: cleanupImage("products/one"),
+				asset: cleanupImage("listings/one"),
 			},
 			{
 				cleanupBatchId: "batch-1",
 				listingId: "listing-1",
 				sellerId: "seller-1",
-				asset: cleanupImage("products/two"),
+				asset: cleanupImage("listings/two"),
 			},
 		]);
 	});

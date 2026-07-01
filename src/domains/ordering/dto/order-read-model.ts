@@ -29,11 +29,11 @@ export type OrderingOrderReadStatus =
 export type OrderingOrderItemReadModel = {
 	readonly id: string;
 	readonly orderId: string;
-	readonly productId: string;
+	readonly listingId: string;
 	readonly quantity: number;
 	readonly unitPrice: number;
 	readonly subTotal: number;
-	readonly product: {
+	readonly listing: {
 		readonly id: string;
 		readonly name: string;
 		readonly images: string[];

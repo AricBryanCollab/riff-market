@@ -15,21 +15,21 @@ describe("PrismaAccountMediaCleanupStaging", () => {
 		});
 		db.listing.findMany.mockResolvedValue([
 			{
-				id: "product-1",
+				id: "listing-1",
 				images: [
 					{
-						url: "https://res.cloudinary.com/riff/image/upload/products/one.jpg",
-						publicId: "products/one",
+						url: "https://res.cloudinary.com/riff/image/upload/listings/one.jpg",
+						publicId: "listings/one",
 					},
 					{
-						url: "https://res.cloudinary.com/riff/image/upload/products/two.jpg",
+						url: "https://res.cloudinary.com/riff/image/upload/listings/two.jpg",
 						provider: "CLOUDINARY",
 						assetType: "IMAGE",
-						providerAssetId: " products/two ",
+						providerAssetId: " listings/two ",
 					},
 					{
-						url: "https://res.cloudinary.com/riff/image/upload/products/two-copy.jpg",
-						publicId: "products/two",
+						url: "https://res.cloudinary.com/riff/image/upload/listings/two-copy.jpg",
+						publicId: "listings/two",
 					},
 					{
 						url: "https://cdn.example.com/assets/three.jpg",
@@ -75,18 +75,18 @@ describe("PrismaAccountMediaCleanupStaging", () => {
 					cleanupBatchId: "cleanup-batch-1",
 					provider: "cloudinary",
 					assetType: "image",
-					providerAssetId: "products/one",
-					sourceType: MediaCleanupJobSourceType.PRODUCT,
-					sourceId: "product-1",
+					providerAssetId: "listings/one",
+					sourceType: MediaCleanupJobSourceType.LISTING,
+					sourceId: "listing-1",
 					sourceUserId: "user-1",
 				},
 				{
 					cleanupBatchId: "cleanup-batch-1",
 					provider: "cloudinary",
 					assetType: "image",
-					providerAssetId: "products/two",
-					sourceType: MediaCleanupJobSourceType.PRODUCT,
-					sourceId: "product-1",
+					providerAssetId: "listings/two",
+					sourceType: MediaCleanupJobSourceType.LISTING,
+					sourceId: "listing-1",
 					sourceUserId: "user-1",
 				},
 			],

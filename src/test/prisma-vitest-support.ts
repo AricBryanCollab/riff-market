@@ -4,10 +4,9 @@ import { cleanDatabase, createTestPrismaClient } from "./prisma-test-data";
 export {
 	cleanDatabase,
 	createTestPrismaClient,
-	productStock,
+	listingStock,
 	seedListing,
 	seedMarketplaceUsers,
-	seedProduct,
 	seedPurchaseWithSellerOrders,
 } from "./prisma-test-data";
 

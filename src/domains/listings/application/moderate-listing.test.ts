@@ -26,7 +26,7 @@ function makeListing(
 		category: "ELECTRIC",
 		condition: "USED",
 		primaryImageUrl: "https://cdn.example.com/listing.jpg",
-		price: Money.fromMinor(125_00, "USD"),
+		price: Money.fromMinor(1250, "TWD"),
 		stock: 3,
 		status: "PENDING",
 		...overrides,

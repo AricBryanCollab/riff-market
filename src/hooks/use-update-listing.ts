@@ -1,15 +1,21 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { priceAmountMinorToDecimalPrice } from "@/domains/listings/application/listing-money";
 import type {
 	ListingMutationResponseDto,
 	UpdateListingFormDraft,
 } from "@/domains/listings/dto/listing-command";
 import type { UpdateListingFormInput } from "@/domains/listings/dto/listing-form";
 import { useListingById } from "@/hooks/use-get-listings";
-import type { ImageFile } from "@/hooks/use-upload-image";
+import {
+	existingImageFile,
+	type ImageFile,
+	isExistingImageFile,
+	isNewImageFile,
+} from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
-import { invalidateProductCache as invalidateListingCompatibilityCache } from "@/lib/tanstack-query/cache-policy";
+import { invalidateListingCache } from "@/lib/tanstack-query/cache-policy";
 import { updateListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
 import type { ListingCategory, ListingCondition } from "@/types/enum";
@@ -27,6 +33,13 @@ function prepareListingFormData(data: UpdateListingFormInput): FormData {
 		formData.append("description", data.description);
 	if (data.price !== undefined) formData.append("price", String(data.price));
 	if (data.stock !== undefined) formData.append("stock", String(data.stock));
+
+	if (data.imageUpdateMode !== undefined) {
+		formData.append("imageUpdateMode", data.imageUpdateMode);
+		data.imageUpdateItems?.forEach((item) => {
+			formData.append("imageUpdateItem", JSON.stringify(item));
+		});
+	}
 
 	if (data.images && data.images.length > 0) {
 		data.images.forEach((file) => {
@@ -63,17 +76,13 @@ const useUpdateListing = (id: string) => {
 			description: listingData.description,
 			images: listingData.images,
 			category: listingData.category,
-			price: listingData.price,
+			price: priceAmountMinorToDecimalPrice(listingData.priceAmountMinor),
 			stock: listingData.stock,
 		});
 
 		if (listingData.images && Array.isArray(listingData.images)) {
-			const initialImages: ImageFile[] = listingData.images.map(
-				(url: string) => ({
-					file: new File([], `${url}`, { type: "image/jpeg" }),
-					preview: url,
-				}),
-			);
+			const initialImages: ImageFile[] =
+				listingData.images.map(existingImageFile);
 			setImages(initialImages);
 		}
 	}, [listingData]);
@@ -135,7 +144,7 @@ const useUpdateListing = (id: string) => {
 			}) as Promise<ListingMutationResponseDto>;
 		},
 		onSuccess: async () => {
-			await invalidateListingCompatibilityCache(queryClient);
+			await invalidateListingCache(queryClient);
 			showToast(
 				"The listing has been updated. Please wait again for admin approval",
 				"success",
@@ -156,9 +165,21 @@ const useUpdateListing = (id: string) => {
 
 		if (!listingDraft) return;
 
-		const newFiles = images
-			.filter((img) => !img.file.name.startsWith("https://res.cloudinary.com"))
-			.map((img) => img.file);
+		const newFiles = images.filter(isNewImageFile).map((img) => img.file);
+		let newImageIndex = 0;
+		const imageUpdateItems = images.map((image) => {
+			if (isExistingImageFile(image)) {
+				return {
+					kind: "existing" as const,
+					imageId: image.imageId,
+				};
+			}
+
+			return {
+				kind: "new" as const,
+				index: newImageIndex++,
+			};
+		});
 
 		const payload: UpdateListingFormInput = {
 			name: listingDraft.name,
@@ -169,6 +190,8 @@ const useUpdateListing = (id: string) => {
 			category: listingDraft.category,
 			price: listingDraft.price,
 			stock: listingDraft.stock,
+			imageUpdateMode: "replace",
+			imageUpdateItems,
 			...(newFiles.length ? { images: newFiles } : {}),
 		};
 

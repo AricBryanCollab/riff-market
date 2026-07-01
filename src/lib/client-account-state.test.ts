@@ -31,7 +31,7 @@ describe("clearAuthenticatedClientState", () => {
 		useThemeStore.getState().setTheme("light");
 	});
 
-	it("clears account-owned client state without clearing product cache", () => {
+	it("clears account-owned client state without clearing listing cache", () => {
 		const user = makeUser();
 
 		queryClient.setQueryData(queryKeys.auth.user, user);
@@ -39,11 +39,11 @@ describe("clearAuthenticatedClientState", () => {
 		queryClient.setQueryData(queryKeys.orders.byRole("CUSTOMER"), [
 			{ id: "order-1" },
 		]);
-		queryClient.setQueryData(queryKeys.products.featured, [
-			{ id: "product-1" },
+		queryClient.setQueryData(queryKeys.listings.featured, [
+			{ id: "listing-1" },
 		]);
 
-		useCartStore.getState().addItem("product-1", user.id, user.role);
+		useCartStore.getState().addItem("listing-1", user.id, user.role);
 		useUserStore.getState().setUser(user);
 		useThemeStore.getState().setTheme("dark");
 		useThemeStore.getState().setPreviewTheme("light");
@@ -57,8 +57,8 @@ describe("clearAuthenticatedClientState", () => {
 		expect(
 			queryClient.getQueryData(queryKeys.orders.byRole("CUSTOMER")),
 		).toBeUndefined();
-		expect(queryClient.getQueryData(queryKeys.products.featured)).toEqual([
-			{ id: "product-1" },
+		expect(queryClient.getQueryData(queryKeys.listings.featured)).toEqual([
+			{ id: "listing-1" },
 		]);
 		expect(useCartStore.getState()).toMatchObject({
 			items: [],

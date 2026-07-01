@@ -69,7 +69,7 @@ export function ShopPageListingActions({
 			case "ADMIN":
 			case "SELLER":
 				return (
-					<Button onClick={() => navigate({ from: "/product/new" })}>
+					<Button onClick={() => navigate({ from: "/listing/new" })}>
 						<div className="flex items-center gap-2">
 							<Plus className="size-4" />
 							<BodySmall>Add Listing</BodySmall>
@@ -174,7 +174,7 @@ export function ListingDetailsActions({
 				}
 
 				if (actionKey === "edit") {
-					navigate({ from: "/product/edit/$id" });
+					navigate({ from: "/listing/edit/$id" });
 				} else {
 					setOpenDialog("deleteListing");
 				}
@@ -260,7 +260,7 @@ export function ListingDetailsActions({
 						<IconButton
 							icon={Pencil}
 							disabled={isListingModerationPending || !canEditOrDelete}
-							onClick={() => navigate({ from: "/product/edit/$id" })}
+							onClick={() => navigate({ from: "/listing/edit/$id" })}
 							backgroundColor="bg-primary hover:bg-accent hover:text-primary"
 						/>
 						<IconButton

@@ -6,18 +6,13 @@ import type {
 	ListingReadDto,
 	PendingListingCount,
 } from "@/domains/listings/dto/listing-read-model";
-import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import {
 	type ApprovedListingSearchServerInput,
-	getApprovedListingsProductApiFn as getApprovedListingsCompatibilityFn,
-	getListingDetailsProductApiFn as getListingDetailsCompatibilityFn,
-	getListingStatusCountProductApiFn as getListingStatusCountCompatibilityFn,
-} from "@/server/listing-read.functions";
-
-type ListingReadError = {
-	readonly error: string;
-	readonly details?: unknown;
-};
+	fetchApprovedListings,
+	fetchListingDetails,
+	fetchListingStatusCount,
+} from "@/lib/tanstack-query/listing-read-client";
+import { queryKeys } from "@/lib/tanstack-query/query-keys";
 
 function toApprovedListingSearchServerInput(
 	filters: ApprovedListingSearchFilterQuery,
@@ -30,10 +25,8 @@ function toApprovedListingSearchServerInput(
 		brand: toNullableQueryString(filters?.brand),
 		search: toNullableQueryString(filters?.search),
 		condition: toNullableQueryString(filters?.condition),
-		priceMin:
-			filters?.priceMin !== undefined ? filters.priceMin.toString() : null,
-		priceMax:
-			filters?.priceMax !== undefined ? filters.priceMax.toString() : null,
+		priceMin: filters?.priceMin ?? null,
+		priceMax: filters?.priceMax ?? null,
 	};
 }
 
@@ -41,78 +34,39 @@ function toNullableQueryString(value: string | undefined): string | null {
 	return value ? value : null;
 }
 
-function unwrapListingReadResult<T>(result: T | ListingReadError): T {
-	if (isListingReadError(result)) {
-		throw new Error(result.error);
-	}
-
-	return result;
-}
-
-function isListingReadError(value: unknown): value is ListingReadError {
-	return (
-		typeof value === "object" &&
-		value !== null &&
-		"error" in value &&
-		typeof value.error === "string"
-	);
-}
-
 export const approvedListingsQueryOpt = (
 	filters: ApprovedListingSearchFilterQuery,
 ) =>
 	queryOptions<ListingReadDto[]>({
-		queryKey: queryKeys.products.approved(filters),
+		queryKey: queryKeys.listings.approved(filters),
 		queryFn: async () => {
-			const result = await getApprovedListingsCompatibilityFn({
-				data: toApprovedListingSearchServerInput(filters),
-			});
-
-			return unwrapListingReadResult(result) as ListingReadDto[];
+			return fetchApprovedListings(toApprovedListingSearchServerInput(filters));
 		},
 		staleTime: 1000 * 60 * 5,
 	});
 
 export const featuredListingsQueryOpt = queryOptions<ListingReadDto[]>({
-	queryKey: queryKeys.products.featured,
+	queryKey: queryKeys.listings.featured,
 	queryFn: async () => {
-		const result = await getApprovedListingsCompatibilityFn({
-			data: {
-				...toApprovedListingSearchServerInput({ limit: 5 }),
-				random: "true",
-			},
+		return fetchApprovedListings({
+			...toApprovedListingSearchServerInput({ limit: 5 }),
+			random: "true",
 		});
-
-		return unwrapListingReadResult(result) as ListingReadDto[];
 	},
 	staleTime: 1000 * 60 * 5,
 });
 
 export const listingByIdQueryOpt = (id: string) =>
 	queryOptions<ListingReadDto>({
-		queryKey: queryKeys.products.detail(id),
-		queryFn: async () => {
-			const result = await getListingDetailsCompatibilityFn({
-				data: { listingId: id },
-			});
-
-			return unwrapListingReadResult(result) as ListingReadDto;
-		},
+		queryKey: queryKeys.listings.detail(id),
+		queryFn: async () => fetchListingDetails(id),
 		retry: false,
 	});
 
 export const listingCountByStatusQueryOpt = (status: ListingCountStatusQuery) =>
 	queryOptions<ApprovedListingCount | PendingListingCount>({
-		queryKey: queryKeys.products.countByStatus(status),
-		queryFn: async () => {
-			const result = await getListingStatusCountCompatibilityFn({
-				data: { status },
-			});
-
-			return unwrapListingReadResult(result) as
-				| ApprovedListingCount
-				| PendingListingCount;
-		},
+		queryKey: queryKeys.listings.countByStatus(status),
+		queryFn: async () => fetchListingStatusCount(status),
 	});
 
 export const useApprovedListings = (

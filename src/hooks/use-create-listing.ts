@@ -6,9 +6,9 @@ import type {
 	ListingMutationResponseDto,
 } from "@/domains/listings/dto/listing-command";
 import type { CreateListingFormInput } from "@/domains/listings/dto/listing-form";
-import type { ImageFile } from "@/hooks/use-upload-image";
+import type { NewImageFile } from "@/hooks/use-upload-image";
 import { clientLogger } from "@/lib/client-logger";
-import { invalidateProductCache as invalidateListingCompatibilityCache } from "@/lib/tanstack-query/cache-policy";
+import { invalidateListingCache } from "@/lib/tanstack-query/cache-policy";
 import { createListingFn } from "@/server/listing.functions";
 import { useToastStore } from "@/store/toast";
 import type { ListingCategory, ListingCondition } from "@/types/enum";
@@ -46,7 +46,7 @@ function prepareListingFormData(data: CreateListingFormInput): FormData {
 const useCreateListing = () => {
 	const [listingDraft, setListingDraft] =
 		useState<ListingFormDraftFields>(initialListingDraft);
-	const [images, setImages] = useState<ImageFile[]>([]);
+	const [images, setImages] = useState<NewImageFile[]>([]);
 	const queryClient = useQueryClient();
 	const { showToast } = useToastStore();
 	const navigate = useNavigate();
@@ -61,7 +61,7 @@ const useCreateListing = () => {
 				data: prepareListingFormData(data),
 			}) as Promise<ListingMutationResponseDto>,
 		onSuccess: async () => {
-			await invalidateListingCompatibilityCache(queryClient);
+			await invalidateListingCache(queryClient);
 			showToast(
 				"You have successfully added your listing. Please wait for admin approval",
 				"success",
@@ -102,7 +102,7 @@ const useCreateListing = () => {
 		);
 	};
 
-	const onImagesChange = (newImages: ImageFile[]) => {
+	const onImagesChange = (newImages: NewImageFile[]) => {
 		setImages(newImages);
 	};
 

@@ -19,7 +19,7 @@ function makeListing(overrides: Partial<ListingSnapshot> = {}) {
 		category: "ELECTRIC",
 		condition: "USED",
 		primaryImageUrl: "https://cdn.example.com/listing.jpg",
-		price: Money.fromMinor(125_00, "USD"),
+		price: Money.fromMinor(1250, "TWD"),
 		stock: 3,
 		status: "APPROVED",
 		...overrides,
@@ -43,7 +43,7 @@ describe("Listing purchase behavior", () => {
 			primaryImageUrl: "https://cdn.example.com/listing.jpg",
 			sellerId: "seller-1",
 			sellerDisplayName: "A Seller",
-			unitPrice: Money.fromMinor(125_00, "USD"),
+			unitPrice: Money.fromMinor(1250, "TWD"),
 			quantity: 2,
 		});
 	});

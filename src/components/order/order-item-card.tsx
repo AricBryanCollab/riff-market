@@ -1,17 +1,14 @@
 import { Package } from "lucide-react";
 import AnimatedLoader from "@/components/animated-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { CartItem } from "@/types/cart";
+import type { CartLine } from "@/types/cart";
 
 interface OrderItemCardProps {
 	isLoadingCart: boolean;
-	cartWithDetails: CartItem[];
+	cartLines: CartLine[];
 }
 
-const OrderItemCard = ({
-	isLoadingCart,
-	cartWithDetails,
-}: OrderItemCardProps) => {
+const OrderItemCard = ({ isLoadingCart, cartLines }: OrderItemCardProps) => {
 	return (
 		<Card>
 			<CardHeader>
@@ -30,35 +27,37 @@ const OrderItemCard = ({
 							containerSizeClass="w-fit min-h-fit mx-auto py-8"
 						/>
 					</div>
-				) : cartWithDetails.length === 0 ? (
+				) : cartLines.length === 0 ? (
 					<p className="text-center text-muted-foreground py-8">
 						Your cart is empty
 					</p>
 				) : (
 					<div className="space-y-4">
-						{cartWithDetails.map((item) => (
+						{cartLines.map((item) => (
 							<div
-								key={item.listing?.id}
+								key={item.listingId}
 								className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"
 							>
 								<div className="size-20 bg-muted rounded-md flex items-center justify-center">
-									<img
-										src={item.listing?.images?.[0]}
-										alt={item.listing?.name}
-										className="w-full h-full object-cover"
-									/>
+									{item.imageUrl && (
+										<img
+											src={item.imageUrl}
+											alt={item.imageAlt}
+											className="w-full h-full object-cover"
+										/>
+									)}
 								</div>
 								<div className="grid grid-cols-2">
 									<div className="flex flex-col gap-2">
-										<h4 className="font-medium">{item.listing?.name}</h4>
+										<h4 className="font-medium">{item.title}</h4>
 										<p className="text-sm text-muted-foreground">
 											Quantity: {item.quantity}
 										</p>
 									</div>
 									<div className="flex flex-col items-end gap-2">
-										<p className="font-semibold">{item.listing?.price}</p>
+										<p className="font-semibold">{item.unitPriceText}</p>
 										<p className="text-sm text-muted-foreground">
-											{(item.listing?.price || 1) * item?.quantity}
+											{item.subtotalText}
 										</p>
 									</div>
 								</div>

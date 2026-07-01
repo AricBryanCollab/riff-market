@@ -1,11 +1,13 @@
-export const DEFAULT_LISTING_CURRENCY_CODE = "USD";
+import {
+	MARKETPLACE_CURRENCY_CODE,
+	requireCurrencyPolicy,
+} from "@/domains/shared/domain/currency";
+import { Money } from "@/domains/shared/domain/money";
+import type { AppError } from "@/domains/shared/domain/result";
+
+export const DEFAULT_LISTING_CURRENCY_CODE = MARKETPLACE_CURRENCY_CODE;
 
 export type ListingMoneyPersistence = {
-	priceAmountMinor: number;
-	currencyCode: string;
-};
-
-export type ListingMoneySource = {
 	priceAmountMinor: number;
 	currencyCode: string;
 };
@@ -20,24 +22,67 @@ type ListingPriceRangePersistence = {
 	lte?: number;
 };
 
+export type ListingCartSubtotalLine = {
+	readonly priceAmountMinor: number;
+	readonly currencyCode: string;
+	readonly quantity: number;
+};
+
+export type ListingCartSubtotalError =
+	AppError<"LISTING_CART_SUBTOTAL_INVALID_MONEY">;
+
+export type ListingCartSubtotalResult =
+	| {
+			readonly status: "valid";
+			readonly subtotal: Money;
+	  }
+	| {
+			readonly status: "invalid";
+			readonly subtotal: Money;
+			readonly error: ListingCartSubtotalError;
+	  };
+
 const decimalPricePattern = /^(\d+)(?:\.(\d+))?$/;
+const listingPriceMinorUnitDigits = requireCurrencyPolicy(
+	DEFAULT_LISTING_CURRENCY_CODE,
+).minorUnitDigits;
 
 export function parseListingPriceInputToAmountMinor(
 	price: string | number,
 ): number {
 	const value = normalizePriceInput(price);
 
-	return decimalPriceStringToAmountMinor(value, 2);
+	return decimalPriceStringToAmountMinor(value, listingPriceMinorUnitDigits);
 }
 
 export function parseOptionalListingPriceInputToAmountMinor(
 	price: string | null | undefined,
 ): number | undefined {
-	if (price === undefined || price === null || price.trim() === "") {
+	const value = normalizeOptionalListingPriceInput(price);
+
+	if (value === undefined) {
 		return undefined;
 	}
 
-	return parseListingPriceInputToAmountMinor(price);
+	return decimalPriceStringToAmountMinor(value, listingPriceMinorUnitDigits);
+}
+
+export function normalizeOptionalListingPriceInput(
+	price: unknown,
+): string | undefined {
+	if (price === undefined || price === null) {
+		return undefined;
+	}
+
+	const value = String(price).trim();
+
+	if (value.length === 0) {
+		return undefined;
+	}
+
+	decimalPriceStringToAmountMinor(value, listingPriceMinorUnitDigits);
+
+	return value;
 }
 
 export function priceAmountMinorToDecimalPrice(
@@ -45,7 +90,7 @@ export function priceAmountMinorToDecimalPrice(
 ): number {
 	assertSafeNonNegativeInteger(priceAmountMinor, "Listing price minor amount");
 
-	return priceAmountMinor / 100;
+	return priceAmountMinor / 10 ** listingPriceMinorUnitDigits;
 }
 
 export function toListingMoneyPersistence(
@@ -56,21 +101,6 @@ export function toListingMoneyPersistence(
 	return {
 		priceAmountMinor,
 		currencyCode: DEFAULT_LISTING_CURRENCY_CODE,
-	};
-}
-
-export function normalizeListingMoney<T extends ListingMoneySource>(
-	listing: T,
-): Omit<T, "price" | "priceAmountMinor" | "priceCents" | "currencyCode"> & {
-	price: number;
-	priceAmountMinor: number;
-	priceCents: number;
-	currencyCode: string;
-} {
-	return {
-		...listing,
-		price: priceAmountMinorToDecimalPrice(listing.priceAmountMinor),
-		priceCents: listing.priceAmountMinor,
 	};
 }
 
@@ -102,6 +132,34 @@ export function toListingPriceRangePersistence({
 	};
 }
 
+export function calculateListingCartSubtotal(
+	lines: ListingCartSubtotalLine[],
+): ListingCartSubtotalResult {
+	try {
+		let subtotal: Money | undefined;
+
+		for (const line of lines) {
+			const lineSubtotal = Money.fromMinor(
+				line.priceAmountMinor,
+				line.currencyCode,
+			).multiply(line.quantity);
+
+			subtotal = subtotal ? subtotal.add(lineSubtotal) : lineSubtotal;
+		}
+
+		return {
+			status: "valid",
+			subtotal: subtotal ?? Money.zero(DEFAULT_LISTING_CURRENCY_CODE),
+		};
+	} catch (error) {
+		return {
+			status: "invalid",
+			subtotal: Money.zero(DEFAULT_LISTING_CURRENCY_CODE),
+			error: listingCartSubtotalError(error),
+		};
+	}
+}
+
 function normalizePriceInput(price: string | number): string {
 	if (typeof price === "number") {
 		assertFiniteNonNegativeNumber(price);
@@ -131,14 +189,16 @@ function decimalPriceStringToAmountMinor(
 	const fraction = match[2] ?? "";
 
 	if (maxFractionDigits !== undefined && fraction.length > maxFractionDigits) {
-		throw new Error("Listing price must use at most two decimal places");
+		throw new Error(listingPriceFractionDigitsMessage(maxFractionDigits));
 	}
 
-	const wholeUnitMinorAmount = wholeUnits * 100;
-	const minorAmountFromFraction = Number(fraction.slice(0, 2).padEnd(2, "0"));
-	const shouldRound = Number(fraction[2] ?? "0") >= 5;
-	const priceAmountMinor =
-		wholeUnitMinorAmount + minorAmountFromFraction + (shouldRound ? 1 : 0);
+	const fractionDigits = maxFractionDigits ?? 2;
+	const minorUnitScale = 10 ** fractionDigits;
+	const wholeUnitMinorAmount = wholeUnits * minorUnitScale;
+	const minorAmountFromFraction = Number(
+		fraction.slice(0, fractionDigits).padEnd(fractionDigits, "0"),
+	);
+	const priceAmountMinor = wholeUnitMinorAmount + minorAmountFromFraction;
 
 	assertSafeNonNegativeInteger(priceAmountMinor, "Listing price minor amount");
 
@@ -155,4 +215,26 @@ function assertSafeNonNegativeInteger(value: number, label: string) {
 	if (!Number.isSafeInteger(value) || value < 0) {
 		throw new Error(`${label} must be a non-negative safe integer`);
 	}
+}
+
+function listingPriceFractionDigitsMessage(maxFractionDigits: number) {
+	if (maxFractionDigits === 0) {
+		return `Listing price must use whole ${DEFAULT_LISTING_CURRENCY_CODE} amounts`;
+	}
+
+	return `Listing price must use at most ${maxFractionDigits} decimal places`;
+}
+
+function listingCartSubtotalError(error: unknown): ListingCartSubtotalError {
+	return {
+		code: "LISTING_CART_SUBTOTAL_INVALID_MONEY",
+		message:
+			error instanceof Error &&
+			error.message.startsWith("Money currency mismatch:")
+				? "Cart subtotal requires listings in a single currency"
+				: error instanceof Error
+					? error.message
+					: "Cart subtotal could not be calculated",
+		kind: "invariant",
+	};
 }

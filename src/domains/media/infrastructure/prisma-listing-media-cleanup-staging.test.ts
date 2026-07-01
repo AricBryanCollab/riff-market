@@ -4,7 +4,7 @@ import { stageListingMediaForCleanup } from "@/domains/media/application/stage-l
 import { PrismaListingMediaCleanupStaging } from "./prisma-listing-media-cleanup-staging";
 
 describe("PrismaListingMediaCleanupStaging", () => {
-	it("stages listing image cleanup jobs as product-sourced media cleanup rows", async () => {
+	it("stages listing image cleanup jobs as listing-sourced media cleanup rows", async () => {
 		const db = createDb();
 
 		await stageListingMediaForCleanup(
@@ -14,10 +14,10 @@ describe("PrismaListingMediaCleanupStaging", () => {
 				sellerId: "seller-1",
 				assets: [
 					{
-						url: "https://res.cloudinary.com/riff/image/upload/products/one.jpg",
+						url: "https://res.cloudinary.com/riff/image/upload/listings/one.jpg",
 						provider: "cloudinary",
 						assetType: "image",
-						providerAssetId: "products/one",
+						providerAssetId: "listings/one",
 					},
 				],
 			},
@@ -30,8 +30,8 @@ describe("PrismaListingMediaCleanupStaging", () => {
 					cleanupBatchId: "cleanup-batch-1",
 					provider: "cloudinary",
 					assetType: "image",
-					providerAssetId: "products/one",
-					sourceType: MediaCleanupJobSourceType.PRODUCT,
+					providerAssetId: "listings/one",
+					sourceType: MediaCleanupJobSourceType.LISTING,
 					sourceId: "listing-1",
 					sourceUserId: "seller-1",
 				},

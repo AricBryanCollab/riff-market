@@ -7,6 +7,7 @@ import {
 	CardHeader,
 } from "@/components/ui/card";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 interface ListingCardProps {
 	listing: ListingReadDto;
@@ -22,7 +23,7 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 		<Card className="flex flex-col max-h-125 hover:shadow-lg transition-shadow duration-200 group">
 			<CardHeader className="p-0">
 				<Link
-					to="/product/$id"
+					to="/listing/$id"
 					params={{ id: listing.id }}
 					className="relative block h-48 rounded-t-lg bg-accent overflow-hidden"
 					onClick={(e) => {
@@ -33,10 +34,10 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 					}}
 				>
 					<img
-						src={
-							listing.images[0] ||
-							"https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400"
-						}
+							src={
+								listing.images[0]?.url ||
+								"https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400"
+							}
 						alt={listing.name}
 						className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
 					/>
@@ -62,7 +63,7 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 
 				{/* Listing Name  */}
 				<Link
-					to="/product/$id"
+					to="/listing/$id"
 					params={{ id: listing.id }}
 					className="text-sm font-semibold text-foreground line-clamp-2 mb-1 hover:text-primary transition-colors min-h-10"
 					onClick={(e) => {
@@ -91,7 +92,10 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 				{/* Price and Stock */}
 				<div className="flex items-center w-full justify-between">
 					<span className="text-lg font-bold text-primary">
-						${listing.price.toLocaleString()}
+						{formatMoneyAmountMinor(
+							listing.priceAmountMinor,
+							listing.currencyCode,
+						)}
 					</span>
 					{!isOutOfStock && (
 						<span className="text-xs text-muted-foreground">
@@ -110,7 +114,7 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 					</button>
 				) : (
 					<Link
-						to="/product/$id"
+						to="/listing/$id"
 						params={{ id: listing.id }}
 						className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium text-center transition-colors"
 						onClick={(e) => {

@@ -2,7 +2,7 @@ import type { CleanupImageAssetRef } from "@/types/image-asset";
 
 export type AccountMediaInventory = {
 	readonly profile: AccountProfileMedia | null;
-	readonly products: readonly AccountProductMedia[];
+	readonly listings: readonly AccountListingMedia[];
 };
 
 export type AccountProfileMedia = {
@@ -10,8 +10,8 @@ export type AccountProfileMedia = {
 	readonly profilePic: CleanupImageAssetRef | null;
 };
 
-export type AccountProductMedia = {
-	readonly productId: string;
+export type AccountListingMedia = {
+	readonly listingId: string;
 	readonly images: readonly CleanupImageAssetRef[];
 };
 
@@ -21,7 +21,7 @@ export type AccountMediaCleanupSource =
 			readonly id: string;
 	  }
 	| {
-			readonly kind: "product";
+			readonly kind: "listing";
 			readonly id: string;
 	  };
 
@@ -77,16 +77,16 @@ export function planAccountMediaCleanupJobs(
 				]
 			: [];
 
-	const productJobs = inventory.products.flatMap((product) =>
-		product.images.filter(isStageableCleanupAsset).map((image) =>
+	const listingJobs = inventory.listings.flatMap((listing) =>
+		listing.images.filter(isStageableCleanupAsset).map((image) =>
 			toCleanupJob(command, image, {
-				kind: "product",
-				id: product.productId,
+				kind: "listing",
+				id: listing.listingId,
 			}),
 		),
 	);
 
-	return dedupeCleanupJobs([...profileJobs, ...productJobs]);
+	return dedupeCleanupJobs([...profileJobs, ...listingJobs]);
 }
 
 function toCleanupJob(

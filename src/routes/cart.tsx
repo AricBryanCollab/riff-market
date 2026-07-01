@@ -6,6 +6,7 @@ import SectionContainer from "@/components/section-container";
 import { Button } from "@/components/ui/button";
 import { BodyLarge, BodySmall, H2 } from "@/components/ui/typography";
 import useCartDetails from "@/hooks/use-cart-details";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
 import { requireRole } from "@/utils/require-role";
 
 export const Route = createFileRoute("/cart")({
@@ -19,12 +20,13 @@ function RouteComponent() {
 	const {
 		isCartEmpty,
 		isLoading,
-		totalPrice,
+		cartPricing,
 		cartCount,
-		cartWithDetails,
+		cartLines,
 		handleRemoveItem,
 		handleQuantityChange,
 	} = useCartDetails();
+	const canCheckout = cartPricing.status === "priced";
 
 	if (isLoading) {
 		return <CartDetailsLoadingState />;
@@ -65,7 +67,12 @@ function RouteComponent() {
 								Total Price
 							</BodySmall>
 							<BodyLarge className="font-extrabold leading-none">
-								${totalPrice}
+								{cartPricing.status === "priced"
+									? formatMoneyAmountMinor(
+											cartPricing.totalPriceAmountMinor,
+											cartPricing.currencyCode,
+										)
+									: cartPricing.message}
 							</BodyLarge>
 						</div>
 					</div>
@@ -76,9 +83,9 @@ function RouteComponent() {
 				<div className=" w-full rounded-2xl bg-white p-8">
 					<h2 className="mb-6 text-2xl font-semibold">Items in Your Cart</h2>
 					<div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-						{cartWithDetails.map((item) => (
+						{cartLines.map((item) => (
 							<CartCard
-								key={item.productId}
+								key={item.listingId}
 								cartItem={item}
 								handleRemoveItem={handleRemoveItem}
 								handleQuantityChange={handleQuantityChange}
@@ -90,7 +97,10 @@ function RouteComponent() {
 
 			{!isCartEmpty && (
 				<div className="flex justify-end">
-					<Button onClick={() => navigate({ to: "/checkout" })}>
+					<Button
+						disabled={!canCheckout}
+						onClick={() => navigate({ to: "/checkout" })}
+					>
 						Proceed To Checkout
 					</Button>
 				</div>

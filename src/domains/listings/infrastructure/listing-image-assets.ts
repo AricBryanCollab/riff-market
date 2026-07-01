@@ -89,7 +89,7 @@ async function uploadListingImage(imageFile: File): Promise<ImageAssetRef> {
 		buffer: compressedImage.buffer,
 		filename: imageFile.name,
 		uploadPreset: env.CLOUDINARY_UPLOAD_PRESET,
-		folder: "products",
+		folder: "listings",
 	})) as CloudinaryUploadResult;
 
 	if (!uploadResult?.secure_url || !uploadResult.public_id) {

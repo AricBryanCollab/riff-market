@@ -16,8 +16,9 @@ import SectionContainer from "@/components/section-container";
 import { listingCategoryOptions } from "@/constants/select-options";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
 import { listingByIdQueryOpt } from "@/hooks/use-get-listings";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
 
-export const Route = createFileRoute("/product/$id")({
+export const Route = createFileRoute("/listing/$id")({
 	beforeLoad: async ({ context, params }) => {
 		await context.queryClient
 			.ensureQueryData(listingByIdQueryOpt(params.id))
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/product/$id")({
 });
 
 function RouteComponent() {
-	const { id } = useParams({ from: "/product/$id" });
+	const { id } = useParams({ from: "/listing/$id" });
 	const navigate = useNavigate();
 
 	const {
@@ -82,34 +83,37 @@ function RouteComponent() {
 					<p className="font-medium">Back to Shop</p>
 				</div>
 
-				{/* PRODUCT MAIN SECTION */}
+				{/* LISTING MAIN SECTION */}
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-					{/* PRODUCT IMAGES */}
+					{/* LISTING IMAGES */}
 					<div className="rounded-2xl bg-white p-6">
 						<div className="h-96 w-full rounded-xl bg-slate-200 mb-4 overflow-hidden">
-							<img
-								src={listing.images[selectedImage] || listing.images[0]}
-								alt={listing.name}
-								className="w-full h-full object-cover"
-							/>
+								<img
+									src={
+										listing.images[selectedImage]?.url ||
+										listing.images[0]?.url
+									}
+									alt={listing.name}
+									className="w-full h-full object-cover"
+								/>
 						</div>
 						<div className="grid grid-cols-4 gap-3">
-							{listing.images.slice(0, 4).map((img, idx) => (
-								<button
-									type="button"
-									key={img}
-									onClick={() => setSelectedImage(idx)}
+								{listing.images.slice(0, 4).map((img, idx) => (
+									<button
+										type="button"
+										key={img.imageId}
+										onClick={() => setSelectedImage(idx)}
 									className={`h-20 w-full rounded-lg overflow-hidden transition-all ${
 										selectedImage === idx
 											? "ring-2 ring-primary"
 											: "opacity-70 hover:opacity-100"
 									}`}
 								>
-									<img
-										src={img}
-										alt={`${listing.name} ${idx + 1}`}
-										className="w-full h-full object-cover"
-									/>
+										<img
+											src={img.url}
+											alt={`${listing.name} ${idx + 1}`}
+											className="w-full h-full object-cover"
+										/>
 								</button>
 							))}
 						</div>
@@ -157,7 +161,10 @@ function RouteComponent() {
 						{/* PRICE */}
 						<div className="rounded-xl bg-slate-50 p-6 border-2 border-slate-200">
 							<p className="text-4xl font-bold text-gray-900">
-								${listing.price.toFixed(2)}
+								{formatMoneyAmountMinor(
+									listing.priceAmountMinor,
+									listing.currencyCode,
+								)}
 							</p>
 							<p className="text-sm text-gray-500 mt-1">Price per unit</p>
 						</div>

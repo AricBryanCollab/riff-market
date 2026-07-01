@@ -164,10 +164,13 @@ Clean slate started: 2026-06-11
 - The approved deferred money work is complete in code: `prisma/schema.prisma` removed the legacy Float `Listing.price` column, made `Listing.priceAmountMinor` required, and keeps `currencyCode` required.
 - `prisma/migrations/20260630090000_drop_listing_float_price/migration.sql` backfills any null cents from the old Float column, sets the then-current `priceCents` column non-null, adds a non-negative check constraint, and drops `price`; `20260630110000_rename_listing_price_cents_to_amount_minor` then renames the listing price column, index, and check constraint to `priceAmountMinor`.
 - Listing command, read-model, moderation, purchase-reservation, and test fixture code no longer writes, selects, filters, or falls back to a persisted Float listing price.
-- UI/read DTOs still expose decimal `price` as a compatibility presentation field derived from `priceAmountMinor`; `priceCents` remains a serialized compatibility alias during the current UI transition.
+- Listing read and mutation DTOs no longer serialize decimal `price` or legacy `priceCents`. Frontend display and cart totals derive from `priceAmountMinor` plus `currencyCode`; create/update/search inputs still accept human decimal prices at the boundary.
 
 ## Latest Verification
 
+- Listing money read-contract follow-up typecheck passed: `bun run typecheck`.
+- Listing money read-contract focused unit run passed with the Codex-bundled Node runtime and sandbox-safe Vite config loading: `/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/vitest/vitest.mjs run --config vitest.config.ts --configLoader runner src/utils/format-money.test.ts src/domains/listings/application/listing-money.test.ts` -> 2 files passed; 11 tests passed.
+- `git diff --check` passed after the listing money read-contract follow-up.
 - Listing price minor-unit rename Prisma schema formatting passed with the Codex-bundled Node runtime: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js format --schema prisma/schema.prisma`.
 - Listing price minor-unit rename Prisma schema validation passed with the Codex-bundled Node runtime: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js validate --schema prisma/schema.prisma`.
 - Listing price minor-unit rename Prisma client generation passed with the Codex-bundled Node runtime: `DATABASE_URL=postgresql://user:pass@localhost:5432/riff_market_generate /Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node node_modules/prisma/build/index.js generate --schema prisma/schema.prisma`.

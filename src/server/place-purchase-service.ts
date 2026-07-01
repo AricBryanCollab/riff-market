@@ -83,7 +83,7 @@ function toCommand(
 ): PlacePurchaseCommand {
 	return {
 		items: input.items.map((item) => ({
-			listingId: item.productId,
+			listingId: item.listingId,
 			quantity: item.quantity,
 		})),
 		buyerName: getBuyerName(user),

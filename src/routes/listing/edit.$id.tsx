@@ -1,58 +1,81 @@
-import { createFileRoute } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	useNavigate,
+	useParams,
+} from "@tanstack/react-router";
 import { Camera } from "lucide-react";
 import Counter from "@/components/counter";
+import { ListingDetailErrorState } from "@/components/error-states";
 import { FormField } from "@/components/form-field";
 import { FormTextArea } from "@/components/form-text-area";
 import ImageUploader from "@/components/image-uploader";
+import { ListingLoadingState } from "@/components/loading-states";
 import { NumberField } from "@/components/number-field";
 import { SearchableSelect } from "@/components/searchable-select";
 import SectionContainer from "@/components/section-container";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Body, H4 } from "@/components/ui/typography";
-import {
-	listingCategoryOptions,
-	listingConditionOptions,
-} from "@/constants/select-options";
-import useCreateListing from "@/hooks/use-create-listing";
-import type { ListingCategory, ListingCondition } from "@/types/enum";
+import { listingCategoryOptions } from "@/constants/select-options";
+import useUpdateListing from "@/hooks/use-update-listing";
+import type { ImageFile } from "@/hooks/use-upload-image";
+import type { ListingCategory } from "@/types/enum";
 import { requireRole } from "@/utils/require-role";
 
-export const Route = createFileRoute("/product/new")({
+export const Route = createFileRoute("/listing/edit/$id")({
 	beforeLoad: async ({ context }) =>
-		requireRole(context.queryClient, ["SELLER", "ADMIN"]),
+		requireRole(context.queryClient, ["ADMIN", "SELLER"]),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
+	const { id } = useParams({ from: "/listing/edit/$id" });
+	const navigate = useNavigate();
+
 	const {
 		listingDraft,
 		images,
-		isListingCreating,
+		isListingLoading,
+		isListingUpdateLoading,
+		isListingError,
 		onChange,
 		onSelectChange,
 		onQuantityChange,
 		onImagesChange,
-		clearCreateListingForm,
 		handleSubmit,
-	} = useCreateListing();
+		refetchListingDetails,
+	} = useUpdateListing(id);
+
+	if (isListingLoading) {
+		return <ListingLoadingState />;
+	}
+
+	if (!listingDraft || isListingError) {
+		return <ListingDetailErrorState refetch={refetchListingDetails} />;
+	}
 
 	return (
 		<SectionContainer>
 			<div className="my-4 max-w-6xl flex flex-col gap-3">
-				<H4>Add A New Listing To Sell</H4>
+				<H4>Edit Your Listing Information</H4>
 				<Body>
-					Fill up the form to add the listing. RiffMarket App admin would check
-					and approve the listing if it is valid to be sold in our community
-					marketplace.
+					Fill up the form to edit your listing. Please note that after
+					submitting your changes, your listing will be set to pending status
+					and will require approval from the RiffMarket App admin before it
+					becomes visible in the marketplace again.
+				</Body>
+				<Body className="text-accent font-semibold">
+					Important Note: If you upload new images, your previous listing photos
+					will be permanently deleted and replaced with the new ones.
 				</Body>
 			</div>
+
 			<form onSubmit={handleSubmit}>
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 					<FormField
 						id="name"
 						label="Listing Name"
 						onChange={onChange}
-						value={listingDraft.name}
+						value={listingDraft.name || ""}
 					/>
 
 					<FormField
@@ -60,7 +83,7 @@ function RouteComponent() {
 						label="Listing Brand"
 						placeholder="eg. Fender, Gibson, Yamaha, Taylor"
 						onChange={onChange}
-						value={listingDraft.brand}
+						value={listingDraft.brand || ""}
 					/>
 
 					<FormField
@@ -68,13 +91,25 @@ function RouteComponent() {
 						label="Model Specification"
 						placeholder="eg. American Standard, Jimi Hendrix Special Edition"
 						onChange={onChange}
-						value={listingDraft.model}
+						value={listingDraft.model || ""}
+					/>
+
+					<SearchableSelect
+						options={listingCategoryOptions.map((p) => ({
+							label: p.label,
+							value: p.value,
+						}))}
+						value={listingDraft.category || "OTHERS"}
+						onValueChange={(value: string) =>
+							onSelectChange("category", value as ListingCategory)
+						}
+						label="Listing Classification"
 					/>
 
 					<FormTextArea
 						id="description"
 						label="Listing Description"
-						value={listingDraft.description}
+						value={listingDraft.description || ""}
 						onChange={onChange}
 						placeholder="Please provide a description for the listing. This gives the customer insights about the instrument, gear, or accessory you want to sell."
 						maxLength={200}
@@ -83,36 +118,10 @@ function RouteComponent() {
 					/>
 
 					<div className="lg:col-span-1">
-						<SearchableSelect
-							options={listingCategoryOptions.map((p) => ({
-								label: p.label,
-								value: p.value,
-							}))}
-							value={listingDraft.category}
-							onValueChange={(value: string) =>
-								onSelectChange("category", value as ListingCategory)
-							}
-							label="Listing Classification"
-						/>
-
-						<SearchableSelect
-							options={listingConditionOptions.map((p) => ({
-								label: p.label,
-								value: p.value,
-							}))}
-							value={listingDraft.condition}
-							onValueChange={(value: string) =>
-								onSelectChange("condition", value as ListingCondition)
-							}
-							label="Listing Condition"
-						/>
-					</div>
-
-					<div className="lg:col-span-1">
 						<Counter
 							inputId="stock"
 							label="Stock Quantity"
-							value={listingDraft.stock}
+							value={listingDraft.stock || 0}
 							onChange={onQuantityChange}
 							min={0}
 							max={10}
@@ -121,15 +130,17 @@ function RouteComponent() {
 
 						<NumberField
 							id="price"
-							label="Listing Price Per Unit"
-							value={listingDraft.price}
+							label="Listing Price Per Unit (TWD)"
+							value={listingDraft.price || 0}
 							onChange={onChange}
+							min={0}
+							step={1}
 						/>
 					</div>
 				</div>
 
 				<div className="mt-6 ">
-					<ImageUploader
+					<ImageUploader<ImageFile>
 						inputId="images"
 						label="Listing Photos"
 						images={images}
@@ -142,15 +153,15 @@ function RouteComponent() {
 
 				<div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start md:justify-end">
 					<LoadingButton
-						disabled={isListingCreating}
+						loading={isListingUpdateLoading}
 						variant="outline"
 						type="button"
-						onClick={clearCreateListingForm}
+						onClick={() => navigate({ to: `/shop` })}
 					>
-						Clear
+						Go Back
 					</LoadingButton>
-					<LoadingButton loading={isListingCreating} type="submit">
-						Add Listing
+					<LoadingButton loading={isListingUpdateLoading} type="submit">
+						Update My Listing
 					</LoadingButton>
 				</div>
 			</form>

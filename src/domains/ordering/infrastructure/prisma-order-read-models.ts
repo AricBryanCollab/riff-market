@@ -233,11 +233,11 @@ function toOrderItemReadModel(
 	return {
 		id: item.id,
 		orderId,
-		productId: item.listingId,
+		listingId: item.listingId,
 		quantity: item.quantity,
 		unitPrice: centsToDecimal(item.unitPriceCents),
 		subTotal: centsToDecimal(item.subTotalCents),
-		product: {
+		listing: {
 			id: item.listingId,
 			name: item.listingName,
 			images: item.primaryImageUrl ? [item.primaryImageUrl] : [],

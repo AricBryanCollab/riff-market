@@ -1,32 +1,11 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import { fetchPendingModerationListings } from "@/lib/tanstack-query/listing-read-client";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import { getPendingModerationListingsProductApiFn as getPendingModerationListingsCompatibilityFn } from "@/server/listing-read.functions";
-
-type ListingReadError = {
-	readonly error: string;
-};
-
-function unwrapListingReadResult<T>(result: T | ListingReadError): T {
-	if (
-		typeof result === "object" &&
-		result !== null &&
-		"error" in result &&
-		typeof result.error === "string"
-	) {
-		throw new Error(result.error);
-	}
-
-	return result as T;
-}
 
 export const pendingListingsQueryOpt = queryOptions<ListingReadDto[]>({
-	queryKey: queryKeys.products.pending,
-	queryFn: async () => {
-		const result = await getPendingModerationListingsCompatibilityFn();
-
-		return unwrapListingReadResult(result) as ListingReadDto[];
-	},
+	queryKey: queryKeys.listings.pending,
+	queryFn: fetchPendingModerationListings,
 	retry: false,
 	staleTime: 30000,
 });
@@ -56,7 +35,7 @@ const useGetPendingListings = (options: UseGetPendingListingsOptions = {}) => {
 	const isEmptyPendingListings = pendingListings.length === 0;
 
 	const refetch = () => {
-		queryClient.invalidateQueries({ queryKey: queryKeys.products.pending });
+		queryClient.invalidateQueries({ queryKey: queryKeys.listings.pending });
 	};
 
 	return {

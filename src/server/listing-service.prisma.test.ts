@@ -29,7 +29,7 @@ import type { RequestError } from "@/server/request-error";
 import {
 	describeDb,
 	seedMarketplaceUsers,
-	seedListing as seedProduct,
+	seedListing,
 	seedPurchaseWithSellerOrders,
 	setupPrismaTestDatabase,
 } from "@/test/prisma-vitest-support";
@@ -54,7 +54,7 @@ describeDb("listing service Prisma integration", () => {
 		formData.append("brand", "Fender");
 		formData.append("model", "American Standard");
 		formData.append("description", "A vertical integration listing");
-		formData.append("price", "199.95");
+		formData.append("price", "19995");
 		formData.append("stock", "3");
 		formData.append("image", imageFile("listing.jpg"));
 
@@ -66,36 +66,39 @@ describeDb("listing service Prisma integration", () => {
 
 		expect(response).toMatchObject({
 			message: "New listing has been added",
-			product: {
+			listing: {
 				sellerId: "seller-1",
 				name: "Smoke Telecaster",
-				price: 199.95,
 				priceAmountMinor: 19995,
-				priceCents: 19995,
-				currencyCode: "USD",
+				currencyCode: "TWD",
 				stock: 3,
 				isApproved: false,
 				listingStatus: "PENDING",
-				images: ["https://cdn.example.com/upload-1.jpg"],
+				images: [
+					{
+						imageId: "upload-1",
+						url: "https://cdn.example.com/upload-1.jpg",
+					},
+				],
 			},
 		});
 		expect(imageManager.uploadedFileNames).toEqual(["listing.jpg"]);
 
 		const listing = await db.listing.findUniqueOrThrow({
-			where: { id: response.product.id },
+			where: { id: response.listing.id },
 		});
 		expect(listing).toMatchObject({
 			sellerId: "seller-1",
 			name: "Smoke Telecaster",
 			priceAmountMinor: 19995,
-			currencyCode: "USD",
+			currencyCode: "TWD",
 			isApproved: false,
 			listingStatus: "PENDING",
 		});
 	});
 
 	it("updates seller listings back to pending and cleans up replaced images", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			isApproved: true,
@@ -104,7 +107,7 @@ describeDb("listing service Prisma integration", () => {
 		const formData = new FormData();
 		formData.append("listingId", "listing-1");
 		formData.append("name", "Updated Telecaster");
-		formData.append("price", "249.50");
+		formData.append("price", "24950");
 		formData.append("image", imageFile("updated.jpg"));
 
 		const response = await updateListingForCurrentUser(
@@ -113,15 +116,18 @@ describeDb("listing service Prisma integration", () => {
 			commandDependencies(db, imageManager),
 		);
 
-		expect(response.product).toMatchObject({
+		expect(response.listing).toMatchObject({
 			id: "listing-1",
 			name: "Updated Telecaster",
-			price: 249.5,
 			priceAmountMinor: 24950,
-			priceCents: 24950,
 			isApproved: false,
 			listingStatus: "PENDING",
-			images: ["https://cdn.example.com/upload-1.jpg"],
+			images: [
+				{
+					imageId: "upload-1",
+					url: "https://cdn.example.com/upload-1.jpg",
+				},
+			],
 		});
 		expect(imageManager.cleanedImages).toEqual([
 			{
@@ -142,7 +148,7 @@ describeDb("listing service Prisma integration", () => {
 	});
 
 	it("lets admins update listings without resetting approval", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			isApproved: false,
@@ -171,13 +177,13 @@ describeDb("listing service Prisma integration", () => {
 	});
 
 	it("moderates listings and creates seller notifications", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-approve",
 			sellerId: "seller-1",
 			isApproved: false,
 			listingStatus: "PENDING",
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-decline",
 			sellerId: "seller-1",
 			name: "Declined Telecaster",
@@ -216,13 +222,13 @@ describeDb("listing service Prisma integration", () => {
 			orderBy: { createdAt: "asc" },
 		});
 		expect(notifications.map((notification) => notification.message)).toEqual([
-			"Great News! Your product Telecaster has been approved and live at the RiffMarket shop",
-			"Your product Declined Telecaster has been declined by the admin",
+			"Great News! Your listing Telecaster has been approved and live at the RiffMarket shop",
+			"Your listing Declined Telecaster has been declined by the admin",
 		]);
 	});
 
 	it("rolls back moderation status when notification creation fails", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-rollback",
 			sellerId: "seller-1",
 			isApproved: false,
@@ -252,7 +258,7 @@ describeDb("listing service Prisma integration", () => {
 	});
 
 	it("returns conflict and does not notify when moderation status changes after read", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-stale",
 			sellerId: "seller-1",
 			isApproved: false,
@@ -283,7 +289,7 @@ describeDb("listing service Prisma integration", () => {
 	});
 
 	it("hard-deletes unreferenced listings and cleans up images", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			isApproved: false,
@@ -296,10 +302,10 @@ describeDb("listing service Prisma integration", () => {
 			commandDependencies(db, imageManager),
 		);
 
-		expect(response.product).toEqual({
+		expect(response.listing).toEqual({
 			listingId: "listing-1",
 			mode: "DELETED",
-			message: "Product deleted successfully",
+			message: "Listing deleted successfully",
 		});
 		await expect(
 			db.listing.findUnique({ where: { id: "listing-1" } }),
@@ -313,7 +319,7 @@ describeDb("listing service Prisma integration", () => {
 	});
 
 	it("withdraws referenced listings instead of deleting them", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			isApproved: true,
@@ -327,10 +333,10 @@ describeDb("listing service Prisma integration", () => {
 			commandDependencies(db, imageManager),
 		);
 
-		expect(response.product).toEqual({
+		expect(response.listing).toEqual({
 			listingId: "listing-1",
 			mode: "WITHDRAWN",
-			message: "Product withdrawn successfully",
+			message: "Listing withdrawn successfully",
 		});
 
 		const listing = await db.listing.findUniqueOrThrow({
@@ -344,7 +350,7 @@ describeDb("listing service Prisma integration", () => {
 	});
 
 	it("blocks sellers from mutating another seller's listing", async () => {
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			isApproved: true,

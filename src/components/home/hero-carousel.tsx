@@ -5,6 +5,7 @@ import MusicNote from "@/assets/music-note";
 import ConditionBadge from "@/components/home/condition-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 interface HeroCarouselProps {
 	listings: ListingReadDto[];
@@ -38,17 +39,17 @@ const HeroCarousel = ({
 				{/* Image Section */}
 				<div className="relative">
 					<Link
-						to="/product/$id"
+						to="/listing/$id"
 						params={{ id: listing.id }}
 						className="block relative aspect-square bg-muted rounded-2xl overflow-hidden"
 					>
 						<div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
-							{listing.images && listing.images.length > 0 ? (
-								<img
-									src={listing.images[0]}
-									alt={listing.name}
-									className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-								/>
+								{listing.images && listing.images.length > 0 ? (
+									<img
+										src={listing.images[0]?.url}
+										alt={listing.name}
+										className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+									/>
 							) : (
 								<div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
 									<MusicNote size={128} />
@@ -105,17 +106,17 @@ const HeroCarousel = ({
 						{listing.brand} · {listing.model}
 					</p>
 					<p className="text-3xl font-semibold text-foreground mt-6">
-						$
-						{listing.price.toLocaleString("en-US", {
-							minimumFractionDigits: 2,
-						})}
+						{formatMoneyAmountMinor(
+							listing.priceAmountMinor,
+							listing.currencyCode,
+						)}
 					</p>
 					<p className="text-sm text-muted-foreground mt-2">
 						Sold by {listing.seller.firstName}{" "}
 					</p>
 
 					<Link
-						to="/product/$id"
+						to="/listing/$id"
 						params={{ id: listing.id }}
 						className={buttonVariants({ size: "lg", className: "mt-8 w-fit" })}
 					>

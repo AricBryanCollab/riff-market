@@ -38,7 +38,7 @@ function toPrismaCleanupJobInput(
 		provider: job.asset.provider,
 		assetType: job.asset.assetType,
 		providerAssetId: job.asset.providerAssetId,
-		sourceType: MediaCleanupJobSourceType.PRODUCT,
+		sourceType: MediaCleanupJobSourceType.LISTING,
 		sourceId: job.listingId,
 		sourceUserId: job.sellerId,
 	};

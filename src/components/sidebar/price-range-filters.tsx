@@ -1,35 +1,80 @@
-import { DollarSign, X } from "lucide-react";
+import { Banknote, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MARKETPLACE_CURRENCY_CODE } from "@/domains/shared/domain/currency";
 import useShopSearchFilters from "@/hooks/use-shop-search-filters";
+import { parseOptionalListingPriceSearchInput } from "@/utils/shop-search";
 
-const getPriceValue = (value: string): number | undefined => {
-	if (!value) {
-		return undefined;
-	}
-
-	const parsed = Number(value);
-	return Number.isFinite(parsed) ? parsed : undefined;
-};
+const formatPriceInput = (priceInput: string) =>
+	`${priceInput} ${MARKETPLACE_CURRENCY_CODE}`;
 
 const PriceRangeFilters = () => {
 	const { searchParams, setPriceRange } = useShopSearchFilters();
+	const [priceMinDraft, setPriceMinDraft] = useState(
+		searchParams.priceMin ?? "",
+	);
+	const [priceMaxDraft, setPriceMaxDraft] = useState(
+		searchParams.priceMax ?? "",
+	);
+	const [priceMinError, setPriceMinError] = useState<string | null>(null);
+	const [priceMaxError, setPriceMaxError] = useState<string | null>(null);
+
+	useEffect(() => {
+		setPriceMinDraft(searchParams.priceMin ?? "");
+		setPriceMinError(null);
+	}, [searchParams.priceMin]);
+
+	useEffect(() => {
+		setPriceMaxDraft(searchParams.priceMax ?? "");
+		setPriceMaxError(null);
+	}, [searchParams.priceMax]);
 
 	const handlePriceMinChange = (value: string) => {
-		const min = getPriceValue(value);
-		setPriceRange(min, searchParams.priceMax);
+		const result = parseOptionalListingPriceSearchInput(value);
+		setPriceMinDraft(value);
+
+		if (result.status === "invalid") {
+			setPriceMinError(result.message);
+			return;
+		}
+
+		setPriceMinError(null);
+		setPriceRange(
+			result.status === "valid" ? result.value : undefined,
+			searchParams.priceMax,
+		);
 	};
 
 	const handlePriceMaxChange = (value: string) => {
-		const max = getPriceValue(value);
-		setPriceRange(searchParams.priceMin, max);
+		const result = parseOptionalListingPriceSearchInput(value);
+		setPriceMaxDraft(value);
+
+		if (result.status === "invalid") {
+			setPriceMaxError(result.message);
+			return;
+		}
+
+		setPriceMaxError(null);
+		setPriceRange(
+			searchParams.priceMin,
+			result.status === "valid" ? result.value : undefined,
+		);
+	};
+
+	const clearPriceRange = () => {
+		setPriceMinDraft("");
+		setPriceMaxDraft("");
+		setPriceMinError(null);
+		setPriceMaxError(null);
+		setPriceRange(undefined, undefined);
 	};
 
 	return (
 		<div className="space-y-3">
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-2">
-					<DollarSign size={16} className="text-muted-foreground" />
+					<Banknote size={16} className="text-muted-foreground" />
 					<h3 className="font-semibold text-sm uppercase tracking-wide">
 						Price Range
 					</h3>
@@ -39,7 +84,7 @@ const PriceRangeFilters = () => {
 					<Button
 						variant="ghost"
 						size="sm"
-						onClick={() => setPriceRange(undefined, undefined)}
+						onClick={clearPriceRange}
 						className="h-6 px-2"
 					>
 						<X size={14} />
@@ -50,27 +95,40 @@ const PriceRangeFilters = () => {
 				<Input
 					type="number"
 					placeholder="Min"
-					value={searchParams.priceMin ?? ""}
+					value={priceMinDraft}
 					onChange={(e) => handlePriceMinChange(e.target.value)}
+					min={0}
+					step={1}
+					aria-invalid={priceMinError !== null}
 					className="flex-1"
 				/>
 				<span className="text-muted-foreground">—</span>
 				<Input
 					type="number"
 					placeholder="Max"
-					value={searchParams.priceMax ?? ""}
+					value={priceMaxDraft}
 					onChange={(e) => handlePriceMaxChange(e.target.value)}
+					min={0}
+					step={1}
+					aria-invalid={priceMaxError !== null}
 					className="flex-1"
 				/>
 			</div>
+			{(priceMinError || priceMaxError) && (
+				<p className="text-xs text-destructive">
+					{priceMinError ?? priceMaxError}
+				</p>
+			)}
 			{(searchParams.priceMin !== undefined ||
 				searchParams.priceMax !== undefined) && (
 				<p className="text-xs text-muted-foreground">
-					{searchParams.priceMin !== undefined && `$${searchParams.priceMin}`}
+					{searchParams.priceMin !== undefined &&
+						formatPriceInput(searchParams.priceMin)}
 					{searchParams.priceMin !== undefined &&
 						searchParams.priceMax !== undefined &&
 						" - "}
-					{searchParams.priceMax !== undefined && `$${searchParams.priceMax}`}
+					{searchParams.priceMax !== undefined &&
+						formatPriceInput(searchParams.priceMax)}
 				</p>
 			)}
 		</div>

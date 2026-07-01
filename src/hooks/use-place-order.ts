@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import type { CheckoutCartState } from "@/hooks/use-cart-details";
 import { clientLogger } from "@/lib/client-logger";
 import { invalidateOrdersCache } from "@/lib/tanstack-query/cache-policy";
 import { createOrder } from "@/lib/tanstack-query/orders-queries";
@@ -9,8 +10,7 @@ import { useCartStore } from "@/store/cart";
 import { useToastStore } from "@/store/toast";
 import type { PaymentMethod } from "@/types/enum";
 
-const usePlaceOrder = () => {
-	const cartItems = useCartStore((state) => state.items);
+const usePlaceOrder = (checkoutCart: CheckoutCartState) => {
 	const clearCart = useCartStore((state) => state.clearCart);
 	const { data: user } = useAuthUser();
 	const address = user?.address ?? null;
@@ -76,13 +76,13 @@ const usePlaceOrder = () => {
 			return;
 		}
 
-		if (cartItems.length === 0) {
-			showToast("Your cart is empty", "error");
+		if (checkoutCart.status !== "ready") {
+			showToast(checkoutCart.message, "error");
 			return;
 		}
 
 		const orderPayload = {
-			items: cartItems,
+			items: checkoutCart.items,
 			shippingAddress,
 			paymentMethod,
 		};

@@ -2,7 +2,7 @@
 CREATE TYPE "MediaCleanupJobStatus" AS ENUM ('PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED');
 
 -- CreateEnum
-CREATE TYPE "MediaCleanupJobSourceType" AS ENUM ('USER_PROFILE', 'PRODUCT');
+CREATE TYPE "MediaCleanupJobSourceType" AS ENUM ('USER_PROFILE', 'LISTING');
 
 -- CreateTable
 CREATE TABLE "MediaCleanupJob" (

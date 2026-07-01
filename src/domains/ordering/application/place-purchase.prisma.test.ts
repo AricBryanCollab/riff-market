@@ -18,9 +18,9 @@ import { PrismaSellerOrderStatusRepository } from "@/domains/ordering/infrastruc
 import type { PrismaTransactionContext } from "@/domains/shared/infrastructure/prisma-unit-of-work";
 import {
 	describeDb,
-	productStock,
+	listingStock,
 	seedMarketplaceUsers,
-	seedProduct,
+	seedListing,
 	setupPrismaTestDatabase,
 } from "@/test/prisma-vitest-support";
 
@@ -34,13 +34,13 @@ describeDb("PlacePurchase Prisma integration", () => {
 
 	it("persists purchase placement, seller orders, notifications, and guarded stock reduction", async () => {
 		await seedMarketplaceUsers(db);
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			priceAmountMinor: 125_00,
 			stock: 2,
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-2",
 			sellerId: "seller-2",
 			name: "Jazzmaster",
@@ -136,8 +136,8 @@ describeDb("PlacePurchase Prisma integration", () => {
 				}),
 			],
 		});
-		expect(await productStock(db, "listing-1")).toBe(1);
-		expect(await productStock(db, "listing-2")).toBe(1);
+		expect(await listingStock(db, "listing-1")).toBe(1);
+		expect(await listingStock(db, "listing-2")).toBe(1);
 		expect(await db.notification.count()).toBe(3);
 		expect(
 			await db.notification.count({
@@ -153,7 +153,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 
 	it("allows approved listings even when legacy isApproved is stale", async () => {
 		await seedMarketplaceUsers(db);
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-approved-status",
 			sellerId: "seller-1",
 			priceAmountMinor: 125_00,
@@ -183,13 +183,13 @@ describeDb("PlacePurchase Prisma integration", () => {
 				purchaseNumber: "RM-1",
 			}),
 		});
-		expect(await productStock(db, "listing-approved-status")).toBe(0);
+		expect(await listingStock(db, "listing-approved-status")).toBe(0);
 		expect(await db.purchase.count()).toBe(1);
 	});
 
 	it("rejects withdrawn listings even when legacy isApproved is stale", async () => {
 		await seedMarketplaceUsers(db);
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-withdrawn-status",
 			sellerId: "seller-1",
 			priceAmountMinor: 125_00,
@@ -219,20 +219,20 @@ describeDb("PlacePurchase Prisma integration", () => {
 				code: "PLACE_PURCHASE_LISTING_NOT_ORDERABLE",
 			}),
 		});
-		expect(await productStock(db, "listing-withdrawn-status")).toBe(1);
+		expect(await listingStock(db, "listing-withdrawn-status")).toBe(1);
 		expect(await db.purchase.count()).toBe(0);
 		expect(await db.sellerOrder.count()).toBe(0);
 	});
 
 	it("serves buyer history and seller dashboard reads from target models", async () => {
 		await seedMarketplaceUsers(db);
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			priceAmountMinor: 125_00,
 			stock: 2,
 		});
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-2",
 			sellerId: "seller-2",
 			name: "Jazzmaster",
@@ -284,17 +284,17 @@ describeDb("PlacePurchase Prisma integration", () => {
 					status: "OPEN",
 					items: expect.arrayContaining([
 						expect.objectContaining({
-							productId: "listing-1",
+							listingId: "listing-1",
 							quantity: 1,
 							unitPrice: 125,
 							subTotal: 125,
-							product: expect.objectContaining({
+							listing: expect.objectContaining({
 								name: "Telecaster",
 								images: ["https://cdn.example.com/listing-1.jpg"],
 							}),
 						}),
 						expect.objectContaining({
-							productId: "listing-2",
+							listingId: "listing-2",
 							quantity: 2,
 							unitPrice: 75,
 							subTotal: 150,
@@ -328,7 +328,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 					},
 					items: [
 						expect.objectContaining({
-							productId: "listing-1",
+							listingId: "listing-1",
 							quantity: 1,
 						}),
 					],
@@ -350,10 +350,10 @@ describeDb("PlacePurchase Prisma integration", () => {
 				status: "OPEN",
 				items: expect.arrayContaining([
 					expect.objectContaining({
-						productId: "listing-1",
+						listingId: "listing-1",
 					}),
 					expect.objectContaining({
-						productId: "listing-2",
+						listingId: "listing-2",
 					}),
 				]),
 			}),
@@ -427,7 +427,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 
 	it("updates seller order status through the target repository", async () => {
 		await seedMarketplaceUsers(db);
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			priceAmountMinor: 125_00,
@@ -516,7 +516,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 
 	it("combines duplicate cart rows for the same listing", async () => {
 		await seedMarketplaceUsers(db);
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			priceAmountMinor: 125_00,
@@ -557,7 +557,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 			},
 		});
 
-		expect(await productStock(db, "listing-1")).toBe(1);
+		expect(await listingStock(db, "listing-1")).toBe(1);
 		expect(purchase.totalAmountCents).toBe(250_00);
 		expect(purchase.sellerOrders).toHaveLength(1);
 		expect(purchase.sellerOrders[0]?.items).toHaveLength(1);
@@ -571,7 +571,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 
 	it("preserves purchase and seller-order history when buyer and seller accounts are deleted", async () => {
 		await seedMarketplaceUsers(db);
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			priceAmountMinor: 125_00,
@@ -643,7 +643,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 
 	it("rolls back stock and persistence when later notification creation fails", async () => {
 		await seedMarketplaceUsers(db);
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			priceAmountMinor: 125_00,
@@ -672,7 +672,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 				code: "PLACE_PURCHASE_TRANSACTION_FAILED",
 			}),
 		});
-		expect(await productStock(db, "listing-1")).toBe(1);
+		expect(await listingStock(db, "listing-1")).toBe(1);
 		expect(await db.purchase.count()).toBe(0);
 		expect(await db.sellerOrder.count()).toBe(0);
 		expect(await db.notification.count()).toBe(0);
@@ -680,7 +680,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 
 	it("prevents overselling with concurrent guarded stock mutations", async () => {
 		await seedMarketplaceUsers(db);
-		await seedProduct(db, {
+		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
 			priceAmountMinor: 125_00,
@@ -711,7 +711,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 					result.error.code === "PLACE_PURCHASE_INSUFFICIENT_STOCK",
 			),
 		).toHaveLength(1);
-		expect(await productStock(db, "listing-1")).toBe(0);
+		expect(await listingStock(db, "listing-1")).toBe(0);
 		expect(await db.purchase.count()).toBe(1);
 		expect(await db.sellerOrder.count()).toBe(1);
 	});

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import type { ListingRemovalResponseDto } from "@/domains/listings/dto/listing-command";
 import { clientLogger } from "@/lib/client-logger";
-import { invalidateProductCache as invalidateListingCompatibilityCache } from "@/lib/tanstack-query/cache-policy";
+import { invalidateListingCache } from "@/lib/tanstack-query/cache-policy";
 import { deleteListingFn } from "@/server/listing.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
@@ -25,7 +25,7 @@ const useDeleteListing = () => {
 				data: { listingId },
 			}) as Promise<ListingRemovalResponseDto>,
 		onSuccess: async () => {
-			await invalidateListingCompatibilityCache(queryClient);
+			await invalidateListingCache(queryClient);
 			showToast("Listing has been successfully deleted", "success");
 			navigate({ to: "/shop" });
 		},

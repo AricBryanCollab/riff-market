@@ -61,7 +61,7 @@ export async function searchApprovedListingReadDtos(
 
 	if (!parsed.success) {
 		return {
-			error: "Invalid product queries",
+			error: "Invalid listing queries",
 			details: parsed.error,
 		};
 	}
@@ -122,8 +122,8 @@ export async function getListingStatusCountDto(
 	const count = await readDependencies.listings.countByStatus(status);
 
 	return isApproved
-		? { approvedProductCount: count }
-		: { pendingProductCount: count };
+		? { approvedListingCount: count }
+		: { pendingListingCount: count };
 }
 
 export async function listRecentListingReadDtos(
@@ -150,7 +150,7 @@ export async function listCartListingReadDtos(
 
 	if (!parsed.success) {
 		return {
-			error: "Invalid product IDs query",
+			error: "Invalid listing IDs query",
 			details: parsed.error,
 		};
 	}
@@ -162,17 +162,6 @@ export async function listCartListingReadDtos(
 
 	return listings.map(toListingReadDto);
 }
-
-export {
-	getListingCategoryCountDtos as getListingCategoryCountsForProductApi,
-	getListingDetailsReadDto as getListingDetailsForProductApi,
-	getListingStatusCountDto as getListingStatusCountForProductApi,
-	listCartListingReadDtos as getCartListingsForProductApi,
-	listPendingModerationListingReadDtos as getPendingModerationListingsForProductApi,
-	listRecentListingReadDtos as getRecentListingsForProductApi,
-	listSellerListingReadDtos as getSellerListingsForProductApi,
-	searchApprovedListingReadDtos as getApprovedListingsForProductApi,
-};
 
 async function createPrismaListingReadDependencies(): Promise<ListingReadServiceDependencies> {
 	const [{ prisma }, readModels] = await Promise.all([
@@ -220,9 +209,7 @@ function toListingReadDto(listing: ListingReadModel): ListingReadDto {
 		model: listing.model,
 		images: listing.images,
 		description: listing.description,
-		price: listing.price,
 		priceAmountMinor: listing.priceAmountMinor,
-		priceCents: listing.priceCents,
 		currencyCode: listing.currencyCode,
 		stock: listing.stock,
 		isApproved: listing.listingStatus === "APPROVED",

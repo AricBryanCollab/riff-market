@@ -27,6 +27,19 @@ const listingPriceSchema = z
 			),
 		),
 	);
+const imageUpdateItemSchema = z.discriminatedUnion("kind", [
+	z.object({
+		kind: z.literal("existing"),
+		imageId: z.string().trim().min(1, "Existing image ID is required"),
+	}),
+	z.object({
+		kind: z.literal("new"),
+		index: z
+			.number()
+			.int("New image index must be a whole number")
+			.min(0, "New image index must be at least 0"),
+	}),
+]);
 
 function parseWithListingPriceIssue<T>(
 	ctx: { addIssue: (issue: { code: "custom"; message: string }) => void },
@@ -59,7 +72,24 @@ export const createListingFormSchema = z.object({
 	stock: z.number().int().min(0, "Stock must be at least 0"),
 });
 
-export const updateListingFormSchema = createListingFormSchema.partial();
+export const updateListingFormSchema = createListingFormSchema
+	.partial()
+	.extend({
+		imageUpdateMode: z.literal("replace").optional(),
+		imageUpdateItems: z.array(imageUpdateItemSchema).max(5).optional(),
+	})
+	.superRefine((data, ctx) => {
+		if (
+			data.imageUpdateItems !== undefined &&
+			data.imageUpdateMode === undefined
+		) {
+			ctx.addIssue({
+				code: "custom",
+				path: ["imageUpdateItems"],
+				message: "Image update mode is required when retaining images",
+			});
+		}
+	});
 
 export type CreateListingFormInput = z.input<typeof createListingFormSchema>;
 export type UpdateListingFormInput = z.input<typeof updateListingFormSchema>;

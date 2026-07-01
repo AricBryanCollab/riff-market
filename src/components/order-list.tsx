@@ -142,10 +142,10 @@ const OrderList = ({
 													key={item.id}
 													className="relative size-12 shrink-0 rounded bg-muted border border-border overflow-hidden"
 												>
-													{item.product.images?.[0] && (
+													{item.listing.images?.[0] && (
 														<img
-															src={item.product.images[0]}
-															alt={item.product.name}
+															src={item.listing.images[0]}
+															alt={item.listing.name}
 															className="w-full h-full object-cover"
 														/>
 													)}

@@ -107,7 +107,21 @@ export function toImageAssetUrls(value: Prisma.JsonValue | null | undefined) {
 
 	return value
 		.map((image) => (isImageAssetRef(image) ? toImageAssetUrl(image) : null))
-		.filter((imageUrl): imageUrl is string => imageUrl !== null);
+			.filter((imageUrl): imageUrl is string => imageUrl !== null);
+}
+
+export function toListingImageDtos(value: Prisma.JsonValue | null | undefined) {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+
+	return value
+		.map(toImageAssetRef)
+		.filter((image): image is ImageAssetRef => image !== null)
+		.map((image) => ({
+			imageId: image.publicId,
+			url: image.url,
+		}));
 }
 
 export function toImageAssetRefs(value: Prisma.JsonValue | null | undefined) {

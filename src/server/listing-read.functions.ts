@@ -48,35 +48,35 @@ export type ApprovedListingSearchServerInput = z.infer<
 	typeof approvedListingSearchServerInputSchema
 >;
 
-export const getListingDetailsProductApiFn = createServerFn({ method: "GET" })
+export const getListingDetailsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => listingDetailsServerInputSchema.parse(data))
 	.handler(async ({ data }) => getListingDetailsReadDto(data.listingId));
 
-export const getApprovedListingsProductApiFn = createServerFn({ method: "GET" })
+export const getApprovedListingsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => approvedListingSearchServerInputSchema.parse(data))
 	.handler(async ({ data }) => searchApprovedListingReadDtos(data));
 
-export const getPendingModerationListingsProductApiFn = createServerFn({
+export const getPendingModerationListingsListingApiFn = createServerFn({
 	method: "GET",
 })
 	.middleware(createRoleServerFunctionMiddleware(["ADMIN"]))
 	.handler(async () => listPendingModerationListingReadDtos());
 
-export const getSellerListingsProductApiFn = createServerFn({ method: "GET" })
+export const getSellerListingsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(authenticatedServerFunctionMiddleware)
 	.handler(async ({ context }) =>
 		listSellerListingReadDtos(context.user.id, context.user.role),
 	);
 
-export const getListingCategoryCountsProductApiFn = createServerFn({
+export const getListingCategoryCountsListingApiFn = createServerFn({
 	method: "GET",
 })
 	.middleware(publicServerFunctionMiddleware)
 	.handler(async () => getListingCategoryCountDtos());
 
-export const getListingStatusCountProductApiFn = createServerFn({
+export const getListingStatusCountListingApiFn = createServerFn({
 	method: "GET",
 })
 	.middleware(publicServerFunctionMiddleware)
@@ -85,12 +85,12 @@ export const getListingStatusCountProductApiFn = createServerFn({
 		getListingStatusCountDto(data.status === "approved"),
 	);
 
-export const getRecentListingsProductApiFn = createServerFn({ method: "GET" })
+export const getRecentListingsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => recentListingsInputSchema.parse(data))
 	.handler(async ({ data }) => listRecentListingReadDtos(data.limit));
 
-export const getCartListingsProductApiFn = createServerFn({ method: "GET" })
+export const getCartListingsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(authenticatedServerFunctionMiddleware)
 	.inputValidator((data) => cartListingDetailsInputSchema.parse(data))
 	.handler(async ({ context, data }) =>

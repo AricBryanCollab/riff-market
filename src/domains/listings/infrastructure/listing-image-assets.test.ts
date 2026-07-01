@@ -36,10 +36,12 @@ function makeImage(name: string) {
 	});
 }
 
-function makeUploadResult(filename: string) {
+function makeUploadResult(filename: string, folder = "listings") {
+	const publicId = `${folder}/${filename.split(".")[0]}`;
+
 	return {
-		secure_url: `https://cdn.example.com/${filename}`,
-		public_id: filename.split(".")[0],
+		secure_url: `https://cdn.example.com/${publicId}.jpg`,
+		public_id: publicId,
 	};
 }
 
@@ -100,14 +102,32 @@ describe("listing image assets", () => {
 		const result = await imageManager.uploadImages(files);
 
 		expect(result).toEqual([
-			makeImageAssetRef("https://cdn.example.com/img-1.jpg"),
-			makeImageAssetRef("https://cdn.example.com/img-2.jpg"),
-			makeImageAssetRef("https://cdn.example.com/img-3.jpg"),
-			makeImageAssetRef("https://cdn.example.com/img-4.jpg"),
-			makeImageAssetRef("https://cdn.example.com/img-5.jpg"),
+			{
+				url: "https://cdn.example.com/listings/img-1.jpg",
+				publicId: "listings/img-1",
+			},
+			{
+				url: "https://cdn.example.com/listings/img-2.jpg",
+				publicId: "listings/img-2",
+			},
+			{
+				url: "https://cdn.example.com/listings/img-3.jpg",
+				publicId: "listings/img-3",
+			},
+			{
+				url: "https://cdn.example.com/listings/img-4.jpg",
+				publicId: "listings/img-4",
+			},
+			{
+				url: "https://cdn.example.com/listings/img-5.jpg",
+				publicId: "listings/img-5",
+			},
 		]);
 		expect(cloudinaryMock.unsignedUploadImage).toHaveBeenCalledTimes(
 			files.length,
+		);
+		expect(cloudinaryMock.unsignedUploadImage).toHaveBeenCalledWith(
+			expect.objectContaining({ folder: "listings" }),
 		);
 		expect(maxActiveUploads).toBeLessThanOrEqual(3);
 		expect(maxActiveUploads).toBeGreaterThan(1);
@@ -132,7 +152,7 @@ describe("listing image assets", () => {
 		await expect(imageManager.uploadImages(files)).rejects.toThrow(
 			"upload failed",
 		);
-		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("img-1");
+		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith("listings/img-1");
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledTimes(1);
 	});
 
