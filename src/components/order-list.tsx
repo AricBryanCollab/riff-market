@@ -14,7 +14,6 @@ const orderListBadgeVariants = cva(
 	{
 		variants: {
 			status: {
-				PENDING: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
 				PENDING_PAYMENT:
 					"bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
 				ON_HOLD_PAYMENT:
@@ -31,7 +30,7 @@ const orderListBadgeVariants = cva(
 			},
 		},
 		defaultVariants: {
-			status: "PENDING",
+			status: "OPEN",
 		},
 	},
 );

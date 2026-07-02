@@ -33,20 +33,6 @@ enum ListingCondition {
   MINT
 }
 
-enum PaymentMethod {
-  CASH
-  PAYPAL
-  VISA
-}
-
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELED
-}
-
 enum PurchaseStatus {
   OPEN
   CANCELED
@@ -105,7 +91,6 @@ model User {
 
   settings      UserSettings?
   listings      Listing[]
-  orders        Order[]
   purchases     Purchase[]
   sellerOrders  SellerOrder[]
   reviews       Review[]
@@ -132,40 +117,6 @@ model AppSettings {
   id        Int      @id @default(1)
   currency  String   @default("TWD")
   updatedAt DateTime @updatedAt
-}
-
-model Order {
-  id              String        @id @default(uuid())
-  userId          String
-  orderDate       DateTime
-  totalAmount     Float
-  shippingAddress String
-  paymentMethod   PaymentMethod
-  trackingNumber  String
-  status          OrderStatus   @default(PENDING)
-
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items         OrderItem[]
-  notifications Notification[]
-
-  @@index([userId])
-  @@index([orderDate])
-}
-
-model OrderItem {
-  id        String @id @default(uuid())
-  orderId   String
-  listingId String
-
-  quantity  Int
-  unitPrice Float
-  subTotal  Float
-
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-
-  @@index([orderId])
-  @@index([listingId])
 }
 
 model Purchase {
@@ -262,9 +213,8 @@ model Listing {
   listingStatus    ListingStatus    @default(PENDING)
   favoritedBy      Favorite[]
 
-  seller     User        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  orderItems OrderItem[]
-  reviews    Review[]
+  seller  User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  reviews Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -332,14 +282,12 @@ model Favorite {
 model Notification {
   id            String  @id @default(uuid())
   userId        String
-  orderId       String?
   purchaseId    String?
   sellerOrderId String?
   message       String
   isRead        Boolean @default(false)
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  order       Order?       @relation(fields: [orderId], references: [id], onDelete: Cascade)
   purchase    Purchase?    @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   sellerOrder SellerOrder? @relation(fields: [sellerOrderId], references: [id], onDelete: Cascade)
 

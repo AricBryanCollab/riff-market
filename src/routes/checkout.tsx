@@ -7,7 +7,6 @@ import {
 	OrderSummaryLoading,
 	OrderSummaryUnavailable,
 } from "@/components/order/order-summary";
-import PaymentMethodSelect from "@/components/order/payment-method-select";
 import ShippingAddressField from "@/components/order/shipping-address-field";
 import SectionContainer from "@/components/section-container";
 import { Button } from "@/components/ui/button";
@@ -35,13 +34,11 @@ function RouteComponent() {
 
 	const {
 		shippingAddress,
-		paymentMethod,
 		address: defaultAddress,
 		isPending: isPlacingOrder,
 		clearAddress,
 		handleDefaultAddress,
 		handleShippingAddressChange,
-		handlePaymentMethodChange,
 		handleSubmit,
 	} = usePlaceOrder(checkoutCart);
 
@@ -94,11 +91,6 @@ function RouteComponent() {
 							clearAddress={clearAddress}
 							disabled={!defaultAddress}
 							setDefaultAddress={handleDefaultAddress}
-						/>
-
-						<PaymentMethodSelect
-							value={paymentMethod}
-							onValueChange={handlePaymentMethodChange}
 						/>
 
 						<div className="lg:hidden">

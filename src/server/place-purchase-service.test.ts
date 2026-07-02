@@ -25,7 +25,6 @@ const customer: ServerUserContext = {
 const validInput: PlacePurchaseInput = {
 	items: [{ listingId: "listing-1", quantity: 2 }],
 	shippingAddress: "123 Market St",
-	paymentMethod: "CASH",
 };
 
 describe("placePurchaseForCurrentUser", () => {
@@ -98,13 +97,11 @@ describe("placePurchaseForCurrentUser", () => {
 		const input = validatePlacePurchaseInput({
 			items: [{ listingId: " listing-1 ", quantity: 1 }],
 			shippingAddress: " 123 Market St ",
-			paymentMethod: "VISA",
 		});
 
 		expect(input).toEqual({
 			items: [{ listingId: "listing-1", quantity: 1 }],
 			shippingAddress: "123 Market St",
-			paymentMethod: "VISA",
 		});
 	});
 
@@ -113,7 +110,6 @@ describe("placePurchaseForCurrentUser", () => {
 			validatePlacePurchaseInput({
 				items: [{ productId: "listing-1", quantity: 1 }],
 				shippingAddress: "123 Market St",
-				paymentMethod: "VISA",
 			}),
 		).toThrow("Invalid order data");
 	});
@@ -123,7 +119,6 @@ describe("placePurchaseForCurrentUser", () => {
 			validatePlacePurchaseInput({
 				items: [],
 				shippingAddress: "x",
-				paymentMethod: "WIRE",
 			});
 		}).toThrow(RequestError);
 	});

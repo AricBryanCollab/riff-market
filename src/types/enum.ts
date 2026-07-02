@@ -9,15 +9,6 @@ export type ListingCategory =
 
 export type ListingCondition = "NEW" | "USED" | "MINT";
 
-export type PaymentMethod = "CASH" | "PAYPAL" | "VISA";
-
-export type LegacyOrderStatus =
-	| "PENDING"
-	| "PROCESSING"
-	| "SHIPPED"
-	| "DELIVERED"
-	| "CANCELED";
-
 export type BuyerOrderSummaryStatus =
 	| "PENDING_PAYMENT"
 	| "OPEN"
@@ -36,11 +27,10 @@ export type SellerOrderReadStatus =
 	| "CANCELED";
 
 export type OrderDisplayStatus =
-	| LegacyOrderStatus
 	| BuyerOrderSummaryStatus
 	| SellerOrderReadStatus;
 
-export type OrderStatus = LegacyOrderStatus;
+export type OrderStatus = SellerOrderReadStatus;
 
 export type DialogType =
 	| "signin"

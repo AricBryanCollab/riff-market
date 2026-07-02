@@ -8,7 +8,6 @@ import { invalidateOrdersCache } from "@/lib/tanstack-query/cache-policy";
 import { createOrder } from "@/lib/tanstack-query/orders-queries";
 import { useCartStore } from "@/store/cart";
 import { useToastStore } from "@/store/toast";
-import type { PaymentMethod } from "@/types/enum";
 
 const usePlaceOrder = (checkoutCart: CheckoutCartState) => {
 	const clearCart = useCartStore((state) => state.clearCart);
@@ -19,9 +18,6 @@ const usePlaceOrder = (checkoutCart: CheckoutCartState) => {
 	const queryClient = useQueryClient();
 
 	const [shippingAddress, setShippingAddress] = useState<string>("");
-	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
-		null,
-	);
 
 	const { mutate, isPending, isError } = useMutation({
 		mutationFn: createOrder,
@@ -59,20 +55,11 @@ const usePlaceOrder = (checkoutCart: CheckoutCartState) => {
 		}
 	};
 
-	const handlePaymentMethodChange = (value: string) => {
-		setPaymentMethod(value as PaymentMethod);
-	};
-
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
 		if (!shippingAddress.trim()) {
 			showToast("Please provide a shipping address", "error");
-			return;
-		}
-
-		if (!paymentMethod) {
-			showToast("Please select a payment method", "error");
 			return;
 		}
 
@@ -84,7 +71,6 @@ const usePlaceOrder = (checkoutCart: CheckoutCartState) => {
 		const orderPayload = {
 			items: checkoutCart.items,
 			shippingAddress,
-			paymentMethod,
 		};
 
 		mutate(orderPayload);
@@ -92,14 +78,12 @@ const usePlaceOrder = (checkoutCart: CheckoutCartState) => {
 
 	return {
 		shippingAddress,
-		paymentMethod,
 		address,
 		isPending,
 		isError,
 		clearAddress,
 		handleDefaultAddress,
 		handleShippingAddressChange,
-		handlePaymentMethodChange,
 		handleSubmit,
 	};
 };

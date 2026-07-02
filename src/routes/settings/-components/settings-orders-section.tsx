@@ -13,7 +13,6 @@ import { formatRelativeTime } from "@/utils/format-date";
 import { formatOrderStatusLabel } from "@/utils/order-status-label";
 
 const orderStatusStyles: Record<OrderDisplayStatus, string> = {
-	PENDING: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
 	PENDING_PAYMENT: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
 	ON_HOLD_PAYMENT: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
 	OPEN: "bg-blue-500/10 text-blue-700 border-blue-500/20",

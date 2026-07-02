@@ -1,4 +1,4 @@
-import type { OrderDisplayStatus, PaymentMethod } from "@/types/enum";
+import type { OrderDisplayStatus } from "@/types/enum";
 
 export interface OrderItem {
 	listingId: string;
@@ -17,7 +17,6 @@ export interface OrderItemWithPricing extends OrderDisplayItem {
 
 interface OrderCheckoutData {
 	shippingAddress: string;
-	paymentMethod: PaymentMethod;
 }
 
 export interface OrderRequest extends OrderCheckoutData {
@@ -49,7 +48,6 @@ export interface OrderResponse {
 	totalAmount: number;
 	shippingAddress: string;
 	trackingNumber: string;
-	paymentMethod?: PaymentMethod;
 	status: OrderDisplayStatus;
 	items?: OrderItemResponse[];
 	customer?: {

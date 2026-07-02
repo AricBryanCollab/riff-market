@@ -17,20 +17,6 @@ export const listingConditionOptions = [
 	{ value: "USED", label: "Used" },
 ] as const;
 
-export const paymentMethodOptions = [
-	{ value: "CASH", label: "Cash" },
-	{ value: "PAYPAL", label: "PayPal" },
-	{ value: "VISA", label: "Visa/Credit Card" },
-] as const;
-
-export const orderStatusOptions = [
-	{ value: "PENDING", label: "Pending" },
-	{ value: "PROCESSING", label: "Processing" },
-	{ value: "SHIPPED", label: "Shipped" },
-	{ value: "DELIVERED", label: "Delivered" },
-	{ value: "CANCELED", label: "Canceled" },
-] as const;
-
 export const chatRoleOptions = [
 	{ value: "USER", label: "User" },
 	{ value: "ASSISTANT", label: "Assistant" },

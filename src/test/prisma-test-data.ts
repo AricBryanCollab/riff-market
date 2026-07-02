@@ -76,8 +76,6 @@ export async function cleanDatabase(db: PrismaClient) {
 	await db.purchase.deleteMany();
 	await db.favorite.deleteMany();
 	await db.review.deleteMany();
-	await db.orderItem.deleteMany();
-	await db.order.deleteMany();
 	await db.listing.deleteMany();
 	await db.userSettings.deleteMany();
 	await db.user.deleteMany();

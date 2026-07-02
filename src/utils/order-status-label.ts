@@ -1,7 +1,6 @@
 import type { OrderDisplayStatus } from "@/types/enum";
 
 const orderStatusLabels: Record<OrderDisplayStatus, string> = {
-	PENDING: "Pending",
 	PROCESSING: "Processing",
 	SHIPPED: "Shipped",
 	DELIVERED: "Delivered",

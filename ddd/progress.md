@@ -28,6 +28,22 @@ Clean slate started: 2026-06-11
 | `10` Naming and polish | Complete for the non-persistence naming scope. DTO, application, infrastructure-helper, route internals, hooks, utilities, UI components, store files, constants, and visible copy now use listing vocabulary where compatibility allows. |
 | `11` Product-to-Listing persistence rename | Complete for listing-owned persistence names. Generated Prisma vocabulary exposes `Listing`/`ListingCategory`/`ListingCondition`, and the new SQL migration renames the physical Product table/enums/productId columns, constraints, and indexes in place. |
 
+## Final Schema Closure
+
+- `prisma/migrations/20260701090000_drop_legacy_order_schema/migration.sql` removes the old fake `Order` / `OrderItem` persistence schema, `OrderStatus`, the old Prisma `PaymentMethod` enum, and the obsolete `Notification.orderId` link.
+- `prisma/migrations/20260701093000_rename_media_cleanup_source_product_to_listing/migration.sql` repairs older local databases that had already applied the media cleanup source enum before it converged from `PRODUCT` to `LISTING`.
+- The local development database and `TEST_DATABASE_URL` database have both applied all migrations through `20260701093000_rename_media_cleanup_source_product_to_listing`.
+- Final verification after schema closure:
+  - `bun run typecheck` passed.
+  - Bundled-Node unit run passed: 46 files passed, 268 tests passed, 9 DB files skipped.
+  - DB-gated run passed: 9 files passed, 51 tests passed.
+  - Touched-file Biome passed for the files changed in this cleanup.
+  - `git diff --check` passed.
+- Thermo-nuclear subagent review found two cleanup issues after the first pass:
+  - the old fake `PaymentMethod` checkout contract still existed after the Prisma enum was dropped
+  - old order-linked notification rows would become unanchored if preserved through the drop migration
+- Follow-up cleanup removed the fake payment-method request/UI/type path and updated the drop migration to delete old `Notification.orderId` rows before dropping the column.
+
 ## Current Slice 7 State
 
 - Review DTOs, use cases, domain review validation, and Prisma adapter now live under `src/domains/reviews`.
