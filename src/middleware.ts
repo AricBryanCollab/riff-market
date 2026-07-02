@@ -11,14 +11,24 @@ const getRequestLoggerDependencies = createServerOnlyFn(async () => {
 });
 
 const getAuthMiddlewareDependencies = createServerOnlyFn(async () => {
-	const [{ findUserById }, { updateRequestContext }, { useAppSession }] =
-		await Promise.all([
-			import("@/data/auth-repo"),
-			import("@/lib/logger"),
-			import("@/utils/session"),
-		]);
+	const [
+		{ prisma },
+		{ PrismaAccountLookup },
+		{ updateRequestContext },
+		{ useAppSession },
+	] = await Promise.all([
+		import("@/data/connect-db"),
+		import("@/domains/accounts/infrastructure/prisma-account-lookup"),
+		import("@/lib/logger"),
+		import("@/utils/session"),
+	]);
+	const accountLookup = new PrismaAccountLookup(prisma);
 
-	return { findUserById, updateRequestContext, useAppSession };
+	return {
+		findUserById: (userId: string) => accountLookup.findById(userId),
+		updateRequestContext,
+		useAppSession,
+	};
 });
 
 export const requestLoggerMiddleware = createMiddleware().server(
