@@ -54,17 +54,31 @@ export type ListingImageCleanupSource = {
 	readonly sellerId: string;
 };
 
-export type ListingMutationPersistenceInput = Omit<
-	ListingMutationFields,
-	"price"
-> & {
-	readonly sellerId?: string;
-	readonly images?: ImageAssetRef[];
-	readonly priceAmountMinor?: number;
-	readonly currencyCode?: string;
+type ListingPersistenceFields = {
+	readonly name: string;
+	readonly category: string;
+	readonly condition: string;
+	readonly brand: string;
+	readonly model: string;
+	readonly description: string;
+	readonly priceAmountMinor: number;
+	readonly currencyCode: string;
+	readonly stock: number;
+};
+
+export type CreateListingPersistenceInput = ListingPersistenceFields & {
+	readonly sellerId: string;
+	readonly images: ImageAssetRef[];
 	readonly status: ListingStatus;
 	readonly isApproved: boolean;
 };
+
+export type UpdateListingPersistenceInput =
+	Partial<ListingPersistenceFields> & {
+		readonly images?: ImageAssetRef[];
+		readonly status: ListingStatus;
+		readonly isApproved: boolean;
+	};
 
 export type ListingMutationResult = {
 	readonly id: string;
@@ -112,14 +126,14 @@ export type ListingCommandError = AppError<ListingCommandErrorCode>;
 
 export interface ListingCommandRepositoryPort {
 	createListing(
-		input: ListingMutationPersistenceInput,
+		input: CreateListingPersistenceInput,
 	): Promise<ListingMutationResult | null>;
 	findListingForMutation(
 		listingId: string,
 	): Promise<ListingRemovalSnapshot | null>;
 	updateListing(
 		listingId: string,
-		input: ListingMutationPersistenceInput,
+		input: UpdateListingPersistenceInput,
 	): Promise<ListingMutationResult | null>;
 	deleteListing(listingId: string): Promise<boolean>;
 	saveListingStatus(
@@ -162,7 +176,7 @@ export async function createListing(
 
 	try {
 		const listing = await listings.createListing({
-			...toPersistenceFields(command),
+			...toCreatePersistenceFields(command),
 			sellerId: actor.id,
 			images: uploadedImages,
 			status: "PENDING",
@@ -209,7 +223,7 @@ export async function updateListing(
 
 	try {
 		const listing = await listings.updateListing(command.listingId, {
-			...toPersistenceFields(command),
+			...toUpdatePersistenceFields(command),
 			...(imageUpdate.nextImages ? { images: imageUpdate.nextImages } : {}),
 			status,
 			isApproved: status === "APPROVED",
@@ -463,13 +477,27 @@ function hasReferences(snapshot: ListingRemovalSnapshot) {
 	return Object.values(snapshot.referenceCounts).some((count) => count > 0);
 }
 
-function toPersistenceFields(fields: ListingMutationFields): Omit<
-	ListingMutationFields,
-	"price"
-> & {
-	readonly priceAmountMinor?: number;
-	readonly currencyCode?: string;
-} {
+function toCreatePersistenceFields(
+	command: CreateListingCommand,
+): ListingPersistenceFields {
+	const price = toListingMoneyPersistence(command.price);
+
+	return {
+		name: command.name,
+		category: command.category,
+		condition: command.condition,
+		brand: command.brand,
+		model: command.model,
+		description: command.description,
+		priceAmountMinor: price.priceAmountMinor,
+		currencyCode: price.currencyCode,
+		stock: command.stock,
+	};
+}
+
+function toUpdatePersistenceFields(
+	fields: ListingMutationFields,
+): Partial<ListingPersistenceFields> {
 	const priceData =
 		fields.price !== undefined ? toListingMoneyPersistence(fields.price) : {};
 

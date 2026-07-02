@@ -5,13 +5,13 @@ import type {
 	PrismaClient,
 } from "generated/prisma/client";
 import type {
+	CreateListingPersistenceInput,
 	ListingCommandRepositoryPort,
-	ListingMutationPersistenceInput,
 	ListingMutationResult,
 	ListingRemovalSnapshot,
+	UpdateListingPersistenceInput,
 } from "@/domains/listings/application/manage-listing";
 import type { ListingStatus } from "@/domains/listings/domain/listing";
-import { MARKETPLACE_CURRENCY_CODE } from "@/domains/shared/domain/currency";
 import { Money } from "@/domains/shared/domain/money";
 import { toImageAssetRefs, toImageAssetUrls } from "@/utils/image-asset-ref";
 
@@ -59,29 +59,21 @@ export class PrismaListingCommandRepository
 	constructor(private readonly db: DbClient) {}
 
 	async createListing(
-		input: ListingMutationPersistenceInput,
+		input: CreateListingPersistenceInput,
 	): Promise<ListingMutationResult | null> {
-		if (
-			!input.sellerId ||
-			!input.images ||
-			input.priceAmountMinor === undefined
-		) {
-			return null;
-		}
-
 		const listing = await this.db.listing.create({
 			data: {
 				sellerId: input.sellerId,
-				name: input.name ?? "",
+				name: input.name,
 				category: input.category as ListingCategory,
 				condition: input.condition as ListingCondition,
-				brand: input.brand ?? "",
-				model: input.model ?? "",
+				brand: input.brand,
+				model: input.model,
 				images: input.images as unknown as Prisma.InputJsonValue,
-				description: input.description ?? "",
+				description: input.description,
 				priceAmountMinor: input.priceAmountMinor,
-				currencyCode: input.currencyCode ?? MARKETPLACE_CURRENCY_CODE,
-				stock: input.stock ?? 0,
+				currencyCode: input.currencyCode,
+				stock: input.stock,
 				isApproved: input.isApproved,
 				listingStatus: input.status,
 			},
@@ -112,7 +104,7 @@ export class PrismaListingCommandRepository
 
 	async updateListing(
 		listingId: string,
-		input: ListingMutationPersistenceInput,
+		input: UpdateListingPersistenceInput,
 	): Promise<ListingMutationResult | null> {
 		const listing = await this.db.listing.update({
 			where: { id: listingId },
@@ -149,7 +141,7 @@ export class PrismaListingCommandRepository
 }
 
 function toUpdateData(
-	input: ListingMutationPersistenceInput,
+	input: UpdateListingPersistenceInput,
 ): Prisma.ListingUpdateInput {
 	return {
 		...(input.name !== undefined && { name: input.name }),
