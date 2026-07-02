@@ -4,6 +4,7 @@ import type { ServerUserContext } from "@/server/function-middleware";
 import type { RequestError } from "@/server/request-error";
 import {
 	getNotificationsForCurrentUser,
+	getUnreadNotificationCountForOptionalUser,
 	readNotificationForCurrentUser,
 } from "./notification-service";
 
@@ -30,6 +31,32 @@ describe("notification server service", () => {
 		expect(result).toEqual([
 			makeNotification({ id: "notification-1", userId: "customer-1" }),
 		]);
+	});
+
+	it("returns zero unread notifications without a current user", async () => {
+		const notifications = new InMemoryNotifications([
+			makeNotification({ id: "notification-1", userId: "customer-1" }),
+		]);
+
+		await expect(
+			getUnreadNotificationCountForOptionalUser(null, notifications),
+		).resolves.toBe(0);
+	});
+
+	it("gets unread notification count for an optional current user", async () => {
+		const notifications = new InMemoryNotifications([
+			makeNotification({ id: "notification-1", userId: "customer-1" }),
+			makeNotification({
+				id: "notification-2",
+				userId: "customer-1",
+				isRead: true,
+			}),
+			makeNotification({ id: "notification-3", userId: "seller-1" }),
+		]);
+
+		await expect(
+			getUnreadNotificationCountForOptionalUser(customerUser, notifications),
+		).resolves.toBe(1);
 	});
 
 	it("maps missing notification reads to request errors", async () => {

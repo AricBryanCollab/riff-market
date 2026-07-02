@@ -26,8 +26,8 @@ abandoned)
   `improve` skill is explicitly read-only for source code and allows writes only
   under `plans/`.
 - Migrate all remaining product read routes now: rejected for this plan because
-  `ddd/next-session.md` says to keep changes slice-based and move seller/pending
-  reads next before lower-value count/recent/cart reads.
+  the migration was intentionally slice-based, with seller/pending reads ahead
+  of lower-value count/recent/cart reads.
 - Run the gated DB suite during the advisor audit: rejected because
   `bun run test:db` mutates local Postgres data; the read-only checks used
   typecheck, focused unit tests with DB files skipped, Biome check, and docs

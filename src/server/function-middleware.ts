@@ -1,11 +1,7 @@
-import { createMiddleware } from "@tanstack/react-start";
-import { setResponseStatus } from "@tanstack/react-start/server";
-import { findUserById } from "@/data/auth-repo";
-import { logger, updateRequestContext } from "@/lib/logger";
+import { createMiddleware, createServerOnlyFn } from "@tanstack/react-start";
 import { requestLoggerMiddleware } from "@/middleware";
 import { RequestError } from "@/server/request-error";
 import type { UserRole } from "@/types/enum";
-import { useAppSession } from "@/utils/session";
 
 export type ServerUserContext = {
 	id: string;
@@ -15,48 +11,111 @@ export type ServerUserContext = {
 	role: UserRole;
 };
 
+type AppSession = Awaited<
+	ReturnType<typeof import("@/utils/session").useAppSession>
+>;
+type ServerUserLookup =
+	| { readonly kind: "anonymous"; readonly session: AppSession }
+	| { readonly kind: "missing-user"; readonly session: AppSession }
+	| {
+			readonly kind: "authenticated";
+			readonly session: AppSession;
+			readonly user: ServerUserContext;
+	  };
+
+const getServerUserLookupDependencies = createServerOnlyFn(async () => {
+	const [{ findUserById }, { updateRequestContext }, { useAppSession }] =
+		await Promise.all([
+			import("@/data/auth-repo"),
+			import("@/lib/logger"),
+			import("@/utils/session"),
+		]);
+
+	return { findUserById, updateRequestContext, useAppSession };
+});
+
+const setServerResponseStatus = createServerOnlyFn(async (status: number) => {
+	const { setResponseStatus } = await import("@tanstack/react-start/server");
+	setResponseStatus(status);
+});
+
+const logUnexpectedRequestError = createServerOnlyFn(async (error: unknown) => {
+	const { logger } = await import("@/lib/logger");
+	const fallbackMessage = "Failed to process request";
+
+	logger.error(fallbackMessage, error);
+
+	return fallbackMessage;
+});
+
 export const serverAuthMiddleware = createMiddleware({
 	type: "function",
 }).server(async ({ next }) => {
-	const session = await useAppSession();
-	const userId = session.data.userId;
+	const lookup = await getServerUserLookup();
 
-	if (!userId) {
+	if (lookup.kind === "anonymous") {
 		throw new RequestError("Access Denied. Unauthorized", {
 			code: "AUTHENTICATION_REQUIRED",
 			status: 401,
 		});
 	}
 
-	const user = await findUserById(userId);
-
-	if (!user) {
+	if (lookup.kind === "missing-user") {
 		throw new RequestError("User not found", {
 			code: "AUTHENTICATED_USER_NOT_FOUND",
 			status: 401,
 		});
 	}
 
-	const serverUser: ServerUserContext = {
-		id: user.id,
-		email: user.email,
-		firstName: user.firstName,
-		lastName: user.lastName,
-		role: user.role as UserRole,
-	};
-
-	updateRequestContext({
-		userId: serverUser.id,
-		userRole: serverUser.role,
-	});
-
 	return next({
 		context: {
-			session,
-			user: serverUser,
+			session: lookup.session,
+			user: lookup.user,
 		},
 	});
 });
+
+export const getOptionalServerUserContext = createServerOnlyFn(
+	async (): Promise<ServerUserContext | null> => {
+		const lookup = await getServerUserLookup();
+
+		return lookup.kind === "authenticated" ? lookup.user : null;
+	},
+);
+
+const getServerUserLookup = createServerOnlyFn(
+	async (): Promise<ServerUserLookup> => {
+		const { findUserById, updateRequestContext, useAppSession } =
+			await getServerUserLookupDependencies();
+		const session = await useAppSession();
+		const userId = session.data.userId;
+
+		if (!userId) {
+			return { kind: "anonymous", session };
+		}
+
+		const user = await findUserById(userId);
+
+		if (!user) {
+			return { kind: "missing-user", session };
+		}
+
+		const serverUser: ServerUserContext = {
+			id: user.id,
+			email: user.email,
+			firstName: user.firstName,
+			lastName: user.lastName,
+			role: user.role as UserRole,
+		};
+
+		updateRequestContext({
+			userId: serverUser.id,
+			userRole: serverUser.role,
+		});
+
+		return { kind: "authenticated", session, user: serverUser };
+	},
+);
 
 export const createServerRoleMiddleware = (allowedRoles: UserRole[]) =>
 	createMiddleware({ type: "function" })
@@ -82,17 +141,16 @@ export const requestErrorMiddleware = createMiddleware({
 		return await next();
 	} catch (error) {
 		if (error instanceof RequestError) {
-			setResponseStatus(error.status);
+			await setServerResponseStatus(error.status);
 			throw error;
 		}
 
-		const fallbackMessage = "Failed to process request";
-		logger.error(fallbackMessage, error);
+		const fallbackMessage = await logUnexpectedRequestError(error);
 		const requestError = new RequestError(fallbackMessage, {
 			cause: error,
 			status: 500,
 		});
-		setResponseStatus(requestError.status);
+		await setServerResponseStatus(requestError.status);
 		throw requestError;
 	}
 });

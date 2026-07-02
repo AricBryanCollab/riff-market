@@ -2,8 +2,8 @@ import type { PrismaClient } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
 import {
 	describeDb,
-	seedMarketplaceUsers,
 	seedListing,
+	seedMarketplaceUsers,
 	setupPrismaTestDatabase,
 } from "@/test/prisma-vitest-support";
 import { PrismaListingReadModels } from "./prisma-listing-read-models";

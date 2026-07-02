@@ -7,6 +7,7 @@ import { BodySmall, H5 } from "@/components/ui/typography";
 import type { UserRole } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 import { formatRelativeTime } from "@/utils/format-date";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
 import { formatOrderStatusLabel } from "@/utils/order-status-label";
 
 const orderListBadgeVariants = cva(
@@ -174,7 +175,10 @@ const OrderList = ({
 											)}
 										</div>
 										<span className="text-sm font-semibold text-foreground">
-											${order.totalAmount.toFixed(2)}
+											{formatMoneyAmountMinor(
+												order.totalAmountMinor,
+												order.currencyCode,
+											)}
 										</span>
 									</div>
 								</div>

@@ -20,10 +20,10 @@ export default defineConfig({
 		trace: "on-first-retry",
 	},
 	webServer: {
-		command: `bun --bun vite dev --host 127.0.0.1 --port ${port} --strictPort`,
+		command: `bun --bun vite build && bun --bun vite preview --host 127.0.0.1 --port ${port} --strictPort`,
 		url: baseURL,
 		reuseExistingServer: false,
-		timeout: 60_000,
+		timeout: 120_000,
 		stdout: "ignore",
 		stderr: "pipe",
 		env: {

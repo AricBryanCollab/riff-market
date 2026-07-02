@@ -142,7 +142,7 @@ describe("PrismaPurchasePlacedNotificationCreator", () => {
 				purchaseId: "purchase-1",
 				sellerOrderId: null,
 				message:
-					"Your purchase #RM-1001 has been placed successfully! Total: USD 250.00",
+					"Your purchase #RM-1001 has been placed successfully! Total: $250.00",
 				isRead: false,
 			},
 			{
@@ -150,7 +150,7 @@ describe("PrismaPurchasePlacedNotificationCreator", () => {
 				purchaseId: "purchase-1",
 				sellerOrderId: "seller-order-1",
 				message:
-					"New seller order for purchase #RM-1001: Telecaster. Amount: USD 250.00",
+					"New seller order for purchase #RM-1001: Telecaster. Amount: $250.00",
 				isRead: false,
 			},
 		]);

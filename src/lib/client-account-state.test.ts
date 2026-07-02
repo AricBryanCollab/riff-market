@@ -31,7 +31,7 @@ describe("clearAuthenticatedClientState", () => {
 		useThemeStore.getState().setTheme("light");
 	});
 
-	it("clears account-owned client state without clearing listing cache", () => {
+	it("clears account-owned client state without clearing listing cache", async () => {
 		const user = makeUser();
 
 		queryClient.setQueryData(queryKeys.auth.user, user);
@@ -48,7 +48,7 @@ describe("clearAuthenticatedClientState", () => {
 		useThemeStore.getState().setTheme("dark");
 		useThemeStore.getState().setPreviewTheme("light");
 
-		clearAuthenticatedClientState(queryClient);
+		await clearAuthenticatedClientState(queryClient);
 
 		expect(queryClient.getQueryData(queryKeys.auth.user)).toBeNull();
 		expect(

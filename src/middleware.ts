@@ -1,22 +1,35 @@
-import { createMiddleware } from "@tanstack/react-start";
+import { createMiddleware, createServerOnlyFn } from "@tanstack/react-start";
 import type { RequestServerResult } from "@tanstack/start-client-core";
 import type { User } from "generated/prisma/client";
-import { findUserById } from "@/data/auth-repo";
-import {
-	createRequestContext,
-	logger,
-	toErrorDetails,
-	updateRequestContext,
-	withRequestContext,
-} from "@/lib/logger";
 import {
 	getRequestLogOutcome,
 	getRequestLogStatusCode,
 } from "@/server/request-log-status";
-import { useAppSession } from "@/utils/session";
+
+const getRequestLoggerDependencies = createServerOnlyFn(async () => {
+	return await import("@/lib/logger");
+});
+
+const getAuthMiddlewareDependencies = createServerOnlyFn(async () => {
+	const [{ findUserById }, { updateRequestContext }, { useAppSession }] =
+		await Promise.all([
+			import("@/data/auth-repo"),
+			import("@/lib/logger"),
+			import("@/utils/session"),
+		]);
+
+	return { findUserById, updateRequestContext, useAppSession };
+});
 
 export const requestLoggerMiddleware = createMiddleware().server(
 	async ({ next, request, context }) => {
+		const {
+			createRequestContext,
+			logger,
+			toErrorDetails,
+			updateRequestContext,
+			withRequestContext,
+		} = await getRequestLoggerDependencies();
 		const requestContext = createRequestContext(request);
 		let nextResult:
 			| Response
@@ -74,6 +87,8 @@ export const requestLoggerMiddleware = createMiddleware().server(
 
 export const authMiddleware = createMiddleware().server(
 	async ({ next, context }) => {
+		const { findUserById, updateRequestContext, useAppSession } =
+			await getAuthMiddlewareDependencies();
 		const session = await useAppSession();
 
 		const userId = session.data.userId;

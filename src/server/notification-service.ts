@@ -27,6 +27,7 @@ export type NotificationIdInput = z.infer<typeof notificationIdInputSchema>;
 export type NotificationServiceDependencies = NotificationReadPort &
 	NotificationUnreadCountPort &
 	NotificationReadStatePort;
+type NotificationActorContext = Pick<ServerUserContext, "id" | "role">;
 
 export function validateNotificationIdInput(
 	data: unknown,
@@ -57,6 +58,21 @@ export async function getUnreadNotificationCountForCurrentUser(
 	user: ServerUserContext,
 	dependencies?: NotificationServiceDependencies,
 ): Promise<number> {
+	return executeNotificationUseCase(
+		user,
+		dependencies,
+		(notifications, actor) => getUnreadNotificationCount(actor, notifications),
+	);
+}
+
+export async function getUnreadNotificationCountForOptionalUser(
+	user: NotificationActorContext | null | undefined,
+	dependencies?: NotificationServiceDependencies,
+): Promise<number> {
+	if (!user) {
+		return 0;
+	}
+
 	return executeNotificationUseCase(
 		user,
 		dependencies,
@@ -95,7 +111,7 @@ export async function readAllNotificationsForCurrentUser(
 }
 
 async function executeNotificationUseCase<T>(
-	user: ServerUserContext,
+	user: NotificationActorContext,
 	dependencies: NotificationServiceDependencies | undefined,
 	execute: (
 		notifications: NotificationServiceDependencies,
@@ -118,7 +134,7 @@ async function createPrismaNotificationDependencies(): Promise<NotificationServi
 	return new PrismaNotifications(prisma);
 }
 
-function toActor(user: ServerUserContext): Actor {
+function toActor(user: NotificationActorContext): Actor {
 	return {
 		id: user.id,
 		role: user.role,

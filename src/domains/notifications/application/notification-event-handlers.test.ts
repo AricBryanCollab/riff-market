@@ -55,7 +55,7 @@ describe("notification event handlers", () => {
 				purchaseId: "purchase-1",
 				sellerOrderId: null,
 				message:
-					"Your purchase #RM-1001 has been placed successfully! Total: USD 250.00",
+					"Your purchase #RM-1001 has been placed successfully! Total: $250.00",
 				isRead: false,
 			},
 			{
@@ -63,8 +63,62 @@ describe("notification event handlers", () => {
 				purchaseId: "purchase-1",
 				sellerOrderId: "seller-order-1",
 				message:
-					"New seller order for purchase #RM-1001: Telecaster. Amount: USD 250.00",
+					"New seller order for purchase #RM-1001: Telecaster. Amount: $250.00",
 				isRead: false,
+			},
+		]);
+	});
+
+	it("formats TWD purchase notifications with whole minor units", async () => {
+		const notifications = new CreatedNotifications();
+
+		await createPurchasePlacedNotifications(
+			{
+				purchase: {
+					id: "purchase-1",
+					customerId: "customer-1",
+					purchaseNumber: "RM-1001",
+					totalAmountCents: 250,
+					currencyCode: "TWD",
+				},
+				sellerOrders: [
+					{
+						id: "seller-order-1",
+						purchaseId: "purchase-1",
+						sellerId: "seller-1",
+						listingNames: ["Telecaster"],
+						subtotalCents: 250,
+						currencyCode: "TWD",
+					},
+				],
+				domainEvents: [
+					domainEvent("PurchasePlaced", "purchase-1", {
+						purchaseId: "purchase-1",
+						customerId: "customer-1",
+						purchaseNumber: "RM-1001",
+						totalAmountCents: 250,
+						currencyCode: "TWD",
+					}),
+					domainEvent("SellerOrderCreated", "seller-order-1", {
+						sellerOrderId: "seller-order-1",
+						purchaseId: "purchase-1",
+						sellerId: "seller-1",
+						subtotalCents: 250,
+						currencyCode: "TWD",
+					}),
+				],
+			},
+			notifications,
+		);
+
+		expect(notifications.created).toMatchObject([
+			{
+				message:
+					"Your purchase #RM-1001 has been placed successfully! Total: NT$250",
+			},
+			{
+				message:
+					"New seller order for purchase #RM-1001: Telecaster. Amount: NT$250",
 			},
 		]);
 	});

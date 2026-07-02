@@ -6,7 +6,7 @@ import {
 	seedMarketplaceUsers,
 } from "../../src/test/prisma-test-data";
 
-setup("seed product detail smoke data", async () => {
+setup("seed listing detail smoke data", async () => {
 	const db = createTestPrismaClient();
 
 	try {

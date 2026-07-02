@@ -16,8 +16,5 @@ export function toAppErrorStatus(kind: AppErrorKind) {
 export function isAppErrorKind(
 	kind: string | null | undefined,
 ): kind is AppErrorKind {
-	return (
-		typeof kind === "string" &&
-		Object.hasOwn(appErrorStatusByKind, kind)
-	);
+	return typeof kind === "string" && Object.hasOwn(appErrorStatusByKind, kind);
 }

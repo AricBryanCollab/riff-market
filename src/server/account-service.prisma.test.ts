@@ -123,12 +123,12 @@ describeDb("account service Prisma integration", () => {
 				providerAssetId: "avatars/seller-1",
 				sourceType: MediaCleanupJobSourceType.USER_PROFILE,
 			},
-				{
-					provider: "cloudinary",
-					assetType: "image",
-					providerAssetId: "listings/one",
-					sourceType: MediaCleanupJobSourceType.LISTING,
-				},
+			{
+				provider: "cloudinary",
+				assetType: "image",
+				providerAssetId: "listings/one",
+				sourceType: MediaCleanupJobSourceType.LISTING,
+			},
 		]);
 	});
 });

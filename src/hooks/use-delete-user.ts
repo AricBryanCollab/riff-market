@@ -18,8 +18,8 @@ const useDeleteUser = () => {
 		isError: errorDeleteUser,
 	} = useMutation({
 		mutationFn: (email: string) => deleteCurrentUserFn({ data: { email } }),
-		onSuccess: () => {
-			clearAuthenticatedClientState(queryClient);
+		onSuccess: async () => {
+			await clearAuthenticatedClientState(queryClient);
 			setCloseDialog();
 			showToast("Your account has been deleted", "success");
 			navigate({ to: "/" });

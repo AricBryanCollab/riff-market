@@ -44,12 +44,12 @@ const HeroCarousel = ({
 						className="block relative aspect-square bg-muted rounded-2xl overflow-hidden"
 					>
 						<div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
-								{listing.images && listing.images.length > 0 ? (
-									<img
-										src={listing.images[0]?.url}
-										alt={listing.name}
-										className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-									/>
+							{listing.images && listing.images.length > 0 ? (
+								<img
+									src={listing.images[0]?.url}
+									alt={listing.name}
+									className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+								/>
 							) : (
 								<div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
 									<MusicNote size={128} />

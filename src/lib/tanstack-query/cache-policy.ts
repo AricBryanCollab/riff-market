@@ -19,10 +19,18 @@ export function updateCurrentUserCache(
 	);
 }
 
-export function clearAccountCache(queryClient: QueryClient) {
-	setCurrentUserCache(queryClient, null);
+export async function cancelAccountScopedQueries(queryClient: QueryClient) {
+	await Promise.all([
+		queryClient.cancelQueries({ queryKey: queryKeys.notifications.root }),
+		queryClient.cancelQueries({ queryKey: queryKeys.orders.root }),
+	]);
+}
+
+export async function clearAccountCache(queryClient: QueryClient) {
+	await cancelAccountScopedQueries(queryClient);
 	queryClient.removeQueries({ queryKey: queryKeys.notifications.root });
 	queryClient.removeQueries({ queryKey: queryKeys.orders.root });
+	setCurrentUserCache(queryClient, null);
 }
 
 export function invalidateOrdersCache(queryClient: QueryClient) {

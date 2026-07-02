@@ -31,13 +31,15 @@ export type OrderingOrderItemReadModel = {
 	readonly orderId: string;
 	readonly listingId: string;
 	readonly quantity: number;
-	readonly unitPrice: number;
-	readonly subTotal: number;
+	readonly unitPriceAmountMinor: number;
+	readonly subTotalAmountMinor: number;
+	readonly currencyCode: string;
 	readonly listing: {
 		readonly id: string;
 		readonly name: string;
 		readonly images: string[];
-		readonly price: number;
+		readonly priceAmountMinor: number;
+		readonly currencyCode: string;
 		readonly seller: {
 			readonly id: string;
 			readonly firstName: string;
@@ -52,7 +54,8 @@ export type OrderingOrderReadModel = {
 	readonly purchaseId?: string;
 	readonly sellerOrderId?: string;
 	readonly orderDate: Date;
-	readonly totalAmount: number;
+	readonly totalAmountMinor: number;
+	readonly currencyCode: string;
 	readonly shippingAddress: string;
 	readonly trackingNumber: string;
 	readonly status: OrderingOrderReadStatus;

@@ -6,13 +6,13 @@ import { BodySmall, H2 } from "@/components/ui/typography";
 import UpdateProfileForm from "@/components/user-settings/update-profile-form";
 import { ordersByRoleQueryOpt } from "@/hooks/use-get-orders";
 import { requireAuthUser } from "@/utils/require-role";
-import { ThemeSection } from "./-components/theme-section";
 import { DeleteAccountDialog } from "./-components/delete-account-dialog";
 import { ProfileHeroCard } from "./-components/profile-hero-card";
 import { ProfilePictureDialog } from "./-components/profile-picture-dialog";
 import { SettingsOrdersSection } from "./-components/settings-orders-section";
 import { SettingsPanel } from "./-components/settings-panel";
 import { SettingsProfileDetailsList } from "./-components/settings-summary-lists";
+import { ThemeSection } from "./-components/theme-section";
 import { useSettingsPage } from "./-hooks/use-settings-page";
 
 export const Route = createFileRoute("/settings")({

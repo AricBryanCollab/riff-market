@@ -10,6 +10,7 @@ import { useToastStore } from "@/store/toast";
 import type { OrderDisplayStatus, OrderStatus, UserRole } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 import { formatRelativeTime } from "@/utils/format-date";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
 import { formatOrderStatusLabel } from "@/utils/order-status-label";
 
 const orderStatusStyles: Record<OrderDisplayStatus, string> = {
@@ -311,7 +312,10 @@ function SettingsOrdersListSection({
 
 											<div className="shrink-0 sm:text-right">
 												<BodyLarge className="text-base font-semibold tracking-normal">
-													${order.totalAmount.toFixed(2)}
+													{formatMoneyAmountMinor(
+														order.totalAmountMinor,
+														order.currencyCode,
+													)}
 												</BodyLarge>
 											</div>
 										</div>

@@ -34,7 +34,7 @@ const useModerateListing = () => {
 				? "Listing approved successfully"
 				: "Listing declined successfully";
 			showToast(message, "success");
-			navigate({ from: "/shop" });
+			navigate({ to: "/shop" });
 		},
 		onError: (error) => {
 			showToast(error.message || "Failed to update listing status", "error");

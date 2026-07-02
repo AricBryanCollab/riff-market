@@ -282,25 +282,30 @@ describeDb("PlacePurchase Prisma integration", () => {
 					id: result.value.purchaseId,
 					purchaseId: result.value.purchaseId,
 					trackingNumber: "RM-1",
-					totalAmount: 275,
+					totalAmountMinor: 275,
+					currencyCode: "TWD",
 					shippingAddress: "123 Market St",
 					status: "OPEN",
 					items: expect.arrayContaining([
 						expect.objectContaining({
 							listingId: "listing-1",
 							quantity: 1,
-							unitPrice: 125,
-							subTotal: 125,
+							unitPriceAmountMinor: 125,
+							subTotalAmountMinor: 125,
+							currencyCode: "TWD",
 							listing: expect.objectContaining({
 								name: "Telecaster",
 								images: ["https://cdn.example.com/listing-1.jpg"],
+								priceAmountMinor: 125,
+								currencyCode: "TWD",
 							}),
 						}),
 						expect.objectContaining({
 							listingId: "listing-2",
 							quantity: 2,
-							unitPrice: 75,
-							subTotal: 150,
+							unitPriceAmountMinor: 75,
+							subTotalAmountMinor: 150,
+							currencyCode: "TWD",
 						}),
 					]),
 				}),
@@ -321,7 +326,8 @@ describeDb("PlacePurchase Prisma integration", () => {
 				expect.objectContaining({
 					purchaseId: result.value.purchaseId,
 					trackingNumber: "RM-1",
-					totalAmount: 125,
+					totalAmountMinor: 125,
+					currencyCode: "TWD",
 					status: "NEW",
 					customer: {
 						id: "customer-1",
@@ -349,7 +355,8 @@ describeDb("PlacePurchase Prisma integration", () => {
 			value: expect.objectContaining({
 				id: result.value.purchaseId,
 				purchaseId: result.value.purchaseId,
-				totalAmount: 275,
+				totalAmountMinor: 275,
+				currencyCode: "TWD",
 				status: "OPEN",
 				items: expect.arrayContaining([
 					expect.objectContaining({
@@ -377,7 +384,8 @@ describeDb("PlacePurchase Prisma integration", () => {
 				id: sellerOrderId,
 				sellerOrderId,
 				status: "NEW",
-				totalAmount: 125,
+				totalAmountMinor: 125,
+				currencyCode: "TWD",
 				customer: expect.objectContaining({
 					id: "customer-1",
 					email: "pat@example.com",
@@ -395,7 +403,8 @@ describeDb("PlacePurchase Prisma integration", () => {
 			value: expect.objectContaining({
 				id: result.value.purchaseId,
 				purchaseId: result.value.purchaseId,
-				totalAmount: 275,
+				totalAmountMinor: 275,
+				currencyCode: "TWD",
 				status: "OPEN",
 			}),
 		});
@@ -410,7 +419,8 @@ describeDb("PlacePurchase Prisma integration", () => {
 			value: expect.objectContaining({
 				id: sellerOrderId,
 				sellerOrderId,
-				totalAmount: 125,
+				totalAmountMinor: 125,
+				currencyCode: "TWD",
 				status: "NEW",
 			}),
 		});

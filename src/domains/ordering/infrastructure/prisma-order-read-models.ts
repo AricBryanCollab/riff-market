@@ -10,7 +10,6 @@ import type {
 	OrderingOrderItemReadModel,
 	OrderingOrderReadModel,
 } from "@/domains/ordering/dto/order-read-model";
-import { requireCurrencyPolicy } from "@/domains/shared/domain/currency";
 
 type OrderingReadPrisma = Pick<PrismaClient, "purchase" | "sellerOrder">;
 
@@ -184,10 +183,8 @@ function toBuyerPurchaseHistoryReadModel(
 		id: purchase.id,
 		purchaseId: purchase.id,
 		orderDate: purchase.createdAt,
-		totalAmount: minorAmountToDecimal(
-			purchase.totalAmountCents,
-			purchase.currencyCode,
-		),
+		totalAmountMinor: purchase.totalAmountCents,
+		currencyCode: purchase.currencyCode,
 		shippingAddress: purchase.shippingAddress,
 		trackingNumber: purchase.purchaseNumber,
 		status: deriveBuyerOrderSummaryStatus({
@@ -211,10 +208,8 @@ function toSellerOrderDashboardReadModel(
 		purchaseId: sellerOrder.purchaseId,
 		sellerOrderId: sellerOrder.id,
 		orderDate: sellerOrder.createdAt,
-		totalAmount: minorAmountToDecimal(
-			sellerOrder.subtotalCents,
-			sellerOrder.currencyCode,
-		),
+		totalAmountMinor: sellerOrder.subtotalCents,
+		currencyCode: sellerOrder.currencyCode,
 		shippingAddress: sellerOrder.purchase.shippingAddress,
 		trackingNumber:
 			sellerOrder.trackingNumber ?? sellerOrder.purchase.purchaseNumber,
@@ -242,13 +237,15 @@ function toOrderItemReadModel(
 		orderId,
 		listingId: item.listingId,
 		quantity: item.quantity,
-		unitPrice: minorAmountToDecimal(item.unitPriceCents, item.currencyCode),
-		subTotal: minorAmountToDecimal(item.subTotalCents, item.currencyCode),
+		unitPriceAmountMinor: item.unitPriceCents,
+		subTotalAmountMinor: item.subTotalCents,
+		currencyCode: item.currencyCode,
 		listing: {
 			id: item.listingId,
 			name: item.listingName,
 			images: item.primaryImageUrl ? [item.primaryImageUrl] : [],
-			price: minorAmountToDecimal(item.unitPriceCents, item.currencyCode),
+			priceAmountMinor: item.unitPriceCents,
+			currencyCode: item.currencyCode,
 			seller: {
 				id: item.sellerId,
 				firstName: sellerName.firstName,
@@ -257,12 +254,6 @@ function toOrderItemReadModel(
 			},
 		},
 	};
-}
-
-function minorAmountToDecimal(amountMinor: number, currencyCode: string) {
-	const policy = requireCurrencyPolicy(currencyCode);
-
-	return amountMinor / 10 ** policy.minorUnitDigits;
 }
 
 function splitName(name: string) {

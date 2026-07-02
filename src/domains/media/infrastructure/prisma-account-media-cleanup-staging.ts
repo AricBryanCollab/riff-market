@@ -88,10 +88,10 @@ function toPrismaCleanupJobInput(
 function toPrismaSourceType(
 	sourceKind: StagedAccountMediaCleanupJob["source"]["kind"],
 ) {
-		switch (sourceKind) {
-			case "profile":
-				return MediaCleanupJobSourceType.USER_PROFILE;
-			case "listing":
-				return MediaCleanupJobSourceType.LISTING;
-		}
+	switch (sourceKind) {
+		case "profile":
+			return MediaCleanupJobSourceType.USER_PROFILE;
+		case "listing":
+			return MediaCleanupJobSourceType.LISTING;
 	}
+}

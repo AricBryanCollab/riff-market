@@ -9,7 +9,7 @@
 > **Drift check (run first)**:
 >
 > ```bash
-> git diff --stat e696731 -- src/domains/listings/application/listing-read-models.ts src/domains/listings/dto/listing-read-model.ts src/domains/listings/infrastructure/prisma-listing-read-models.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts src/server/listing-read-service.ts src/server/listing-read-service.test.ts src/lib/zod/product-validation.ts ddd/progress.md ddd/next-session.md
+> git diff --stat e696731 -- src/domains/listings/application/listing-read-models.ts src/domains/listings/dto/listing-read-model.ts src/domains/listings/infrastructure/prisma-listing-read-models.ts src/domains/listings/infrastructure/prisma-listing-read-models.prisma.test.ts src/server/listing-read-service.ts src/server/listing-read-service.test.ts src/lib/zod/product-validation.ts
 > ```
 >
 > This plan was written against commit `e696731` plus the uncommitted Slice 4
@@ -153,7 +153,7 @@ Node runtime error from Vite. Use the bundled Node `PATH=...` prefix shown above
 - `src/server/listing-read-service.ts`
 - `src/server/listing-read-service.test.ts`
 - `src/lib/zod/product-validation.ts`, only if a compatibility re-export is needed
-- `ddd/progress.md` and `ddd/next-session.md`, only for the required DDD handoff note after source changes
+- Removed before merge: temporary DDD handoff docs from the migration worktree.
 
 **Out of scope**:
 
@@ -313,21 +313,11 @@ PATH=/Users/aricjiang/.cache/codex-runtimes/codex-primary-runtime/dependencies/n
 
 Expected: the test file passes and includes the new invalid-query cases.
 
-### Step 5: Run focused checks and update DDD handoff docs if needed
+### Step 5: Run focused checks
 
 Run the focused verification commands from "Commands you will need". If source
-behavior changed beyond pure internal refactoring, update `ddd/progress.md` and
-`ddd/next-session.md` with:
-
-- work completed
-- files changed
-- tests/checks run and results
-- decisions made
-- blockers or risks
-- exact next recommended task
-
-Do not update DDD docs for a no-behavior-change internal cleanup unless the
-operator has asked for handoff docs to stay current on every refactor.
+behavior changed beyond pure internal refactoring, record the verification
+results in the PR or final handoff note.
 
 **Verify**:
 

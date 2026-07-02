@@ -11,8 +11,9 @@ interface OrderDisplayItem {
 }
 
 export interface OrderItemWithPricing extends OrderDisplayItem {
-	unitPrice: number;
-	subTotal: number;
+	unitPriceAmountMinor: number;
+	subTotalAmountMinor: number;
+	currencyCode: string;
 }
 
 interface OrderCheckoutData {
@@ -37,7 +38,8 @@ interface OrderItemResponse extends OrderItemWithPricing {
 		id: string;
 		name: string;
 		images: string[];
-		price: number;
+		priceAmountMinor: number;
+		currencyCode: string;
 		seller: SellerDetails;
 	};
 }
@@ -45,7 +47,8 @@ interface OrderItemResponse extends OrderItemWithPricing {
 export interface OrderResponse {
 	id: string;
 	orderDate: Date;
-	totalAmount: number;
+	totalAmountMinor: number;
+	currencyCode: string;
 	shippingAddress: string;
 	trackingNumber: string;
 	status: OrderDisplayStatus;

@@ -88,32 +88,31 @@ function RouteComponent() {
 					{/* LISTING IMAGES */}
 					<div className="rounded-2xl bg-white p-6">
 						<div className="h-96 w-full rounded-xl bg-slate-200 mb-4 overflow-hidden">
-								<img
-									src={
-										listing.images[selectedImage]?.url ||
-										listing.images[0]?.url
-									}
-									alt={listing.name}
-									className="w-full h-full object-cover"
-								/>
+							<img
+								src={
+									listing.images[selectedImage]?.url || listing.images[0]?.url
+								}
+								alt={listing.name}
+								className="w-full h-full object-cover"
+							/>
 						</div>
 						<div className="grid grid-cols-4 gap-3">
-								{listing.images.slice(0, 4).map((img, idx) => (
-									<button
-										type="button"
-										key={img.imageId}
-										onClick={() => setSelectedImage(idx)}
+							{listing.images.slice(0, 4).map((img, idx) => (
+								<button
+									type="button"
+									key={img.imageId}
+									onClick={() => setSelectedImage(idx)}
 									className={`h-20 w-full rounded-lg overflow-hidden transition-all ${
 										selectedImage === idx
 											? "ring-2 ring-primary"
 											: "opacity-70 hover:opacity-100"
 									}`}
 								>
-										<img
-											src={img.url}
-											alt={`${listing.name} ${idx + 1}`}
-											className="w-full h-full object-cover"
-										/>
+									<img
+										src={img.url}
+										alt={`${listing.name} ${idx + 1}`}
+										className="w-full h-full object-cover"
+									/>
 								</button>
 							))}
 						</div>

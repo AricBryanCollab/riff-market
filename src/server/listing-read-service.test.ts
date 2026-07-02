@@ -5,8 +5,8 @@ import type {
 } from "@/domains/listings/dto/listing-read-model";
 import {
 	getListingDetailsReadDto,
-	searchApprovedListingReadDtos,
 	type ListingReadServiceDependencies,
+	searchApprovedListingReadDtos,
 } from "./listing-read-service";
 
 describe("listing read behavior", () => {

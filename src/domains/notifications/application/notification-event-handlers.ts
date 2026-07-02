@@ -2,6 +2,7 @@ import type { ListingLifecycleEvent } from "@/domains/listings/domain/listing";
 import type { PurchasePlacedEvent } from "@/domains/ordering/domain/purchase";
 import type { SellerOrderCreatedEvent } from "@/domains/ordering/domain/seller-order";
 import type { DomainEvent } from "@/domains/shared/domain/domain-event";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
 import type { NotificationCreatePort } from "./notification-use-cases";
 import { createNotification } from "./notification-use-cases";
 
@@ -46,7 +47,7 @@ export async function createPurchasePlacedNotifications(
 		userId: purchaseEvent.payload.customerId,
 		purchaseId: purchaseEvent.payload.purchaseId,
 		sellerOrderId: null,
-		message: `Your purchase #${purchaseEvent.payload.purchaseNumber} has been placed successfully! Total: ${formatMoney(purchaseEvent.payload.totalAmountCents, purchaseEvent.payload.currencyCode)}`,
+		message: `Your purchase #${purchaseEvent.payload.purchaseNumber} has been placed successfully! Total: ${formatMoneyAmountMinor(purchaseEvent.payload.totalAmountCents, purchaseEvent.payload.currencyCode)}`,
 	});
 
 	for (const sellerOrder of input.sellerOrders) {
@@ -61,7 +62,7 @@ export async function createPurchasePlacedNotifications(
 			userId: sellerOrderEvent.payload.sellerId,
 			purchaseId: sellerOrderEvent.payload.purchaseId,
 			sellerOrderId: sellerOrderEvent.payload.sellerOrderId,
-			message: `New seller order for purchase #${purchaseEvent.payload.purchaseNumber}: ${sellerOrder.listingNames.join(", ")}. Amount: ${formatMoney(sellerOrderEvent.payload.subtotalCents, sellerOrderEvent.payload.currencyCode)}`,
+			message: `New seller order for purchase #${purchaseEvent.payload.purchaseNumber}: ${sellerOrder.listingNames.join(", ")}. Amount: ${formatMoneyAmountMinor(sellerOrderEvent.payload.subtotalCents, sellerOrderEvent.payload.currencyCode)}`,
 		});
 	}
 }
@@ -216,8 +217,4 @@ function isSellerOrderCreatedEvent(
 	event: DomainEvent,
 ): event is SellerOrderCreatedEvent {
 	return event.eventName === "SellerOrderCreated";
-}
-
-function formatMoney(amountCents: number, currencyCode: string) {
-	return `${currencyCode} ${(amountCents / 100).toFixed(2)}`;
 }

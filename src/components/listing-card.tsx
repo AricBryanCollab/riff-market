@@ -34,10 +34,10 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 					}}
 				>
 					<img
-							src={
-								listing.images[0]?.url ||
-								"https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400"
-							}
+						src={
+							listing.images[0]?.url ||
+							"https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400"
+						}
 						alt={listing.name}
 						className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
 					/>

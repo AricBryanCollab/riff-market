@@ -1,8 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
-import { authenticatedServerFunctionMiddleware } from "@/server/function-middleware";
+import {
+	authenticatedServerFunctionMiddleware,
+	getOptionalServerUserContext,
+	publicServerFunctionMiddleware,
+} from "@/server/function-middleware";
 import {
 	getNotificationsForCurrentUser,
-	getUnreadNotificationCountForCurrentUser,
+	getUnreadNotificationCountForOptionalUser,
 	readAllNotificationsForCurrentUser,
 	readNotificationForCurrentUser,
 	validateNotificationIdInput,
@@ -13,9 +17,11 @@ export const listNotificationsFn = createServerFn({ method: "GET" })
 	.handler(async ({ context }) => getNotificationsForCurrentUser(context.user));
 
 export const getUnreadNotificationCountFn = createServerFn({ method: "GET" })
-	.middleware(authenticatedServerFunctionMiddleware)
-	.handler(async ({ context }) => {
-		const count = await getUnreadNotificationCountForCurrentUser(context.user);
+	.middleware(publicServerFunctionMiddleware)
+	.handler(async () => {
+		const count = await getUnreadNotificationCountForOptionalUser(
+			await getOptionalServerUserContext(),
+		);
 
 		return { count };
 	});

@@ -107,7 +107,7 @@ export function toImageAssetUrls(value: Prisma.JsonValue | null | undefined) {
 
 	return value
 		.map((image) => (isImageAssetRef(image) ? toImageAssetUrl(image) : null))
-			.filter((imageUrl): imageUrl is string => imageUrl !== null);
+		.filter((imageUrl): imageUrl is string => imageUrl !== null);
 }
 
 export function toListingImageDtos(value: Prisma.JsonValue | null | undefined) {

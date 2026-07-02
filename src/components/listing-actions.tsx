@@ -69,7 +69,7 @@ export function ShopPageListingActions({
 			case "ADMIN":
 			case "SELLER":
 				return (
-					<Button onClick={() => navigate({ from: "/listing/new" })}>
+					<Button onClick={() => navigate({ to: "/listing/new" })}>
 						<div className="flex items-center gap-2">
 							<Plus className="size-4" />
 							<BodySmall>Add Listing</BodySmall>
@@ -156,7 +156,15 @@ export function ListingDetailsActions({
 		}
 
 		addItem(id, user.id, role, quantity);
-		navigate({ from: "/cart" });
+	};
+
+	const navigateToEditListing = () => {
+		if (!id) {
+			showToast("Listing ID not found", "error");
+			return;
+		}
+
+		navigate({ to: "/listing/edit/$id", params: { id } });
 	};
 
 	const handleAction = (actionKey: string) => {
@@ -174,7 +182,7 @@ export function ListingDetailsActions({
 				}
 
 				if (actionKey === "edit") {
-					navigate({ from: "/listing/edit/$id" });
+					navigateToEditListing();
 				} else {
 					setOpenDialog("deleteListing");
 				}
@@ -260,7 +268,7 @@ export function ListingDetailsActions({
 						<IconButton
 							icon={Pencil}
 							disabled={isListingModerationPending || !canEditOrDelete}
-							onClick={() => navigate({ from: "/listing/edit/$id" })}
+							onClick={navigateToEditListing}
 							backgroundColor="bg-primary hover:bg-accent hover:text-primary"
 						/>
 						<IconButton

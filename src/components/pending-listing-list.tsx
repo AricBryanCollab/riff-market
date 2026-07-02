@@ -76,13 +76,13 @@ const PendingListingList = ({
 							>
 								<div className="flex gap-3">
 									{/* Listing Image */}
-										{listing.images?.[0] && (
-											<div className="relative size-16 shrink-0 rounded-md overflow-hidden bg-muted border border-border">
-												<img
-													src={listing.images[0].url}
-													alt={listing.name}
-													className="w-full h-full object-cover"
-												/>
+									{listing.images?.[0] && (
+										<div className="relative size-16 shrink-0 rounded-md overflow-hidden bg-muted border border-border">
+											<img
+												src={listing.images[0].url}
+												alt={listing.name}
+												className="w-full h-full object-cover"
+											/>
 										</div>
 									)}
 

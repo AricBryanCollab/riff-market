@@ -68,7 +68,8 @@ describeDb("order service Prisma integration", () => {
 			{
 				id: "purchase-1",
 				purchaseId: "purchase-1",
-				totalAmount: 275,
+				totalAmountMinor: 275,
+				currencyCode: "TWD",
 				status: "OPEN",
 			},
 		]);
@@ -78,7 +79,8 @@ describeDb("order service Prisma integration", () => {
 			{
 				id: "seller-order-1",
 				sellerOrderId: "seller-order-1",
-				totalAmount: 125,
+				totalAmountMinor: 125,
+				currencyCode: "TWD",
 				status: "NEW",
 			},
 		]);
@@ -96,15 +98,22 @@ describeDb("order service Prisma integration", () => {
 		);
 		expect(customerDetail).toMatchObject({
 			id: "purchase-1",
-			totalAmount: 275,
+			totalAmountMinor: 275,
+			currencyCode: "TWD",
 			items: expect.arrayContaining([
 				expect.objectContaining({
 					listingId: "listing-1",
 					quantity: 1,
+					unitPriceAmountMinor: 125,
+					subTotalAmountMinor: 125,
+					currencyCode: "TWD",
 				}),
 				expect.objectContaining({
 					listingId: "listing-2",
 					quantity: 2,
+					unitPriceAmountMinor: 75,
+					subTotalAmountMinor: 150,
+					currencyCode: "TWD",
 				}),
 			]),
 		});
@@ -129,7 +138,8 @@ describeDb("order service Prisma integration", () => {
 		expect(sellerDetail).toMatchObject({
 			id: "seller-order-1",
 			sellerOrderId: "seller-order-1",
-			totalAmount: 125,
+			totalAmountMinor: 125,
+			currencyCode: "TWD",
 			status: "NEW",
 			customer: {
 				id: "customer-1",
@@ -147,7 +157,8 @@ describeDb("order service Prisma integration", () => {
 		expect(adminDetail).toMatchObject({
 			id: "seller-order-2",
 			sellerOrderId: "seller-order-2",
-			totalAmount: 150,
+			totalAmountMinor: 150,
+			currencyCode: "TWD",
 			status: "NEW",
 		});
 	});
