@@ -7,8 +7,10 @@ import {
 	type SellerOrderDashboardPort,
 } from "@/domains/ordering/application/order-read-models";
 import type {
+	BuyerPurchaseReadModel,
 	OrderingOrderItemReadModel,
 	OrderingOrderReadModel,
+	SellerOrderReadModel,
 } from "@/domains/ordering/dto/order-read-model";
 
 type OrderingReadPrisma = Pick<PrismaClient, "purchase" | "sellerOrder">;
@@ -41,7 +43,7 @@ export class PrismaOrderReadModels
 {
 	constructor(private readonly db: OrderingReadPrisma) {}
 
-	async listForCustomer(customerId: string): Promise<OrderingOrderReadModel[]> {
+	async listForCustomer(customerId: string): Promise<BuyerPurchaseReadModel[]> {
 		const purchases = await this.db.purchase.findMany({
 			where: {
 				customerIdSnapshot: customerId,
@@ -64,7 +66,7 @@ export class PrismaOrderReadModels
 		return purchases.map(toBuyerPurchaseHistoryReadModel);
 	}
 
-	async listForSeller(sellerId: string): Promise<OrderingOrderReadModel[]> {
+	async listForSeller(sellerId: string): Promise<SellerOrderReadModel[]> {
 		const sellerOrders = await this.db.sellerOrder.findMany({
 			where: {
 				sellerIdSnapshot: sellerId,
@@ -81,7 +83,7 @@ export class PrismaOrderReadModels
 		return sellerOrders.map(toSellerOrderDashboardReadModel);
 	}
 
-	async listAllForAdmin(): Promise<OrderingOrderReadModel[]> {
+	async listAllForAdmin(): Promise<SellerOrderReadModel[]> {
 		const sellerOrders = await this.db.sellerOrder.findMany({
 			include: {
 				items: true,
@@ -98,7 +100,7 @@ export class PrismaOrderReadModels
 	async findPurchaseForCustomer(
 		purchaseId: string,
 		customerId: string,
-	): Promise<OrderingOrderReadModel | null> {
+	): Promise<BuyerPurchaseReadModel | null> {
 		const purchase = await this.db.purchase.findFirst({
 			where: {
 				id: purchaseId,
@@ -122,7 +124,7 @@ export class PrismaOrderReadModels
 	async findSellerOrderForSeller(
 		sellerOrderId: string,
 		sellerId: string,
-	): Promise<OrderingOrderReadModel | null> {
+	): Promise<SellerOrderReadModel | null> {
 		const sellerOrder = await this.db.sellerOrder.findFirst({
 			where: {
 				id: sellerOrderId,
@@ -174,12 +176,13 @@ export class PrismaOrderReadModels
 
 function toBuyerPurchaseHistoryReadModel(
 	purchase: PurchaseHistoryRow,
-): OrderingOrderReadModel {
+): BuyerPurchaseReadModel {
 	const items = purchase.sellerOrders.flatMap((sellerOrder) =>
 		sellerOrder.items.map((item) => toOrderItemReadModel(sellerOrder.id, item)),
 	);
 
 	return {
+		kind: "buyer-purchase",
 		id: purchase.id,
 		purchaseId: purchase.id,
 		orderDate: purchase.createdAt,
@@ -200,10 +203,11 @@ function toBuyerPurchaseHistoryReadModel(
 
 function toSellerOrderDashboardReadModel(
 	sellerOrder: SellerOrderDashboardRow,
-): OrderingOrderReadModel {
+): SellerOrderReadModel {
 	const customerName = splitName(sellerOrder.purchase.buyerName);
 
 	return {
+		kind: "seller-order",
 		id: sellerOrder.id,
 		purchaseId: sellerOrder.purchaseId,
 		sellerOrderId: sellerOrder.id,

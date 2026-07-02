@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { SellerOrderStatusRepositoryPort } from "@/domains/ordering/application/change-seller-order-status";
-import type { OrderingOrderReadModel } from "@/domains/ordering/dto/order-read-model";
+import type {
+	BuyerPurchaseReadModel,
+	OrderingOrderReadModel,
+	SellerOrderReadModel,
+} from "@/domains/ordering/dto/order-read-model";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	changeSellerOrderStatusForCurrentUser,
@@ -112,11 +116,11 @@ class EmptyOrderReadModels implements OrderReadModels {
 		return [];
 	}
 
-	async findPurchaseForCustomer(): Promise<OrderingOrderReadModel | null> {
+	async findPurchaseForCustomer(): Promise<BuyerPurchaseReadModel | null> {
 		return null;
 	}
 
-	async findSellerOrderForSeller(): Promise<OrderingOrderReadModel | null> {
+	async findSellerOrderForSeller(): Promise<SellerOrderReadModel | null> {
 		return null;
 	}
 

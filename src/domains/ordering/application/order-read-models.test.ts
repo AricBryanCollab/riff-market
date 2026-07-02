@@ -9,13 +9,14 @@ import {
 	type OrderDetailReadPort,
 	type SellerOrderDashboardPort,
 } from "@/domains/ordering/application/order-read-models";
-import type { OrderingOrderReadModel } from "@/domains/ordering/dto/order-read-model";
+import type {
+	BuyerPurchaseReadModel,
+	OrderingOrderReadModel,
+	SellerOrderReadModel,
+} from "@/domains/ordering/dto/order-read-model";
 
-const customerOrder = makeOrderReadModel({ id: "purchase-1" });
-const sellerOrder = makeOrderReadModel({
-	id: "seller-order-1",
-	sellerOrderId: "seller-order-1",
-});
+const customerOrder = makeBuyerPurchaseReadModel({ id: "purchase-1" });
+const sellerOrder = makeSellerOrderReadModel({ id: "seller-order-1" });
 
 describe("listBuyerPurchaseHistory", () => {
 	it("allows customers to read only their own purchase history", async () => {
@@ -280,7 +281,7 @@ describe("deriveBuyerOrderSummaryStatus", () => {
 class FakeBuyerPurchaseHistoryPort implements BuyerPurchaseHistoryPort {
 	readonly requestedCustomerIds: string[] = [];
 
-	constructor(private readonly orders: OrderingOrderReadModel[]) {}
+	constructor(private readonly orders: BuyerPurchaseReadModel[]) {}
 
 	async listForCustomer(customerId: string) {
 		this.requestedCustomerIds.push(customerId);
@@ -293,7 +294,7 @@ class FakeSellerOrderDashboardPort implements SellerOrderDashboardPort {
 	readonly requestedSellerIds: string[] = [];
 	adminReadCount = 0;
 
-	constructor(private readonly orders: OrderingOrderReadModel[]) {}
+	constructor(private readonly orders: SellerOrderReadModel[]) {}
 
 	async listForSeller(sellerId: string) {
 		this.requestedSellerIds.push(sellerId);
@@ -313,8 +314,8 @@ class FakeOrderDetailReadPort implements OrderDetailReadPort {
 
 	constructor(
 		private readonly orders: {
-			readonly customerPurchase?: OrderingOrderReadModel | null;
-			readonly sellerOrder?: OrderingOrderReadModel | null;
+			readonly customerPurchase?: BuyerPurchaseReadModel | null;
+			readonly sellerOrder?: SellerOrderReadModel | null;
 			readonly adminOrder?: OrderingOrderReadModel | null;
 		},
 	) {}
@@ -338,10 +339,11 @@ class FakeOrderDetailReadPort implements OrderDetailReadPort {
 	}
 }
 
-function makeOrderReadModel(
-	overrides: Partial<OrderingOrderReadModel> = {},
-): OrderingOrderReadModel {
+function makeBuyerPurchaseReadModel(
+	overrides: Partial<BuyerPurchaseReadModel> = {},
+): BuyerPurchaseReadModel {
 	return {
+		kind: "buyer-purchase",
 		id: "purchase-1",
 		purchaseId: "purchase-1",
 		orderDate: new Date("2026-06-12T00:00:00.000Z"),
@@ -351,6 +353,31 @@ function makeOrderReadModel(
 		trackingNumber: "RM-1001",
 		status: "OPEN",
 		items: [],
+		...overrides,
+	};
+}
+
+function makeSellerOrderReadModel(
+	overrides: Partial<SellerOrderReadModel> = {},
+): SellerOrderReadModel {
+	return {
+		kind: "seller-order",
+		id: "seller-order-1",
+		purchaseId: "purchase-1",
+		sellerOrderId: "seller-order-1",
+		orderDate: new Date("2026-06-12T00:00:00.000Z"),
+		totalAmountMinor: 1299,
+		currencyCode: "TWD",
+		shippingAddress: "123 Main St",
+		trackingNumber: "TRACK-1001",
+		status: "NEW",
+		items: [],
+		customer: {
+			id: "customer-1",
+			email: "customer@example.com",
+			firstName: "Pat",
+			lastName: "Buyer",
+		},
 		...overrides,
 	};
 }

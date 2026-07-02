@@ -3,10 +3,10 @@ import {
 	type PrismaClient,
 } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
+import { PrismaAccountProfiles } from "@/domains/accounts/infrastructure/prisma-account-profiles";
 import {
 	deleteAccount,
 	getAccountProfile,
-	UserRepoAccountProfiles,
 	updateAccountProfile,
 } from "@/server/account-service";
 import {
@@ -18,13 +18,13 @@ import {
 
 describeDb("account service Prisma integration", () => {
 	let db: PrismaClient;
-	let accounts: UserRepoAccountProfiles;
+	let accounts: PrismaAccountProfiles;
 	const testDb = setupPrismaTestDatabase();
 
 	beforeEach(async () => {
 		db = testDb.client;
 		await seedMarketplaceUsers(db);
-		accounts = new UserRepoAccountProfiles(db);
+		accounts = new PrismaAccountProfiles(db);
 	});
 
 	it("reads and updates persisted account profile data", async () => {

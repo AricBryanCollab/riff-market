@@ -1,12 +1,3 @@
-import { randomUUID } from "node:crypto";
-import type { PrismaClient } from "generated/prisma/client";
-import {
-	deleteUser,
-	getUserById,
-	type UserProfileRecord,
-	updateProfilePicture,
-	updateUser,
-} from "@/data/user-repo";
 import {
 	type AccountDeletionPort,
 	type AccountProfileReadPort,
@@ -27,84 +18,15 @@ import type {
 	AccountProfile,
 	AccountProfileUpdate,
 } from "@/domains/accounts/dto/account-profile";
-import type {
-	AccountProfilePictureAsset,
-	AccountProfilePictureUpdateResult,
-} from "@/domains/accounts/dto/account-profile-picture";
-import { stageAccountMediaForCleanup } from "@/domains/media/application/stage-account-media-cleanup";
-import { PrismaAccountMediaCleanupStaging } from "@/domains/media/infrastructure/prisma-account-media-cleanup-staging";
+import type { AccountProfilePictureUpdateResult } from "@/domains/accounts/dto/account-profile-picture";
+import { PrismaAccountProfiles } from "@/domains/accounts/infrastructure/prisma-account-profiles";
 import type { AppError } from "@/domains/shared/domain/result";
 import { logger } from "@/lib/logger";
 import type { UserProfile } from "@/types/user";
-import {
-	toImageAssetRef,
-	toImageAssetUrl,
-	toNullableJsonImageAssetRef,
-} from "@/utils/image-asset-ref";
 
 export type AccountServiceError = AppError & {
 	readonly error: string;
 };
-
-export class UserRepoAccountProfiles
-	implements
-		AccountProfileReadPort,
-		AccountProfileWritePort,
-		AccountDeletionPort,
-		AccountProfilePictureReadPort,
-		AccountProfilePictureWritePort
-{
-	constructor(private readonly db: PrismaClient) {}
-
-	async findById(userId: string): Promise<AccountProfile | null> {
-		const user = await getUserById(userId, this.db);
-
-		return user ? toAccountProfile(user) : null;
-	}
-
-	async updateProfile(
-		userId: string,
-		data: AccountProfileUpdate,
-	): Promise<AccountProfile> {
-		return toAccountProfile(await updateUser(userId, data, this.db));
-	}
-
-	async deleteAccount(userId: string): Promise<void> {
-		await this.db.$transaction(async (transaction) => {
-			await stageAccountMediaForCleanup(
-				{
-					accountId: userId,
-					cleanupBatchId: randomUUID(),
-				},
-				new PrismaAccountMediaCleanupStaging(transaction),
-			);
-			await deleteUser(userId, transaction);
-		});
-	}
-
-	async findProfilePictureStateByUserId(userId: string) {
-		const user = await getUserById(userId, this.db);
-
-		if (!user) {
-			return null;
-		}
-
-		return {
-			profilePic: toImageAssetRef(user.profilePic),
-		};
-	}
-
-	async updateProfilePicture(
-		userId: string,
-		profilePic: AccountProfilePictureAsset | null,
-	): Promise<void> {
-		await updateProfilePicture(
-			userId,
-			toNullableJsonImageAssetRef(profilePic),
-			this.db,
-		);
-	}
-}
 
 export async function getAccountProfile(
 	userId: string,
@@ -112,7 +34,7 @@ export async function getAccountProfile(
 ): Promise<{ readonly data: UserProfile } | AccountServiceError> {
 	const result = await getAccountProfileUseCase(
 		userId,
-		accounts ?? (await createUserRepoAccountProfiles()),
+		accounts ?? (await createPrismaAccountProfiles()),
 	);
 
 	if (!result.ok) {
@@ -132,7 +54,7 @@ export async function updateAccountProfile(
 			userId,
 			data,
 		},
-		accounts ?? (await createUserRepoAccountProfiles()),
+		accounts ?? (await createPrismaAccountProfiles()),
 	);
 
 	if (!result.ok) {
@@ -149,7 +71,7 @@ export async function deleteAccount(
 ): Promise<AccountDeletionResult | AccountServiceError> {
 	const result = await deleteAccountUseCase(
 		{ userId, email },
-		accounts ?? (await createUserRepoAccountProfiles()),
+		accounts ?? (await createPrismaAccountProfiles()),
 	);
 
 	if (!result.ok) {
@@ -170,7 +92,7 @@ export async function updateAccountProfilePicture(
 		profilePic === null
 			? { userId, kind: "remove" }
 			: { userId, kind: "replace", profilePic },
-		accounts ?? (await createUserRepoAccountProfiles()),
+		accounts ?? (await createPrismaAccountProfiles()),
 		imageAssets ?? (await createCloudinaryProfilePictureAssets()),
 		logger,
 	);
@@ -180,13 +102,6 @@ export async function updateAccountProfilePicture(
 	}
 
 	return result.value;
-}
-
-function toAccountProfile(user: UserProfileRecord): AccountProfile {
-	return {
-		...user,
-		profilePic: toImageAssetUrl(user.profilePic),
-	};
 }
 
 function toUserProfile(account: AccountProfile): UserProfile {
@@ -200,9 +115,9 @@ function toAccountServiceError(error: AppError): AccountServiceError {
 	};
 }
 
-async function createUserRepoAccountProfiles() {
+async function createPrismaAccountProfiles() {
 	const { prisma } = await import("@/data/connect-db");
-	return new UserRepoAccountProfiles(prisma);
+	return new PrismaAccountProfiles(prisma);
 }
 
 async function createCloudinaryProfilePictureAssets() {

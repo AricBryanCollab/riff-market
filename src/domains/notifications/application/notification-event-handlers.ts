@@ -1,6 +1,8 @@
-import type { ListingLifecycleEvent } from "@/domains/listings/domain/listing";
-import type { PurchasePlacedEvent } from "@/domains/ordering/domain/purchase";
-import type { SellerOrderCreatedEvent } from "@/domains/ordering/domain/seller-order";
+import type {
+	ListingModerationNotificationEvent,
+	PurchasePlacedNotificationEvent,
+	SellerOrderCreatedNotificationEvent,
+} from "@/domains/notifications/dto/notification-event";
 import type { DomainEvent } from "@/domains/shared/domain/domain-event";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
 import type { NotificationCreatePort } from "./notification-use-cases";
@@ -68,10 +70,7 @@ export async function createPurchasePlacedNotifications(
 }
 
 export type ListingModerationNotificationEventInput = {
-	readonly event: Extract<
-		ListingLifecycleEvent,
-		{ readonly eventName: "ListingApproved" | "ListingDeclined" }
-	>;
+	readonly event: ListingModerationNotificationEvent;
 	readonly listingName: string;
 };
 
@@ -138,7 +137,10 @@ function getSellerOrderCreatedEvents({
 	const sellerOrdersById = new Map(
 		sellerOrders.map((sellerOrder) => [sellerOrder.id, sellerOrder]),
 	);
-	const eventsBySellerOrderId = new Map<string, SellerOrderCreatedEvent>();
+	const eventsBySellerOrderId = new Map<
+		string,
+		SellerOrderCreatedNotificationEvent
+	>();
 
 	for (const event of sellerOrderEvents) {
 		const sellerOrder = sellerOrdersById.get(event.payload.sellerOrderId);
@@ -170,7 +172,7 @@ function getSellerOrderCreatedEvents({
 }
 
 function assertPurchaseEventMatchesSnapshot(
-	event: PurchasePlacedEvent,
+	event: PurchasePlacedNotificationEvent,
 	purchase: PurchaseNotificationSnapshot,
 ) {
 	if (
@@ -188,7 +190,7 @@ function assertPurchaseEventMatchesSnapshot(
 }
 
 function assertSellerOrderEventMatchesSnapshot(
-	event: SellerOrderCreatedEvent,
+	event: SellerOrderCreatedNotificationEvent,
 	purchaseId: string,
 	sellerOrder: SellerOrderNotificationSnapshot,
 ) {
@@ -209,12 +211,12 @@ function assertSellerOrderEventMatchesSnapshot(
 
 function isPurchasePlacedEvent(
 	event: DomainEvent,
-): event is PurchasePlacedEvent {
+): event is PurchasePlacedNotificationEvent {
 	return event.eventName === "PurchasePlaced";
 }
 
 function isSellerOrderCreatedEvent(
 	event: DomainEvent,
-): event is SellerOrderCreatedEvent {
+): event is SellerOrderCreatedNotificationEvent {
 	return event.eventName === "SellerOrderCreated";
 }

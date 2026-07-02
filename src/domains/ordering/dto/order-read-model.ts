@@ -49,10 +49,8 @@ export type OrderingOrderItemReadModel = {
 	};
 };
 
-export type OrderingOrderReadModel = {
+type OrderingOrderReadModelBase = {
 	readonly id: string;
-	readonly purchaseId?: string;
-	readonly sellerOrderId?: string;
 	readonly orderDate: Date;
 	readonly totalAmountMinor: number;
 	readonly currencyCode: string;
@@ -60,10 +58,27 @@ export type OrderingOrderReadModel = {
 	readonly trackingNumber: string;
 	readonly status: OrderingOrderReadStatus;
 	readonly items: OrderingOrderItemReadModel[];
-	readonly customer?: {
-		readonly id?: string;
+};
+
+export type BuyerPurchaseReadModel = OrderingOrderReadModelBase & {
+	readonly kind: "buyer-purchase";
+	readonly purchaseId: string;
+	readonly status: BuyerOrderSummaryStatus;
+};
+
+export type SellerOrderReadModel = OrderingOrderReadModelBase & {
+	readonly kind: "seller-order";
+	readonly purchaseId: string;
+	readonly sellerOrderId: string;
+	readonly status: SellerOrderReadStatus;
+	readonly customer: {
+		readonly id: string;
 		readonly email: string;
 		readonly firstName: string;
 		readonly lastName: string;
 	};
 };
+
+export type OrderingOrderReadModel =
+	| BuyerPurchaseReadModel
+	| SellerOrderReadModel;

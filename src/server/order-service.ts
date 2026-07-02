@@ -12,10 +12,7 @@ import {
 	type SellerOrderDashboardPort,
 } from "@/domains/ordering/application/order-read-models";
 import type { SellerOrderStatus } from "@/domains/ordering/domain/seller-order";
-import type {
-	OrderingOrderReadModel,
-	OrderingOrderReadStatus,
-} from "@/domains/ordering/dto/order-read-model";
+import type { OrderingOrderReadModel } from "@/domains/ordering/dto/order-read-model";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
@@ -65,7 +62,7 @@ export type ChangeSellerOrderStatusInput = z.infer<
 export type SellerOrderStatusChangeResponse = {
 	readonly sellerOrderId: string;
 	readonly purchaseId: string;
-	readonly status: OrderingOrderReadStatus;
+	readonly status: SellerOrderStatus;
 	readonly trackingNumber: string | null;
 };
 

@@ -4,8 +4,10 @@ import type {
 } from "@/domains/ordering/domain/purchase";
 import type { SellerOrderStatus } from "@/domains/ordering/domain/seller-order";
 import type {
+	BuyerOrderSummaryStatus,
+	BuyerPurchaseReadModel,
 	OrderingOrderReadModel,
-	OrderingOrderReadStatus,
+	SellerOrderReadModel,
 } from "@/domains/ordering/dto/order-read-model";
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
@@ -23,30 +25,30 @@ export type OrderReadErrorCode =
 export type OrderReadError = AppError<OrderReadErrorCode>;
 
 export interface BuyerPurchaseHistoryPort {
-	listForCustomer(customerId: string): Promise<OrderingOrderReadModel[]>;
+	listForCustomer(customerId: string): Promise<BuyerPurchaseReadModel[]>;
 }
 
 export interface SellerOrderDashboardPort {
-	listForSeller(sellerId: string): Promise<OrderingOrderReadModel[]>;
-	listAllForAdmin(): Promise<OrderingOrderReadModel[]>;
+	listForSeller(sellerId: string): Promise<SellerOrderReadModel[]>;
+	listAllForAdmin(): Promise<SellerOrderReadModel[]>;
 }
 
 export interface OrderDetailReadPort {
 	findPurchaseForCustomer(
 		purchaseId: string,
 		customerId: string,
-	): Promise<OrderingOrderReadModel | null>;
+	): Promise<BuyerPurchaseReadModel | null>;
 	findSellerOrderForSeller(
 		sellerOrderId: string,
 		sellerId: string,
-	): Promise<OrderingOrderReadModel | null>;
+	): Promise<SellerOrderReadModel | null>;
 	findForAdmin(orderId: string): Promise<OrderingOrderReadModel | null>;
 }
 
 export async function listBuyerPurchaseHistory(
 	actor: Actor,
 	purchases: BuyerPurchaseHistoryPort,
-): Promise<Result<OrderingOrderReadModel[], OrderReadError>> {
+): Promise<Result<BuyerPurchaseReadModel[], OrderReadError>> {
 	if (actor.role !== "CUSTOMER") {
 		return err(
 			orderReadError(
@@ -62,7 +64,7 @@ export async function listBuyerPurchaseHistory(
 export async function listSellerOrderDashboard(
 	actor: Actor,
 	sellerOrders: SellerOrderDashboardPort,
-): Promise<Result<OrderingOrderReadModel[], OrderReadError>> {
+): Promise<Result<SellerOrderReadModel[], OrderReadError>> {
 	if (actor.role !== "SELLER" && actor.role !== "ADMIN") {
 		return err(
 			orderReadError(
@@ -127,7 +129,7 @@ export function deriveBuyerOrderSummaryStatus(input: {
 	readonly purchaseStatus: PurchaseStatus;
 	readonly paymentStatus: PaymentStatus;
 	readonly sellerOrderStatuses: readonly SellerOrderStatus[];
-}): OrderingOrderReadStatus {
+}): BuyerOrderSummaryStatus {
 	if (input.paymentStatus === "PENDING_PAYMENT") {
 		return "PENDING_PAYMENT";
 	}
