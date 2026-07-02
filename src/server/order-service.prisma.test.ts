@@ -228,20 +228,20 @@ async function sellerOrderStatus(db: PrismaClient, sellerOrderId: string) {
 async function seedOrderServicePurchase(db: PrismaClient) {
 	await seedPurchaseWithSellerOrders(db, {
 		id: "purchase-1",
-		totalAmountCents: 275_00,
+		totalAmountCents: 275,
 		sellerOrders: [
 			{
 				id: "seller-order-1",
 				sellerId: "seller-1",
 				sellerIdSnapshot: "seller-1",
-				subtotalCents: 125_00,
+				subtotalCents: 125,
 				items: [
 					{
 						id: "seller-order-item-1",
 						listingId: "listing-1",
 						sellerId: "seller-1",
 						sellerDisplayName: "A Seller",
-						unitPriceCents: 125_00,
+						unitPriceCents: 125,
 						quantity: 1,
 					},
 				],
@@ -250,7 +250,7 @@ async function seedOrderServicePurchase(db: PrismaClient) {
 				id: "seller-order-2",
 				sellerId: "seller-2",
 				sellerIdSnapshot: "seller-2",
-				subtotalCents: 150_00,
+				subtotalCents: 150,
 				items: [
 					{
 						id: "seller-order-item-2",
@@ -258,7 +258,7 @@ async function seedOrderServicePurchase(db: PrismaClient) {
 						listingName: "Jazzmaster",
 						sellerId: "seller-2",
 						sellerDisplayName: "B Seller",
-						unitPriceCents: 75_00,
+						unitPriceCents: 75,
 						quantity: 2,
 					},
 				],

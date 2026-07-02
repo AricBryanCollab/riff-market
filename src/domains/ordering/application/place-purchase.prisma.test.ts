@@ -19,8 +19,8 @@ import type { PrismaTransactionContext } from "@/domains/shared/infrastructure/p
 import {
 	describeDb,
 	listingStock,
-	seedMarketplaceUsers,
 	seedListing,
+	seedMarketplaceUsers,
 	setupPrismaTestDatabase,
 } from "@/test/prisma-vitest-support";
 
@@ -37,14 +37,14 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceAmountMinor: 125_00,
+			priceAmountMinor: 125,
 			stock: 2,
 		});
 		await seedListing(db, {
 			id: "listing-2",
 			sellerId: "seller-2",
 			name: "Jazzmaster",
-			priceAmountMinor: 75_00,
+			priceAmountMinor: 75,
 			stock: 3,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(
@@ -71,8 +71,8 @@ describeDb("PlacePurchase Prisma integration", () => {
 			value: expect.objectContaining({
 				purchaseNumber: "RM-1",
 				total: expect.objectContaining({
-					amountMinor: 275_00,
-					currencyCode: "USD",
+					amountMinor: 275,
+					currencyCode: "TWD",
 				}),
 				paymentStatus: "MANUALLY_CONFIRMED",
 				status: "OPEN",
@@ -96,8 +96,8 @@ describeDb("PlacePurchase Prisma integration", () => {
 		expect(purchase).toMatchObject({
 			customerId: "customer-1",
 			customerIdSnapshot: "customer-1",
-			totalAmountCents: 275_00,
-			currencyCode: "USD",
+			totalAmountCents: 275,
+			currencyCode: "TWD",
 			paymentStatus: "MANUALLY_CONFIRMED",
 			status: "OPEN",
 			buyerName: "Pat Buyer",
@@ -109,30 +109,33 @@ describeDb("PlacePurchase Prisma integration", () => {
 		expect(purchase.sellerOrders[0]).toMatchObject({
 			sellerId: "seller-1",
 			sellerIdSnapshot: "seller-1",
-			subtotalCents: 125_00,
-			currencyCode: "USD",
+			subtotalCents: 125,
+			currencyCode: "TWD",
 			status: "NEW",
 			trackingNumber: null,
 			items: [
 				expect.objectContaining({
 					listingId: "listing-1",
-					unitPriceCents: 125_00,
+					unitPriceCents: 125,
 					quantity: 1,
-					subTotalCents: 125_00,
+					subTotalCents: 125,
+					currencyCode: "TWD",
 				}),
 			],
 		});
 		expect(purchase.sellerOrders[1]).toMatchObject({
 			sellerId: "seller-2",
 			sellerIdSnapshot: "seller-2",
-			subtotalCents: 150_00,
+			subtotalCents: 150,
+			currencyCode: "TWD",
 			status: "NEW",
 			items: [
 				expect.objectContaining({
 					listingId: "listing-2",
-					unitPriceCents: 75_00,
+					unitPriceCents: 75,
 					quantity: 2,
-					subTotalCents: 150_00,
+					subTotalCents: 150,
+					currencyCode: "TWD",
 				}),
 			],
 		});
@@ -156,7 +159,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedListing(db, {
 			id: "listing-approved-status",
 			sellerId: "seller-1",
-			priceAmountMinor: 125_00,
+			priceAmountMinor: 125,
 			stock: 1,
 			listingStatus: "APPROVED",
 			isApproved: false,
@@ -192,7 +195,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedListing(db, {
 			id: "listing-withdrawn-status",
 			sellerId: "seller-1",
-			priceAmountMinor: 125_00,
+			priceAmountMinor: 125,
 			stock: 1,
 			listingStatus: "WITHDRAWN",
 			isApproved: true,
@@ -229,14 +232,14 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceAmountMinor: 125_00,
+			priceAmountMinor: 125,
 			stock: 2,
 		});
 		await seedListing(db, {
 			id: "listing-2",
 			sellerId: "seller-2",
 			name: "Jazzmaster",
-			priceAmountMinor: 75_00,
+			priceAmountMinor: 75,
 			stock: 3,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(
@@ -430,7 +433,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceAmountMinor: 125_00,
+			priceAmountMinor: 125,
 			stock: 2,
 		});
 		const placePurchase = createPlacePurchaseRunner(
@@ -519,7 +522,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceAmountMinor: 125_00,
+			priceAmountMinor: 125,
 			stock: 3,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(
@@ -558,14 +561,14 @@ describeDb("PlacePurchase Prisma integration", () => {
 		});
 
 		expect(await listingStock(db, "listing-1")).toBe(1);
-		expect(purchase.totalAmountCents).toBe(250_00);
+		expect(purchase.totalAmountCents).toBe(250);
 		expect(purchase.sellerOrders).toHaveLength(1);
 		expect(purchase.sellerOrders[0]?.items).toHaveLength(1);
 		expect(purchase.sellerOrders[0]?.items[0]).toMatchObject({
 			listingId: "listing-1",
 			quantity: 2,
-			unitPriceCents: 125_00,
-			subTotalCents: 250_00,
+			unitPriceCents: 125,
+			subTotalCents: 250,
 		});
 	});
 
@@ -574,7 +577,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceAmountMinor: 125_00,
+			priceAmountMinor: 125,
 			stock: 1,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(
@@ -627,7 +630,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		expect(purchase.sellerOrders[0]).toMatchObject({
 			sellerId: null,
 			sellerIdSnapshot: "seller-1",
-			subtotalCents: 125_00,
+			subtotalCents: 125,
 			status: "NEW",
 		});
 		expect(purchase.sellerOrders[0]?.items).toHaveLength(1);
@@ -635,9 +638,9 @@ describeDb("PlacePurchase Prisma integration", () => {
 			listingId: "listing-1",
 			sellerId: "seller-1",
 			sellerDisplayName: "A Seller",
-			unitPriceCents: 125_00,
+			unitPriceCents: 125,
 			quantity: 1,
-			subTotalCents: 125_00,
+			subTotalCents: 125,
 		});
 	});
 
@@ -646,7 +649,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceAmountMinor: 125_00,
+			priceAmountMinor: 125,
 			stock: 1,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(
@@ -683,7 +686,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		await seedListing(db, {
 			id: "listing-1",
 			sellerId: "seller-1",
-			priceAmountMinor: 125_00,
+			priceAmountMinor: 125,
 			stock: 1,
 		});
 		const runPlacePurchase = createPlacePurchaseRunner(
