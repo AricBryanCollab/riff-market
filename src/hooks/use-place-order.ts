@@ -4,7 +4,10 @@ import { useState } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import type { CheckoutCartState } from "@/hooks/use-cart-details";
 import { clientLogger } from "@/lib/client-logger";
-import { invalidateOrdersCache } from "@/lib/tanstack-query/cache-policy";
+import {
+	invalidateListingCache,
+	invalidateOrdersCache,
+} from "@/lib/tanstack-query/cache-policy";
 import { createOrder } from "@/lib/tanstack-query/orders-queries";
 import { useCartStore } from "@/store/cart";
 import { useToastStore } from "@/store/toast";
@@ -22,7 +25,11 @@ const usePlaceOrder = (checkoutCart: CheckoutCartState) => {
 	const { mutate, isPending, isError } = useMutation({
 		mutationFn: createOrder,
 		onSuccess: async () => {
-			await invalidateOrdersCache(queryClient);
+			// Placing an order changes both order history and listing stock.
+			await Promise.all([
+				invalidateOrdersCache(queryClient),
+				invalidateListingCache(queryClient),
+			]);
 			showToast(
 				"Order placed successfully! Please wait for seller confirmation",
 				"success",
