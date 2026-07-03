@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchRecentListings } from "@/lib/tanstack-query/listing-read-client";
+import { fetchRecentListings } from "@/lib/tanstack-query/listing-query-client";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 
 const useGetRecentListings = () => {

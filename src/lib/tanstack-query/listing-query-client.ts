@@ -16,7 +16,7 @@ import {
 	getPendingModerationListingsListingApiFn,
 	getPopularListingBrandCountsListingApiFn,
 	getRecentListingsListingApiFn,
-} from "@/server/listing-read.functions";
+} from "@/server/listing-query.functions";
 
 export type { ApprovedListingSearchServerInput };
 

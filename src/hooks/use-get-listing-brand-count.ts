@@ -1,6 +1,6 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { ListingBrandCountData } from "@/domains/listings/dto/listing-view";
-import { fetchPopularListingBrandCounts } from "@/lib/tanstack-query/listing-read-client";
+import { fetchPopularListingBrandCounts } from "@/lib/tanstack-query/listing-query-client";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 
 export const popularListingBrandCountsOptions = queryOptions<

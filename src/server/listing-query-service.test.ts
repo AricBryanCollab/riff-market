@@ -9,9 +9,9 @@ import {
 	getPopularListingBrandCountDtos,
 	type ListingQueryServiceDependencies,
 	searchApprovedListingResponses,
-} from "./listing-read-service";
+} from "./listing-query-service";
 
-describe("listing read behavior", () => {
+describe("listing query behavior", () => {
 	it("hides missing and non-public listing details", async () => {
 		const dependencies = makeDependencies([
 			makeListing({ id: "pending-listing", listingStatus: "PENDING" }),
@@ -81,7 +81,7 @@ describe("listing read behavior", () => {
 		]);
 	});
 
-	it("returns popular approved brand counts from the listing read model", async () => {
+	it("returns popular approved brand counts from the listing query view", async () => {
 		const dependencies = makeDependencies([]);
 
 		await expect(

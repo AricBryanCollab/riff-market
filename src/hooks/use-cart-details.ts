@@ -5,7 +5,7 @@ import {
 	type ListingCartSubtotalLine,
 } from "@/domains/listings/application/listing-money";
 import type { ListingResponse } from "@/domains/listings/dto/listing-view";
-import { fetchCartListings } from "@/lib/tanstack-query/listing-read-client";
+import { fetchCartListings } from "@/lib/tanstack-query/listing-query-client";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { type CartItem, useCartStore } from "@/store/cart";
 import type { CartLine } from "@/types/cart";

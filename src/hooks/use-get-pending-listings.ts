@@ -1,6 +1,6 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ListingResponse } from "@/domains/listings/dto/listing-view";
-import { fetchPendingModerationListings } from "@/lib/tanstack-query/listing-read-client";
+import { fetchPendingModerationListings } from "@/lib/tanstack-query/listing-query-client";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 
 export const pendingListingsQueryOpt = queryOptions<ListingResponse[]>({

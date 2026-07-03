@@ -18,7 +18,7 @@ import {
 	listRecentListingResponses,
 	listSellerListingResponses,
 	searchApprovedListingResponses,
-} from "@/server/listing-read-service";
+} from "@/server/listing-query-service";
 
 const approvedListingSearchServerInputSchema = z.object({
 	limit: z.string().nullable(),

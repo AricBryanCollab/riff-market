@@ -11,7 +11,7 @@ import {
 	fetchApprovedListings,
 	fetchListingDetails,
 	fetchListingStatusCount,
-} from "@/lib/tanstack-query/listing-read-client";
+} from "@/lib/tanstack-query/listing-query-client";
 import {
 	type ListingDetailViewerScope,
 	listingDetailViewerScopeForRole,
