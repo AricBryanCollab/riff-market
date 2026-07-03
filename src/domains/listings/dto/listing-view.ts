@@ -3,16 +3,16 @@ import { parseOptionalListingPriceInputToAmountMinor } from "@/domains/listings/
 import type { ListingStatus } from "@/domains/listings/domain/listing";
 import type { ListingCategory, ListingCondition } from "@/types/enum";
 
-export type ListingReadStatus = ListingStatus;
+export type ListingViewStatus = ListingStatus;
 export type ListingCountStatus = Extract<
-	ListingReadStatus,
+	ListingViewStatus,
 	"APPROVED" | "PENDING"
 >;
 
-export type ListingReadCategory = ListingCategory;
-export type ListingReadCondition = ListingCondition;
+export type ListingViewCategory = ListingCategory;
+export type ListingViewCondition = ListingCondition;
 
-export type ListingReadSellerDto = {
+export type ListingViewSeller = {
 	readonly firstName: string;
 	readonly lastName: string;
 	readonly email: string;
@@ -23,12 +23,12 @@ export type ListingImageDto = {
 	readonly url: string;
 };
 
-export type ListingReadModel = {
+export type ListingView = {
 	readonly id: string;
 	readonly sellerId: string;
 	readonly name: string;
-	readonly category: ListingReadCategory;
-	readonly condition: ListingReadCondition;
+	readonly category: ListingViewCategory;
+	readonly condition: ListingViewCondition;
 	readonly brand: string;
 	readonly model: string;
 	readonly images: ListingImageDto[];
@@ -36,18 +36,18 @@ export type ListingReadModel = {
 	readonly priceAmountMinor: number;
 	readonly currencyCode: string;
 	readonly stock: number;
-	readonly listingStatus: ListingReadStatus;
+	readonly listingStatus: ListingViewStatus;
 	readonly createdAt?: Date;
 	readonly updatedAt?: Date;
-	readonly seller: ListingReadSellerDto;
+	readonly seller: ListingViewSeller;
 };
 
-export type ListingReadDto = {
+export type ListingResponse = {
 	readonly id: string;
 	readonly sellerId: string;
 	readonly name: string;
-	readonly category: ListingReadCategory;
-	readonly condition: ListingReadCondition;
+	readonly category: ListingViewCategory;
+	readonly condition: ListingViewCondition;
 	readonly brand: string;
 	readonly model: string;
 	readonly images: ListingImageDto[];
@@ -56,14 +56,14 @@ export type ListingReadDto = {
 	readonly currencyCode: string;
 	readonly stock: number;
 	readonly isApproved: boolean;
-	readonly listingStatus?: ListingReadStatus;
+	readonly listingStatus?: ListingViewStatus;
 	readonly createdAt?: string;
 	readonly updatedAt?: string;
-	readonly seller: ListingReadSellerDto;
+	readonly seller: ListingViewSeller;
 };
 
 export type ListingCategoryCount = {
-	readonly category: ListingReadCategory;
+	readonly category: ListingViewCategory;
 	readonly count: number;
 };
 
@@ -77,7 +77,7 @@ export type ListingBrandCount = {
 export type ListingBrandCountData = ListingBrandCount;
 
 export type ListingCategoryMeta = {
-	readonly category: ListingReadCategory;
+	readonly category: ListingViewCategory;
 	readonly label: string;
 	readonly icon: string;
 	readonly count: number;

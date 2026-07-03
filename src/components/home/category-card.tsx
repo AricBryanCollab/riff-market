@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { type LucideIcon, Mic2, Music, Piano, Zap } from "lucide-react";
-import type { ListingCategoryMeta } from "@/domains/listings/dto/listing-read-model";
+import type { ListingCategoryMeta } from "@/domains/listings/dto/listing-view";
 
 interface CategoryCardProps {
 	category: ListingCategoryMeta;

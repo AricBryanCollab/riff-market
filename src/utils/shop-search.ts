@@ -2,7 +2,7 @@ import { normalizeOptionalListingPriceInput } from "@/domains/listings/applicati
 import type {
 	ApprovedListingSearchFilterQuery,
 	ListingShopSearch,
-} from "@/domains/listings/dto/listing-read-model";
+} from "@/domains/listings/dto/listing-view";
 
 export const SHOP_PAGE_SIZE = 8;
 

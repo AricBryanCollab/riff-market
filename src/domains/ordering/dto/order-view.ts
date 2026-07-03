@@ -11,7 +11,7 @@ export const buyerOrderSummaryStatuses = [
 export type BuyerOrderSummaryStatus =
 	(typeof buyerOrderSummaryStatuses)[number];
 
-export const sellerOrderReadStatuses = [
+export const sellerOrderViewStatuses = [
 	"ON_HOLD_PAYMENT",
 	"NEW",
 	"PROCESSING",
@@ -20,13 +20,11 @@ export const sellerOrderReadStatuses = [
 	"CANCELED",
 ] as const;
 
-export type SellerOrderReadStatus = (typeof sellerOrderReadStatuses)[number];
+export type SellerOrderViewStatus = (typeof sellerOrderViewStatuses)[number];
 
-export type OrderingOrderReadStatus =
-	| BuyerOrderSummaryStatus
-	| SellerOrderReadStatus;
+export type OrderViewStatus = BuyerOrderSummaryStatus | SellerOrderViewStatus;
 
-export type OrderingOrderItemReadModel = {
+export type OrderItemView = {
 	readonly id: string;
 	readonly orderId: string;
 	readonly listingId: string;
@@ -49,28 +47,28 @@ export type OrderingOrderItemReadModel = {
 	};
 };
 
-type OrderingOrderReadModelBase = {
+type OrderViewBase = {
 	readonly id: string;
 	readonly orderDate: Date;
 	readonly totalAmountMinor: number;
 	readonly currencyCode: string;
 	readonly shippingAddress: string;
 	readonly trackingNumber: string;
-	readonly status: OrderingOrderReadStatus;
-	readonly items: OrderingOrderItemReadModel[];
+	readonly status: OrderViewStatus;
+	readonly items: OrderItemView[];
 };
 
-export type BuyerPurchaseReadModel = OrderingOrderReadModelBase & {
+export type BuyerPurchaseView = OrderViewBase & {
 	readonly kind: "buyer-purchase";
 	readonly purchaseId: string;
 	readonly status: BuyerOrderSummaryStatus;
 };
 
-export type SellerOrderReadModel = OrderingOrderReadModelBase & {
+export type SellerOrderView = OrderViewBase & {
 	readonly kind: "seller-order";
 	readonly purchaseId: string;
 	readonly sellerOrderId: string;
-	readonly status: SellerOrderReadStatus;
+	readonly status: SellerOrderViewStatus;
 	readonly customer: {
 		readonly id: string;
 		readonly email: string;
@@ -79,6 +77,4 @@ export type SellerOrderReadModel = OrderingOrderReadModelBase & {
 	};
 };
 
-export type OrderingOrderReadModel =
-	| BuyerPurchaseReadModel
-	| SellerOrderReadModel;
+export type OrderView = BuyerPurchaseView | SellerOrderView;

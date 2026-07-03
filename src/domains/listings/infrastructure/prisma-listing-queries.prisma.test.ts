@@ -6,16 +6,16 @@ import {
 	seedMarketplaceUsers,
 	setupPrismaTestDatabase,
 } from "@/test/prisma-vitest-support";
-import { PrismaListingReadModels } from "./prisma-listing-read-models";
+import { PrismaListingQueries } from "./prisma-listing-queries";
 
 describeDb("Prisma listing read models", () => {
 	let db: PrismaClient;
-	let readModels: PrismaListingReadModels;
+	let queries: PrismaListingQueries;
 	const testDb = setupPrismaTestDatabase();
 
 	beforeEach(async () => {
 		db = testDb.client;
-		readModels = new PrismaListingReadModels(db);
+		queries = new PrismaListingQueries(db);
 		await seedMarketplaceUsers(db, [
 			{
 				id: "seller-1",
@@ -69,7 +69,7 @@ describeDb("Prisma listing read models", () => {
 			isApproved: false,
 		});
 
-		const listings = await readModels.searchApproved({
+		const listings = await queries.searchApproved({
 			limit: 10,
 			offset: 0,
 			random: false,
@@ -105,7 +105,7 @@ describeDb("Prisma listing read models", () => {
 			priceAmountMinor: 35000,
 		});
 
-		const listings = await readModels.searchApproved({
+		const listings = await queries.searchApproved({
 			limit: 10,
 			offset: 0,
 			random: false,
@@ -184,7 +184,7 @@ describeDb("Prisma listing read models", () => {
 			description: "Bright twang guitar",
 		});
 
-		const listings = await readModels.searchApproved({
+		const listings = await queries.searchApproved({
 			limit: 10,
 			offset: 0,
 			random: false,
@@ -205,7 +205,7 @@ describeDb("Prisma listing read models", () => {
 			isApproved: false,
 		});
 
-		const listing = await readModels.findById("pending-detail");
+		const listing = await queries.findById("pending-detail");
 
 		expect(listing).toMatchObject({
 			id: "pending-detail",
@@ -243,7 +243,7 @@ describeDb("Prisma listing read models", () => {
 			createdAt: new Date("2026-06-18T04:00:00.000Z"),
 		});
 
-		const listings = await readModels.listForSeller("seller-1");
+		const listings = await queries.listForSeller("seller-1");
 
 		expect(listings.map((listing) => listing.id)).toEqual([
 			"seller-newer",
@@ -297,7 +297,7 @@ describeDb("Prisma listing read models", () => {
 			createdAt: new Date("2026-06-18T06:00:00.000Z"),
 		});
 
-		const listings = await readModels.listPendingModeration();
+		const listings = await queries.listPendingModeration();
 
 		expect(listings.map((listing) => listing.id)).toEqual([
 			"pending-newer",
@@ -345,7 +345,7 @@ describeDb("Prisma listing read models", () => {
 			category: "ELECTRIC",
 		});
 
-		const categoryCounts = await readModels.countApprovedByCategory();
+		const categoryCounts = await queries.countApprovedByCategory();
 
 		expect(
 			[...categoryCounts].sort((a, b) => a.category.localeCompare(b.category)),
@@ -353,8 +353,8 @@ describeDb("Prisma listing read models", () => {
 			{ category: "ACOUSTIC", count: 1 },
 			{ category: "ELECTRIC", count: 1 },
 		]);
-		await expect(readModels.countByStatus("APPROVED")).resolves.toBe(2);
-		await expect(readModels.countByStatus("PENDING")).resolves.toBe(1);
+		await expect(queries.countByStatus("APPROVED")).resolves.toBe(2);
+		await expect(queries.countByStatus("PENDING")).resolves.toBe(1);
 	});
 
 	it("counts approved brands with normalized casing and spacing", async () => {
@@ -387,7 +387,7 @@ describeDb("Prisma listing read models", () => {
 			brand: "Fender",
 		});
 
-		const brandCounts = await readModels.listPopularApprovedBrandCounts();
+		const brandCounts = await queries.listPopularApprovedBrandCounts();
 
 		expect(brandCounts).toEqual([
 			{ brand: "Fender", count: 2 },
@@ -418,7 +418,7 @@ describeDb("Prisma listing read models", () => {
 			updatedAt: new Date("2026-06-18T02:00:00.000Z"),
 		});
 
-		const listings = await readModels.listRecentApproved(8);
+		const listings = await queries.listRecentApproved(8);
 
 		expect(listings.map((listing) => listing.id)).toEqual([
 			"approved-newer",
@@ -455,10 +455,7 @@ describeDb("Prisma listing read models", () => {
 			isApproved: true,
 		});
 
-		const listings = await readModels.findByIds([
-			"cart-approved",
-			"cart-pending",
-		]);
+		const listings = await queries.findByIds(["cart-approved", "cart-pending"]);
 
 		expect(
 			[...listings].sort((a, b) => a.id.localeCompare(b.id)),

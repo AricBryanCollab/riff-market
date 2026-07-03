@@ -1,8 +1,8 @@
 import FeaturedListingCard from "@/components/home/featured-listing-card";
-import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import type { ListingResponse } from "@/domains/listings/dto/listing-view";
 
 interface ListingGridProps {
-	listings: ListingReadDto[];
+	listings: ListingResponse[];
 }
 
 const ListingGrid = ({ listings }: ListingGridProps) => {

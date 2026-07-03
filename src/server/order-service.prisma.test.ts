@@ -1,6 +1,6 @@
 import type { PrismaClient } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
-import { PrismaOrderReadModels } from "@/domains/ordering/infrastructure/prisma-order-read-models";
+import { PrismaOrderQueries } from "@/domains/ordering/infrastructure/prisma-order-queries";
 import { PrismaSellerOrderStatusRepository } from "@/domains/ordering/infrastructure/prisma-seller-order-status-repository";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
@@ -58,11 +58,11 @@ describeDb("order service Prisma integration", () => {
 
 	it("serves persisted purchases and seller orders by current-user role", async () => {
 		await seedOrderServicePurchase(db);
-		const readModels = new PrismaOrderReadModels(db);
+		const queries = new PrismaOrderQueries(db);
 
 		const customerOrders = await listOrdersForCurrentUser(
 			customerUser,
-			readModels,
+			queries,
 		);
 		expect(customerOrders).toMatchObject([
 			{
@@ -74,7 +74,7 @@ describeDb("order service Prisma integration", () => {
 			},
 		]);
 
-		const sellerOrders = await listOrdersForCurrentUser(sellerUser, readModels);
+		const sellerOrders = await listOrdersForCurrentUser(sellerUser, queries);
 		expect(sellerOrders).toMatchObject([
 			{
 				id: "seller-order-1",
@@ -85,7 +85,7 @@ describeDb("order service Prisma integration", () => {
 			},
 		]);
 
-		const adminOrders = await listOrdersForCurrentUser(adminUser, readModels);
+		const adminOrders = await listOrdersForCurrentUser(adminUser, queries);
 		expect(adminOrders.map((order) => order.id).sort()).toEqual([
 			"seller-order-1",
 			"seller-order-2",
@@ -94,7 +94,7 @@ describeDb("order service Prisma integration", () => {
 		const customerDetail = await getOrderDetailForCurrentUser(
 			customerUser,
 			{ orderId: "purchase-1" },
-			readModels,
+			queries,
 		);
 		expect(customerDetail).toMatchObject({
 			id: "purchase-1",
@@ -122,7 +122,7 @@ describeDb("order service Prisma integration", () => {
 			getOrderDetailForCurrentUser(
 				sellerUser,
 				{ orderId: "seller-order-2" },
-				readModels,
+				queries,
 			),
 		).rejects.toMatchObject({
 			name: "RequestError",
@@ -133,7 +133,7 @@ describeDb("order service Prisma integration", () => {
 		const sellerDetail = await getOrderDetailForCurrentUser(
 			sellerUser,
 			{ orderId: "seller-order-1" },
-			readModels,
+			queries,
 		);
 		expect(sellerDetail).toMatchObject({
 			id: "seller-order-1",
@@ -152,7 +152,7 @@ describeDb("order service Prisma integration", () => {
 		const adminDetail = await getOrderDetailForCurrentUser(
 			adminUser,
 			{ orderId: "seller-order-2" },
-			readModels,
+			queries,
 		);
 		expect(adminDetail).toMatchObject({
 			id: "seller-order-2",

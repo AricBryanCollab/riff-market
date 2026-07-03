@@ -1,65 +1,65 @@
 import {
 	type ApprovedListingSearchPort,
 	type ApprovedListingSearchQuery,
-	type CartListingReadPort,
+	type CartListingQueryPort,
 	getListingDetails,
-	type ListingCountReadPort,
-	type ListingDetailReadPort,
+	type ListingCountQueryPort,
+	type ListingDetailQueryPort,
 	listSellerListings,
-	type PendingModerationListingReadPort,
-	type RecentApprovedListingReadPort,
-	type SellerListingReadPort,
-} from "@/domains/listings/application/listing-read-models";
+	type PendingModerationListingQueryPort,
+	type RecentApprovedListingQueryPort,
+	type SellerListingQueryPort,
+} from "@/domains/listings/application/listing-queries";
 import {
 	approvedListingSearchInputSchema,
 	cartListingDetailsInputSchema,
 	type ListingBrandCount,
 	type ListingCategoryCount,
-	type ListingReadDto,
-	type ListingReadModel,
+	type ListingResponse,
 	type ListingStatusCount,
-} from "@/domains/listings/dto/listing-read-model";
+	type ListingView,
+} from "@/domains/listings/dto/listing-view";
 import type { Actor } from "@/domains/shared/domain/actor";
 
-export type ListingReadServiceDependencies = {
-	readonly listings: ListingDetailReadPort &
+export type ListingQueryServiceDependencies = {
+	readonly listings: ListingDetailQueryPort &
 		ApprovedListingSearchPort &
-		SellerListingReadPort &
-		PendingModerationListingReadPort &
-		ListingCountReadPort &
-		RecentApprovedListingReadPort &
-		CartListingReadPort;
+		SellerListingQueryPort &
+		PendingModerationListingQueryPort &
+		ListingCountQueryPort &
+		RecentApprovedListingQueryPort &
+		CartListingQueryPort;
 };
 
-type ListingReadServiceError = {
+type ListingQueryServiceError = {
 	readonly error: string;
 	readonly details?: object;
 };
 
-export async function getListingDetailsReadDto(
+export async function getListingDetailsResponse(
 	actor: Actor | null,
 	listingId: string,
-	dependencies?: ListingReadServiceDependencies,
-): Promise<ListingReadDto | ListingReadServiceError> {
-	const readDependencies =
-		dependencies ?? (await createPrismaListingReadDependencies());
+	dependencies?: ListingQueryServiceDependencies,
+): Promise<ListingResponse | ListingQueryServiceError> {
+	const queryDependencies =
+		dependencies ?? (await createPrismaListingQueryDependencies());
 	const result = await getListingDetails(
 		actor,
 		listingId,
-		readDependencies.listings,
+		queryDependencies.listings,
 	);
 
 	if (!result.ok) {
 		return { error: result.error.message };
 	}
 
-	return toListingReadDto(result.value);
+	return toListingResponse(result.value);
 }
 
-export async function searchApprovedListingReadDtos(
+export async function searchApprovedListingResponses(
 	rawQuery: unknown,
-	dependencies?: ListingReadServiceDependencies,
-): Promise<ListingReadDto[] | ListingReadServiceError> {
+	dependencies?: ListingQueryServiceDependencies,
+): Promise<ListingResponse[] | ListingQueryServiceError> {
 	const parsed = approvedListingSearchInputSchema.safeParse(rawQuery);
 
 	if (!parsed.success) {
@@ -69,90 +69,90 @@ export async function searchApprovedListingReadDtos(
 		};
 	}
 
-	const readDependencies =
-		dependencies ?? (await createPrismaListingReadDependencies());
+	const queryDependencies =
+		dependencies ?? (await createPrismaListingQueryDependencies());
 	const query = toListingSearchQuery(parsed.data);
-	const listings = await readDependencies.listings.searchApproved(query);
+	const listings = await queryDependencies.listings.searchApproved(query);
 
-	return listings.map(toListingReadDto);
+	return listings.map(toListingResponse);
 }
 
-export async function listSellerListingReadDtos(
+export async function listSellerListingResponses(
 	sellerId: string,
 	role: string,
-	dependencies?: ListingReadServiceDependencies,
-): Promise<ListingReadDto[] | ListingReadServiceError> {
+	dependencies?: ListingQueryServiceDependencies,
+): Promise<ListingResponse[] | ListingQueryServiceError> {
 	if (role !== "SELLER" || !sellerId) {
 		return { error: "Unauthorized, user must be a seller" };
 	}
 
-	const readDependencies =
-		dependencies ?? (await createPrismaListingReadDependencies());
-	const result = await listSellerListings(sellerId, readDependencies.listings);
+	const queryDependencies =
+		dependencies ?? (await createPrismaListingQueryDependencies());
+	const result = await listSellerListings(sellerId, queryDependencies.listings);
 
 	if (!result.ok) {
 		return { error: result.error.message };
 	}
 
-	return result.value.map(toListingReadDto);
+	return result.value.map(toListingResponse);
 }
 
-export async function listPendingModerationListingReadDtos(
-	dependencies?: ListingReadServiceDependencies,
-): Promise<ListingReadDto[] | ListingReadServiceError> {
-	const readDependencies =
-		dependencies ?? (await createPrismaListingReadDependencies());
-	const listings = await readDependencies.listings.listPendingModeration();
+export async function listPendingModerationListingResponses(
+	dependencies?: ListingQueryServiceDependencies,
+): Promise<ListingResponse[] | ListingQueryServiceError> {
+	const queryDependencies =
+		dependencies ?? (await createPrismaListingQueryDependencies());
+	const listings = await queryDependencies.listings.listPendingModeration();
 
-	return listings.map(toListingReadDto);
+	return listings.map(toListingResponse);
 }
 
 export async function getPopularListingBrandCountDtos(
-	dependencies?: ListingReadServiceDependencies,
-): Promise<ListingBrandCount[] | ListingReadServiceError> {
-	const readDependencies =
-		dependencies ?? (await createPrismaListingReadDependencies());
-	return readDependencies.listings.listPopularApprovedBrandCounts();
+	dependencies?: ListingQueryServiceDependencies,
+): Promise<ListingBrandCount[] | ListingQueryServiceError> {
+	const queryDependencies =
+		dependencies ?? (await createPrismaListingQueryDependencies());
+	return queryDependencies.listings.listPopularApprovedBrandCounts();
 }
 
 export async function getListingCategoryCountDtos(
-	dependencies?: ListingReadServiceDependencies,
-): Promise<ListingCategoryCount[] | ListingReadServiceError> {
-	const readDependencies =
-		dependencies ?? (await createPrismaListingReadDependencies());
-	return readDependencies.listings.countApprovedByCategory();
+	dependencies?: ListingQueryServiceDependencies,
+): Promise<ListingCategoryCount[] | ListingQueryServiceError> {
+	const queryDependencies =
+		dependencies ?? (await createPrismaListingQueryDependencies());
+	return queryDependencies.listings.countApprovedByCategory();
 }
 
 export async function getListingStatusCountDto(
 	isApproved: boolean,
-	dependencies?: ListingReadServiceDependencies,
-): Promise<ListingStatusCount | ListingReadServiceError> {
-	const readDependencies =
-		dependencies ?? (await createPrismaListingReadDependencies());
+	dependencies?: ListingQueryServiceDependencies,
+): Promise<ListingStatusCount | ListingQueryServiceError> {
+	const queryDependencies =
+		dependencies ?? (await createPrismaListingQueryDependencies());
 	const status = isApproved ? "APPROVED" : "PENDING";
-	const count = await readDependencies.listings.countByStatus(status);
+	const count = await queryDependencies.listings.countByStatus(status);
 
 	return isApproved
 		? { approvedListingCount: count }
 		: { pendingListingCount: count };
 }
 
-export async function listRecentListingReadDtos(
+export async function listRecentListingResponses(
 	limit: number = 8,
-	dependencies?: ListingReadServiceDependencies,
-): Promise<ListingReadDto[] | ListingReadServiceError> {
-	const readDependencies =
-		dependencies ?? (await createPrismaListingReadDependencies());
-	const listings = await readDependencies.listings.listRecentApproved(limit);
+	dependencies?: ListingQueryServiceDependencies,
+): Promise<ListingResponse[] | ListingQueryServiceError> {
+	const queryDependencies =
+		dependencies ?? (await createPrismaListingQueryDependencies());
+	const listings = await queryDependencies.listings.listRecentApproved(limit);
 
-	return listings.map(toListingReadDto);
+	return listings.map(toListingResponse);
 }
 
-export async function listCartListingReadDtos(
+export async function listCartListingResponses(
 	role: string,
 	rawQuery: unknown,
-	dependencies?: ListingReadServiceDependencies,
-): Promise<ListingReadDto[] | ListingReadServiceError> {
+	dependencies?: ListingQueryServiceDependencies,
+): Promise<ListingResponse[] | ListingQueryServiceError> {
 	if (role !== "CUSTOMER") {
 		return { error: "Unauthorized, user must be a customer" };
 	}
@@ -166,22 +166,22 @@ export async function listCartListingReadDtos(
 		};
 	}
 
-	const readDependencies =
-		dependencies ?? (await createPrismaListingReadDependencies());
+	const queryDependencies =
+		dependencies ?? (await createPrismaListingQueryDependencies());
 	const uniqueIds = Array.from(new Set(parsed.data.ids));
-	const listings = await readDependencies.listings.findByIds(uniqueIds);
+	const listings = await queryDependencies.listings.findByIds(uniqueIds);
 
-	return listings.map(toListingReadDto);
+	return listings.map(toListingResponse);
 }
 
-async function createPrismaListingReadDependencies(): Promise<ListingReadServiceDependencies> {
-	const [{ prisma }, readModels] = await Promise.all([
+async function createPrismaListingQueryDependencies(): Promise<ListingQueryServiceDependencies> {
+	const [{ prisma }, queries] = await Promise.all([
 		import("@/data/connect-db"),
-		import("@/domains/listings/infrastructure/prisma-listing-read-models"),
+		import("@/domains/listings/infrastructure/prisma-listing-queries"),
 	]);
 
 	return {
-		listings: new readModels.PrismaListingReadModels(prisma),
+		listings: new queries.PrismaListingQueries(prisma),
 	};
 }
 
@@ -205,7 +205,7 @@ function toListingSearchQuery(
 	};
 }
 
-function toListingReadDto(listing: ListingReadModel): ListingReadDto {
+function toListingResponse(listing: ListingView): ListingResponse {
 	return {
 		id: listing.id,
 		sellerId: listing.sellerId,

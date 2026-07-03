@@ -3,9 +3,9 @@ import type {
 	ApprovedListingCount,
 	ApprovedListingSearchFilterQuery,
 	ListingCountStatusQuery,
-	ListingReadDto,
+	ListingResponse,
 	PendingListingCount,
-} from "@/domains/listings/dto/listing-read-model";
+} from "@/domains/listings/dto/listing-view";
 import {
 	type ApprovedListingSearchServerInput,
 	fetchApprovedListings,
@@ -42,7 +42,7 @@ function toNullableQueryString(value: string | undefined): string | null {
 export const approvedListingsQueryOpt = (
 	filters: ApprovedListingSearchFilterQuery,
 ) =>
-	queryOptions<ListingReadDto[]>({
+	queryOptions<ListingResponse[]>({
 		queryKey: queryKeys.listings.approved(filters),
 		queryFn: async () => {
 			return fetchApprovedListings(toApprovedListingSearchServerInput(filters));
@@ -50,7 +50,7 @@ export const approvedListingsQueryOpt = (
 		staleTime: 1000 * 60 * 5,
 	});
 
-export const featuredListingsQueryOpt = queryOptions<ListingReadDto[]>({
+export const featuredListingsQueryOpt = queryOptions<ListingResponse[]>({
 	queryKey: queryKeys.listings.featured,
 	queryFn: async () => {
 		return fetchApprovedListings({
@@ -65,7 +65,7 @@ export const listingByIdQueryOpt = (
 	id: string,
 	viewerScope: ListingDetailViewerScope = "public",
 ) =>
-	queryOptions<ListingReadDto>({
+	queryOptions<ListingResponse>({
 		queryKey: queryKeys.listings.detail(id, viewerScope),
 		queryFn: async () => fetchListingDetails(id),
 		retry: false,

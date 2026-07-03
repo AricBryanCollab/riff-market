@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { SellerOrderStatusRepositoryPort } from "@/domains/ordering/application/change-seller-order-status";
 import type {
-	BuyerPurchaseReadModel,
-	OrderingOrderReadModel,
-	SellerOrderReadModel,
-} from "@/domains/ordering/dto/order-read-model";
+	BuyerPurchaseView,
+	OrderView,
+	SellerOrderView,
+} from "@/domains/ordering/dto/order-view";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	changeSellerOrderStatusForCurrentUser,
@@ -14,7 +14,7 @@ import {
 } from "@/server/order-service";
 import { RequestError } from "@/server/request-error";
 
-type OrderReadModels = NonNullable<
+type OrderQueries = NonNullable<
 	Parameters<typeof getOrderDetailForCurrentUser>[2]
 >;
 
@@ -52,7 +52,7 @@ describe("order server service", () => {
 			getOrderDetailForCurrentUser(
 				customerUser,
 				{ orderId: "missing-order" },
-				new EmptyOrderReadModels(),
+				new EmptyOrderQueries(),
 			),
 		).rejects.toMatchObject({
 			name: "RequestError",
@@ -103,7 +103,7 @@ describe("order server service", () => {
 	});
 });
 
-class EmptyOrderReadModels implements OrderReadModels {
+class EmptyOrderQueries implements OrderQueries {
 	async listForCustomer() {
 		return [];
 	}
@@ -116,15 +116,15 @@ class EmptyOrderReadModels implements OrderReadModels {
 		return [];
 	}
 
-	async findPurchaseForCustomer(): Promise<BuyerPurchaseReadModel | null> {
+	async findPurchaseForCustomer(): Promise<BuyerPurchaseView | null> {
 		return null;
 	}
 
-	async findSellerOrderForSeller(): Promise<SellerOrderReadModel | null> {
+	async findSellerOrderForSeller(): Promise<SellerOrderView | null> {
 		return null;
 	}
 
-	async findForAdmin(): Promise<OrderingOrderReadModel | null> {
+	async findForAdmin(): Promise<OrderView | null> {
 		return null;
 	}
 }

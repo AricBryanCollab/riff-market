@@ -1,15 +1,15 @@
 import { create } from "zustand";
-import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import type { ListingResponse } from "@/domains/listings/dto/listing-view";
 
 interface PendingListingStore {
-	pendingListings: ListingReadDto[];
+	pendingListings: ListingResponse[];
 	pendingListingCount: number;
 	showPending: boolean;
-	setPendingListings: (listings: ListingReadDto[]) => void;
+	setPendingListings: (listings: ListingResponse[]) => void;
 	setShowPending: () => void;
-	addPendingListing: (listing: ListingReadDto) => void;
+	addPendingListing: (listing: ListingResponse) => void;
 	removePendingListing: (listingId: string) => void;
-	updatePendingListing: (id: string, updatedListing: ListingReadDto) => void;
+	updatePendingListing: (id: string, updatedListing: ListingResponse) => void;
 }
 
 export const usePendingListingStore = create<PendingListingStore>((set) => ({

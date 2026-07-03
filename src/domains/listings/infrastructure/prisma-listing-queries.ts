@@ -3,13 +3,13 @@ import { toListingPriceRangePersistence } from "@/domains/listings/application/l
 import type {
 	ApprovedListingSearchPort,
 	ApprovedListingSearchQuery,
-	CartListingReadPort,
-	ListingCountReadPort,
-	ListingDetailReadPort,
-	PendingModerationListingReadPort,
-	RecentApprovedListingReadPort,
-	SellerListingReadPort,
-} from "@/domains/listings/application/listing-read-models";
+	CartListingQueryPort,
+	ListingCountQueryPort,
+	ListingDetailQueryPort,
+	PendingModerationListingQueryPort,
+	RecentApprovedListingQueryPort,
+	SellerListingQueryPort,
+} from "@/domains/listings/application/listing-queries";
 import {
 	normalizeListingBrand,
 	toListingBrandKey,
@@ -18,13 +18,13 @@ import type {
 	ListingBrandCount,
 	ListingCategoryCount,
 	ListingCountStatus,
-	ListingReadModel,
-} from "@/domains/listings/dto/listing-read-model";
+	ListingView,
+} from "@/domains/listings/dto/listing-view";
 import { toListingImageDtos } from "@/utils/image-asset-ref";
 
-type ListingReadPrisma = Pick<PrismaClient, "listing">;
+type ListingQueryPrisma = Pick<PrismaClient, "listing">;
 
-const listingReadSelect = {
+const listingViewSelect = {
 	id: true,
 	sellerId: true,
 	name: true,
@@ -49,38 +49,38 @@ const listingReadSelect = {
 	},
 } satisfies Prisma.ListingSelect;
 
-type ListingReadRow = Prisma.ListingGetPayload<{
-	select: typeof listingReadSelect;
+type ListingViewRow = Prisma.ListingGetPayload<{
+	select: typeof listingViewSelect;
 }>;
 
 const popularListingBrandCountLimit = 12;
 
-export class PrismaListingReadModels
+export class PrismaListingQueries
 	implements
-		ListingDetailReadPort,
+		ListingDetailQueryPort,
 		ApprovedListingSearchPort,
-		SellerListingReadPort,
-		PendingModerationListingReadPort,
-		ListingCountReadPort,
-		RecentApprovedListingReadPort,
-		CartListingReadPort
+		SellerListingQueryPort,
+		PendingModerationListingQueryPort,
+		ListingCountQueryPort,
+		RecentApprovedListingQueryPort,
+		CartListingQueryPort
 {
-	constructor(private readonly db: ListingReadPrisma) {}
+	constructor(private readonly db: ListingQueryPrisma) {}
 
-	async findById(listingId: string): Promise<ListingReadModel | null> {
+	async findById(listingId: string): Promise<ListingView | null> {
 		const listing = await this.db.listing.findFirst({
 			where: {
 				id: listingId,
 			},
-			select: listingReadSelect,
+			select: listingViewSelect,
 		});
 
-		return listing ? toListingReadModel(listing) : null;
+		return listing ? toListingView(listing) : null;
 	}
 
 	async searchApproved(
 		query: ApprovedListingSearchQuery,
-	): Promise<ListingReadModel[]> {
+	): Promise<ListingView[]> {
 		const { limit = 12, offset = 0, random = false } = query;
 		const where = toApprovedListingWhere(query);
 
@@ -91,12 +91,12 @@ export class PrismaListingReadModels
 
 			const listings = await this.db.listing.findMany({
 				where,
-				select: listingReadSelect,
+				select: listingViewSelect,
 				take: limit,
 				skip: randomSkip,
 			});
 
-			return toListingReadModels(listings);
+			return toListingViews(listings);
 		}
 
 		const listings = await this.db.listing.findMany({
@@ -104,36 +104,36 @@ export class PrismaListingReadModels
 			orderBy: {
 				createdAt: "desc",
 			},
-			select: listingReadSelect,
+			select: listingViewSelect,
 			take: limit,
 			skip: offset,
 		});
 
-		return toListingReadModels(listings);
+		return toListingViews(listings);
 	}
 
-	async listForSeller(sellerId: string): Promise<ListingReadModel[]> {
+	async listForSeller(sellerId: string): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { sellerId },
 			orderBy: {
 				createdAt: "desc",
 			},
-			select: listingReadSelect,
+			select: listingViewSelect,
 		});
 
-		return toListingReadModels(listings);
+		return toListingViews(listings);
 	}
 
-	async listPendingModeration(): Promise<ListingReadModel[]> {
+	async listPendingModeration(): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "PENDING" },
 			orderBy: {
 				createdAt: "desc",
 			},
-			select: listingReadSelect,
+			select: listingViewSelect,
 		});
 
-		return toListingReadModels(listings);
+		return toListingViews(listings);
 	}
 
 	async listPopularApprovedBrandCounts(): Promise<ListingBrandCount[]> {
@@ -181,28 +181,28 @@ export class PrismaListingReadModels
 		});
 	}
 
-	async listRecentApproved(limit: number): Promise<ListingReadModel[]> {
+	async listRecentApproved(limit: number): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "APPROVED" },
 			orderBy: { updatedAt: "desc" },
-			select: listingReadSelect,
+			select: listingViewSelect,
 			take: limit,
 		});
 
-		return toListingReadModels(listings);
+		return toListingViews(listings);
 	}
 
-	async findByIds(listingIds: string[]): Promise<ListingReadModel[]> {
+	async findByIds(listingIds: string[]): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: {
 				id: {
 					in: listingIds,
 				},
 			},
-			select: listingReadSelect,
+			select: listingViewSelect,
 		});
 
-		return toListingReadModels(listings);
+		return toListingViews(listings);
 	}
 }
 
@@ -293,11 +293,11 @@ function mostCommonDisplayBrand(displayCounts: ReadonlyMap<string, number>) {
 	)[0][0];
 }
 
-function toListingReadModels(listings: ListingReadRow[]) {
-	return listings.map(toListingReadModel);
+function toListingViews(listings: ListingViewRow[]) {
+	return listings.map(toListingView);
 }
 
-function toListingReadModel(listing: ListingReadRow): ListingReadModel {
+function toListingView(listing: ListingViewRow): ListingView {
 	return {
 		...listing,
 		images: toListingImageDtos(listing.images),

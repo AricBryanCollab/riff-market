@@ -4,7 +4,7 @@ import {
 	type ListingCartSubtotalError,
 	type ListingCartSubtotalLine,
 } from "@/domains/listings/application/listing-money";
-import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import type { ListingResponse } from "@/domains/listings/dto/listing-view";
 import { fetchCartListings } from "@/lib/tanstack-query/listing-read-client";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { type CartItem, useCartStore } from "@/store/cart";
@@ -66,7 +66,7 @@ function toListingCartSubtotalLines(
 }
 
 export const cartDetailsQueryOpt = (listingIds: string[]) =>
-	queryOptions<ListingReadDto[]>({
+	queryOptions<ListingResponse[]>({
 		queryKey: queryKeys.listings.cartDetails(listingIds),
 		queryFn: async () => fetchCartListings(listingIds),
 		staleTime: 1000 * 60 * 2,
@@ -145,7 +145,7 @@ const useCartDetails = (options: UseCartDetailsOptions = {}) => {
 	};
 };
 
-function toCartLine(cartItem: CartItem, listing: ListingReadDto | undefined) {
+function toCartLine(cartItem: CartItem, listing: ListingResponse | undefined) {
 	if (!listing) {
 		return {
 			status: "unavailable",

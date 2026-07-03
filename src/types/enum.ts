@@ -18,7 +18,7 @@ export type BuyerOrderSummaryStatus =
 	| "PARTIALLY_CANCELED"
 	| "CANCELED";
 
-export type SellerOrderReadStatus =
+export type SellerOrderViewStatus =
 	| "ON_HOLD_PAYMENT"
 	| "NEW"
 	| "PROCESSING"
@@ -28,9 +28,9 @@ export type SellerOrderReadStatus =
 
 export type OrderDisplayStatus =
 	| BuyerOrderSummaryStatus
-	| SellerOrderReadStatus;
+	| SellerOrderViewStatus;
 
-export type OrderStatus = SellerOrderReadStatus;
+export type OrderStatus = SellerOrderViewStatus;
 
 export type DialogType =
 	| "signin"

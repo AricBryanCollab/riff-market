@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type {
-	ListingReadModel,
-	ListingReadStatus,
-} from "@/domains/listings/dto/listing-read-model";
+	ListingView,
+	ListingViewStatus,
+} from "@/domains/listings/dto/listing-view";
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
-	getListingDetailsReadDto,
+	getListingDetailsResponse,
 	getPopularListingBrandCountDtos,
-	type ListingReadServiceDependencies,
-	searchApprovedListingReadDtos,
+	type ListingQueryServiceDependencies,
+	searchApprovedListingResponses,
 } from "./listing-read-service";
 
 describe("listing read behavior", () => {
@@ -20,16 +20,16 @@ describe("listing read behavior", () => {
 		]);
 
 		await expect(
-			getListingDetailsReadDto(null, "missing-listing", dependencies),
+			getListingDetailsResponse(null, "missing-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsReadDto(null, "pending-listing", dependencies),
+			getListingDetailsResponse(null, "pending-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsReadDto(null, "declined-listing", dependencies),
+			getListingDetailsResponse(null, "declined-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsReadDto(null, "withdrawn-listing", dependencies),
+			getListingDetailsResponse(null, "withdrawn-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
 	});
 
@@ -41,7 +41,7 @@ describe("listing read behavior", () => {
 		const dependencies = makeDependencies([pendingListing]);
 
 		await expect(
-			getListingDetailsReadDto(adminActor, "pending-listing", dependencies),
+			getListingDetailsResponse(adminActor, "pending-listing", dependencies),
 		).resolves.toMatchObject({
 			id: "pending-listing",
 			isApproved: false,
@@ -53,7 +53,7 @@ describe("listing read behavior", () => {
 		const telecaster = makeListing({ id: "telecaster" });
 		const dependencies = makeDependencies([telecaster]);
 
-		const result = await searchApprovedListingReadDtos(
+		const result = await searchApprovedListingResponses(
 			{
 				limit: "5",
 				offset: "10",
@@ -96,8 +96,8 @@ const adminActor: Actor = {
 };
 
 function makeDependencies(
-	listings: ListingReadModel[],
-): ListingReadServiceDependencies {
+	listings: ListingView[],
+): ListingQueryServiceDependencies {
 	return {
 		listings: {
 			findById: async (listingId) =>
@@ -132,8 +132,8 @@ function makeListing({
 	listingStatus = "APPROVED",
 }: {
 	readonly id?: string;
-	readonly listingStatus?: ListingReadStatus;
-} = {}): ListingReadModel {
+	readonly listingStatus?: ListingViewStatus;
+} = {}): ListingView {
 	return {
 		id,
 		sellerId: "seller-1",

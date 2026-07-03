@@ -2,10 +2,10 @@ import type {
 	ListingBrandCount,
 	ListingCategoryCount,
 	ListingCountStatus,
-	ListingReadCategory,
-	ListingReadCondition,
-	ListingReadModel,
-} from "@/domains/listings/dto/listing-read-model";
+	ListingView,
+	ListingViewCategory,
+	ListingViewCondition,
+} from "@/domains/listings/dto/listing-view";
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	type AppError,
@@ -14,22 +14,22 @@ import {
 	type Result,
 } from "@/domains/shared/domain/result";
 
-export type ListingReadErrorCode =
+export type ListingQueryErrorCode =
 	| "LISTING_READ_INVALID_ID"
 	| "LISTING_READ_NOT_FOUND";
 
-export type ListingReadError = AppError<ListingReadErrorCode>;
+export type ListingQueryError = AppError<ListingQueryErrorCode>;
 
-export interface ListingDetailReadPort {
-	findById(listingId: string): Promise<ListingReadModel | null>;
+export interface ListingDetailQueryPort {
+	findById(listingId: string): Promise<ListingView | null>;
 }
 
 export type ApprovedListingSearchQuery = {
 	readonly limit?: number;
 	readonly offset?: number;
 	readonly random?: boolean;
-	readonly category?: ListingReadCategory;
-	readonly condition?: ListingReadCondition;
+	readonly category?: ListingViewCategory;
+	readonly condition?: ListingViewCondition;
 	readonly brand?: string;
 	readonly search?: string;
 	readonly priceMinAmountMinor?: number;
@@ -37,41 +37,39 @@ export type ApprovedListingSearchQuery = {
 };
 
 export interface ApprovedListingSearchPort {
-	searchApproved(
-		query: ApprovedListingSearchQuery,
-	): Promise<ListingReadModel[]>;
+	searchApproved(query: ApprovedListingSearchQuery): Promise<ListingView[]>;
 }
 
-export interface SellerListingReadPort {
-	listForSeller(sellerId: string): Promise<ListingReadModel[]>;
+export interface SellerListingQueryPort {
+	listForSeller(sellerId: string): Promise<ListingView[]>;
 }
 
-export interface PendingModerationListingReadPort {
-	listPendingModeration(): Promise<ListingReadModel[]>;
+export interface PendingModerationListingQueryPort {
+	listPendingModeration(): Promise<ListingView[]>;
 }
 
-export interface ListingCountReadPort {
+export interface ListingCountQueryPort {
 	listPopularApprovedBrandCounts(): Promise<ListingBrandCount[]>;
 	countApprovedByCategory(): Promise<ListingCategoryCount[]>;
 	countByStatus(status: ListingCountStatus): Promise<number>;
 }
 
-export interface RecentApprovedListingReadPort {
-	listRecentApproved(limit: number): Promise<ListingReadModel[]>;
+export interface RecentApprovedListingQueryPort {
+	listRecentApproved(limit: number): Promise<ListingView[]>;
 }
 
-export interface CartListingReadPort {
-	findByIds(listingIds: string[]): Promise<ListingReadModel[]>;
+export interface CartListingQueryPort {
+	findByIds(listingIds: string[]): Promise<ListingView[]>;
 }
 
 export async function getListingDetails(
 	actor: Actor | null,
 	listingId: string,
-	listings: ListingDetailReadPort,
-): Promise<Result<ListingReadModel, ListingReadError>> {
+	listings: ListingDetailQueryPort,
+): Promise<Result<ListingView, ListingQueryError>> {
 	if (listingId.trim().length === 0) {
 		return err(
-			listingReadError(
+			listingQueryError(
 				"LISTING_READ_INVALID_ID",
 				"Listing ID is required",
 				"validation",
@@ -82,7 +80,7 @@ export async function getListingDetails(
 	const listing = await listings.findById(listingId);
 	if (!listing) {
 		return err(
-			listingReadError(
+			listingQueryError(
 				"LISTING_READ_NOT_FOUND",
 				"Listing not found",
 				"not-found",
@@ -92,7 +90,7 @@ export async function getListingDetails(
 
 	if (!canReadListingDetails(actor, listing)) {
 		return err(
-			listingReadError(
+			listingQueryError(
 				"LISTING_READ_NOT_FOUND",
 				"Listing not found",
 				"not-found",
@@ -105,11 +103,11 @@ export async function getListingDetails(
 
 export async function listSellerListings(
 	sellerId: string,
-	listings: SellerListingReadPort,
-): Promise<Result<ListingReadModel[], ListingReadError>> {
+	listings: SellerListingQueryPort,
+): Promise<Result<ListingView[], ListingQueryError>> {
 	if (sellerId.trim().length === 0) {
 		return err(
-			listingReadError(
+			listingQueryError(
 				"LISTING_READ_INVALID_ID",
 				"Seller ID is required",
 				"validation",
@@ -120,11 +118,11 @@ export async function listSellerListings(
 	return ok(await listings.listForSeller(sellerId));
 }
 
-function listingReadError(
-	code: ListingReadErrorCode,
+function listingQueryError(
+	code: ListingQueryErrorCode,
 	message: string,
-	kind: ListingReadError["kind"],
-): ListingReadError {
+	kind: ListingQueryError["kind"],
+): ListingQueryError {
 	return {
 		code,
 		message,
@@ -132,7 +130,7 @@ function listingReadError(
 	};
 }
 
-function canReadListingDetails(actor: Actor | null, listing: ListingReadModel) {
+function canReadListingDetails(actor: Actor | null, listing: ListingView) {
 	if (listing.listingStatus === "APPROVED") {
 		return true;
 	}

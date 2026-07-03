@@ -1,7 +1,7 @@
 import type {
 	ApprovedListingSearchFilterQuery,
 	ListingCountStatusQuery,
-} from "@/domains/listings/dto/listing-read-model";
+} from "@/domains/listings/dto/listing-view";
 import type { UserRole } from "@/types/enum";
 
 export type ListingDetailViewerScope = "public" | "admin";

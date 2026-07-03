@@ -1,5 +1,5 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import type { ListingShopSearch } from "@/domains/listings/dto/listing-read-model";
+import type { ListingShopSearch } from "@/domains/listings/dto/listing-view";
 import {
 	getApprovedFiltersFromSearch,
 	getOptionalListingPriceSearchInput,

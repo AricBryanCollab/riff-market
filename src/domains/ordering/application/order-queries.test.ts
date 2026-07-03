@@ -6,17 +6,17 @@ import {
 	getOrderDetail,
 	listBuyerPurchaseHistory,
 	listSellerOrderDashboard,
-	type OrderDetailReadPort,
+	type OrderDetailQueryPort,
 	type SellerOrderDashboardPort,
-} from "@/domains/ordering/application/order-read-models";
+} from "@/domains/ordering/application/order-queries";
 import type {
-	BuyerPurchaseReadModel,
-	OrderingOrderReadModel,
-	SellerOrderReadModel,
-} from "@/domains/ordering/dto/order-read-model";
+	BuyerPurchaseView,
+	OrderView,
+	SellerOrderView,
+} from "@/domains/ordering/dto/order-view";
 
-const customerOrder = makeBuyerPurchaseReadModel({ id: "purchase-1" });
-const sellerOrder = makeSellerOrderReadModel({ id: "seller-order-1" });
+const customerOrder = makeBuyerPurchaseView({ id: "purchase-1" });
+const sellerOrder = makeSellerOrderView({ id: "seller-order-1" });
 
 describe("listBuyerPurchaseHistory", () => {
 	it("allows customers to read only their own purchase history", async () => {
@@ -123,7 +123,7 @@ describe("listSellerOrderDashboard", () => {
 
 describe("getOrderDetail", () => {
 	it("allows customers to read their own purchase detail", async () => {
-		const port = new FakeOrderDetailReadPort({
+		const port = new FakeOrderDetailQueryPort({
 			customerPurchase: customerOrder,
 		});
 
@@ -143,7 +143,7 @@ describe("getOrderDetail", () => {
 	});
 
 	it("returns not found when a customer reads another customer's purchase", async () => {
-		const port = new FakeOrderDetailReadPort({
+		const port = new FakeOrderDetailQueryPort({
 			customerPurchase: null,
 		});
 
@@ -163,7 +163,7 @@ describe("getOrderDetail", () => {
 	});
 
 	it("allows sellers to read their own seller-order detail", async () => {
-		const port = new FakeOrderDetailReadPort({
+		const port = new FakeOrderDetailQueryPort({
 			sellerOrder,
 		});
 
@@ -183,7 +183,7 @@ describe("getOrderDetail", () => {
 	});
 
 	it("allows admins to read either purchase or seller-order detail", async () => {
-		const port = new FakeOrderDetailReadPort({
+		const port = new FakeOrderDetailQueryPort({
 			adminOrder: sellerOrder,
 		});
 
@@ -201,7 +201,7 @@ describe("getOrderDetail", () => {
 	});
 
 	it("rejects blank order IDs", async () => {
-		const port = new FakeOrderDetailReadPort({});
+		const port = new FakeOrderDetailQueryPort({});
 
 		const result = await getOrderDetail(
 			{ id: "customer-1", role: "CUSTOMER" },
@@ -281,7 +281,7 @@ describe("deriveBuyerOrderSummaryStatus", () => {
 class FakeBuyerPurchaseHistoryPort implements BuyerPurchaseHistoryPort {
 	readonly requestedCustomerIds: string[] = [];
 
-	constructor(private readonly orders: BuyerPurchaseReadModel[]) {}
+	constructor(private readonly orders: BuyerPurchaseView[]) {}
 
 	async listForCustomer(customerId: string) {
 		this.requestedCustomerIds.push(customerId);
@@ -294,7 +294,7 @@ class FakeSellerOrderDashboardPort implements SellerOrderDashboardPort {
 	readonly requestedSellerIds: string[] = [];
 	adminReadCount = 0;
 
-	constructor(private readonly orders: SellerOrderReadModel[]) {}
+	constructor(private readonly orders: SellerOrderView[]) {}
 
 	async listForSeller(sellerId: string) {
 		this.requestedSellerIds.push(sellerId);
@@ -309,14 +309,14 @@ class FakeSellerOrderDashboardPort implements SellerOrderDashboardPort {
 	}
 }
 
-class FakeOrderDetailReadPort implements OrderDetailReadPort {
+class FakeOrderDetailQueryPort implements OrderDetailQueryPort {
 	readonly requests: unknown[][] = [];
 
 	constructor(
 		private readonly orders: {
-			readonly customerPurchase?: BuyerPurchaseReadModel | null;
-			readonly sellerOrder?: SellerOrderReadModel | null;
-			readonly adminOrder?: OrderingOrderReadModel | null;
+			readonly customerPurchase?: BuyerPurchaseView | null;
+			readonly sellerOrder?: SellerOrderView | null;
+			readonly adminOrder?: OrderView | null;
 		},
 	) {}
 
@@ -339,9 +339,9 @@ class FakeOrderDetailReadPort implements OrderDetailReadPort {
 	}
 }
 
-function makeBuyerPurchaseReadModel(
-	overrides: Partial<BuyerPurchaseReadModel> = {},
-): BuyerPurchaseReadModel {
+function makeBuyerPurchaseView(
+	overrides: Partial<BuyerPurchaseView> = {},
+): BuyerPurchaseView {
 	return {
 		kind: "buyer-purchase",
 		id: "purchase-1",
@@ -357,9 +357,9 @@ function makeBuyerPurchaseReadModel(
 	};
 }
 
-function makeSellerOrderReadModel(
-	overrides: Partial<SellerOrderReadModel> = {},
-): SellerOrderReadModel {
+function makeSellerOrderView(
+	overrides: Partial<SellerOrderView> = {},
+): SellerOrderView {
 	return {
 		kind: "seller-order",
 		id: "seller-order-1",

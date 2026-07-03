@@ -1,5 +1,5 @@
 import { listingCategoryMetadata } from "@/constants/listing-category-metadata";
-import type { ListingCategoryCountData } from "@/domains/listings/dto/listing-read-model";
+import type { ListingCategoryCountData } from "@/domains/listings/dto/listing-view";
 
 export function transformListingCategoryCount(
 	data: ListingCategoryCountData[],

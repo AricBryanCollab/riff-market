@@ -5,13 +5,13 @@ import {
 	getOrderDetail,
 	listBuyerPurchaseHistory,
 	listSellerOrderDashboard,
-} from "@/domains/ordering/application/order-read-models";
+} from "@/domains/ordering/application/order-queries";
 import type {
 	PurchaseNumberGeneratorPort,
 	PurchasePlacedNotificationCreatorPort,
 	PurchasePlacedNotificationInput,
 } from "@/domains/ordering/application/place-purchase";
-import { PrismaOrderReadModels } from "@/domains/ordering/infrastructure/prisma-order-read-models";
+import { PrismaOrderQueries } from "@/domains/ordering/infrastructure/prisma-order-queries";
 import { createPrismaPlacePurchase } from "@/domains/ordering/infrastructure/prisma-place-purchase";
 import { PrismaPurchasePlacedNotificationCreator } from "@/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator";
 import { PrismaSellerOrderStatusRepository } from "@/domains/ordering/infrastructure/prisma-seller-order-status-repository";
@@ -266,13 +266,13 @@ describeDb("PlacePurchase Prisma integration", () => {
 			throw new Error(result.error.message);
 		}
 
-		const readModels = new PrismaOrderReadModels(db);
+		const queries = new PrismaOrderQueries(db);
 		const buyerHistory = await listBuyerPurchaseHistory(
 			{
 				id: "customer-1",
 				role: "CUSTOMER",
 			},
-			readModels,
+			queries,
 		);
 
 		expect(buyerHistory).toEqual({
@@ -317,7 +317,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 				id: "seller-1",
 				role: "SELLER",
 			},
-			readModels,
+			queries,
 		);
 
 		expect(sellerDashboard).toEqual({
@@ -348,7 +348,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		const customerDetail = await getOrderDetail(
 			{ id: "customer-1", role: "CUSTOMER" },
 			result.value.purchaseId,
-			readModels,
+			queries,
 		);
 		expect(customerDetail).toEqual({
 			ok: true,
@@ -376,7 +376,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		const sellerDetail = await getOrderDetail(
 			{ id: "seller-1", role: "SELLER" },
 			sellerOrderId,
-			readModels,
+			queries,
 		);
 		expect(sellerDetail).toEqual({
 			ok: true,
@@ -396,7 +396,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		const adminPurchaseDetail = await getOrderDetail(
 			{ id: "admin-1", role: "ADMIN" },
 			result.value.purchaseId,
-			readModels,
+			queries,
 		);
 		expect(adminPurchaseDetail).toEqual({
 			ok: true,
@@ -412,7 +412,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		const adminSellerDetail = await getOrderDetail(
 			{ id: "admin-1", role: "ADMIN" },
 			sellerOrderId,
-			readModels,
+			queries,
 		);
 		expect(adminSellerDetail).toEqual({
 			ok: true,
@@ -428,7 +428,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		const unauthorizedSellerDetail = await getOrderDetail(
 			{ id: "seller-2", role: "SELLER" },
 			sellerOrderId,
-			readModels,
+			queries,
 		);
 		expect(unauthorizedSellerDetail).toMatchObject({
 			ok: false,

@@ -1,4 +1,4 @@
-import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import type { ListingResponse } from "@/domains/listings/dto/listing-view";
 
 type CartLineBase = {
 	readonly listingId: string;
@@ -13,7 +13,7 @@ type CartLineBase = {
 
 export type AvailableCartLine = CartLineBase & {
 	readonly status: "available";
-	readonly listing: ListingReadDto;
+	readonly listing: ListingResponse;
 };
 
 export type UnavailableCartLine = CartLineBase & {

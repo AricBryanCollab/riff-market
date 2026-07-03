@@ -3,9 +3,9 @@ import type {
 	ListingBrandCountData,
 	ListingCategoryCountData,
 	ListingCountStatusQuery,
-	ListingReadDto,
+	ListingResponse,
 	PendingListingCount,
-} from "@/domains/listings/dto/listing-read-model";
+} from "@/domains/listings/dto/listing-view";
 import {
 	type ApprovedListingSearchServerInput,
 	getApprovedListingsListingApiFn,
@@ -20,15 +20,17 @@ import {
 
 export type { ApprovedListingSearchServerInput };
 
-type ListingReadError = {
+type ListingResponseError = {
 	readonly error: string;
 	readonly details?: unknown;
 };
 
 export type ListingStatusCount = ApprovedListingCount | PendingListingCount;
 
-export function unwrapListingReadResult<T>(result: T | ListingReadError): T {
-	if (isListingReadError(result)) {
+export function unwrapListingResponseResult<T>(
+	result: T | ListingResponseError,
+): T {
+	if (isListingResponseError(result)) {
 		throw new Error(result.error);
 	}
 
@@ -40,7 +42,7 @@ export async function fetchApprovedListings(
 ) {
 	const result = await getApprovedListingsListingApiFn({ data });
 
-	return unwrapListingReadResult(result) as ListingReadDto[];
+	return unwrapListingResponseResult(result) as ListingResponse[];
 }
 
 export async function fetchListingDetails(listingId: string) {
@@ -48,7 +50,7 @@ export async function fetchListingDetails(listingId: string) {
 		data: { listingId },
 	});
 
-	return unwrapListingReadResult(result) as ListingReadDto;
+	return unwrapListingResponseResult(result) as ListingResponse;
 }
 
 export async function fetchListingStatusCount(status: ListingCountStatusQuery) {
@@ -56,7 +58,7 @@ export async function fetchListingStatusCount(status: ListingCountStatusQuery) {
 		data: { status },
 	});
 
-	return unwrapListingReadResult(result) as ListingStatusCount;
+	return unwrapListingResponseResult(result) as ListingStatusCount;
 }
 
 export async function fetchCartListings(listingIds: string[]) {
@@ -66,25 +68,25 @@ export async function fetchCartListings(listingIds: string[]) {
 		},
 	});
 
-	return unwrapListingReadResult(result) as ListingReadDto[];
+	return unwrapListingResponseResult(result) as ListingResponse[];
 }
 
 export async function fetchPendingModerationListings() {
 	const result = await getPendingModerationListingsListingApiFn();
 
-	return unwrapListingReadResult(result) as ListingReadDto[];
+	return unwrapListingResponseResult(result) as ListingResponse[];
 }
 
 export async function fetchListingCategoryCounts() {
 	const result = await getListingCategoryCountsListingApiFn();
 
-	return unwrapListingReadResult(result) as ListingCategoryCountData[];
+	return unwrapListingResponseResult(result) as ListingCategoryCountData[];
 }
 
 export async function fetchPopularListingBrandCounts() {
 	const result = await getPopularListingBrandCountsListingApiFn();
 
-	return unwrapListingReadResult(result) as ListingBrandCountData[];
+	return unwrapListingResponseResult(result) as ListingBrandCountData[];
 }
 
 export async function fetchRecentListings(limit: number) {
@@ -92,10 +94,10 @@ export async function fetchRecentListings(limit: number) {
 		data: { limit },
 	});
 
-	return unwrapListingReadResult(result) as ListingReadDto[];
+	return unwrapListingResponseResult(result) as ListingResponse[];
 }
 
-function isListingReadError(value: unknown): value is ListingReadError {
+function isListingResponseError(value: unknown): value is ListingResponseError {
 	return (
 		typeof value === "object" &&
 		value !== null &&

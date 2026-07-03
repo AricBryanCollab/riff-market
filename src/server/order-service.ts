@@ -8,11 +8,11 @@ import {
 	getOrderDetail,
 	listBuyerPurchaseHistory,
 	listSellerOrderDashboard,
-	type OrderDetailReadPort,
+	type OrderDetailQueryPort,
 	type SellerOrderDashboardPort,
-} from "@/domains/ordering/application/order-read-models";
+} from "@/domains/ordering/application/order-queries";
 import type { SellerOrderStatus } from "@/domains/ordering/domain/seller-order";
-import type { OrderingOrderReadModel } from "@/domains/ordering/dto/order-read-model";
+import type { OrderView } from "@/domains/ordering/dto/order-view";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
@@ -66,9 +66,9 @@ export type SellerOrderStatusChangeResponse = {
 	readonly trackingNumber: string | null;
 };
 
-type OrderReadModels = BuyerPurchaseHistoryPort &
+type OrderQueries = BuyerPurchaseHistoryPort &
 	SellerOrderDashboardPort &
-	OrderDetailReadPort;
+	OrderDetailQueryPort;
 
 export function validateOrderDetailInput(data: unknown): OrderDetailInput {
 	const parsed = orderDetailInputSchema.safeParse(data);
@@ -98,19 +98,19 @@ export function validateChangeSellerOrderStatusInput(
 
 export async function listOrdersForCurrentUser(
 	user: ServerUserContext,
-	readModels?: OrderReadModels,
-): Promise<OrderingOrderReadModel[]> {
+	queries?: OrderQueries,
+): Promise<OrderView[]> {
 	const actor = toActor(user);
-	const orderReadModels = readModels ?? (await createPrismaOrderReadModels());
+	const orderQueries = queries ?? (await createPrismaOrderQueries());
 
 	if (actor.role === "CUSTOMER") {
-		const result = await listBuyerPurchaseHistory(actor, orderReadModels);
+		const result = await listBuyerPurchaseHistory(actor, orderQueries);
 
 		return unwrapResultOrThrowRequestError(result);
 	}
 
 	if (actor.role === "SELLER" || actor.role === "ADMIN") {
-		const result = await listSellerOrderDashboard(actor, orderReadModels);
+		const result = await listSellerOrderDashboard(actor, orderQueries);
 
 		return unwrapResultOrThrowRequestError(result);
 	}
@@ -126,11 +126,11 @@ export async function listOrdersForCurrentUser(
 export async function getOrderDetailForCurrentUser(
 	user: ServerUserContext,
 	input: OrderDetailInput,
-	readModels?: OrderReadModels,
-): Promise<OrderingOrderReadModel> {
-	const orderReadModels = readModels ?? (await createPrismaOrderReadModels());
+	queries?: OrderQueries,
+): Promise<OrderView> {
+	const orderQueries = queries ?? (await createPrismaOrderQueries());
 	const actor = toActor(user);
-	const result = await getOrderDetail(actor, input.orderId, orderReadModels);
+	const result = await getOrderDetail(actor, input.orderId, orderQueries);
 
 	return unwrapResultOrThrowRequestError(result);
 }
@@ -160,13 +160,13 @@ function toActor(user: ServerUserContext): Actor {
 	};
 }
 
-async function createPrismaOrderReadModels(): Promise<OrderReadModels> {
-	const [{ prisma }, { PrismaOrderReadModels }] = await Promise.all([
+async function createPrismaOrderQueries(): Promise<OrderQueries> {
+	const [{ prisma }, { PrismaOrderQueries }] = await Promise.all([
 		import("@/data/connect-db"),
-		import("@/domains/ordering/infrastructure/prisma-order-read-models"),
+		import("@/domains/ordering/infrastructure/prisma-order-queries"),
 	]);
 
-	return new PrismaOrderReadModels(prisma);
+	return new PrismaOrderQueries(prisma);
 }
 
 async function createPrismaSellerOrderStatusRepository(): Promise<SellerOrderStatusRepositoryPort> {

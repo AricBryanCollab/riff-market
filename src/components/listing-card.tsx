@@ -6,11 +6,11 @@ import {
 	CardFooter,
 	CardHeader,
 } from "@/components/ui/card";
-import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import type { ListingResponse } from "@/domains/listings/dto/listing-view";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 interface ListingCardProps {
-	listing: ListingReadDto;
+	listing: ListingResponse;
 	onClick?: () => void;
 }
 

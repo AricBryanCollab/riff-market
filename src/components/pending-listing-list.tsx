@@ -4,12 +4,12 @@ import AnimatedLoader from "@/components/animated-loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
-import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import type { ListingResponse } from "@/domains/listings/dto/listing-view";
 import { formatRelativeTime } from "@/utils/format-date";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 interface PendingListingListProps {
-	pendingListings: ListingReadDto[];
+	pendingListings: ListingResponse[];
 	pendingListingCount: number;
 	isLoading: boolean;
 	isEmptyPendingListings: boolean;

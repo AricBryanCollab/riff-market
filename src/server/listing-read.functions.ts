@@ -10,14 +10,14 @@ import {
 } from "@/server/function-middleware";
 import {
 	getListingCategoryCountDtos,
-	getListingDetailsReadDto,
+	getListingDetailsResponse,
 	getListingStatusCountDto,
 	getPopularListingBrandCountDtos,
-	listCartListingReadDtos,
-	listPendingModerationListingReadDtos,
-	listRecentListingReadDtos,
-	listSellerListingReadDtos,
-	searchApprovedListingReadDtos,
+	listCartListingResponses,
+	listPendingModerationListingResponses,
+	listRecentListingResponses,
+	listSellerListingResponses,
+	searchApprovedListingResponses,
 } from "@/server/listing-read-service";
 
 const approvedListingSearchServerInputSchema = z.object({
@@ -56,7 +56,7 @@ export const getListingDetailsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => listingDetailsServerInputSchema.parse(data))
 	.handler(async ({ data }) =>
-		getListingDetailsReadDto(
+		getListingDetailsResponse(
 			toActor(await getOptionalServerUserContext()),
 			data.listingId,
 		),
@@ -65,18 +65,18 @@ export const getListingDetailsListingApiFn = createServerFn({ method: "GET" })
 export const getApprovedListingsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => approvedListingSearchServerInputSchema.parse(data))
-	.handler(async ({ data }) => searchApprovedListingReadDtos(data));
+	.handler(async ({ data }) => searchApprovedListingResponses(data));
 
 export const getPendingModerationListingsListingApiFn = createServerFn({
 	method: "GET",
 })
 	.middleware(createRoleServerFunctionMiddleware(["ADMIN"]))
-	.handler(async () => listPendingModerationListingReadDtos());
+	.handler(async () => listPendingModerationListingResponses());
 
 export const getSellerListingsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(authenticatedServerFunctionMiddleware)
 	.handler(async ({ context }) =>
-		listSellerListingReadDtos(context.user.id, context.user.role),
+		listSellerListingResponses(context.user.id, context.user.role),
 	);
 
 export const getListingCategoryCountsListingApiFn = createServerFn({
@@ -103,13 +103,13 @@ export const getListingStatusCountListingApiFn = createServerFn({
 export const getRecentListingsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => recentListingsInputSchema.parse(data))
-	.handler(async ({ data }) => listRecentListingReadDtos(data.limit));
+	.handler(async ({ data }) => listRecentListingResponses(data.limit));
 
 export const getCartListingsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(authenticatedServerFunctionMiddleware)
 	.inputValidator((data) => cartListingDetailsInputSchema.parse(data))
 	.handler(async ({ context, data }) =>
-		listCartListingReadDtos(context.user.role, data),
+		listCartListingResponses(context.user.role, data),
 	);
 
 function toActor(user: ServerUserContext | null): Actor | null {

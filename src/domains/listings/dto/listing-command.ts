@@ -1,5 +1,5 @@
 import type { ListingStatus } from "@/domains/listings/domain/listing";
-import type { ListingImageDto } from "@/domains/listings/dto/listing-read-model";
+import type { ListingImageDto } from "@/domains/listings/dto/listing-view";
 import type { ListingCategory, ListingCondition } from "@/types/enum";
 
 export type ListingFormDraftFields = {

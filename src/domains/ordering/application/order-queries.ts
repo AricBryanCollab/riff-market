@@ -5,10 +5,10 @@ import type {
 import type { SellerOrderStatus } from "@/domains/ordering/domain/seller-order";
 import type {
 	BuyerOrderSummaryStatus,
-	BuyerPurchaseReadModel,
-	OrderingOrderReadModel,
-	SellerOrderReadModel,
-} from "@/domains/ordering/dto/order-read-model";
+	BuyerPurchaseView,
+	OrderView,
+	SellerOrderView,
+} from "@/domains/ordering/dto/order-view";
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	type AppError,
@@ -17,41 +17,41 @@ import {
 	type Result,
 } from "@/domains/shared/domain/result";
 
-export type OrderReadErrorCode =
+export type OrderQueryErrorCode =
 	| "ORDER_READ_UNAUTHORIZED"
 	| "ORDER_READ_INVALID_ID"
 	| "ORDER_READ_NOT_FOUND";
 
-export type OrderReadError = AppError<OrderReadErrorCode>;
+export type OrderQueryError = AppError<OrderQueryErrorCode>;
 
 export interface BuyerPurchaseHistoryPort {
-	listForCustomer(customerId: string): Promise<BuyerPurchaseReadModel[]>;
+	listForCustomer(customerId: string): Promise<BuyerPurchaseView[]>;
 }
 
 export interface SellerOrderDashboardPort {
-	listForSeller(sellerId: string): Promise<SellerOrderReadModel[]>;
-	listAllForAdmin(): Promise<SellerOrderReadModel[]>;
+	listForSeller(sellerId: string): Promise<SellerOrderView[]>;
+	listAllForAdmin(): Promise<SellerOrderView[]>;
 }
 
-export interface OrderDetailReadPort {
+export interface OrderDetailQueryPort {
 	findPurchaseForCustomer(
 		purchaseId: string,
 		customerId: string,
-	): Promise<BuyerPurchaseReadModel | null>;
+	): Promise<BuyerPurchaseView | null>;
 	findSellerOrderForSeller(
 		sellerOrderId: string,
 		sellerId: string,
-	): Promise<SellerOrderReadModel | null>;
-	findForAdmin(orderId: string): Promise<OrderingOrderReadModel | null>;
+	): Promise<SellerOrderView | null>;
+	findForAdmin(orderId: string): Promise<OrderView | null>;
 }
 
 export async function listBuyerPurchaseHistory(
 	actor: Actor,
 	purchases: BuyerPurchaseHistoryPort,
-): Promise<Result<BuyerPurchaseReadModel[], OrderReadError>> {
+): Promise<Result<BuyerPurchaseView[], OrderQueryError>> {
 	if (actor.role !== "CUSTOMER") {
 		return err(
-			orderReadError(
+			orderQueryError(
 				"ORDER_READ_UNAUTHORIZED",
 				"Only customers can read purchase history",
 			),
@@ -64,10 +64,10 @@ export async function listBuyerPurchaseHistory(
 export async function listSellerOrderDashboard(
 	actor: Actor,
 	sellerOrders: SellerOrderDashboardPort,
-): Promise<Result<SellerOrderReadModel[], OrderReadError>> {
+): Promise<Result<SellerOrderView[], OrderQueryError>> {
 	if (actor.role !== "SELLER" && actor.role !== "ADMIN") {
 		return err(
-			orderReadError(
+			orderQueryError(
 				"ORDER_READ_UNAUTHORIZED",
 				"Only sellers and admins can read seller orders",
 			),
@@ -84,11 +84,11 @@ export async function listSellerOrderDashboard(
 export async function getOrderDetail(
 	actor: Actor,
 	orderId: string,
-	orderDetails: OrderDetailReadPort,
-): Promise<Result<OrderingOrderReadModel, OrderReadError>> {
+	orderDetails: OrderDetailQueryPort,
+): Promise<Result<OrderView, OrderQueryError>> {
 	if (orderId.trim().length === 0) {
 		return err(
-			orderReadError(
+			orderQueryError(
 				"ORDER_READ_INVALID_ID",
 				"Order ID is required",
 				"validation",
@@ -99,7 +99,7 @@ export async function getOrderDetail(
 	const order = await findAuthorizedOrder(actor, orderId, orderDetails);
 	if (!order) {
 		return err(
-			orderReadError(
+			orderQueryError(
 				"ORDER_READ_NOT_FOUND",
 				"Order not found with the provided order ID",
 				"not-found",
@@ -113,7 +113,7 @@ export async function getOrderDetail(
 function findAuthorizedOrder(
 	actor: Actor,
 	orderId: string,
-	orderDetails: OrderDetailReadPort,
+	orderDetails: OrderDetailQueryPort,
 ) {
 	switch (actor.role) {
 		case "CUSTOMER":
@@ -170,11 +170,11 @@ export function deriveBuyerOrderSummaryStatus(input: {
 	return "OPEN";
 }
 
-function orderReadError(
-	code: OrderReadErrorCode,
+function orderQueryError(
+	code: OrderQueryErrorCode,
 	message: string,
-	kind: OrderReadError["kind"] = "authorization",
-): OrderReadError {
+	kind: OrderQueryError["kind"] = "authorization",
+): OrderQueryError {
 	return {
 		code,
 		message,

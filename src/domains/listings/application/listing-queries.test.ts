@@ -1,13 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Actor } from "@/domains/shared/domain/actor";
-import type {
-	ListingReadModel,
-	ListingReadStatus,
-} from "../dto/listing-read-model";
+import type { ListingView, ListingViewStatus } from "../dto/listing-view";
 import {
 	getListingDetails,
-	type ListingDetailReadPort,
-} from "./listing-read-models";
+	type ListingDetailQueryPort,
+} from "./listing-queries";
 
 const admin: Actor = { id: "admin-1", role: "ADMIN" };
 const seller: Actor = { id: "seller-1", role: "SELLER" };
@@ -79,11 +76,11 @@ describe("getListingDetails", () => {
 	});
 });
 
-function readListingDetails(actor: Actor | null, listing: ListingReadModel) {
+function readListingDetails(actor: Actor | null, listing: ListingView) {
 	return getListingDetails(actor, listing.id, makeListings([listing]));
 }
 
-function makeListings(listings: ListingReadModel[]): ListingDetailReadPort {
+function makeListings(listings: ListingView[]): ListingDetailQueryPort {
 	return {
 		findById: async (listingId) =>
 			listings.find((listing) => listing.id === listingId) ?? null,
@@ -93,8 +90,8 @@ function makeListings(listings: ListingReadModel[]): ListingDetailReadPort {
 function makeListing({
 	listingStatus = "APPROVED",
 }: {
-	readonly listingStatus?: ListingReadStatus;
-} = {}): ListingReadModel {
+	readonly listingStatus?: ListingViewStatus;
+} = {}): ListingView {
 	return {
 		id: "listing-1",
 		sellerId: "seller-1",

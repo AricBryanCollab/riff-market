@@ -1,4 +1,4 @@
-import type { ApprovedListingCount } from "@/domains/listings/dto/listing-read-model";
+import type { ApprovedListingCount } from "@/domains/listings/dto/listing-view";
 import {
 	useApprovedListingCount,
 	useApprovedListings,

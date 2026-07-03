@@ -1,11 +1,11 @@
 import type {
 	ListingCategoryMeta,
-	ListingReadDto,
-} from "@/domains/listings/dto/listing-read-model";
+	ListingResponse,
+} from "@/domains/listings/dto/listing-view";
 
 const image = (url: string) => ({ imageId: url, url });
 
-export const mockListings: ListingReadDto[] = [
+export const mockListings: ListingResponse[] = [
 	{
 		id: "prod-001",
 		name: "American Professional II Stratocaster",

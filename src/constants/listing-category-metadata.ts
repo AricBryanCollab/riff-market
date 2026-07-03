@@ -1,4 +1,4 @@
-import type { ListingCategoryMeta } from "@/domains/listings/dto/listing-read-model";
+import type { ListingCategoryMeta } from "@/domains/listings/dto/listing-view";
 import type { ListingCategory } from "@/types/enum";
 
 export const listingCategoryMetadata: Record<

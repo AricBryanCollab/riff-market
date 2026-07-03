@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import type { ListingCategoryCountData } from "@/domains/listings/dto/listing-read-model";
+import type { ListingCategoryCountData } from "@/domains/listings/dto/listing-view";
 import { fetchListingCategoryCounts } from "@/lib/tanstack-query/listing-read-client";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { transformListingCategoryCount } from "@/utils/transform-listing-category-count";

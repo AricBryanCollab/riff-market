@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import MusicNote from "@/assets/music-note";
 import ConditionBadge from "@/components/home/condition-badge";
-import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import type { ListingResponse } from "@/domains/listings/dto/listing-view";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 interface FeaturedListingCardProps {
-	listing: ListingReadDto;
+	listing: ListingResponse;
 }
 
 const FeaturedListingCard = ({ listing }: FeaturedListingCardProps) => {

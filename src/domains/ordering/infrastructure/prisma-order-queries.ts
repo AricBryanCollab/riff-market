@@ -3,17 +3,17 @@ import type { Prisma, PrismaClient } from "generated/prisma/client";
 import {
 	type BuyerPurchaseHistoryPort,
 	deriveBuyerOrderSummaryStatus,
-	type OrderDetailReadPort,
+	type OrderDetailQueryPort,
 	type SellerOrderDashboardPort,
-} from "@/domains/ordering/application/order-read-models";
+} from "@/domains/ordering/application/order-queries";
 import type {
-	BuyerPurchaseReadModel,
-	OrderingOrderItemReadModel,
-	OrderingOrderReadModel,
-	SellerOrderReadModel,
-} from "@/domains/ordering/dto/order-read-model";
+	BuyerPurchaseView,
+	OrderItemView,
+	OrderView,
+	SellerOrderView,
+} from "@/domains/ordering/dto/order-view";
 
-type OrderingReadPrisma = Pick<PrismaClient, "purchase" | "sellerOrder">;
+type OrderQueryPrisma = Pick<PrismaClient, "purchase" | "sellerOrder">;
 
 type PurchaseHistoryRow = Prisma.PurchaseGetPayload<{
 	include: {
@@ -35,15 +35,15 @@ type SellerOrderDashboardRow = Prisma.SellerOrderGetPayload<{
 type SellerOrderItemRow =
 	PurchaseHistoryRow["sellerOrders"][number]["items"][number];
 
-export class PrismaOrderReadModels
+export class PrismaOrderQueries
 	implements
 		BuyerPurchaseHistoryPort,
 		SellerOrderDashboardPort,
-		OrderDetailReadPort
+		OrderDetailQueryPort
 {
-	constructor(private readonly db: OrderingReadPrisma) {}
+	constructor(private readonly db: OrderQueryPrisma) {}
 
-	async listForCustomer(customerId: string): Promise<BuyerPurchaseReadModel[]> {
+	async listForCustomer(customerId: string): Promise<BuyerPurchaseView[]> {
 		const purchases = await this.db.purchase.findMany({
 			where: {
 				customerIdSnapshot: customerId,
@@ -63,10 +63,10 @@ export class PrismaOrderReadModels
 			},
 		});
 
-		return purchases.map(toBuyerPurchaseHistoryReadModel);
+		return purchases.map(toBuyerPurchaseHistoryView);
 	}
 
-	async listForSeller(sellerId: string): Promise<SellerOrderReadModel[]> {
+	async listForSeller(sellerId: string): Promise<SellerOrderView[]> {
 		const sellerOrders = await this.db.sellerOrder.findMany({
 			where: {
 				sellerIdSnapshot: sellerId,
@@ -80,10 +80,10 @@ export class PrismaOrderReadModels
 			},
 		});
 
-		return sellerOrders.map(toSellerOrderDashboardReadModel);
+		return sellerOrders.map(toSellerOrderDashboardView);
 	}
 
-	async listAllForAdmin(): Promise<SellerOrderReadModel[]> {
+	async listAllForAdmin(): Promise<SellerOrderView[]> {
 		const sellerOrders = await this.db.sellerOrder.findMany({
 			include: {
 				items: true,
@@ -94,13 +94,13 @@ export class PrismaOrderReadModels
 			},
 		});
 
-		return sellerOrders.map(toSellerOrderDashboardReadModel);
+		return sellerOrders.map(toSellerOrderDashboardView);
 	}
 
 	async findPurchaseForCustomer(
 		purchaseId: string,
 		customerId: string,
-	): Promise<BuyerPurchaseReadModel | null> {
+	): Promise<BuyerPurchaseView | null> {
 		const purchase = await this.db.purchase.findFirst({
 			where: {
 				id: purchaseId,
@@ -118,13 +118,13 @@ export class PrismaOrderReadModels
 			},
 		});
 
-		return purchase ? toBuyerPurchaseHistoryReadModel(purchase) : null;
+		return purchase ? toBuyerPurchaseHistoryView(purchase) : null;
 	}
 
 	async findSellerOrderForSeller(
 		sellerOrderId: string,
 		sellerId: string,
-	): Promise<SellerOrderReadModel | null> {
+	): Promise<SellerOrderView | null> {
 		const sellerOrder = await this.db.sellerOrder.findFirst({
 			where: {
 				id: sellerOrderId,
@@ -136,10 +136,10 @@ export class PrismaOrderReadModels
 			},
 		});
 
-		return sellerOrder ? toSellerOrderDashboardReadModel(sellerOrder) : null;
+		return sellerOrder ? toSellerOrderDashboardView(sellerOrder) : null;
 	}
 
-	async findForAdmin(orderId: string): Promise<OrderingOrderReadModel | null> {
+	async findForAdmin(orderId: string): Promise<OrderView | null> {
 		const purchase = await this.db.purchase.findUnique({
 			where: {
 				id: orderId,
@@ -157,7 +157,7 @@ export class PrismaOrderReadModels
 		});
 
 		if (purchase) {
-			return toBuyerPurchaseHistoryReadModel(purchase);
+			return toBuyerPurchaseHistoryView(purchase);
 		}
 
 		const sellerOrder = await this.db.sellerOrder.findUnique({
@@ -170,15 +170,15 @@ export class PrismaOrderReadModels
 			},
 		});
 
-		return sellerOrder ? toSellerOrderDashboardReadModel(sellerOrder) : null;
+		return sellerOrder ? toSellerOrderDashboardView(sellerOrder) : null;
 	}
 }
 
-function toBuyerPurchaseHistoryReadModel(
+function toBuyerPurchaseHistoryView(
 	purchase: PurchaseHistoryRow,
-): BuyerPurchaseReadModel {
+): BuyerPurchaseView {
 	const items = purchase.sellerOrders.flatMap((sellerOrder) =>
-		sellerOrder.items.map((item) => toOrderItemReadModel(sellerOrder.id, item)),
+		sellerOrder.items.map((item) => toOrderItemView(sellerOrder.id, item)),
 	);
 
 	return {
@@ -201,9 +201,9 @@ function toBuyerPurchaseHistoryReadModel(
 	};
 }
 
-function toSellerOrderDashboardReadModel(
+function toSellerOrderDashboardView(
 	sellerOrder: SellerOrderDashboardRow,
-): SellerOrderReadModel {
+): SellerOrderView {
 	const customerName = splitName(sellerOrder.purchase.buyerName);
 
 	return {
@@ -219,7 +219,7 @@ function toSellerOrderDashboardReadModel(
 			sellerOrder.trackingNumber ?? sellerOrder.purchase.purchaseNumber,
 		status: sellerOrder.status,
 		items: sellerOrder.items.map((item) =>
-			toOrderItemReadModel(sellerOrder.id, item),
+			toOrderItemView(sellerOrder.id, item),
 		),
 		customer: {
 			id: sellerOrder.purchase.customerIdSnapshot,
@@ -230,10 +230,10 @@ function toSellerOrderDashboardReadModel(
 	};
 }
 
-function toOrderItemReadModel(
+function toOrderItemView(
 	orderId: string,
 	item: SellerOrderItemRow,
-): OrderingOrderItemReadModel {
+): OrderItemView {
 	const sellerName = splitName(item.sellerDisplayName);
 
 	return {
