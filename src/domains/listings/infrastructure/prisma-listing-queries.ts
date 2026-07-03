@@ -289,8 +289,26 @@ function toNormalizedBrandCounts(
 function mostCommonDisplayBrand(displayCounts: ReadonlyMap<string, number>) {
 	return Array.from(displayCounts.entries()).sort(
 		([leftBrand, leftCount], [rightBrand, rightCount]) =>
-			rightCount - leftCount || leftBrand.localeCompare(rightBrand),
+			rightCount - leftCount ||
+			displayBrandCasingScore(rightBrand) -
+				displayBrandCasingScore(leftBrand) ||
+			leftBrand.localeCompare(rightBrand),
 	)[0][0];
+}
+
+function displayBrandCasingScore(brand: string) {
+	const hasUppercase = /[A-Z]/.test(brand);
+	const hasLowercase = /[a-z]/.test(brand);
+
+	if (hasUppercase && hasLowercase) {
+		return 2;
+	}
+
+	if (hasUppercase) {
+		return 1;
+	}
+
+	return 0;
 }
 
 function toListingViews(listings: ListingViewRow[]) {
