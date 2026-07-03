@@ -1,18 +1,18 @@
 import type { Prisma, PrismaClient } from "generated/prisma/client";
 import type {
 	NotificationCreatePort,
-	NotificationReadPort,
+	NotificationQueryPort,
 	NotificationReadStatePort,
 	NotificationUnreadCountPort,
 } from "@/domains/notifications/application/notification-use-cases";
 import type {
 	CreateNotificationCommand,
-	NotificationReadModel,
+	NotificationView,
 } from "@/domains/notifications/dto/notification";
 
 type NotificationPrisma = Pick<PrismaClient, "notification">;
 
-const notificationReadSelect = {
+const notificationViewSelect = {
 	id: true,
 	userId: true,
 	purchaseId: true,
@@ -23,21 +23,19 @@ const notificationReadSelect = {
 } satisfies Prisma.NotificationSelect;
 
 type NotificationRow = Prisma.NotificationGetPayload<{
-	select: typeof notificationReadSelect;
+	select: typeof notificationViewSelect;
 }>;
 
 export class PrismaNotifications
 	implements
 		NotificationCreatePort,
-		NotificationReadPort,
+		NotificationQueryPort,
 		NotificationUnreadCountPort,
 		NotificationReadStatePort
 {
 	constructor(private readonly db: NotificationPrisma) {}
 
-	async create(
-		command: CreateNotificationCommand,
-	): Promise<NotificationReadModel> {
+	async create(command: CreateNotificationCommand): Promise<NotificationView> {
 		const notification = await this.db.notification.create({
 			data: {
 				userId: command.userId,
@@ -46,20 +44,20 @@ export class PrismaNotifications
 				message: command.message,
 				isRead: command.isRead ?? false,
 			},
-			select: notificationReadSelect,
+			select: notificationViewSelect,
 		});
 
-		return toNotificationReadModel(notification);
+		return toNotificationView(notification);
 	}
 
-	async listForUser(userId: string): Promise<NotificationReadModel[]> {
+	async listForUser(userId: string): Promise<NotificationView[]> {
 		const notifications = await this.db.notification.findMany({
 			where: { userId },
-			select: notificationReadSelect,
+			select: notificationViewSelect,
 			orderBy: { createdAt: "desc" },
 		});
 
-		return notifications.map(toNotificationReadModel);
+		return notifications.map(toNotificationView);
 	}
 
 	async countUnreadForUser(userId: string): Promise<number> {
@@ -74,7 +72,7 @@ export class PrismaNotifications
 	async markAsReadForUser(
 		notificationId: string,
 		userId: string,
-	): Promise<NotificationReadModel | null> {
+	): Promise<NotificationView | null> {
 		const notification = await this.db.notification.findFirst({
 			where: {
 				id: notificationId,
@@ -90,10 +88,10 @@ export class PrismaNotifications
 		const updated = await this.db.notification.update({
 			where: { id: notification.id },
 			data: { isRead: true },
-			select: notificationReadSelect,
+			select: notificationViewSelect,
 		});
 
-		return toNotificationReadModel(updated);
+		return toNotificationView(updated);
 	}
 
 	async markAllAsReadForUser(
@@ -113,9 +111,7 @@ export class PrismaNotifications
 	}
 }
 
-function toNotificationReadModel(
-	notification: NotificationRow,
-): NotificationReadModel {
+function toNotificationView(notification: NotificationRow): NotificationView {
 	return {
 		id: notification.id,
 		userId: notification.userId,

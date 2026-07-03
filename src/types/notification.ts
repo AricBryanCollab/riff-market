@@ -1,7 +1,7 @@
 import type {
 	CreateNotificationCommand,
-	NotificationReadModel,
+	NotificationView,
 } from "@/domains/notifications/dto/notification";
 
-export type NotificationData = NotificationReadModel;
+export type NotificationData = NotificationView;
 export type CreateNotificationData = CreateNotificationCommand;

@@ -1,6 +1,6 @@
 import type {
 	CreateNotificationCommand,
-	NotificationReadModel,
+	NotificationView,
 } from "@/domains/notifications/dto/notification";
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
@@ -16,12 +16,12 @@ export type NotificationErrorCode =
 
 export type NotificationError = AppError<NotificationErrorCode>;
 
-export interface NotificationReadPort {
-	listForUser(userId: string): Promise<NotificationReadModel[]>;
+export interface NotificationQueryPort {
+	listForUser(userId: string): Promise<NotificationView[]>;
 }
 
 export interface NotificationCreatePort {
-	create(command: CreateNotificationCommand): Promise<NotificationReadModel>;
+	create(command: CreateNotificationCommand): Promise<NotificationView>;
 }
 
 export interface NotificationUnreadCountPort {
@@ -32,14 +32,14 @@ export interface NotificationReadStatePort {
 	markAsReadForUser(
 		notificationId: string,
 		userId: string,
-	): Promise<NotificationReadModel | null>;
+	): Promise<NotificationView | null>;
 	markAllAsReadForUser(userId: string): Promise<{ readonly count: number }>;
 }
 
 export async function getNotifications(
 	actor: Actor,
-	notifications: NotificationReadPort,
-): Promise<Result<NotificationReadModel[], NotificationError>> {
+	notifications: NotificationQueryPort,
+): Promise<Result<NotificationView[], NotificationError>> {
 	const validationError = validateRequired(actor.id, "User ID");
 	if (validationError) {
 		return err(validationError);
@@ -51,7 +51,7 @@ export async function getNotifications(
 export async function createNotification(
 	command: CreateNotificationCommand,
 	notifications: NotificationCreatePort,
-): Promise<Result<NotificationReadModel, NotificationError>> {
+): Promise<Result<NotificationView, NotificationError>> {
 	const userIdError = validateRequired(command.userId, "User ID");
 	if (userIdError) {
 		return err(userIdError);
@@ -79,7 +79,7 @@ export async function readNotification(
 		readonly actor: Actor;
 	},
 	notifications: NotificationReadStatePort,
-): Promise<Result<NotificationReadModel, NotificationError>> {
+): Promise<Result<NotificationView, NotificationError>> {
 	const notificationIdError = validateRequired(
 		command.notificationId,
 		"Notification ID",

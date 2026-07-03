@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { NotificationReadModel } from "@/domains/notifications/dto/notification";
+import type { NotificationView } from "@/domains/notifications/dto/notification";
 import type { ServerUserContext } from "@/server/function-middleware";
 import type { RequestError } from "@/server/request-error";
 import {
@@ -79,7 +79,7 @@ describe("notification server service", () => {
 });
 
 class InMemoryNotifications {
-	constructor(private readonly notifications: NotificationReadModel[]) {}
+	constructor(private readonly notifications: NotificationView[]) {}
 
 	async listForUser(userId: string) {
 		return this.notifications.filter(
@@ -117,8 +117,8 @@ class InMemoryNotifications {
 }
 
 function makeNotification(
-	overrides: Partial<NotificationReadModel> = {},
-): NotificationReadModel {
+	overrides: Partial<NotificationView> = {},
+): NotificationView {
 	return {
 		id: "notification-1",
 		userId: "customer-1",

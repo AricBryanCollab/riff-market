@@ -113,7 +113,7 @@ describe("notification use cases", () => {
 	});
 });
 
-type NotificationReadModel = {
+type NotificationView = {
 	readonly id: string;
 	readonly userId: string;
 	readonly purchaseId: string | null;
@@ -124,9 +124,9 @@ type NotificationReadModel = {
 };
 
 class InMemoryNotifications {
-	items: NotificationReadModel[];
+	items: NotificationView[];
 
-	constructor(notifications: NotificationReadModel[]) {
+	constructor(notifications: NotificationView[]) {
 		this.items = notifications;
 	}
 
@@ -196,8 +196,8 @@ class InMemoryNotifications {
 }
 
 function makeNotification(
-	overrides: Partial<NotificationReadModel> = {},
-): NotificationReadModel {
+	overrides: Partial<NotificationView> = {},
+): NotificationView {
 	return {
 		id: "notification-1",
 		userId: "user-1",

@@ -3,13 +3,13 @@ import {
 	getNotifications,
 	getUnreadNotificationCount,
 	type NotificationError,
-	type NotificationReadPort,
+	type NotificationQueryPort,
 	type NotificationReadStatePort,
 	type NotificationUnreadCountPort,
 	readAllNotifications,
 	readNotification,
 } from "@/domains/notifications/application/notification-use-cases";
-import type { NotificationReadModel } from "@/domains/notifications/dto/notification";
+import type { NotificationView } from "@/domains/notifications/dto/notification";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { Result } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
@@ -24,7 +24,7 @@ const notificationIdInputSchema = z.object({
 
 export type NotificationIdInput = z.infer<typeof notificationIdInputSchema>;
 
-export type NotificationServiceDependencies = NotificationReadPort &
+export type NotificationServiceDependencies = NotificationQueryPort &
 	NotificationUnreadCountPort &
 	NotificationReadStatePort;
 type NotificationActorContext = Pick<ServerUserContext, "id" | "role">;
@@ -46,7 +46,7 @@ export function validateNotificationIdInput(
 export async function getNotificationsForCurrentUser(
 	user: ServerUserContext,
 	dependencies?: NotificationServiceDependencies,
-): Promise<NotificationReadModel[]> {
+): Promise<NotificationView[]> {
 	return executeNotificationUseCase(
 		user,
 		dependencies,
@@ -84,7 +84,7 @@ export async function readNotificationForCurrentUser(
 	user: ServerUserContext,
 	input: NotificationIdInput,
 	dependencies?: NotificationServiceDependencies,
-): Promise<NotificationReadModel> {
+): Promise<NotificationView> {
 	return executeNotificationUseCase(
 		user,
 		dependencies,

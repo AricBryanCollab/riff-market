@@ -1,4 +1,4 @@
-export type NotificationReadModel = {
+export type NotificationView = {
 	readonly id: string;
 	readonly userId: string;
 	readonly purchaseId: string | null;
