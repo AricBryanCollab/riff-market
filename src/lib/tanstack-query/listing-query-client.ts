@@ -8,14 +8,14 @@ import type {
 } from "@/domains/listings/dto/listing-view";
 import {
 	type ApprovedListingSearchServerInput,
-	getApprovedListingsListingApiFn,
-	getCartListingsListingApiFn,
-	getListingCategoryCountsListingApiFn,
-	getListingDetailsListingApiFn,
-	getListingStatusCountListingApiFn,
-	getPendingModerationListingsListingApiFn,
-	getPopularListingBrandCountsListingApiFn,
-	getRecentListingsListingApiFn,
+	getApprovedListingsServerFn,
+	getCartListingsServerFn,
+	getListingCategoryCountsServerFn,
+	getListingDetailsServerFn,
+	getListingStatusCountServerFn,
+	getPendingModerationListingsServerFn,
+	getPopularListingBrandCountsServerFn,
+	getRecentListingsServerFn,
 } from "@/server/listing-query.functions";
 
 export type { ApprovedListingSearchServerInput };
@@ -40,13 +40,13 @@ export function unwrapListingResponseResult<T>(
 export async function fetchApprovedListings(
 	data: ApprovedListingSearchServerInput,
 ) {
-	const result = await getApprovedListingsListingApiFn({ data });
+	const result = await getApprovedListingsServerFn({ data });
 
 	return unwrapListingResponseResult(result) as ListingResponse[];
 }
 
 export async function fetchListingDetails(listingId: string) {
-	const result = await getListingDetailsListingApiFn({
+	const result = await getListingDetailsServerFn({
 		data: { listingId },
 	});
 
@@ -54,7 +54,7 @@ export async function fetchListingDetails(listingId: string) {
 }
 
 export async function fetchListingStatusCount(status: ListingCountStatusQuery) {
-	const result = await getListingStatusCountListingApiFn({
+	const result = await getListingStatusCountServerFn({
 		data: { status },
 	});
 
@@ -62,7 +62,7 @@ export async function fetchListingStatusCount(status: ListingCountStatusQuery) {
 }
 
 export async function fetchCartListings(listingIds: string[]) {
-	const result = await getCartListingsListingApiFn({
+	const result = await getCartListingsServerFn({
 		data: {
 			ids: listingIds,
 		},
@@ -72,25 +72,25 @@ export async function fetchCartListings(listingIds: string[]) {
 }
 
 export async function fetchPendingModerationListings() {
-	const result = await getPendingModerationListingsListingApiFn();
+	const result = await getPendingModerationListingsServerFn();
 
 	return unwrapListingResponseResult(result) as ListingResponse[];
 }
 
 export async function fetchListingCategoryCounts() {
-	const result = await getListingCategoryCountsListingApiFn();
+	const result = await getListingCategoryCountsServerFn();
 
 	return unwrapListingResponseResult(result) as ListingCategoryCountData[];
 }
 
 export async function fetchPopularListingBrandCounts() {
-	const result = await getPopularListingBrandCountsListingApiFn();
+	const result = await getPopularListingBrandCountsServerFn();
 
 	return unwrapListingResponseResult(result) as ListingBrandCountData[];
 }
 
 export async function fetchRecentListings(limit: number) {
-	const result = await getRecentListingsListingApiFn({
+	const result = await getRecentListingsServerFn({
 		data: { limit },
 	});
 
