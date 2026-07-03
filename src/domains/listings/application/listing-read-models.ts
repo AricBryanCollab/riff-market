@@ -6,6 +6,7 @@ import type {
 	ListingReadCondition,
 	ListingReadModel,
 } from "@/domains/listings/dto/listing-read-model";
+import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	type AppError,
 	err,
@@ -64,6 +65,7 @@ export interface CartListingReadPort {
 }
 
 export async function getListingDetails(
+	actor: Actor | null,
 	listingId: string,
 	listings: ListingDetailReadPort,
 ): Promise<Result<ListingReadModel, ListingReadError>> {
@@ -79,6 +81,16 @@ export async function getListingDetails(
 
 	const listing = await listings.findById(listingId);
 	if (!listing) {
+		return err(
+			listingReadError(
+				"LISTING_READ_NOT_FOUND",
+				"Listing not found",
+				"not-found",
+			),
+		);
+	}
+
+	if (!canReadListingDetails(actor, listing)) {
 		return err(
 			listingReadError(
 				"LISTING_READ_NOT_FOUND",
@@ -118,4 +130,12 @@ function listingReadError(
 		message,
 		kind,
 	};
+}
+
+function canReadListingDetails(actor: Actor | null, listing: ListingReadModel) {
+	if (listing.listingStatus === "APPROVED") {
+		return true;
+	}
+
+	return actor?.role === "ADMIN" && listing.listingStatus === "PENDING";
 }

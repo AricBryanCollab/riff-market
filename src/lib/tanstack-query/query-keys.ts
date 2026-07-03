@@ -4,6 +4,8 @@ import type {
 } from "@/domains/listings/dto/listing-read-model";
 import type { UserRole } from "@/types/enum";
 
+export type ListingDetailViewerScope = "public" | "admin";
+
 const listingKeys = {
 	root: ["listings"] as const,
 	approved: (filters: ApprovedListingSearchFilterQuery) =>
@@ -14,11 +16,18 @@ const listingKeys = {
 	countByCategory: ["listings", "count", "by-category"] as const,
 	countByStatus: (status: ListingCountStatusQuery) =>
 		["listings", "count", status] as const,
-	detail: (id: string) => ["listings", "detail", id] as const,
+	detail: (id: string, viewerScope: ListingDetailViewerScope) =>
+		["listings", "detail", id, viewerScope] as const,
 	featured: ["listings", "featured"] as const,
 	pending: ["listings", "pending"] as const,
 	recent: ["listings", "recent"] as const,
 };
+
+export function listingDetailViewerScopeForRole(
+	role: UserRole | null | undefined,
+): ListingDetailViewerScope {
+	return role === "ADMIN" ? "admin" : "public";
+}
 
 export const queryKeys = {
 	auth: {

@@ -14,14 +14,25 @@ import Rating from "@/components/rating";
 import ReviewSection from "@/components/review-section";
 import SectionContainer from "@/components/section-container";
 import { listingCategoryOptions } from "@/constants/select-options";
-import type { ListingReadDto } from "@/domains/listings/dto/listing-read-model";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { listingByIdQueryOpt } from "@/hooks/use-get-listings";
+import { optionalAuthUserQueryOpt } from "@/lib/tanstack-query/auth-user-query";
+import { listingDetailViewerScopeForRole } from "@/lib/tanstack-query/query-keys";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 export const Route = createFileRoute("/listing/$id")({
 	beforeLoad: async ({ context, params }) => {
+		const user = await context.queryClient
+			.ensureQueryData(optionalAuthUserQueryOpt)
+			.catch(() => null);
+
 		await context.queryClient
-			.ensureQueryData(listingByIdQueryOpt(params.id))
+			.ensureQueryData(
+				listingByIdQueryOpt(
+					params.id,
+					listingDetailViewerScopeForRole(user?.role),
+				),
+			)
 			.catch(() => undefined);
 	},
 	component: RouteComponent,
@@ -30,12 +41,17 @@ export const Route = createFileRoute("/listing/$id")({
 function RouteComponent() {
 	const { id } = useParams({ from: "/listing/$id" });
 	const navigate = useNavigate();
+	const { data: user, isPending: isAuthPending } = useAuthUser();
+	const viewerScope = listingDetailViewerScopeForRole(user?.role);
 
 	const {
 		data: listing,
 		isPending,
 		isError,
-	} = useQuery(listingByIdQueryOpt(id));
+	} = useQuery({
+		...listingByIdQueryOpt(id, viewerScope),
+		enabled: !isAuthPending,
+	});
 
 	const getCategoryDisplay = (category: string) => {
 		const option = listingCategoryOptions.find((opt) => opt.value === category);
@@ -45,11 +61,11 @@ function RouteComponent() {
 	const [quantity, setQuantity] = useState(1);
 	const [selectedImage, setSelectedImage] = useState(0);
 
-	if (isPending) {
+	if (isAuthPending || isPending) {
 		return <ListingDetailsLoadingState />;
 	}
 
-	if (isError || !listing || !isPublicListingVisible(listing)) {
+	if (isError || !listing) {
 		return (
 			<div className="flex flex-col justify-center items-center min-h-screen">
 				<p className="text-lg text-gray-500">Listing not found</p>
@@ -209,10 +225,4 @@ function RouteComponent() {
 			</div>
 		</SectionContainer>
 	);
-}
-
-function isPublicListingVisible(listing: ListingReadDto) {
-	return listing.listingStatus === undefined
-		? listing.isApproved
-		: listing.listingStatus === "APPROVED";
 }

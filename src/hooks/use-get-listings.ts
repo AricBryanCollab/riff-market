@@ -12,7 +12,12 @@ import {
 	fetchListingDetails,
 	fetchListingStatusCount,
 } from "@/lib/tanstack-query/listing-read-client";
-import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import {
+	type ListingDetailViewerScope,
+	listingDetailViewerScopeForRole,
+	queryKeys,
+} from "@/lib/tanstack-query/query-keys";
+import { useAuthUser } from "./use-auth-user";
 
 function toApprovedListingSearchServerInput(
 	filters: ApprovedListingSearchFilterQuery,
@@ -56,9 +61,12 @@ export const featuredListingsQueryOpt = queryOptions<ListingReadDto[]>({
 	staleTime: 1000 * 60 * 5,
 });
 
-export const listingByIdQueryOpt = (id: string) =>
+export const listingByIdQueryOpt = (
+	id: string,
+	viewerScope: ListingDetailViewerScope = "public",
+) =>
 	queryOptions<ListingReadDto>({
-		queryKey: queryKeys.listings.detail(id),
+		queryKey: queryKeys.listings.detail(id, viewerScope),
 		queryFn: async () => fetchListingDetails(id),
 		retry: false,
 	});
@@ -103,19 +111,21 @@ export const useApprovedListingCount = () => {
 };
 
 export const useListingById = (id?: string | null) => {
+	const { data: user, isPending: isAuthPending } = useAuthUser();
+	const viewerScope = listingDetailViewerScopeForRole(user?.role);
 	const {
 		data: listing,
 		isPending: isListingLoading,
 		isError: isListingError,
 		refetch: refetchListingDetails,
 	} = useQuery({
-		...listingByIdQueryOpt(id ?? ""),
-		enabled: !!id,
+		...listingByIdQueryOpt(id ?? "", viewerScope),
+		enabled: !!id && !isAuthPending,
 	});
 
 	return {
 		listing,
-		isListingLoading,
+		isListingLoading: isAuthPending || isListingLoading,
 		isListingError,
 		refetchListingDetails,
 	};

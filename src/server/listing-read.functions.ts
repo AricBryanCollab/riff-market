@@ -1,9 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	authenticatedServerFunctionMiddleware,
 	createRoleServerFunctionMiddleware,
+	getOptionalServerUserContext,
 	publicServerFunctionMiddleware,
+	type ServerUserContext,
 } from "@/server/function-middleware";
 import {
 	getListingCategoryCountDtos,
@@ -52,7 +55,12 @@ export type ApprovedListingSearchServerInput = z.infer<
 export const getListingDetailsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => listingDetailsServerInputSchema.parse(data))
-	.handler(async ({ data }) => getListingDetailsReadDto(data.listingId));
+	.handler(async ({ data }) =>
+		getListingDetailsReadDto(
+			toActor(await getOptionalServerUserContext()),
+			data.listingId,
+		),
+	);
 
 export const getApprovedListingsListingApiFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
@@ -103,3 +111,7 @@ export const getCartListingsListingApiFn = createServerFn({ method: "GET" })
 	.handler(async ({ context, data }) =>
 		listCartListingReadDtos(context.user.role, data),
 	);
+
+function toActor(user: ServerUserContext | null): Actor | null {
+	return user ? { id: user.id, role: user.role } : null;
+}

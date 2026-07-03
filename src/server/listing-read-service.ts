@@ -19,6 +19,7 @@ import {
 	type ListingReadModel,
 	type ListingStatusCount,
 } from "@/domains/listings/dto/listing-read-model";
+import type { Actor } from "@/domains/shared/domain/actor";
 
 export type ListingReadServiceDependencies = {
 	readonly listings: ListingDetailReadPort &
@@ -36,19 +37,20 @@ type ListingReadServiceError = {
 };
 
 export async function getListingDetailsReadDto(
+	actor: Actor | null,
 	listingId: string,
 	dependencies?: ListingReadServiceDependencies,
 ): Promise<ListingReadDto | ListingReadServiceError> {
 	const readDependencies =
 		dependencies ?? (await createPrismaListingReadDependencies());
-	const result = await getListingDetails(listingId, readDependencies.listings);
+	const result = await getListingDetails(
+		actor,
+		listingId,
+		readDependencies.listings,
+	);
 
 	if (!result.ok) {
 		return { error: result.error.message };
-	}
-
-	if (!isPublicListingVisible(result.value)) {
-		return { error: "Listing not found" };
 	}
 
 	return toListingReadDto(result.value);
@@ -181,10 +183,6 @@ async function createPrismaListingReadDependencies(): Promise<ListingReadService
 	return {
 		listings: new readModels.PrismaListingReadModels(prisma),
 	};
-}
-
-function isPublicListingVisible(listing: ListingReadModel) {
-	return listing.listingStatus === "APPROVED";
 }
 
 function toListingSearchQuery(

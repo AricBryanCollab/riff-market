@@ -3,6 +3,7 @@ import type {
 	ListingReadModel,
 	ListingReadStatus,
 } from "@/domains/listings/dto/listing-read-model";
+import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	getListingDetailsReadDto,
 	getPopularListingBrandCountDtos,
@@ -19,17 +20,33 @@ describe("listing read behavior", () => {
 		]);
 
 		await expect(
-			getListingDetailsReadDto("missing-listing", dependencies),
+			getListingDetailsReadDto(null, "missing-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsReadDto("pending-listing", dependencies),
+			getListingDetailsReadDto(null, "pending-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsReadDto("declined-listing", dependencies),
+			getListingDetailsReadDto(null, "declined-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsReadDto("withdrawn-listing", dependencies),
+			getListingDetailsReadDto(null, "withdrawn-listing", dependencies),
 		).resolves.toEqual({ error: "Listing not found" });
+	});
+
+	it("allows admins to read pending listing details for moderation", async () => {
+		const pendingListing = makeListing({
+			id: "pending-listing",
+			listingStatus: "PENDING",
+		});
+		const dependencies = makeDependencies([pendingListing]);
+
+		await expect(
+			getListingDetailsReadDto(adminActor, "pending-listing", dependencies),
+		).resolves.toMatchObject({
+			id: "pending-listing",
+			isApproved: false,
+			listingStatus: "PENDING",
+		});
 	});
 
 	it("searches approved listings from listing filter input", async () => {
@@ -72,6 +89,11 @@ describe("listing read behavior", () => {
 		).resolves.toEqual([{ brand: "Fender", count: 2 }]);
 	});
 });
+
+const adminActor: Actor = {
+	id: "admin-1",
+	role: "ADMIN",
+};
 
 function makeDependencies(
 	listings: ListingReadModel[],
