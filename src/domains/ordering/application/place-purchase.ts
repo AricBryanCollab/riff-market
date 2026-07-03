@@ -67,9 +67,10 @@ export interface ListingsForPurchasePort<TContext> {
 	): Promise<Result<ReservedSellerListingGroup[], PlacePurchaseError>>;
 }
 
-export interface PurchasePersistencePort<TContext> {
-	save(context: TContext, purchase: Purchase): Promise<void>;
-}
+export type SavePurchase<TContext> = (
+	context: TContext,
+	purchase: Purchase,
+) => Promise<void>;
 
 export interface SellerOrderPersistencePort<TContext> {
 	saveMany(context: TContext, sellerOrders: SellerOrder[]): Promise<void>;
@@ -93,7 +94,7 @@ export interface PurchasePlacedNotificationCreatorPort<TContext> {
 export type PlacePurchaseDependencies<TContext> = {
 	readonly unitOfWork: UnitOfWork<TContext>;
 	readonly listings: ListingsForPurchasePort<TContext>;
-	readonly purchases: PurchasePersistencePort<TContext>;
+	readonly savePurchase: SavePurchase<TContext>;
 	readonly sellerOrders: SellerOrderPersistencePort<TContext>;
 	readonly purchaseNumbers: PurchaseNumberGeneratorPort<TContext>;
 	readonly entityIds: PurchaseEntityIdGeneratorPort<TContext>;
@@ -108,7 +109,7 @@ export async function placePurchase<TContext>(
 	const {
 		unitOfWork,
 		listings,
-		purchases,
+		savePurchase,
 		sellerOrders: sellerOrderPersistence,
 		purchaseNumbers,
 		entityIds,
@@ -174,7 +175,7 @@ export async function placePurchase<TContext>(
 				throw new PlacePurchaseRollback(toDomainError(error));
 			}
 
-			await purchases.save(context, purchase);
+			await savePurchase(context, purchase);
 			await sellerOrderPersistence.saveMany(context, sellerOrders);
 
 			const domainEvents = [

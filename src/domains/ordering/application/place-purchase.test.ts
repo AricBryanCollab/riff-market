@@ -18,12 +18,12 @@ import {
 	type PlacePurchaseItem,
 	type PurchaseEntityIdGeneratorPort,
 	type PurchaseNumberGeneratorPort,
-	type PurchasePersistencePort,
 	type PurchasePlacedNotificationCreatorPort,
 	type PurchasePlacedNotificationInput,
 	placePurchase,
 	placePurchaseError,
 	type ReservedSellerListingGroup,
+	type SavePurchase,
 	type SellerOrderPersistencePort,
 } from "./place-purchase";
 
@@ -71,7 +71,7 @@ function makeListing(overrides: Partial<ListingSnapshot> = {}) {
 function makeHarness(listings: Listing[]) {
 	const unitOfWork = new FakeUnitOfWork();
 	const listingPort = new FakeListingsForPurchasePort(listings);
-	const purchasePort = new FakePurchasePersistencePort();
+	const purchasePort = createSavePurchaseRecorder();
 	const sellerOrderPort = new FakeSellerOrderPersistencePort();
 	const purchaseNumberPort = new FakePurchaseNumberGeneratorPort("RM-1001");
 	const entityIdPort = new FakePurchaseEntityIdGeneratorPort([
@@ -83,7 +83,7 @@ function makeHarness(listings: Listing[]) {
 	const dependencies = {
 		unitOfWork,
 		listings: listingPort,
-		purchases: purchasePort,
+		savePurchase: purchasePort.savePurchase,
 		sellerOrders: sellerOrderPort,
 		purchaseNumbers: purchaseNumberPort,
 		entityIds: entityIdPort,
@@ -426,16 +426,27 @@ class FakeListingsForPurchasePort
 	}
 }
 
-class FakePurchasePersistencePort
-	implements PurchasePersistencePort<FakeTransaction>
-{
-	saved: Purchase | undefined;
-	savedWith: FakeTransaction | undefined;
+function createSavePurchaseRecorder() {
+	let saved: Purchase | undefined;
+	let savedWith: FakeTransaction | undefined;
 
-	async save(context: FakeTransaction, purchase: Purchase) {
-		this.savedWith = context;
-		this.saved = purchase;
-	}
+	const savePurchase: SavePurchase<FakeTransaction> = async (
+		context,
+		purchase,
+	) => {
+		savedWith = context;
+		saved = purchase;
+	};
+
+	return {
+		savePurchase,
+		get saved() {
+			return saved;
+		},
+		get savedWith() {
+			return savedWith;
+		},
+	};
 }
 
 class FakeSellerOrderPersistencePort
