@@ -2,12 +2,15 @@ import { Tag, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { popularBrands } from "@/constants/popular-brands";
+import { toListingBrandKey } from "@/domains/listings/domain/listing-brand";
+import useGetListingBrandCount from "@/hooks/use-get-listing-brand-count";
 import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 
 const BrandFilters = () => {
 	const { searchParams, setBrand } = useShopSearchFilters();
+	const { brandCounts } = useGetListingBrandCount();
 	const selectedBrand = searchParams.brand;
+	const selectedBrandKey = toListingBrandKey(selectedBrand);
 
 	return (
 		<div className="space-y-3">
@@ -37,21 +40,28 @@ const BrandFilters = () => {
 					onChange={(e) => setBrand(e.target.value || undefined)}
 					className="w-full"
 				/>
-				<div className="text-xs text-muted-foreground">Popular brands:</div>
-				<div className="flex flex-wrap gap-1.5">
-					{popularBrands.map((brand) => (
-						<Badge
-							key={brand}
-							variant={selectedBrand === brand ? "default" : "outline"}
-							className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-							onClick={() =>
-								setBrand(selectedBrand === brand ? undefined : brand)
-							}
-						>
-							{brand}
-						</Badge>
-					))}
-				</div>
+				{brandCounts.length > 0 && (
+					<>
+						<div className="text-xs text-muted-foreground">Popular brands:</div>
+						<div className="flex flex-wrap gap-1.5">
+							{brandCounts.map(({ brand, count }) => {
+								const isSelected =
+									selectedBrandKey === toListingBrandKey(brand);
+
+								return (
+									<Badge
+										key={brand}
+										variant={isSelected ? "default" : "outline"}
+										className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+										onClick={() => setBrand(isSelected ? undefined : brand)}
+									>
+										{brand} {count}
+									</Badge>
+								);
+							})}
+						</div>
+					</>
+				)}
 			</div>
 		</div>
 	);

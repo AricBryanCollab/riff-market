@@ -13,6 +13,7 @@ import {
 import {
 	approvedListingSearchInputSchema,
 	cartListingDetailsInputSchema,
+	type ListingBrandCount,
 	type ListingCategoryCount,
 	type ListingReadDto,
 	type ListingReadModel,
@@ -102,6 +103,14 @@ export async function listPendingModerationListingReadDtos(
 	const listings = await readDependencies.listings.listPendingModeration();
 
 	return listings.map(toListingReadDto);
+}
+
+export async function getPopularListingBrandCountDtos(
+	dependencies?: ListingReadServiceDependencies,
+): Promise<ListingBrandCount[] | ListingReadServiceError> {
+	const readDependencies =
+		dependencies ?? (await createPrismaListingReadDependencies());
+	return readDependencies.listings.listPopularApprovedBrandCounts();
 }
 
 export async function getListingCategoryCountDtos(

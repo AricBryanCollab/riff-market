@@ -1,5 +1,6 @@
 import type {
 	ApprovedListingCount,
+	ListingBrandCountData,
 	ListingCategoryCountData,
 	ListingCountStatusQuery,
 	ListingReadDto,
@@ -13,6 +14,7 @@ import {
 	getListingDetailsListingApiFn,
 	getListingStatusCountListingApiFn,
 	getPendingModerationListingsListingApiFn,
+	getPopularListingBrandCountsListingApiFn,
 	getRecentListingsListingApiFn,
 } from "@/server/listing-read.functions";
 
@@ -77,6 +79,12 @@ export async function fetchListingCategoryCounts() {
 	const result = await getListingCategoryCountsListingApiFn();
 
 	return unwrapListingReadResult(result) as ListingCategoryCountData[];
+}
+
+export async function fetchPopularListingBrandCounts() {
+	const result = await getPopularListingBrandCountsListingApiFn();
+
+	return unwrapListingReadResult(result) as ListingBrandCountData[];
 }
 
 export async function fetchRecentListings(limit: number) {

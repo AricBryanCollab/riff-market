@@ -357,6 +357,44 @@ describeDb("Prisma listing read models", () => {
 		await expect(readModels.countByStatus("PENDING")).resolves.toBe(1);
 	});
 
+	it("counts approved brands with normalized casing and spacing", async () => {
+		await seedListing(db, {
+			id: "fender-title",
+			name: "Fender Title",
+			listingStatus: "APPROVED",
+			isApproved: true,
+			brand: "Fender",
+		});
+		await seedListing(db, {
+			id: "fender-lower",
+			name: "Fender Lower",
+			listingStatus: "APPROVED",
+			isApproved: true,
+			brand: " fender ",
+		});
+		await seedListing(db, {
+			id: "yamaha",
+			name: "Yamaha",
+			listingStatus: "APPROVED",
+			isApproved: true,
+			brand: "Yamaha",
+		});
+		await seedListing(db, {
+			id: "pending-fender",
+			name: "Pending Fender",
+			listingStatus: "PENDING",
+			isApproved: false,
+			brand: "Fender",
+		});
+
+		const brandCounts = await readModels.listPopularApprovedBrandCounts();
+
+		expect(brandCounts).toEqual([
+			{ brand: "Fender", count: 2 },
+			{ brand: "Yamaha", count: 1 },
+		]);
+	});
+
 	it("returns recent approved listings by latest update", async () => {
 		await seedListing(db, {
 			id: "approved-newer",

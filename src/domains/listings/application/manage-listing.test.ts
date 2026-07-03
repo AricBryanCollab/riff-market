@@ -121,7 +121,7 @@ describe("listing command use cases", () => {
 				name: "Telecaster",
 				category: "ELECTRIC",
 				condition: "NEW",
-				brand: "Fender",
+				brand: " Fender   Custom ",
 				model: "Player",
 				description: "A listing",
 				price: 19995,
@@ -138,6 +138,7 @@ describe("listing command use cases", () => {
 				sellerId: "seller-1",
 				status: "PENDING",
 				isApproved: false,
+				brand: "Fender Custom",
 				priceAmountMinor: 19995,
 				currencyCode: "TWD",
 				images: [image("https://cdn.example.com/new.jpg")],
@@ -209,6 +210,7 @@ describe("listing command use cases", () => {
 			{
 				listingId: "listing-1",
 				name: "Updated",
+				brand: " Fender   Offset ",
 				imageFiles: [imageFile("new.jpg")],
 			},
 			dependencies,
@@ -219,6 +221,7 @@ describe("listing command use cases", () => {
 			"listing-1",
 			expect.objectContaining({
 				name: "Updated",
+				brand: "Fender Offset",
 				status: "PENDING",
 				isApproved: false,
 				images: [image("https://cdn.example.com/new.jpg")],

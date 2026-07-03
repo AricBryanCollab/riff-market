@@ -69,6 +69,13 @@ export type ListingCategoryCount = {
 
 export type ListingCategoryCountData = ListingCategoryCount;
 
+export type ListingBrandCount = {
+	readonly brand: string;
+	readonly count: number;
+};
+
+export type ListingBrandCountData = ListingBrandCount;
+
 export type ListingCategoryMeta = {
 	readonly category: ListingReadCategory;
 	readonly label: string;

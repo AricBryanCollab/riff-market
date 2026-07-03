@@ -1,4 +1,5 @@
 import type {
+	ListingBrandCount,
 	ListingCategoryCount,
 	ListingCountStatus,
 	ListingReadCategory,
@@ -49,6 +50,7 @@ export interface PendingModerationListingReadPort {
 }
 
 export interface ListingCountReadPort {
+	listPopularApprovedBrandCounts(): Promise<ListingBrandCount[]>;
 	countApprovedByCategory(): Promise<ListingCategoryCount[]>;
 	countByStatus(status: ListingCountStatus): Promise<number>;
 }

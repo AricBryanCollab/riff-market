@@ -4,6 +4,7 @@ import {
 	type ListingSnapshot,
 	type ListingStatus,
 } from "@/domains/listings/domain/listing";
+import { normalizeListingBrand } from "@/domains/listings/domain/listing-brand";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { AppError, Result } from "@/domains/shared/domain/result";
 import { err, ok } from "@/domains/shared/domain/result";
@@ -486,7 +487,7 @@ function toCreatePersistenceFields(
 		name: command.name,
 		category: command.category,
 		condition: command.condition,
-		brand: command.brand,
+		brand: normalizeListingBrand(command.brand),
 		model: command.model,
 		description: command.description,
 		priceAmountMinor: price.priceAmountMinor,
@@ -505,7 +506,9 @@ function toUpdatePersistenceFields(
 		...(fields.name !== undefined && { name: fields.name }),
 		...(fields.category !== undefined && { category: fields.category }),
 		...(fields.condition !== undefined && { condition: fields.condition }),
-		...(fields.brand !== undefined && { brand: fields.brand }),
+		...(fields.brand !== undefined && {
+			brand: normalizeListingBrand(fields.brand),
+		}),
 		...(fields.model !== undefined && { model: fields.model }),
 		...(fields.description !== undefined && {
 			description: fields.description,

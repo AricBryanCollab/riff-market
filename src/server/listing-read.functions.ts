@@ -9,6 +9,7 @@ import {
 	getListingCategoryCountDtos,
 	getListingDetailsReadDto,
 	getListingStatusCountDto,
+	getPopularListingBrandCountDtos,
 	listCartListingReadDtos,
 	listPendingModerationListingReadDtos,
 	listRecentListingReadDtos,
@@ -75,6 +76,12 @@ export const getListingCategoryCountsListingApiFn = createServerFn({
 })
 	.middleware(publicServerFunctionMiddleware)
 	.handler(async () => getListingCategoryCountDtos());
+
+export const getPopularListingBrandCountsListingApiFn = createServerFn({
+	method: "GET",
+})
+	.middleware(publicServerFunctionMiddleware)
+	.handler(async () => getPopularListingBrandCountDtos());
 
 export const getListingStatusCountListingApiFn = createServerFn({
 	method: "GET",

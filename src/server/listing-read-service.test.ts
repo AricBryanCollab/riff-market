@@ -5,6 +5,7 @@ import type {
 } from "@/domains/listings/dto/listing-read-model";
 import {
 	getListingDetailsReadDto,
+	getPopularListingBrandCountDtos,
 	type ListingReadServiceDependencies,
 	searchApprovedListingReadDtos,
 } from "./listing-read-service";
@@ -62,6 +63,14 @@ describe("listing read behavior", () => {
 			},
 		]);
 	});
+
+	it("returns popular approved brand counts from the listing read model", async () => {
+		const dependencies = makeDependencies([]);
+
+		await expect(
+			getPopularListingBrandCountDtos(dependencies),
+		).resolves.toEqual([{ brand: "Fender", count: 2 }]);
+	});
 });
 
 function makeDependencies(
@@ -85,6 +94,9 @@ function makeDependencies(
 					: [],
 			listForSeller: async () => [],
 			listPendingModeration: async () => [],
+			listPopularApprovedBrandCounts: async () => [
+				{ brand: "Fender", count: 2 },
+			],
 			countApprovedByCategory: async () => [],
 			countByStatus: async () => 0,
 			listRecentApproved: async () => [],

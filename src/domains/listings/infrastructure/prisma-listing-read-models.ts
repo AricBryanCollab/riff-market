@@ -10,7 +10,12 @@ import type {
 	RecentApprovedListingReadPort,
 	SellerListingReadPort,
 } from "@/domains/listings/application/listing-read-models";
+import {
+	normalizeListingBrand,
+	toListingBrandKey,
+} from "@/domains/listings/domain/listing-brand";
 import type {
+	ListingBrandCount,
 	ListingCategoryCount,
 	ListingCountStatus,
 	ListingReadModel,
@@ -47,6 +52,8 @@ const listingReadSelect = {
 type ListingReadRow = Prisma.ListingGetPayload<{
 	select: typeof listingReadSelect;
 }>;
+
+const popularListingBrandCountLimit = 12;
 
 export class PrismaListingReadModels
 	implements
@@ -127,6 +134,26 @@ export class PrismaListingReadModels
 		});
 
 		return toListingReadModels(listings);
+	}
+
+	async listPopularApprovedBrandCounts(): Promise<ListingBrandCount[]> {
+		const groupedListings = await this.db.listing.groupBy({
+			by: ["brand"],
+			where: {
+				listingStatus: "APPROVED",
+				brand: {
+					not: "",
+				},
+			},
+			_count: {
+				brand: true,
+			},
+		});
+
+		return toNormalizedBrandCounts(groupedListings).slice(
+			0,
+			popularListingBrandCountLimit,
+		);
 	}
 
 	async countApprovedByCategory(): Promise<ListingCategoryCount[]> {
@@ -211,6 +238,59 @@ function toApprovedListingWhere(
 		}),
 		...(priceRange && { priceAmountMinor: priceRange }),
 	};
+}
+
+function toNormalizedBrandCounts(
+	groupedListings: readonly {
+		readonly brand: string;
+		readonly _count: { readonly brand: number };
+	}[],
+): ListingBrandCount[] {
+	const brandCountsByKey = new Map<
+		string,
+		{
+			count: number;
+			displayCounts: Map<string, number>;
+		}
+	>();
+
+	for (const listing of groupedListings) {
+		const displayBrand = normalizeListingBrand(listing.brand);
+		const brandKey = toListingBrandKey(displayBrand);
+
+		if (!brandKey) {
+			continue;
+		}
+
+		const existing = brandCountsByKey.get(brandKey);
+		if (!existing) {
+			brandCountsByKey.set(brandKey, {
+				count: listing._count.brand,
+				displayCounts: new Map([[displayBrand, listing._count.brand]]),
+			});
+			continue;
+		}
+
+		existing.count += listing._count.brand;
+		existing.displayCounts.set(
+			displayBrand,
+			(existing.displayCounts.get(displayBrand) ?? 0) + listing._count.brand,
+		);
+	}
+
+	return Array.from(brandCountsByKey.values())
+		.map(({ count, displayCounts }) => ({
+			brand: mostCommonDisplayBrand(displayCounts),
+			count,
+		}))
+		.sort((a, b) => b.count - a.count || a.brand.localeCompare(b.brand));
+}
+
+function mostCommonDisplayBrand(displayCounts: ReadonlyMap<string, number>) {
+	return Array.from(displayCounts.entries()).sort(
+		([leftBrand, leftCount], [rightBrand, rightCount]) =>
+			rightCount - leftCount || leftBrand.localeCompare(rightBrand),
+	)[0][0];
 }
 
 function toListingReadModels(listings: ListingReadRow[]) {
