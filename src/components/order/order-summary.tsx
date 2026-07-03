@@ -80,15 +80,11 @@ function OrderSummaryBreakdown({
 				)}
 			</OrderSummaryRow>
 
-			<OrderSummaryRow label="Tax">
-				{taxAmountMinor !== undefined ? (
-					formatSummaryAmount(taxAmountMinor, amounts.currencyCode)
-				) : (
-					<span className="text-xs text-muted-foreground">
-						Calculated at checkout
-					</span>
-				)}
-			</OrderSummaryRow>
+			{taxAmountMinor !== undefined && (
+				<OrderSummaryRow label="Tax">
+					{formatSummaryAmount(taxAmountMinor, amounts.currencyCode)}
+				</OrderSummaryRow>
+			)}
 
 			<Separator className={layout.separatorClassName} />
 

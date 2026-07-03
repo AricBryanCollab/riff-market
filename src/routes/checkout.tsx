@@ -45,16 +45,11 @@ function RouteComponent() {
 	const canSubmitOrder = checkoutCart.status === "ready";
 	const subtotalAmountMinor =
 		cartPricing.status === "priced" ? cartPricing.totalPriceAmountMinor : 0;
-	const taxAmountMinor =
-		cartPricing.status === "priced"
-			? Math.round(subtotalAmountMinor * 0.08)
-			: undefined;
 	const isSubmittingOrder = isLoadingCart || isPlacingOrder;
 	const orderSummaryAmounts =
 		cartPricing.status === "priced"
 			? {
 					subtotalAmountMinor,
-					taxAmountMinor,
 					shippingAmountMinor: 0,
 					currencyCode: cartPricing.currencyCode,
 				}

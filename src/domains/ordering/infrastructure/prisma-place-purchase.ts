@@ -8,7 +8,7 @@ import {
 import { NodePurchaseEntityIdGenerator } from "@/domains/ordering/infrastructure/node-purchase-entity-id-generator";
 import { PrismaListingsForPurchase } from "@/domains/ordering/infrastructure/prisma-listings-for-purchase";
 import { PrismaPurchaseNumberGenerator } from "@/domains/ordering/infrastructure/prisma-purchase-number-generator";
-import { PrismaPurchasePersistence } from "@/domains/ordering/infrastructure/prisma-purchase-persistence";
+import { savePurchaseWithPrisma } from "@/domains/ordering/infrastructure/prisma-purchase-persistence";
 import { PrismaPurchasePlacedNotificationCreator } from "@/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator";
 import { PrismaSellerOrderPersistence } from "@/domains/ordering/infrastructure/prisma-seller-order-persistence";
 import type { Actor } from "@/domains/shared/domain/actor";
@@ -38,7 +38,7 @@ export function createPrismaPlacePurchase(
 	const dependencies = {
 		unitOfWork: new PrismaUnitOfWork(db),
 		listings: new PrismaListingsForPurchase(),
-		purchases: new PrismaPurchasePersistence(),
+		savePurchase: savePurchaseWithPrisma,
 		sellerOrders: new PrismaSellerOrderPersistence(),
 		purchaseNumbers,
 		entityIds,
