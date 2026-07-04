@@ -23,15 +23,13 @@ import type {
 } from "@/domains/listings/dto/listing-view";
 import type { Actor } from "@/domains/shared/domain/actor";
 
-export type ListingQueryServiceDependencies = {
-	readonly listings: ListingDetailQueryPort &
-		ApprovedListingSearchPort &
-		SellerListingQueryPort &
-		PendingModerationListingQueryPort &
-		ListingCountQueryPort &
-		RecentApprovedListingQueryPort &
-		CartListingQueryPort;
-};
+type PrismaListingQueryPort = ListingDetailQueryPort &
+	ApprovedListingSearchPort &
+	SellerListingQueryPort &
+	PendingModerationListingQueryPort &
+	ListingCountQueryPort &
+	RecentApprovedListingQueryPort &
+	CartListingQueryPort;
 
 type ListingQueryServiceError = {
 	readonly error: string;
@@ -111,15 +109,10 @@ const cartListingDetailsInputSchema = z.object({
 export async function getListingDetailsResponse(
 	actor: Actor | null,
 	listingId: string,
-	dependencies?: ListingQueryServiceDependencies,
+	listings?: ListingDetailQueryPort,
 ): Promise<ListingResponse | ListingQueryServiceError> {
-	const queryDependencies =
-		dependencies ?? (await createPrismaListingQueryDependencies());
-	const result = await getListingDetails(
-		actor,
-		listingId,
-		queryDependencies.listings,
-	);
+	const listingQueries = listings ?? (await createPrismaListingQueries());
+	const result = await getListingDetails(actor, listingId, listingQueries);
 
 	if (!result.ok) {
 		return { error: result.error.message };
@@ -130,7 +123,7 @@ export async function getListingDetailsResponse(
 
 export async function searchApprovedListingResponses(
 	rawQuery: unknown,
-	dependencies?: ListingQueryServiceDependencies,
+	listings?: ApprovedListingSearchPort,
 ): Promise<ListingResponse[] | ListingQueryServiceError> {
 	const parsed = approvedListingSearchInputSchema.safeParse(rawQuery);
 
@@ -141,21 +134,19 @@ export async function searchApprovedListingResponses(
 		};
 	}
 
-	const queryDependencies =
-		dependencies ?? (await createPrismaListingQueryDependencies());
+	const listingQueries = listings ?? (await createPrismaListingQueries());
 	const query = toListingSearchQuery(parsed.data);
-	const listings = await queryDependencies.listings.searchApproved(query);
+	const listingViews = await listingQueries.searchApproved(query);
 
-	return listings.map(toListingResponse);
+	return listingViews.map(toListingResponse);
 }
 
 export async function listSellerListingResponses(
 	actor: Actor,
-	dependencies?: ListingQueryServiceDependencies,
+	listings?: SellerListingQueryPort,
 ): Promise<ListingResponse[] | ListingQueryServiceError> {
-	const queryDependencies =
-		dependencies ?? (await createPrismaListingQueryDependencies());
-	const result = await listSellerListings(actor, queryDependencies.listings);
+	const listingQueries = listings ?? (await createPrismaListingQueries());
+	const result = await listSellerListings(actor, listingQueries);
 
 	if (!result.ok) {
 		return toListingQueryServiceError(result.error);
@@ -166,14 +157,10 @@ export async function listSellerListingResponses(
 
 export async function listPendingModerationListingResponses(
 	actor: Actor,
-	dependencies?: ListingQueryServiceDependencies,
+	listings?: PendingModerationListingQueryPort,
 ): Promise<ListingResponse[] | ListingQueryServiceError> {
-	const queryDependencies =
-		dependencies ?? (await createPrismaListingQueryDependencies());
-	const result = await listPendingModerationListings(
-		actor,
-		queryDependencies.listings,
-	);
+	const listingQueries = listings ?? (await createPrismaListingQueries());
+	const result = await listPendingModerationListings(actor, listingQueries);
 
 	if (!result.ok) {
 		return toListingQueryServiceError(result.error);
@@ -183,29 +170,26 @@ export async function listPendingModerationListingResponses(
 }
 
 export async function getPopularListingBrandCountDtos(
-	dependencies?: ListingQueryServiceDependencies,
+	listings?: Pick<ListingCountQueryPort, "listPopularApprovedBrandCounts">,
 ): Promise<ListingBrandCount[] | ListingQueryServiceError> {
-	const queryDependencies =
-		dependencies ?? (await createPrismaListingQueryDependencies());
-	return queryDependencies.listings.listPopularApprovedBrandCounts();
+	const listingQueries = listings ?? (await createPrismaListingQueries());
+	return listingQueries.listPopularApprovedBrandCounts();
 }
 
 export async function getListingCategoryCountDtos(
-	dependencies?: ListingQueryServiceDependencies,
+	listings?: Pick<ListingCountQueryPort, "countApprovedByCategory">,
 ): Promise<ListingCategoryCount[] | ListingQueryServiceError> {
-	const queryDependencies =
-		dependencies ?? (await createPrismaListingQueryDependencies());
-	return queryDependencies.listings.countApprovedByCategory();
+	const listingQueries = listings ?? (await createPrismaListingQueries());
+	return listingQueries.countApprovedByCategory();
 }
 
 export async function getListingStatusCountDto(
 	isApproved: boolean,
-	dependencies?: ListingQueryServiceDependencies,
+	listings?: Pick<ListingCountQueryPort, "countByStatus">,
 ): Promise<ListingStatusCount | ListingQueryServiceError> {
-	const queryDependencies =
-		dependencies ?? (await createPrismaListingQueryDependencies());
+	const listingQueries = listings ?? (await createPrismaListingQueries());
 	const status = isApproved ? "APPROVED" : "PENDING";
-	const count = await queryDependencies.listings.countByStatus(status);
+	const count = await listingQueries.countByStatus(status);
 
 	return isApproved
 		? { approvedListingCount: count }
@@ -214,19 +198,18 @@ export async function getListingStatusCountDto(
 
 export async function listRecentListingResponses(
 	limit: number = 8,
-	dependencies?: ListingQueryServiceDependencies,
+	listings?: RecentApprovedListingQueryPort,
 ): Promise<ListingResponse[] | ListingQueryServiceError> {
-	const queryDependencies =
-		dependencies ?? (await createPrismaListingQueryDependencies());
-	const listings = await queryDependencies.listings.listRecentApproved(limit);
+	const listingQueries = listings ?? (await createPrismaListingQueries());
+	const listingViews = await listingQueries.listRecentApproved(limit);
 
-	return listings.map(toListingResponse);
+	return listingViews.map(toListingResponse);
 }
 
 export async function listCartListingResponses(
 	actor: Actor,
 	rawQuery: unknown,
-	dependencies?: ListingQueryServiceDependencies,
+	listings?: CartListingQueryPort,
 ): Promise<ListingResponse[] | ListingQueryServiceError> {
 	const parsed = cartListingDetailsInputSchema.safeParse(rawQuery);
 
@@ -237,14 +220,9 @@ export async function listCartListingResponses(
 		};
 	}
 
-	const queryDependencies =
-		dependencies ?? (await createPrismaListingQueryDependencies());
+	const listingQueries = listings ?? (await createPrismaListingQueries());
 	const uniqueIds = Array.from(new Set(parsed.data.ids));
-	const result = await listCartListings(
-		actor,
-		uniqueIds,
-		queryDependencies.listings,
-	);
+	const result = await listCartListings(actor, uniqueIds, listingQueries);
 
 	if (!result.ok) {
 		return toListingQueryServiceError(result.error);
@@ -253,15 +231,13 @@ export async function listCartListingResponses(
 	return result.value.map(toListingResponse);
 }
 
-async function createPrismaListingQueryDependencies(): Promise<ListingQueryServiceDependencies> {
+async function createPrismaListingQueries(): Promise<PrismaListingQueryPort> {
 	const [{ prisma }, queries] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/listings/infrastructure/prisma-listing-queries"),
 	]);
 
-	return {
-		listings: new queries.PrismaListingQueries(prisma),
-	};
+	return new queries.PrismaListingQueries(prisma);
 }
 
 function toListingSearchQuery(

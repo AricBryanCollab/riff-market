@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type {
+	ApprovedListingSearchPort,
+	ListingDetailQueryPort,
+} from "@/domains/listings/application/listing-queries";
+import type {
 	ListingView,
 	ListingViewStatus,
 } from "@/domains/listings/dto/listing-view";
@@ -7,29 +11,28 @@ import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	getListingDetailsResponse,
 	getPopularListingBrandCountDtos,
-	type ListingQueryServiceDependencies,
 	searchApprovedListingResponses,
 } from "./listing-query-service";
 
 describe("listing query behavior", () => {
 	it("hides missing and non-public listing details", async () => {
-		const dependencies = makeDependencies([
+		const listings = makeListingDetailPort([
 			makeListing({ id: "pending-listing", listingStatus: "PENDING" }),
 			makeListing({ id: "declined-listing", listingStatus: "DECLINED" }),
 			makeListing({ id: "withdrawn-listing", listingStatus: "WITHDRAWN" }),
 		]);
 
 		await expect(
-			getListingDetailsResponse(null, "missing-listing", dependencies),
+			getListingDetailsResponse(null, "missing-listing", listings),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsResponse(null, "pending-listing", dependencies),
+			getListingDetailsResponse(null, "pending-listing", listings),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsResponse(null, "declined-listing", dependencies),
+			getListingDetailsResponse(null, "declined-listing", listings),
 		).resolves.toEqual({ error: "Listing not found" });
 		await expect(
-			getListingDetailsResponse(null, "withdrawn-listing", dependencies),
+			getListingDetailsResponse(null, "withdrawn-listing", listings),
 		).resolves.toEqual({ error: "Listing not found" });
 	});
 
@@ -38,10 +41,10 @@ describe("listing query behavior", () => {
 			id: "pending-listing",
 			listingStatus: "PENDING",
 		});
-		const dependencies = makeDependencies([pendingListing]);
+		const listings = makeListingDetailPort([pendingListing]);
 
 		await expect(
-			getListingDetailsResponse(adminActor, "pending-listing", dependencies),
+			getListingDetailsResponse(adminActor, "pending-listing", listings),
 		).resolves.toMatchObject({
 			id: "pending-listing",
 			isApproved: false,
@@ -51,7 +54,7 @@ describe("listing query behavior", () => {
 
 	it("searches approved listings from listing filter input", async () => {
 		const telecaster = makeListing({ id: "telecaster" });
-		const dependencies = makeDependencies([telecaster]);
+		const listings = makeApprovedListingSearchPort([telecaster]);
 
 		const result = await searchApprovedListingResponses(
 			{
@@ -65,7 +68,7 @@ describe("listing query behavior", () => {
 				priceMin: "19995",
 				priceMax: "50000",
 			},
-			dependencies,
+			listings,
 		);
 
 		expect(result).toMatchObject([
@@ -82,10 +85,12 @@ describe("listing query behavior", () => {
 	});
 
 	it("returns popular approved brand counts from the listing query view", async () => {
-		const dependencies = makeDependencies([]);
-
 		await expect(
-			getPopularListingBrandCountDtos(dependencies),
+			getPopularListingBrandCountDtos({
+				listPopularApprovedBrandCounts: async () => [
+					{ brand: "Fender", count: 2 },
+				],
+			}),
 		).resolves.toEqual([{ brand: "Fender", count: 2 }]);
 	});
 });
@@ -95,35 +100,31 @@ const adminActor: Actor = {
 	role: "ADMIN",
 };
 
-function makeDependencies(
+function makeListingDetailPort(
 	listings: ListingView[],
-): ListingQueryServiceDependencies {
+): ListingDetailQueryPort {
 	return {
-		listings: {
-			findById: async (listingId) =>
-				listings.find((listing) => listing.id === listingId) ?? null,
-			searchApproved: async (query) =>
-				query.limit === 5 &&
-				query.offset === 10 &&
-				query.random === false &&
-				query.category === "ELECTRIC" &&
-				query.condition === "USED" &&
-				query.brand === "Fender" &&
-				query.search === "tele" &&
-				query.priceMinAmountMinor === 19995 &&
-				query.priceMaxAmountMinor === 50000
-					? listings.filter((listing) => listing.listingStatus === "APPROVED")
-					: [],
-			listForSeller: async () => [],
-			listPendingModeration: async () => [],
-			listPopularApprovedBrandCounts: async () => [
-				{ brand: "Fender", count: 2 },
-			],
-			countApprovedByCategory: async () => [],
-			countByStatus: async () => 0,
-			listRecentApproved: async () => [],
-			findByIds: async () => [],
-		},
+		findById: async (listingId) =>
+			listings.find((listing) => listing.id === listingId) ?? null,
+	};
+}
+
+function makeApprovedListingSearchPort(
+	listings: ListingView[],
+): ApprovedListingSearchPort {
+	return {
+		searchApproved: async (query) =>
+			query.limit === 5 &&
+			query.offset === 10 &&
+			query.random === false &&
+			query.category === "ELECTRIC" &&
+			query.condition === "USED" &&
+			query.brand === "Fender" &&
+			query.search === "tele" &&
+			query.priceMinAmountMinor === 19995 &&
+			query.priceMaxAmountMinor === 50000
+				? listings.filter((listing) => listing.listingStatus === "APPROVED")
+				: [],
 	};
 }
 
