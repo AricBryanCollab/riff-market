@@ -15,6 +15,7 @@ import {
 } from "@/domains/shared/domain/result";
 
 export type ListingQueryErrorCode =
+	| "LISTING_QUERY_UNAUTHORIZED"
 	| "LISTING_QUERY_INVALID_ID"
 	| "LISTING_QUERY_NOT_FOUND";
 
@@ -102,10 +103,20 @@ export async function getListingDetails(
 }
 
 export async function listSellerListings(
-	sellerId: string,
+	actor: Actor,
 	listings: SellerListingQueryPort,
 ): Promise<Result<ListingView[], ListingQueryError>> {
-	if (sellerId.trim().length === 0) {
+	if (actor.role !== "SELLER") {
+		return err(
+			listingQueryError(
+				"LISTING_QUERY_UNAUTHORIZED",
+				"Only sellers can query seller listings",
+				"authorization",
+			),
+		);
+	}
+
+	if (actor.id.trim().length === 0) {
 		return err(
 			listingQueryError(
 				"LISTING_QUERY_INVALID_ID",
@@ -115,7 +126,42 @@ export async function listSellerListings(
 		);
 	}
 
-	return ok(await listings.listForSeller(sellerId));
+	return ok(await listings.listForSeller(actor.id));
+}
+
+export async function listPendingModerationListings(
+	actor: Actor,
+	listings: PendingModerationListingQueryPort,
+): Promise<Result<ListingView[], ListingQueryError>> {
+	if (actor.role !== "ADMIN") {
+		return err(
+			listingQueryError(
+				"LISTING_QUERY_UNAUTHORIZED",
+				"Only admins can query pending moderation listings",
+				"authorization",
+			),
+		);
+	}
+
+	return ok(await listings.listPendingModeration());
+}
+
+export async function listCartListings(
+	actor: Actor,
+	listingIds: string[],
+	listings: CartListingQueryPort,
+): Promise<Result<ListingView[], ListingQueryError>> {
+	if (actor.role !== "CUSTOMER") {
+		return err(
+			listingQueryError(
+				"LISTING_QUERY_UNAUTHORIZED",
+				"Only customers can query cart listings",
+				"authorization",
+			),
+		);
+	}
+
+	return ok(await listings.findByIds(listingIds));
 }
 
 function listingQueryError(

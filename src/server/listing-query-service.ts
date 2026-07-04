@@ -7,6 +7,8 @@ import {
 	getListingDetails,
 	type ListingCountQueryPort,
 	type ListingDetailQueryPort,
+	listCartListings,
+	listPendingModerationListings,
 	listSellerListings,
 	type PendingModerationListingQueryPort,
 	type RecentApprovedListingQueryPort,
@@ -148,33 +150,36 @@ export async function searchApprovedListingResponses(
 }
 
 export async function listSellerListingResponses(
-	sellerId: string,
-	role: string,
+	actor: Actor,
 	dependencies?: ListingQueryServiceDependencies,
 ): Promise<ListingResponse[] | ListingQueryServiceError> {
-	if (role !== "SELLER" || !sellerId) {
-		return { error: "Unauthorized, user must be a seller" };
-	}
-
 	const queryDependencies =
 		dependencies ?? (await createPrismaListingQueryDependencies());
-	const result = await listSellerListings(sellerId, queryDependencies.listings);
+	const result = await listSellerListings(actor, queryDependencies.listings);
 
 	if (!result.ok) {
-		return { error: result.error.message };
+		return toListingQueryServiceError(result.error);
 	}
 
 	return result.value.map(toListingResponse);
 }
 
 export async function listPendingModerationListingResponses(
+	actor: Actor,
 	dependencies?: ListingQueryServiceDependencies,
 ): Promise<ListingResponse[] | ListingQueryServiceError> {
 	const queryDependencies =
 		dependencies ?? (await createPrismaListingQueryDependencies());
-	const listings = await queryDependencies.listings.listPendingModeration();
+	const result = await listPendingModerationListings(
+		actor,
+		queryDependencies.listings,
+	);
 
-	return listings.map(toListingResponse);
+	if (!result.ok) {
+		return toListingQueryServiceError(result.error);
+	}
+
+	return result.value.map(toListingResponse);
 }
 
 export async function getPopularListingBrandCountDtos(
@@ -219,14 +224,10 @@ export async function listRecentListingResponses(
 }
 
 export async function listCartListingResponses(
-	role: string,
+	actor: Actor,
 	rawQuery: unknown,
 	dependencies?: ListingQueryServiceDependencies,
 ): Promise<ListingResponse[] | ListingQueryServiceError> {
-	if (role !== "CUSTOMER") {
-		return { error: "Unauthorized, user must be a customer" };
-	}
-
 	const parsed = cartListingDetailsInputSchema.safeParse(rawQuery);
 
 	if (!parsed.success) {
@@ -239,9 +240,17 @@ export async function listCartListingResponses(
 	const queryDependencies =
 		dependencies ?? (await createPrismaListingQueryDependencies());
 	const uniqueIds = Array.from(new Set(parsed.data.ids));
-	const listings = await queryDependencies.listings.findByIds(uniqueIds);
+	const result = await listCartListings(
+		actor,
+		uniqueIds,
+		queryDependencies.listings,
+	);
 
-	return listings.map(toListingResponse);
+	if (!result.ok) {
+		return toListingQueryServiceError(result.error);
+	}
+
+	return result.value.map(toListingResponse);
 }
 
 async function createPrismaListingQueryDependencies(): Promise<ListingQueryServiceDependencies> {
@@ -273,6 +282,10 @@ function toListingSearchQuery(
 			priceMaxAmountMinor: query.priceMaxAmountMinor,
 		}),
 	};
+}
+
+function toListingQueryServiceError(error: { readonly message: string }) {
+	return { error: error.message };
 }
 
 function toListingResponse(listing: ListingView): ListingResponse {

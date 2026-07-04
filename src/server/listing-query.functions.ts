@@ -3,7 +3,6 @@ import { z } from "zod";
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	authenticatedServerFunctionMiddleware,
-	createRoleServerFunctionMiddleware,
 	getOptionalServerUserContext,
 	publicServerFunctionMiddleware,
 	type ServerUserContext,
@@ -57,7 +56,7 @@ export const getListingDetailsServerFn = createServerFn({ method: "GET" })
 	.inputValidator((data) => listingDetailsServerInputSchema.parse(data))
 	.handler(async ({ data }) =>
 		getListingDetailsResponse(
-			toActor(await getOptionalServerUserContext()),
+			toOptionalActor(await getOptionalServerUserContext()),
 			data.listingId,
 		),
 	);
@@ -70,13 +69,15 @@ export const getApprovedListingsServerFn = createServerFn({ method: "GET" })
 export const getPendingModerationListingsServerFn = createServerFn({
 	method: "GET",
 })
-	.middleware(createRoleServerFunctionMiddleware(["ADMIN"]))
-	.handler(async () => listPendingModerationListingResponses());
+	.middleware(authenticatedServerFunctionMiddleware)
+	.handler(async ({ context }) =>
+		listPendingModerationListingResponses(toActor(context.user)),
+	);
 
 export const getSellerListingsServerFn = createServerFn({ method: "GET" })
 	.middleware(authenticatedServerFunctionMiddleware)
 	.handler(async ({ context }) =>
-		listSellerListingResponses(context.user.id, context.user.role),
+		listSellerListingResponses(toActor(context.user)),
 	);
 
 export const getListingCategoryCountsServerFn = createServerFn({
@@ -109,9 +110,13 @@ export const getCartListingsServerFn = createServerFn({ method: "GET" })
 	.middleware(authenticatedServerFunctionMiddleware)
 	.inputValidator((data) => cartListingDetailsInputSchema.parse(data))
 	.handler(async ({ context, data }) =>
-		listCartListingResponses(context.user.role, data),
+		listCartListingResponses(toActor(context.user), data),
 	);
 
-function toActor(user: ServerUserContext | null): Actor | null {
-	return user ? { id: user.id, role: user.role } : null;
+function toActor(user: ServerUserContext): Actor {
+	return { id: user.id, role: user.role };
+}
+
+function toOptionalActor(user: ServerUserContext | null): Actor | null {
+	return user ? toActor(user) : null;
 }

@@ -2,8 +2,14 @@ import { describe, expect, it } from "vitest";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { ListingView, ListingViewStatus } from "../dto/listing-view";
 import {
+	type CartListingQueryPort,
 	getListingDetails,
 	type ListingDetailQueryPort,
+	listCartListings,
+	listPendingModerationListings,
+	listSellerListings,
+	type PendingModerationListingQueryPort,
+	type SellerListingQueryPort,
 } from "./listing-queries";
 
 const admin: Actor = { id: "admin-1", role: "ADMIN" };
@@ -76,6 +82,94 @@ describe("getListingDetails", () => {
 	});
 });
 
+describe("listSellerListings", () => {
+	it("allows sellers to query their own listings", async () => {
+		const listing = makeListing();
+		const listings = makeSellerListingPort([listing]);
+
+		await expect(listSellerListings(seller, listings)).resolves.toEqual({
+			ok: true,
+			value: [listing],
+		});
+	});
+
+	it.each([
+		["admin", admin],
+		["customer", customer],
+	] as const)("rejects %s actors", async (_label, actor) => {
+		await expect(
+			listSellerListings(actor, makeSellerListingPort([])),
+		).resolves.toMatchObject({
+			ok: false,
+			error: {
+				code: "LISTING_QUERY_UNAUTHORIZED",
+				kind: "authorization",
+			},
+		});
+	});
+});
+
+describe("listPendingModerationListings", () => {
+	it("allows admins to query pending moderation listings", async () => {
+		const listing = makeListing({ listingStatus: "PENDING" });
+		const listings = makePendingModerationListingPort([listing]);
+
+		await expect(
+			listPendingModerationListings(admin, listings),
+		).resolves.toEqual({
+			ok: true,
+			value: [listing],
+		});
+	});
+
+	it.each([
+		["customer", customer],
+		["seller", seller],
+	] as const)("rejects %s actors", async (_label, actor) => {
+		await expect(
+			listPendingModerationListings(
+				actor,
+				makePendingModerationListingPort([]),
+			),
+		).resolves.toMatchObject({
+			ok: false,
+			error: {
+				code: "LISTING_QUERY_UNAUTHORIZED",
+				kind: "authorization",
+			},
+		});
+	});
+});
+
+describe("listCartListings", () => {
+	it("allows customers to query cart listings", async () => {
+		const listing = makeListing();
+		const listings = makeCartListingPort([listing]);
+
+		await expect(
+			listCartListings(customer, [listing.id], listings),
+		).resolves.toEqual({
+			ok: true,
+			value: [listing],
+		});
+	});
+
+	it.each([
+		["admin", admin],
+		["seller", seller],
+	] as const)("rejects %s actors", async (_label, actor) => {
+		await expect(
+			listCartListings(actor, ["listing-1"], makeCartListingPort([])),
+		).resolves.toMatchObject({
+			ok: false,
+			error: {
+				code: "LISTING_QUERY_UNAUTHORIZED",
+				kind: "authorization",
+			},
+		});
+	});
+});
+
 function readListingDetails(actor: Actor | null, listing: ListingView) {
 	return getListingDetails(actor, listing.id, makeListings([listing]));
 }
@@ -87,13 +181,40 @@ function makeListings(listings: ListingView[]): ListingDetailQueryPort {
 	};
 }
 
+function makeSellerListingPort(
+	listings: ListingView[],
+): SellerListingQueryPort {
+	return {
+		listForSeller: async (sellerId) =>
+			listings.filter((listing) => listing.sellerId === sellerId),
+	};
+}
+
+function makePendingModerationListingPort(
+	listings: ListingView[],
+): PendingModerationListingQueryPort {
+	return {
+		listPendingModeration: async () =>
+			listings.filter((listing) => listing.listingStatus === "PENDING"),
+	};
+}
+
+function makeCartListingPort(listings: ListingView[]): CartListingQueryPort {
+	return {
+		findByIds: async (listingIds) =>
+			listings.filter((listing) => listingIds.includes(listing.id)),
+	};
+}
+
 function makeListing({
+	id = "listing-1",
 	listingStatus = "APPROVED",
 }: {
+	readonly id?: string;
 	readonly listingStatus?: ListingViewStatus;
 } = {}): ListingView {
 	return {
-		id: "listing-1",
+		id,
 		sellerId: "seller-1",
 		name: "Telecaster",
 		category: "ELECTRIC",
@@ -102,8 +223,8 @@ function makeListing({
 		model: "American Standard",
 		images: [
 			{
-				imageId: "image-1",
-				url: "https://cdn.example.com/listing-1.jpg",
+				imageId: id,
+				url: `https://cdn.example.com/${id}.jpg`,
 			},
 		],
 		description: "A test listing",
