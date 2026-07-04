@@ -41,7 +41,7 @@ describe("getListingDetails", () => {
 		).resolves.toMatchObject({
 			ok: false,
 			error: {
-				code: "LISTING_READ_NOT_FOUND",
+				code: "LISTING_QUERY_NOT_FOUND",
 				kind: "not-found",
 				message: "Listing not found",
 			},
@@ -67,7 +67,7 @@ describe("getListingDetails", () => {
 			).resolves.toMatchObject({
 				ok: false,
 				error: {
-					code: "LISTING_READ_NOT_FOUND",
+					code: "LISTING_QUERY_NOT_FOUND",
 					kind: "not-found",
 					message: "Listing not found",
 				},

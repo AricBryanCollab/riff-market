@@ -433,7 +433,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		expect(unauthorizedSellerDetail).toMatchObject({
 			ok: false,
 			error: {
-				code: "ORDER_READ_NOT_FOUND",
+				code: "ORDER_QUERY_NOT_FOUND",
 			},
 		});
 	});

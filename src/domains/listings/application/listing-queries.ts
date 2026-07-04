@@ -15,8 +15,8 @@ import {
 } from "@/domains/shared/domain/result";
 
 export type ListingQueryErrorCode =
-	| "LISTING_READ_INVALID_ID"
-	| "LISTING_READ_NOT_FOUND";
+	| "LISTING_QUERY_INVALID_ID"
+	| "LISTING_QUERY_NOT_FOUND";
 
 export type ListingQueryError = AppError<ListingQueryErrorCode>;
 
@@ -70,7 +70,7 @@ export async function getListingDetails(
 	if (listingId.trim().length === 0) {
 		return err(
 			listingQueryError(
-				"LISTING_READ_INVALID_ID",
+				"LISTING_QUERY_INVALID_ID",
 				"Listing ID is required",
 				"validation",
 			),
@@ -81,7 +81,7 @@ export async function getListingDetails(
 	if (!listing) {
 		return err(
 			listingQueryError(
-				"LISTING_READ_NOT_FOUND",
+				"LISTING_QUERY_NOT_FOUND",
 				"Listing not found",
 				"not-found",
 			),
@@ -91,7 +91,7 @@ export async function getListingDetails(
 	if (!canReadListingDetails(actor, listing)) {
 		return err(
 			listingQueryError(
-				"LISTING_READ_NOT_FOUND",
+				"LISTING_QUERY_NOT_FOUND",
 				"Listing not found",
 				"not-found",
 			),
@@ -108,7 +108,7 @@ export async function listSellerListings(
 	if (sellerId.trim().length === 0) {
 		return err(
 			listingQueryError(
-				"LISTING_READ_INVALID_ID",
+				"LISTING_QUERY_INVALID_ID",
 				"Seller ID is required",
 				"validation",
 			),

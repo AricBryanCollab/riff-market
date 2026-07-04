@@ -51,7 +51,7 @@ describe("listBuyerPurchaseHistory", () => {
 		expect(result).toMatchObject({
 			ok: false,
 			error: {
-				code: "ORDER_READ_UNAUTHORIZED",
+				code: "ORDER_QUERY_UNAUTHORIZED",
 				kind: "authorization",
 			},
 		});
@@ -112,7 +112,7 @@ describe("listSellerOrderDashboard", () => {
 		expect(result).toMatchObject({
 			ok: false,
 			error: {
-				code: "ORDER_READ_UNAUTHORIZED",
+				code: "ORDER_QUERY_UNAUTHORIZED",
 				kind: "authorization",
 			},
 		});
@@ -156,7 +156,7 @@ describe("getOrderDetail", () => {
 		expect(result).toMatchObject({
 			ok: false,
 			error: {
-				code: "ORDER_READ_NOT_FOUND",
+				code: "ORDER_QUERY_NOT_FOUND",
 				kind: "not-found",
 			},
 		});
@@ -212,7 +212,7 @@ describe("getOrderDetail", () => {
 		expect(result).toMatchObject({
 			ok: false,
 			error: {
-				code: "ORDER_READ_INVALID_ID",
+				code: "ORDER_QUERY_INVALID_ID",
 				kind: "validation",
 			},
 		});

@@ -18,9 +18,9 @@ import {
 } from "@/domains/shared/domain/result";
 
 export type OrderQueryErrorCode =
-	| "ORDER_READ_UNAUTHORIZED"
-	| "ORDER_READ_INVALID_ID"
-	| "ORDER_READ_NOT_FOUND";
+	| "ORDER_QUERY_UNAUTHORIZED"
+	| "ORDER_QUERY_INVALID_ID"
+	| "ORDER_QUERY_NOT_FOUND";
 
 export type OrderQueryError = AppError<OrderQueryErrorCode>;
 
@@ -52,7 +52,7 @@ export async function listBuyerPurchaseHistory(
 	if (actor.role !== "CUSTOMER") {
 		return err(
 			orderQueryError(
-				"ORDER_READ_UNAUTHORIZED",
+				"ORDER_QUERY_UNAUTHORIZED",
 				"Only customers can read purchase history",
 			),
 		);
@@ -68,7 +68,7 @@ export async function listSellerOrderDashboard(
 	if (actor.role !== "SELLER" && actor.role !== "ADMIN") {
 		return err(
 			orderQueryError(
-				"ORDER_READ_UNAUTHORIZED",
+				"ORDER_QUERY_UNAUTHORIZED",
 				"Only sellers and admins can read seller orders",
 			),
 		);
@@ -89,7 +89,7 @@ export async function getOrderDetail(
 	if (orderId.trim().length === 0) {
 		return err(
 			orderQueryError(
-				"ORDER_READ_INVALID_ID",
+				"ORDER_QUERY_INVALID_ID",
 				"Order ID is required",
 				"validation",
 			),
@@ -100,7 +100,7 @@ export async function getOrderDetail(
 	if (!order) {
 		return err(
 			orderQueryError(
-				"ORDER_READ_NOT_FOUND",
+				"ORDER_QUERY_NOT_FOUND",
 				"Order not found with the provided order ID",
 				"not-found",
 			),

@@ -8,7 +8,7 @@ import {
 } from "@/test/prisma-vitest-support";
 import { PrismaListingQueries } from "./prisma-listing-queries";
 
-describeDb("Prisma listing read models", () => {
+describeDb("Prisma listing queries", () => {
 	let db: PrismaClient;
 	let queries: PrismaListingQueries;
 	const testDb = setupPrismaTestDatabase();
@@ -34,7 +34,7 @@ describeDb("Prisma listing read models", () => {
 		]);
 	});
 
-	it("searches only approved listings through the listing read model", async () => {
+	it("searches only approved listings through the listing query", async () => {
 		await seedListing(db, {
 			id: "approved-1",
 			name: "Approved Telecaster",
