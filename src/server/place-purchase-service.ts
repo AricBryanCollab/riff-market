@@ -28,8 +28,8 @@ export type PlacePurchaseResponse = {
 		readonly purchaseNumber: string;
 		readonly totalAmountCents: number;
 		readonly currencyCode: string;
-		readonly paymentStatus: string;
-		readonly status: string;
+		readonly paymentStatus: PlacePurchaseResult["paymentStatus"];
+		readonly status: PlacePurchaseResult["status"];
 		readonly sellerOrderIds: string[];
 	};
 };

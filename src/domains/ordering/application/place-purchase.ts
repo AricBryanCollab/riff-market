@@ -1,5 +1,9 @@
 import type { ReservedListingItemSnapshot } from "@/domains/listings/domain/listing";
-import { Purchase } from "@/domains/ordering/domain/purchase";
+import {
+	type PaymentStatus,
+	Purchase,
+	type PurchaseStatus,
+} from "@/domains/ordering/domain/purchase";
 import type { SellerOrderItemSnapshot } from "@/domains/ordering/domain/seller-order";
 import { SellerOrder } from "@/domains/ordering/domain/seller-order";
 import type { UnitOfWork } from "@/domains/shared/application/unit-of-work";
@@ -49,8 +53,8 @@ export type PlacePurchaseResult = {
 	readonly purchaseId: string;
 	readonly purchaseNumber: string;
 	readonly total: Money;
-	readonly paymentStatus: string;
-	readonly status: string;
+	readonly paymentStatus: PaymentStatus;
+	readonly status: PurchaseStatus;
 	readonly sellerOrderIds: string[];
 };
 
