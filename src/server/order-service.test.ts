@@ -104,18 +104,6 @@ describe("order server service", () => {
 });
 
 class EmptyOrderQueries implements OrderQueries {
-	async listForCustomer() {
-		return [];
-	}
-
-	async listForSeller() {
-		return [];
-	}
-
-	async listAllForAdmin() {
-		return [];
-	}
-
 	async findPurchaseForCustomer(): Promise<BuyerPurchaseView | null> {
 		return null;
 	}

@@ -66,9 +66,9 @@ export type SellerOrderStatusChangeResponse = {
 	readonly trackingNumber: string | null;
 };
 
-type OrderQueries = BuyerPurchaseHistoryPort &
-	SellerOrderDashboardPort &
-	OrderDetailQueryPort;
+type OrderListQueryPort = BuyerPurchaseHistoryPort & SellerOrderDashboardPort;
+
+type PrismaOrderQueryPort = OrderListQueryPort & OrderDetailQueryPort;
 
 export function validateOrderDetailInput(data: unknown): OrderDetailInput {
 	const parsed = orderDetailInputSchema.safeParse(data);
@@ -98,7 +98,7 @@ export function validateChangeSellerOrderStatusInput(
 
 export async function listOrdersForCurrentUser(
 	user: ServerUserContext,
-	queries?: OrderQueries,
+	queries?: OrderListQueryPort,
 ): Promise<OrderView[]> {
 	const actor = toActor(user);
 	const orderQueries = queries ?? (await createPrismaOrderQueries());
@@ -126,7 +126,7 @@ export async function listOrdersForCurrentUser(
 export async function getOrderDetailForCurrentUser(
 	user: ServerUserContext,
 	input: OrderDetailInput,
-	queries?: OrderQueries,
+	queries?: OrderDetailQueryPort,
 ): Promise<OrderView> {
 	const orderQueries = queries ?? (await createPrismaOrderQueries());
 	const actor = toActor(user);
@@ -160,7 +160,7 @@ function toActor(user: ServerUserContext): Actor {
 	};
 }
 
-async function createPrismaOrderQueries(): Promise<OrderQueries> {
+async function createPrismaOrderQueries(): Promise<PrismaOrderQueryPort> {
 	const [{ prisma }, { PrismaOrderQueries }] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/ordering/infrastructure/prisma-order-queries"),
