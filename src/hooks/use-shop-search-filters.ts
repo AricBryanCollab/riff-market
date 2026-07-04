@@ -1,9 +1,9 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import type { ListingShopSearch } from "@/domains/listings/dto/listing-view";
 import {
 	getApprovedFiltersFromSearch,
 	getOptionalListingPriceSearchInput,
 	getShopPage,
+	type ListingShopSearch,
 } from "@/utils/shop-search";
 
 const getOptionalString = (value?: string) => (value ? value : undefined);

@@ -2,7 +2,6 @@ import type {
 	ApprovedListingCount,
 	ListingBrandCountData,
 	ListingCategoryCountData,
-	ListingCountStatusQuery,
 	ListingResponse,
 	PendingListingCount,
 } from "@/domains/listings/dto/listing-view";
@@ -19,6 +18,8 @@ import {
 } from "@/server/listing-query.functions";
 
 export type { ApprovedListingSearchServerInput };
+
+export type ListingCountStatusQuery = "approved" | "pending";
 
 type ListingResponseError = {
 	readonly error: string;

@@ -1,8 +1,6 @@
-import type {
-	ApprovedListingSearchFilterQuery,
-	ListingCountStatusQuery,
-} from "@/domains/listings/dto/listing-view";
+import type { ListingCountStatusQuery } from "@/lib/tanstack-query/listing-query-client";
 import type { UserRole } from "@/types/enum";
+import type { ApprovedListingSearchFilterQuery } from "@/utils/shop-search";
 
 export type ListingDetailViewerScope = "public" | "admin";
 

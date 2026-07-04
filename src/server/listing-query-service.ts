@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { parseOptionalListingPriceInputToAmountMinor } from "@/domains/listings/application/listing-money";
 import {
 	type ApprovedListingSearchPort,
 	type ApprovedListingSearchQuery,
@@ -10,14 +12,12 @@ import {
 	type RecentApprovedListingQueryPort,
 	type SellerListingQueryPort,
 } from "@/domains/listings/application/listing-queries";
-import {
-	approvedListingSearchInputSchema,
-	cartListingDetailsInputSchema,
-	type ListingBrandCount,
-	type ListingCategoryCount,
-	type ListingResponse,
-	type ListingStatusCount,
-	type ListingView,
+import type {
+	ListingBrandCount,
+	ListingCategoryCount,
+	ListingResponse,
+	ListingStatusCount,
+	ListingView,
 } from "@/domains/listings/dto/listing-view";
 import type { Actor } from "@/domains/shared/domain/actor";
 
@@ -35,6 +35,76 @@ type ListingQueryServiceError = {
 	readonly error: string;
 	readonly details?: object;
 };
+
+const listingCategorySchema = z.enum([
+	"ELECTRIC",
+	"ACOUSTIC",
+	"KEYBOARD",
+	"PEDALS",
+	"ACCESSORY",
+]);
+const listingConditionSchema = z.enum(["NEW", "USED", "MINT"]);
+
+const optionalListingPriceInputSchema = z
+	.string()
+	.nullable()
+	.optional()
+	.transform((value, ctx) => {
+		try {
+			return parseOptionalListingPriceInputToAmountMinor(value);
+		} catch (error) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					error instanceof Error ? error.message : "Invalid listing price",
+			});
+
+			return z.NEVER;
+		}
+	});
+
+const approvedListingSearchInputSchema = z
+	.object({
+		limit: z
+			.string()
+			.nullable()
+			.transform((v) => (v ? Number(v) : 12))
+			.pipe(z.number().min(1).max(100)),
+
+		offset: z
+			.string()
+			.nullable()
+			.transform((v) => (v ? Number(v) : 0))
+			.pipe(z.number().min(0)),
+
+		random: z
+			.string()
+			.nullable()
+			.transform((v) => v === "true"),
+
+		category: listingCategorySchema.nullable().optional(),
+		condition: listingConditionSchema.nullable().optional(),
+		brand: z.string().nullable().optional(),
+		search: z.string().nullable().optional(),
+		priceMin: optionalListingPriceInputSchema,
+		priceMax: optionalListingPriceInputSchema,
+	})
+	.transform(({ priceMin, priceMax, ...query }) => ({
+		...query,
+		priceMinAmountMinor: priceMin,
+		priceMaxAmountMinor: priceMax,
+	}));
+
+type ApprovedListingSearchInput = z.infer<
+	typeof approvedListingSearchInputSchema
+>;
+
+const cartListingDetailsInputSchema = z.object({
+	ids: z
+		.array(z.string().trim().min(1, "Listing ID is required"))
+		.min(1, "At least one listing ID is required")
+		.max(100, "Maximum 100 listing IDs are allowed"),
+});
 
 export async function getListingDetailsResponse(
 	actor: Actor | null,
@@ -186,7 +256,7 @@ async function createPrismaListingQueryDependencies(): Promise<ListingQueryServi
 }
 
 function toListingSearchQuery(
-	query: ReturnType<typeof approvedListingSearchInputSchema.parse>,
+	query: ApprovedListingSearchInput,
 ): ApprovedListingSearchQuery {
 	return {
 		limit: query.limit,

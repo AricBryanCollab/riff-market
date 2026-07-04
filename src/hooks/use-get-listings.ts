@@ -1,8 +1,6 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import type {
 	ApprovedListingCount,
-	ApprovedListingSearchFilterQuery,
-	ListingCountStatusQuery,
 	ListingResponse,
 	PendingListingCount,
 } from "@/domains/listings/dto/listing-view";
@@ -11,12 +9,14 @@ import {
 	fetchApprovedListings,
 	fetchListingDetails,
 	fetchListingStatusCount,
+	type ListingCountStatusQuery,
 } from "@/lib/tanstack-query/listing-query-client";
 import {
 	type ListingDetailViewerScope,
 	listingDetailViewerScopeForRole,
 	queryKeys,
 } from "@/lib/tanstack-query/query-keys";
+import type { ApprovedListingSearchFilterQuery } from "@/utils/shop-search";
 import { useAuthUser } from "./use-auth-user";
 
 function toApprovedListingSearchServerInput(

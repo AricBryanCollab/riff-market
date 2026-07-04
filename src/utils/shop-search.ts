@@ -1,10 +1,30 @@
 import { normalizeOptionalListingPriceInput } from "@/domains/listings/application/listing-money";
-import type {
-	ApprovedListingSearchFilterQuery,
-	ListingShopSearch,
-} from "@/domains/listings/dto/listing-view";
 
 export const SHOP_PAGE_SIZE = 8;
+
+// Human-entered listing price in marketplace currency, not minor units.
+export type ListingPriceInput = string;
+
+export type ApprovedListingSearchFilterQuery = {
+	readonly limit?: number;
+	readonly offset?: number;
+	readonly category?: string;
+	readonly brand?: string;
+	readonly search?: string;
+	readonly condition?: string;
+	readonly priceMin?: ListingPriceInput;
+	readonly priceMax?: ListingPriceInput;
+};
+
+export type ListingShopSearch = {
+	readonly category?: string;
+	readonly brand?: string;
+	readonly condition?: string;
+	readonly search?: string;
+	readonly priceMin?: ListingPriceInput;
+	readonly priceMax?: ListingPriceInput;
+	readonly page?: number;
+};
 
 export type OptionalListingPriceSearchInputResult =
 	| {

@@ -1,5 +1,7 @@
-import type { ListingShopSearch } from "@/domains/listings/dto/listing-view";
-import { getOptionalListingPriceSearchInput } from "@/utils/shop-search";
+import {
+	getOptionalListingPriceSearchInput,
+	type ListingShopSearch,
+} from "@/utils/shop-search";
 
 const getOptionalString = (value: unknown): string | undefined => {
 	if (typeof value !== "string" || value.length === 0) {
