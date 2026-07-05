@@ -17,6 +17,7 @@ import { PrismaNotifications } from "@/domains/notifications/infrastructure/pris
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	createListingForCurrentUser,
+	type ListingModerationExecutionDependencies,
 	type ListingModerationServiceDependencies,
 	moderateListingForCurrentUser,
 	removeListingForCurrentUser,
@@ -431,8 +432,6 @@ function moderationDependencies(
 	db: PrismaClient,
 ): ListingModerationServiceDependencies {
 	return {
-		repository: new PrismaListingModerationRepository(db),
-		notifier: new PrismaListingModerationNotifier(db),
 		runInTransaction: (handler) =>
 			db.$transaction((transaction) =>
 				handler({
@@ -447,8 +446,6 @@ function failingModerationDependencies(
 	db: PrismaClient,
 ): ListingModerationServiceDependencies {
 	return {
-		repository: new PrismaListingModerationRepository(db),
-		notifier: new FailingListingModerationNotifier(),
 		runInTransaction: (handler) =>
 			db.$transaction((transaction) =>
 				handler({
@@ -461,7 +458,7 @@ function failingModerationDependencies(
 
 function staleStatusModerationDependencies(
 	db: PrismaClient,
-): ListingModerationServiceDependencies {
+): ListingModerationExecutionDependencies {
 	return {
 		repository: new StaleStatusListingModerationRepository(db),
 		notifier: new PrismaListingModerationNotifier(db),
