@@ -2,7 +2,9 @@ import { z } from "zod";
 import {
 	createListingReview,
 	getListingReviews,
+	type ListingReviewCreatePort,
 	type ListingReviewPort,
+	type ListingReviewQueryPort,
 } from "@/domains/reviews/application/review-use-cases";
 import {
 	type CreateListingReviewInput,
@@ -51,7 +53,7 @@ export function validateGetListingReviewsInput(
 export async function createListingReviewForCurrentUser(
 	user: ServerUserContext,
 	input: CreateListingReviewInput,
-	reviews?: ListingReviewPort,
+	reviews?: ListingReviewCreatePort,
 ): Promise<ReviewCreationResponse> {
 	const reviewPort = reviews ?? (await createPrismaReviewDependencies());
 	const result = await createListingReview(input, toActor(user), reviewPort);
@@ -68,7 +70,7 @@ export async function createListingReviewForCurrentUser(
 
 export async function listListingReviews(
 	input: GetListingReviewsQuery,
-	reviews?: ListingReviewPort,
+	reviews?: ListingReviewQueryPort,
 ): Promise<ListingReview[]> {
 	const reviewPort = reviews ?? (await createPrismaReviewDependencies());
 	const result = await getListingReviews(input.listingId, reviewPort);

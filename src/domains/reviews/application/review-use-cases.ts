@@ -22,12 +22,18 @@ export type ReviewErrorCode =
 
 export type ReviewError = AppError<ReviewErrorCode>;
 
-export interface ListingReviewPort {
+export interface ListingReviewCreatePort {
 	createReview(
 		data: ListingReviewCreateData,
 	): Promise<Result<ListingReview, ReviewError>>;
+}
+
+export interface ListingReviewQueryPort {
 	listByListingId(listingId: string): Promise<ListingReview[]>;
 }
+
+export type ListingReviewPort = ListingReviewCreatePort &
+	ListingReviewQueryPort;
 
 export async function createListingReview(
 	command: {
@@ -36,7 +42,7 @@ export async function createListingReview(
 		readonly comment: string;
 	},
 	actor: Actor,
-	reviews: ListingReviewPort,
+	reviews: ListingReviewCreatePort,
 ): Promise<Result<ListingReview, ReviewError>> {
 	let review: Review;
 
@@ -60,7 +66,7 @@ export async function createListingReview(
 
 export async function getListingReviews(
 	listingId: string,
-	reviews: ListingReviewPort,
+	reviews: ListingReviewQueryPort,
 ): Promise<Result<ListingReview[], ReviewError>> {
 	const normalizedListingId = listingId.trim();
 
