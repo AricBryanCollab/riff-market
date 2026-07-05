@@ -28,13 +28,19 @@ export interface NotificationUnreadCountPort {
 	countUnreadForUser(userId: string): Promise<number>;
 }
 
-export interface NotificationReadStatePort {
+export interface NotificationReadPort {
 	markAsReadForUser(
 		notificationId: string,
 		userId: string,
 	): Promise<NotificationView | null>;
+}
+
+export interface NotificationReadAllPort {
 	markAllAsReadForUser(userId: string): Promise<{ readonly count: number }>;
 }
+
+export type NotificationReadStatePort = NotificationReadPort &
+	NotificationReadAllPort;
 
 export async function getNotifications(
 	actor: Actor,
@@ -78,7 +84,7 @@ export async function readNotification(
 		readonly notificationId: string;
 		readonly actor: Actor;
 	},
-	notifications: NotificationReadStatePort,
+	notifications: NotificationReadPort,
 ): Promise<Result<NotificationView, NotificationError>> {
 	const notificationIdError = validateRequired(
 		command.notificationId,
@@ -113,7 +119,7 @@ export async function readNotification(
 
 export async function readAllNotifications(
 	actor: Actor,
-	notifications: NotificationReadStatePort,
+	notifications: NotificationReadAllPort,
 ): Promise<Result<{ readonly count: number }, NotificationError>> {
 	const userIdError = validateRequired(actor.id, "User ID");
 	if (userIdError) {

@@ -1,4 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type {
+	NotificationQueryPort,
+	NotificationReadPort,
+	NotificationUnreadCountPort,
+} from "@/domains/notifications/application/notification-use-cases";
 import type { NotificationView } from "@/domains/notifications/dto/notification";
 import type { ServerUserContext } from "@/server/function-middleware";
 import type { RequestError } from "@/server/request-error";
@@ -18,7 +23,7 @@ const customerUser: ServerUserContext = {
 
 describe("notification server service", () => {
 	it("gets notifications for the current user", async () => {
-		const notifications = new InMemoryNotifications([
+		const notifications = makeNotificationQueryPort([
 			makeNotification({ id: "notification-1", userId: "customer-1" }),
 			makeNotification({ id: "notification-2", userId: "seller-1" }),
 		]);
@@ -34,17 +39,13 @@ describe("notification server service", () => {
 	});
 
 	it("returns zero unread notifications without a current user", async () => {
-		const notifications = new InMemoryNotifications([
-			makeNotification({ id: "notification-1", userId: "customer-1" }),
-		]);
-
-		await expect(
-			getUnreadNotificationCountForOptionalUser(null, notifications),
-		).resolves.toBe(0);
+		await expect(getUnreadNotificationCountForOptionalUser(null)).resolves.toBe(
+			0,
+		);
 	});
 
 	it("gets unread notification count for an optional current user", async () => {
-		const notifications = new InMemoryNotifications([
+		const notifications = makeNotificationUnreadCountPort([
 			makeNotification({ id: "notification-1", userId: "customer-1" }),
 			makeNotification({
 				id: "notification-2",
@@ -60,7 +61,7 @@ describe("notification server service", () => {
 	});
 
 	it("maps missing notification reads to request errors", async () => {
-		const notifications = new InMemoryNotifications([
+		const notifications = makeNotificationReadPort([
 			makeNotification({ id: "notification-1", userId: "seller-1" }),
 		]);
 
@@ -78,42 +79,39 @@ describe("notification server service", () => {
 	});
 });
 
-class InMemoryNotifications {
-	constructor(private readonly notifications: NotificationView[]) {}
+function makeNotificationQueryPort(
+	notifications: NotificationView[],
+): NotificationQueryPort {
+	return {
+		listForUser: async (userId) =>
+			notifications.filter((notification) => notification.userId === userId),
+	};
+}
 
-	async listForUser(userId: string) {
-		return this.notifications.filter(
-			(notification) => notification.userId === userId,
-		);
-	}
+function makeNotificationUnreadCountPort(
+	notifications: NotificationView[],
+): NotificationUnreadCountPort {
+	return {
+		countUnreadForUser: async (userId) =>
+			notifications.filter(
+				(notification) =>
+					notification.userId === userId && notification.isRead === false,
+			).length,
+	};
+}
 
-	async countUnreadForUser(userId: string) {
-		return this.notifications.filter(
-			(notification) =>
-				notification.userId === userId && notification.isRead === false,
-		).length;
-	}
+function makeNotificationReadPort(
+	notifications: NotificationView[],
+): NotificationReadPort {
+	return {
+		markAsReadForUser: async (notificationId, userId) => {
+			const notification = notifications.find(
+				(item) => item.id === notificationId && item.userId === userId,
+			);
 
-	async markAsReadForUser(notificationId: string, userId: string) {
-		const notification = this.notifications.find(
-			(item) => item.id === notificationId && item.userId === userId,
-		);
-
-		return notification ? { ...notification, isRead: true } : null;
-	}
-
-	async markAllAsReadForUser(userId: string) {
-		const count = this.notifications.filter(
-			(notification) =>
-				notification.userId === userId && notification.isRead === false,
-		).length;
-
-		return { count };
-	}
-
-	async create() {
-		throw new Error("Not needed for read service tests");
-	}
+			return notification ? { ...notification, isRead: true } : null;
+		},
+	};
 }
 
 function makeNotification(
