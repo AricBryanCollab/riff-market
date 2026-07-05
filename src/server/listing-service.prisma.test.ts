@@ -1,12 +1,13 @@
 import type { PrismaClient } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
 import type { ListingImageManagerPort } from "@/domains/listings/application/manage-listing";
-import type {
-	ListingApprovedEvent,
-	ListingDeclinedEvent,
-	ListingModerationNotifierPort,
-	ListingModerationRepositoryPort,
-	ListingModerationResult,
+import {
+	type ListingApprovedEvent,
+	type ListingDeclinedEvent,
+	type ListingModerationNotifierPort,
+	type ListingModerationRepositoryPort,
+	type ListingModerationResult,
+	moderateListing,
 } from "@/domains/listings/application/moderate-listing";
 import { PrismaListingCommandRepository } from "@/domains/listings/infrastructure/prisma-listing-commands";
 import {
@@ -17,7 +18,6 @@ import { PrismaNotifications } from "@/domains/notifications/infrastructure/pris
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	createListingForCurrentUser,
-	type ListingModerationExecutionDependencies,
 	type ListingModerationServiceDependencies,
 	moderateListingForCurrentUser,
 	removeListingForCurrentUser,
@@ -432,12 +432,14 @@ function moderationDependencies(
 	db: PrismaClient,
 ): ListingModerationServiceDependencies {
 	return {
-		runInTransaction: (handler) =>
+		moderateListing: (actor, command) =>
 			db.$transaction((transaction) =>
-				handler({
-					repository: new PrismaListingModerationRepository(transaction),
-					notifier: new PrismaListingModerationNotifier(transaction),
-				}),
+				moderateListing(
+					actor,
+					command,
+					new PrismaListingModerationRepository(transaction),
+					new PrismaListingModerationNotifier(transaction),
+				),
 			),
 	};
 }
@@ -446,22 +448,29 @@ function failingModerationDependencies(
 	db: PrismaClient,
 ): ListingModerationServiceDependencies {
 	return {
-		runInTransaction: (handler) =>
+		moderateListing: (actor, command) =>
 			db.$transaction((transaction) =>
-				handler({
-					repository: new PrismaListingModerationRepository(transaction),
-					notifier: new FailingListingModerationNotifier(),
-				}),
+				moderateListing(
+					actor,
+					command,
+					new PrismaListingModerationRepository(transaction),
+					new FailingListingModerationNotifier(),
+				),
 			),
 	};
 }
 
 function staleStatusModerationDependencies(
 	db: PrismaClient,
-): ListingModerationExecutionDependencies {
+): ListingModerationServiceDependencies {
 	return {
-		repository: new StaleStatusListingModerationRepository(db),
-		notifier: new PrismaListingModerationNotifier(db),
+		moderateListing: (actor, command) =>
+			moderateListing(
+				actor,
+				command,
+				new StaleStatusListingModerationRepository(db),
+				new PrismaListingModerationNotifier(db),
+			),
 	};
 }
 

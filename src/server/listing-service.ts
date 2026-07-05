@@ -10,8 +10,6 @@ import {
 	updateListing,
 } from "@/domains/listings/application/manage-listing";
 import {
-	type ListingModerationNotifierPort,
-	type ListingModerationRepositoryPort,
 	type ListingModerationResult,
 	type ModerateListingCommand,
 	moderateListing,
@@ -51,22 +49,14 @@ export type RemoveListingResponse = ListingRemovalResponseDto;
 
 export type ListingCommandServiceDependencies = ListingCommandDependencies;
 
-export type ListingModerationExecutionDependencies = {
-	readonly repository: ListingModerationRepositoryPort;
-	readonly notifier: ListingModerationNotifierPort;
+export type ListingModerationWorkflow = {
+	readonly moderateListing: (
+		actor: Actor,
+		command: ModerateListingCommand,
+	) => ReturnType<typeof moderateListing>;
 };
 
-export type ListingModerationTransactionRunner = {
-	readonly runInTransaction: <T>(
-		handler: (
-			dependencies: ListingModerationExecutionDependencies,
-		) => Promise<T>,
-	) => Promise<T>;
-};
-
-export type ListingModerationServiceDependencies =
-	| ListingModerationExecutionDependencies
-	| ListingModerationTransactionRunner;
+export type ListingModerationServiceDependencies = ListingModerationWorkflow;
 
 export function validateModerateListingInput(
 	data: unknown,
@@ -230,31 +220,11 @@ export async function moderateListingForCurrentUser(
 	input: ModerateListingInput,
 	dependencies?: ListingModerationServiceDependencies,
 ): Promise<ListingModerationResult> {
-	const moderationDependencies =
+	const moderationWorkflow =
 		dependencies ?? (await createPrismaListingModerationDependencies());
-
-	if (isListingModerationTransactionRunner(moderationDependencies)) {
-		return moderationDependencies.runInTransaction((transactionDependencies) =>
-			moderateListingWithDependencies(user, input, transactionDependencies),
-		);
-	}
-
-	return moderateListingWithDependencies(user, input, moderationDependencies);
-}
-
-async function moderateListingWithDependencies(
-	user: ServerUserContext,
-	input: ModerateListingInput,
-	dependencies: ListingModerationExecutionDependencies,
-): Promise<ListingModerationResult> {
 	const actor = toActor(user);
 	const command = toCommand(input);
-	const result = await moderateListing(
-		actor,
-		command,
-		dependencies.repository,
-		dependencies.notifier,
-	);
+	const result = await moderationWorkflow.moderateListing(actor, command);
 
 	return unwrapResultOrThrowRequestError(result);
 }
@@ -284,22 +254,16 @@ async function createPrismaListingModerationDependencies(): Promise<ListingModer
 	]);
 
 	return {
-		runInTransaction: (handler) =>
+		moderateListing: (actor, command) =>
 			prisma.$transaction((transaction) =>
-				handler({
-					repository: new moderation.PrismaListingModerationRepository(
-						transaction,
-					),
-					notifier: new moderation.PrismaListingModerationNotifier(transaction),
-				}),
+				moderateListing(
+					actor,
+					command,
+					new moderation.PrismaListingModerationRepository(transaction),
+					new moderation.PrismaListingModerationNotifier(transaction),
+				),
 			),
 	};
-}
-
-function isListingModerationTransactionRunner(
-	dependencies: ListingModerationServiceDependencies,
-): dependencies is ListingModerationTransactionRunner {
-	return "runInTransaction" in dependencies;
 }
 
 function toActor(user: ServerUserContext): Actor {
