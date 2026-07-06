@@ -2,7 +2,15 @@
 scope:
   - src/domains/listings/**
   - src/server/listing-*
-  - src/components/**
+  - src/components/listing-card.tsx
+  - src/components/cart-list.tsx
+  - src/components/pending-listing-list.tsx
+  - src/components/order-list.tsx
+  - src/components/order/order-summary.*
+  - src/components/home/featured-listing-card.tsx
+  - src/components/home/hero-carousel.tsx
+  - src/components/home/mocks.ts
+  - src/components/sidebar/price-range-filters.tsx
   - src/hooks/use-cart-details.*
   - src/hooks/use-update-listing.ts
   - src/routes/cart.tsx

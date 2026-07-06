@@ -15,6 +15,8 @@ Server functions should execute service-owned validators at the untrusted input 
 
 `src/domains/*/application/*` is the use-case layer. It owns application workflows: authorization in domain language, command validation that is not transport-specific, port definitions, transaction orchestration, domain object coordination, domain event handling, and application error codes.
 
+Application use cases should be plain functions shaped like `useCase(actor, commandOrQuery, dependency)` or `useCase(actor, commandOrQuery, dependencies)` when multiple ports are needed. Bundle multiple ports into a named dependency object instead of growing a positional parameter list. Avoid one-method use-case classes that only store dependencies and expose `execute()`. Use classes only when state or identity helps: domain objects with behavior, stateful infrastructure adapters, long-lived clients, workers, schedulers, or services. Apply this to new or touched code; do not churn unrelated older slices only to change shape.
+
 `src/domains/*/domain/*` owns pure business invariants, value objects, entity lifecycle behavior, and domain events. Keep framework, Prisma, request, and session concerns out of domain code.
 
 `src/domains/*/infrastructure/*` implements application ports with Prisma, assets, external systems, and other IO details.
