@@ -11,9 +11,14 @@ import {
 	type Result,
 } from "@/domains/shared/domain/result";
 
+export const selfAssignableRoles = ["SELLER", "CUSTOMER"] as const;
+
+export type SelfAssignableRole = (typeof selfAssignableRoles)[number];
+
 export type AccountAuthErrorCode =
 	| "ACCOUNT_AUTH_EMAIL_TAKEN"
-	| "ACCOUNT_AUTH_INVALID_CREDENTIALS";
+	| "ACCOUNT_AUTH_INVALID_CREDENTIALS"
+	| "ACCOUNT_AUTH_INVALID_SIGNUP_ROLE";
 
 export type AccountAuthError = AppError<AccountAuthErrorCode>;
 
@@ -52,6 +57,10 @@ export async function signUpAccount(
 	accounts: AccountRegistrationPort,
 	passwords: AccountPasswordPort,
 ): Promise<Result<AccountAuthUser, AccountAuthError>> {
+	if (!isSelfAssignableRole(data.role)) {
+		return err(invalidSignupRoleError());
+	}
+
 	const passwordHash = await passwords.hashPassword(data.password);
 	return accounts.createAccount({
 		firstName: data.firstName,
@@ -89,10 +98,21 @@ export async function signInAccount(
 	});
 }
 
+function isSelfAssignableRole(role: ActorRole): role is SelfAssignableRole {
+	return selfAssignableRoles.includes(role as SelfAssignableRole);
+}
+
 function invalidCredentialsError(): AccountAuthError {
 	return accountAuthError(
 		"ACCOUNT_AUTH_INVALID_CREDENTIALS",
 		"Invalid email or password",
+	);
+}
+
+function invalidSignupRoleError(): AccountAuthError {
+	return accountAuthError(
+		"ACCOUNT_AUTH_INVALID_SIGNUP_ROLE",
+		"Admin accounts cannot be created via self-registration",
 	);
 }
 

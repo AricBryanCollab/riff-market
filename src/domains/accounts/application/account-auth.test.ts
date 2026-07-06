@@ -76,6 +76,23 @@ describe("account auth use cases", () => {
 		});
 	});
 
+	it("rejects signup with an admin role even when transport validation is bypassed", async () => {
+		const result = await signUpAccount(
+			makeSignUpData({ role: "ADMIN" }),
+			new InMemoryAuthAccounts(),
+			new FakePasswords(),
+		);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: {
+				code: "ACCOUNT_AUTH_INVALID_SIGNUP_ROLE",
+				message: "Admin accounts cannot be created via self-registration",
+				kind: "validation",
+			},
+		});
+	});
+
 	it("rejects sign in when the password does not match", async () => {
 		const existingAccount = makeCredentials();
 		const result = await signInAccount(

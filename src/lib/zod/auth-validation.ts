@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { selfAssignableRoles } from "@/domains/accounts/application/account-auth";
 
 export const signUpSchema = z
 	.object({
@@ -11,10 +12,7 @@ export const signUpSchema = z
 			.email("Invalid email address"),
 		password: z.string().min(4, "Password must be at least 4 characters"),
 		confirmPassword: z.string().min(4),
-		role: z
-			.enum(["ADMIN", "SELLER", "CUSTOMER"])
-			.optional()
-			.default("CUSTOMER"),
+		role: z.enum(selfAssignableRoles).optional().default("CUSTOMER"),
 	})
 	.refine((data) => data.password === data.confirmPassword, {
 		message: "Passwords do not match",
