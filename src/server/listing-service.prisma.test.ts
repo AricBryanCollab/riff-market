@@ -7,17 +7,19 @@ import type {
 	ListingModerationNotifierPort,
 	ListingModerationRepositoryPort,
 	ListingModerationResult,
+	ListingModerationWorkflowPort,
 } from "@/domains/listings/application/moderate-listing";
+import { moderateListing } from "@/domains/listings/application/moderate-listing";
 import { PrismaListingCommandRepository } from "@/domains/listings/infrastructure/prisma-listing-commands";
 import {
 	PrismaListingModerationNotifier,
 	PrismaListingModerationRepository,
+	PrismaListingModerationWorkflow,
 } from "@/domains/listings/infrastructure/prisma-listing-moderation";
 import { PrismaNotifications } from "@/domains/notifications/infrastructure/prisma-notifications";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	createListingForCurrentUser,
-	type ListingModerationExecutionDependencies,
 	type ListingModerationServiceDependencies,
 	moderateListingForCurrentUser,
 	removeListingForCurrentUser,
@@ -431,37 +433,36 @@ function commandDependencies(
 function moderationDependencies(
 	db: PrismaClient,
 ): ListingModerationServiceDependencies {
-	return {
-		runInTransaction: (handler) =>
-			db.$transaction((transaction) =>
-				handler({
-					repository: new PrismaListingModerationRepository(transaction),
-					notifier: new PrismaListingModerationNotifier(transaction),
-				}),
-			),
-	};
+	return new PrismaListingModerationWorkflow(db);
 }
 
 function failingModerationDependencies(
 	db: PrismaClient,
 ): ListingModerationServiceDependencies {
 	return {
-		runInTransaction: (handler) =>
+		moderate: (actor, command) =>
 			db.$transaction((transaction) =>
-				handler({
-					repository: new PrismaListingModerationRepository(transaction),
-					notifier: new FailingListingModerationNotifier(),
-				}),
+				moderateListing(
+					actor,
+					command,
+					new PrismaListingModerationRepository(transaction),
+					new FailingListingModerationNotifier(),
+				),
 			),
 	};
 }
 
 function staleStatusModerationDependencies(
 	db: PrismaClient,
-): ListingModerationExecutionDependencies {
+): ListingModerationWorkflowPort {
 	return {
-		repository: new StaleStatusListingModerationRepository(db),
-		notifier: new PrismaListingModerationNotifier(db),
+		moderate: (actor, command) =>
+			moderateListing(
+				actor,
+				command,
+				new StaleStatusListingModerationRepository(db),
+				new PrismaListingModerationNotifier(db),
+			),
 	};
 }
 
