@@ -8,6 +8,9 @@ import {
 } from "@/test/prisma-vitest-support";
 import { PrismaListingQueries } from "./prisma-listing-queries";
 
+const adminActor = { id: "admin-1", role: "ADMIN" } as const;
+const sellerActor = { id: "seller-1", role: "SELLER" } as const;
+
 describeDb("Prisma listing queries", () => {
 	let db: PrismaClient;
 	let queries: PrismaListingQueries;
@@ -17,6 +20,13 @@ describeDb("Prisma listing queries", () => {
 		db = testDb.client;
 		queries = new PrismaListingQueries(db);
 		await seedMarketplaceUsers(db, [
+			{
+				id: "admin-1",
+				email: "admin@example.com",
+				firstName: "A",
+				lastName: "Admin",
+				role: "ADMIN",
+			},
 			{
 				id: "seller-1",
 				email: "seller@example.com",
@@ -216,6 +226,56 @@ describeDb("Prisma listing queries", () => {
 					url: "https://cdn.example.com/pending-detail.jpg",
 				},
 			],
+		});
+	});
+
+	it("populates viewer capability flags in listing views", async () => {
+		await seedListing(db, {
+			id: "pending-capabilities",
+			name: "Pending Capabilities",
+			listingStatus: "PENDING",
+			isApproved: false,
+		});
+		await seedListing(db, {
+			id: "approved-capabilities",
+			name: "Approved Capabilities",
+			listingStatus: "APPROVED",
+			isApproved: true,
+		});
+		await seedListing(db, {
+			id: "withdrawn-capabilities",
+			name: "Withdrawn Capabilities",
+			listingStatus: "WITHDRAWN",
+			isApproved: false,
+		});
+
+		await expect(
+			queries.findById("pending-capabilities", adminActor),
+		).resolves.toMatchObject({
+			viewerCanEdit: true,
+			viewerCanDelete: true,
+			viewerCanApprove: true,
+			viewerCanDecline: true,
+		});
+		await expect(
+			queries.findById("approved-capabilities", adminActor),
+		).resolves.toMatchObject({
+			viewerCanApprove: false,
+			viewerCanDecline: true,
+		});
+		await expect(
+			queries.findById("withdrawn-capabilities", adminActor),
+		).resolves.toMatchObject({
+			viewerCanApprove: false,
+			viewerCanDecline: false,
+		});
+		await expect(
+			queries.findById("pending-capabilities", sellerActor),
+		).resolves.toMatchObject({
+			viewerCanEdit: true,
+			viewerCanDelete: true,
+			viewerCanApprove: false,
+			viewerCanDecline: false,
 		});
 	});
 

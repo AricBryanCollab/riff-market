@@ -70,6 +70,14 @@ export type ListingLifecycleEvent =
 			{ readonly listingId: string; readonly sellerId: string }
 	  >;
 
+export function canApproveListingStatus(status: ListingStatus) {
+	return status !== "APPROVED" && status !== "WITHDRAWN";
+}
+
+export function canDeclineListingStatus(status: ListingStatus) {
+	return status !== "DECLINED" && status !== "WITHDRAWN";
+}
+
 export class ListingPurchaseError extends Error {
 	readonly code: ListingPurchaseErrorCode;
 
@@ -149,17 +157,17 @@ export class Listing implements RecordsDomainEvents {
 	}
 
 	approve(actor: Actor) {
-		if (this.currentStatus === "APPROVED") {
+		if (!canApproveListingStatus(this.currentStatus)) {
+			if (this.currentStatus === "WITHDRAWN") {
+				throw new ListingLifecycleError(
+					"LISTING_WITHDRAWN_CANNOT_BE_APPROVED",
+					"Withdrawn listings cannot be approved",
+				);
+			}
+
 			throw new ListingLifecycleError(
 				"LISTING_ALREADY_APPROVED",
 				"Listing is already approved",
-			);
-		}
-
-		if (this.currentStatus === "WITHDRAWN") {
-			throw new ListingLifecycleError(
-				"LISTING_WITHDRAWN_CANNOT_BE_APPROVED",
-				"Withdrawn listings cannot be approved",
 			);
 		}
 
@@ -168,17 +176,17 @@ export class Listing implements RecordsDomainEvents {
 	}
 
 	decline(actor: Actor) {
-		if (this.currentStatus === "DECLINED") {
+		if (!canDeclineListingStatus(this.currentStatus)) {
+			if (this.currentStatus === "WITHDRAWN") {
+				throw new ListingLifecycleError(
+					"LISTING_WITHDRAWN_CANNOT_BE_DECLINED",
+					"Withdrawn listings cannot be declined",
+				);
+			}
+
 			throw new ListingLifecycleError(
 				"LISTING_ALREADY_DECLINED",
 				"Listing is already declined",
-			);
-		}
-
-		if (this.currentStatus === "WITHDRAWN") {
-			throw new ListingLifecycleError(
-				"LISTING_WITHDRAWN_CANNOT_BE_DECLINED",
-				"Withdrawn listings cannot be declined",
 			);
 		}
 

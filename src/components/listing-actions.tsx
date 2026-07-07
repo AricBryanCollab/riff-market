@@ -15,10 +15,6 @@ import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { UserRole } from "@/types/enum";
-import {
-	canModifyListing,
-	isListingActionDisabled,
-} from "@/utils/can-modify-listing";
 
 const listingActionButtonVariants = cva(
 	"rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors",
@@ -115,17 +111,21 @@ export function ShopPageListingActions({
 interface ListingDetailsActionsProps {
 	quantity: number;
 	stock: number;
-	sellerId: string;
-	isApproved: boolean;
+	viewerCanEdit: boolean;
+	viewerCanDelete: boolean;
+	viewerCanApprove: boolean;
+	viewerCanDecline: boolean;
 	handleQuantityChange: (value: number) => void;
 }
 
 export function ListingDetailsActions({
 	quantity,
 	stock,
-	sellerId,
 	handleQuantityChange,
-	isApproved,
+	viewerCanEdit,
+	viewerCanDelete,
+	viewerCanApprove,
+	viewerCanDecline,
 }: ListingDetailsActionsProps) {
 	const { data: user } = useAuthUser();
 	const { showToast } = useToastStore();
@@ -140,9 +140,20 @@ export function ListingDetailsActions({
 
 	const role: UserRole = user?.role ?? "CUSTOMER";
 
-	const canEditOrDelete = canModifyListing(user, sellerId);
-
 	const actions = RoleActionConfigs[role] ?? RoleActionConfigs.CUSTOMER;
+	const actionKeys = actions.map((action) => action.onClickKey);
+	const showModifyIconActions =
+		(viewerCanEdit || viewerCanDelete) &&
+		!actionKeys.includes("edit") &&
+		!actionKeys.includes("delete");
+	const capabilities = {
+		edit: viewerCanEdit,
+		delete: viewerCanDelete,
+		approve: viewerCanApprove,
+		decline: viewerCanDecline,
+		addToCart: true,
+		toggleFavorite: true,
+	};
 
 	const handleAddToCart = () => {
 		if (!id) {
@@ -175,17 +186,21 @@ export function ListingDetailsActions({
 
 		switch (actionKey) {
 			case "edit":
-			case "delete":
-				if (!canEditOrDelete) {
+				if (!viewerCanEdit) {
 					showToast("You are not allowed to modify this listing", "error");
 					return;
 				}
 
-				if (actionKey === "edit") {
-					navigateToEditListing();
-				} else {
-					setOpenDialog("deleteListing");
+				navigateToEditListing();
+				break;
+
+			case "delete":
+				if (!viewerCanDelete) {
+					showToast("You are not allowed to modify this listing", "error");
+					return;
 				}
+
+				setOpenDialog("deleteListing");
 				break;
 
 			case "addToCart":
@@ -197,10 +212,18 @@ export function ListingDetailsActions({
 				break;
 
 			case "approve":
+				if (!viewerCanApprove || isListingModerationPending) {
+					return;
+				}
+
 				handleModerateListing(id, true);
 				break;
 
 			case "decline":
+				if (!viewerCanDecline || isListingModerationPending) {
+					return;
+				}
+
 				handleModerateListing(id, false);
 				break;
 
@@ -227,15 +250,13 @@ export function ListingDetailsActions({
 					const isSecondary = action.variant === "secondary";
 
 					const isOutOfStock = action.requiresStock && stock === 0;
-
-					const permissionDisabled = isListingActionDisabled(
-						action.onClickKey,
-						canEditOrDelete,
-						isListingModerationPending,
-						isApproved,
-					);
-
-					const isButtonDisabled = isOutOfStock || permissionDisabled;
+					const isPending =
+						isListingModerationPending &&
+						(action.onClickKey === "approve" ||
+							action.onClickKey === "decline");
+					const isActionAllowed = capabilities[action.onClickKey];
+					const isButtonDisabled =
+						isOutOfStock || isPending || !isActionAllowed;
 					return (
 						<button
 							key={action.onClickKey}
@@ -243,13 +264,13 @@ export function ListingDetailsActions({
 							onClick={() => handleAction(action.onClickKey)}
 							disabled={isButtonDisabled}
 							title={
-								!canEditOrDelete &&
+								!isActionAllowed &&
 								(action.onClickKey === "edit" || action.onClickKey === "delete")
 									? "You can only modify your own listings"
-									: isApproved &&
+									: !isActionAllowed &&
 											(action.onClickKey === "approve" ||
 												action.onClickKey === "decline")
-										? "Listing is already approved"
+										? "This listing cannot be moderated with this action"
 										: undefined
 							}
 							className={listingActionButtonVariants({
@@ -263,17 +284,17 @@ export function ListingDetailsActions({
 						</button>
 					);
 				})}
-				{role === "ADMIN" && (
+				{showModifyIconActions && (
 					<div className="absolute right-0 top-6 flex gap-4">
 						<IconButton
 							icon={Pencil}
-							disabled={isListingModerationPending || !canEditOrDelete}
+							disabled={!viewerCanEdit}
 							onClick={navigateToEditListing}
 							backgroundColor="bg-primary hover:bg-accent hover:text-primary"
 						/>
 						<IconButton
 							icon={Trash2}
-							disabled={isListingModerationPending || !canEditOrDelete}
+							disabled={!viewerCanDelete}
 							onClick={() => setOpenDialog("deleteListing")}
 							backgroundColor="bg-destructive hover:bg-rose-400"
 						/>

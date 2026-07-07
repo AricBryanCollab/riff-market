@@ -154,6 +154,10 @@ function makeListing({
 		currencyCode: "TWD",
 		stock: 2,
 		listingStatus,
+		viewerCanEdit: false,
+		viewerCanDelete: false,
+		viewerCanApprove: false,
+		viewerCanDecline: false,
 		createdAt: new Date("2026-06-18T00:00:00.000Z"),
 		updatedAt: new Date("2026-06-18T00:00:00.000Z"),
 		seller: {

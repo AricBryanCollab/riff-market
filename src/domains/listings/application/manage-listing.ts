@@ -468,7 +468,7 @@ function canManageListings(actor: Actor) {
 	return actor.role === "SELLER" || actor.role === "ADMIN";
 }
 
-function canModifyListing(actor: Actor, sellerId: string) {
+export function canModifyListing(actor: Actor, sellerId: string) {
 	return (
 		actor.role === "ADMIN" || (actor.role === "SELLER" && actor.id === sellerId)
 	);

@@ -1,3 +1,7 @@
+import {
+	canApproveListingStatus,
+	canDeclineListingStatus,
+} from "@/domains/listings/domain/listing";
 import type {
 	ListingBrandCount,
 	ListingCategoryCount,
@@ -13,6 +17,7 @@ import {
 	ok,
 	type Result,
 } from "@/domains/shared/domain/result";
+import { canModifyListing } from "./manage-listing";
 
 export type ListingQueryErrorCode =
 	| "LISTING_QUERY_UNAUTHORIZED"
@@ -21,8 +26,24 @@ export type ListingQueryErrorCode =
 
 export type ListingQueryError = AppError<ListingQueryErrorCode>;
 
+export type ListingViewerCapabilities = {
+	readonly viewerCanEdit: boolean;
+	readonly viewerCanDelete: boolean;
+	readonly viewerCanApprove: boolean;
+	readonly viewerCanDecline: boolean;
+};
+
+export type ListingViewerCapabilityInput = {
+	readonly viewer: Actor | null;
+	readonly sellerId: string;
+	readonly listingStatus: ListingView["listingStatus"];
+};
+
 export interface ListingDetailQueryPort {
-	findById(listingId: string): Promise<ListingView | null>;
+	findById(
+		listingId: string,
+		viewer?: Actor | null,
+	): Promise<ListingView | null>;
 }
 
 export type ApprovedListingSearchQuery = {
@@ -38,15 +59,21 @@ export type ApprovedListingSearchQuery = {
 };
 
 export interface ApprovedListingSearchPort {
-	searchApproved(query: ApprovedListingSearchQuery): Promise<ListingView[]>;
+	searchApproved(
+		query: ApprovedListingSearchQuery,
+		viewer?: Actor | null,
+	): Promise<ListingView[]>;
 }
 
 export interface SellerListingQueryPort {
-	listForSeller(sellerId: string): Promise<ListingView[]>;
+	listForSeller(
+		sellerId: string,
+		viewer?: Actor | null,
+	): Promise<ListingView[]>;
 }
 
 export interface PendingModerationListingQueryPort {
-	listPendingModeration(): Promise<ListingView[]>;
+	listPendingModeration(viewer?: Actor | null): Promise<ListingView[]>;
 }
 
 export interface ListingCountQueryPort {
@@ -56,11 +83,17 @@ export interface ListingCountQueryPort {
 }
 
 export interface RecentApprovedListingQueryPort {
-	listRecentApproved(limit: number): Promise<ListingView[]>;
+	listRecentApproved(
+		limit: number,
+		viewer?: Actor | null,
+	): Promise<ListingView[]>;
 }
 
 export interface CartListingQueryPort {
-	findByIds(listingIds: string[]): Promise<ListingView[]>;
+	findByIds(
+		listingIds: string[],
+		viewer?: Actor | null,
+	): Promise<ListingView[]>;
 }
 
 export async function getListingDetails(
@@ -78,7 +111,7 @@ export async function getListingDetails(
 		);
 	}
 
-	const listing = await listings.findById(listingId);
+	const listing = await listings.findById(listingId, actor);
 	if (!listing) {
 		return err(
 			listingQueryError(
@@ -126,7 +159,7 @@ export async function listSellerListings(
 		);
 	}
 
-	return ok(await listings.listForSeller(actor.id));
+	return ok(await listings.listForSeller(actor.id, actor));
 }
 
 export async function listPendingModerationListings(
@@ -143,7 +176,7 @@ export async function listPendingModerationListings(
 		);
 	}
 
-	return ok(await listings.listPendingModeration());
+	return ok(await listings.listPendingModeration(actor));
 }
 
 export async function listCartListings(
@@ -161,7 +194,25 @@ export async function listCartListings(
 		);
 	}
 
-	return ok(await listings.findByIds(listingIds));
+	return ok(await listings.findByIds(listingIds, actor));
+}
+
+export function deriveListingViewerCapabilities(
+	input: ListingViewerCapabilityInput,
+): ListingViewerCapabilities {
+	const canModify = input.viewer
+		? canModifyListing(input.viewer, input.sellerId)
+		: false;
+	const canModerate = input.viewer?.role === "ADMIN";
+
+	return {
+		viewerCanEdit: canModify,
+		viewerCanDelete: canModify,
+		viewerCanApprove:
+			canModerate && canApproveListingStatus(input.listingStatus),
+		viewerCanDecline:
+			canModerate && canDeclineListingStatus(input.listingStatus),
+	};
 }
 
 function listingQueryError(

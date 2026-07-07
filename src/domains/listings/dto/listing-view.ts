@@ -35,6 +35,10 @@ export type ListingView = {
 	readonly currencyCode: string;
 	readonly stock: number;
 	readonly listingStatus: ListingViewStatus;
+	readonly viewerCanEdit: boolean;
+	readonly viewerCanDelete: boolean;
+	readonly viewerCanApprove: boolean;
+	readonly viewerCanDecline: boolean;
 	readonly createdAt?: Date;
 	readonly updatedAt?: Date;
 	readonly seller: ListingViewSeller;
@@ -55,6 +59,10 @@ export type ListingResponse = {
 	readonly stock: number;
 	readonly isApproved: boolean;
 	readonly listingStatus?: ListingViewStatus;
+	readonly viewerCanEdit: boolean;
+	readonly viewerCanDelete: boolean;
+	readonly viewerCanApprove: boolean;
+	readonly viewerCanDecline: boolean;
 	readonly createdAt?: string;
 	readonly updatedAt?: string;
 	readonly seller: ListingViewSeller;

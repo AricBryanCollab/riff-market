@@ -10,6 +10,7 @@ import type {
 	RecentApprovedListingQueryPort,
 	SellerListingQueryPort,
 } from "@/domains/listings/application/listing-queries";
+import { deriveListingViewerCapabilities } from "@/domains/listings/application/listing-queries";
 import {
 	normalizeListingBrand,
 	toListingBrandKey,
@@ -20,6 +21,7 @@ import type {
 	ListingCountStatus,
 	ListingView,
 } from "@/domains/listings/dto/listing-view";
+import type { Actor } from "@/domains/shared/domain/actor";
 import { toListingImageDtos } from "@/utils/image-asset-ref";
 
 type ListingQueryPrisma = Pick<PrismaClient, "listing">;
@@ -67,7 +69,10 @@ export class PrismaListingQueries
 {
 	constructor(private readonly db: ListingQueryPrisma) {}
 
-	async findById(listingId: string): Promise<ListingView | null> {
+	async findById(
+		listingId: string,
+		viewer: Actor | null = null,
+	): Promise<ListingView | null> {
 		const listing = await this.db.listing.findFirst({
 			where: {
 				id: listingId,
@@ -75,11 +80,12 @@ export class PrismaListingQueries
 			select: listingViewSelect,
 		});
 
-		return listing ? toListingView(listing) : null;
+		return listing ? toListingView(listing, viewer) : null;
 	}
 
 	async searchApproved(
 		query: ApprovedListingSearchQuery,
+		viewer: Actor | null = null,
 	): Promise<ListingView[]> {
 		const { limit = 12, offset = 0, random = false } = query;
 		const where = toApprovedListingWhere(query);
@@ -96,7 +102,7 @@ export class PrismaListingQueries
 				skip: randomSkip,
 			});
 
-			return toListingViews(listings);
+			return toListingViews(listings, viewer);
 		}
 
 		const listings = await this.db.listing.findMany({
@@ -109,10 +115,13 @@ export class PrismaListingQueries
 			skip: offset,
 		});
 
-		return toListingViews(listings);
+		return toListingViews(listings, viewer);
 	}
 
-	async listForSeller(sellerId: string): Promise<ListingView[]> {
+	async listForSeller(
+		sellerId: string,
+		viewer: Actor | null = null,
+	): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { sellerId },
 			orderBy: {
@@ -121,10 +130,12 @@ export class PrismaListingQueries
 			select: listingViewSelect,
 		});
 
-		return toListingViews(listings);
+		return toListingViews(listings, viewer);
 	}
 
-	async listPendingModeration(): Promise<ListingView[]> {
+	async listPendingModeration(
+		viewer: Actor | null = null,
+	): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "PENDING" },
 			orderBy: {
@@ -133,7 +144,7 @@ export class PrismaListingQueries
 			select: listingViewSelect,
 		});
 
-		return toListingViews(listings);
+		return toListingViews(listings, viewer);
 	}
 
 	async listPopularApprovedBrandCounts(): Promise<ListingBrandCount[]> {
@@ -181,7 +192,10 @@ export class PrismaListingQueries
 		});
 	}
 
-	async listRecentApproved(limit: number): Promise<ListingView[]> {
+	async listRecentApproved(
+		limit: number,
+		viewer: Actor | null = null,
+	): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "APPROVED" },
 			orderBy: { updatedAt: "desc" },
@@ -189,10 +203,13 @@ export class PrismaListingQueries
 			take: limit,
 		});
 
-		return toListingViews(listings);
+		return toListingViews(listings, viewer);
 	}
 
-	async findByIds(listingIds: string[]): Promise<ListingView[]> {
+	async findByIds(
+		listingIds: string[],
+		viewer: Actor | null = null,
+	): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: {
 				id: {
@@ -202,7 +219,7 @@ export class PrismaListingQueries
 			select: listingViewSelect,
 		});
 
-		return toListingViews(listings);
+		return toListingViews(listings, viewer);
 	}
 }
 
@@ -293,13 +310,24 @@ function mostCommonDisplayBrand(displayCounts: ReadonlyMap<string, number>) {
 	)[0][0];
 }
 
-function toListingViews(listings: ListingViewRow[]) {
-	return listings.map(toListingView);
+function toListingViews(
+	listings: ListingViewRow[],
+	viewer: Actor | null,
+): ListingView[] {
+	return listings.map((listing) => toListingView(listing, viewer));
 }
 
-function toListingView(listing: ListingViewRow): ListingView {
+function toListingView(
+	listing: ListingViewRow,
+	viewer: Actor | null,
+): ListingView {
 	return {
 		...listing,
 		images: toListingImageDtos(listing.images),
+		...deriveListingViewerCapabilities({
+			viewer,
+			sellerId: listing.sellerId,
+			listingStatus: listing.listingStatus,
+		}),
 	};
 }

@@ -3,6 +3,7 @@ import type { Actor } from "@/domains/shared/domain/actor";
 import type { ListingView, ListingViewStatus } from "../dto/listing-view";
 import {
 	type CartListingQueryPort,
+	deriveListingViewerCapabilities,
 	getListingDetails,
 	type ListingDetailQueryPort,
 	listCartListings,
@@ -26,6 +27,115 @@ const nonAdminActors = [
 	["customer", customer],
 	["seller", seller],
 ] as const;
+
+describe("deriveListingViewerCapabilities", () => {
+	it.each([
+		[
+			"admin viewing a pending listing",
+			admin,
+			"seller-2",
+			"PENDING",
+			{
+				viewerCanEdit: true,
+				viewerCanDelete: true,
+				viewerCanApprove: true,
+				viewerCanDecline: true,
+			},
+		],
+		[
+			"admin viewing an approved listing",
+			admin,
+			"seller-2",
+			"APPROVED",
+			{
+				viewerCanEdit: true,
+				viewerCanDelete: true,
+				viewerCanApprove: false,
+				viewerCanDecline: true,
+			},
+		],
+		[
+			"admin viewing a declined listing",
+			admin,
+			"seller-2",
+			"DECLINED",
+			{
+				viewerCanEdit: true,
+				viewerCanDelete: true,
+				viewerCanApprove: true,
+				viewerCanDecline: false,
+			},
+		],
+		[
+			"admin viewing a withdrawn listing",
+			admin,
+			"seller-2",
+			"WITHDRAWN",
+			{
+				viewerCanEdit: true,
+				viewerCanDelete: true,
+				viewerCanApprove: false,
+				viewerCanDecline: false,
+			},
+		],
+		[
+			"owning seller viewing their listing",
+			seller,
+			"seller-1",
+			"PENDING",
+			{
+				viewerCanEdit: true,
+				viewerCanDelete: true,
+				viewerCanApprove: false,
+				viewerCanDecline: false,
+			},
+		],
+		[
+			"another seller viewing a listing",
+			seller,
+			"seller-2",
+			"PENDING",
+			{
+				viewerCanEdit: false,
+				viewerCanDelete: false,
+				viewerCanApprove: false,
+				viewerCanDecline: false,
+			},
+		],
+		[
+			"customer viewing a listing",
+			customer,
+			"seller-1",
+			"PENDING",
+			{
+				viewerCanEdit: false,
+				viewerCanDelete: false,
+				viewerCanApprove: false,
+				viewerCanDecline: false,
+			},
+		],
+		[
+			"guest viewing a listing",
+			null,
+			"seller-1",
+			"PENDING",
+			{
+				viewerCanEdit: false,
+				viewerCanDelete: false,
+				viewerCanApprove: false,
+				viewerCanDecline: false,
+			},
+		],
+	] as const)("derives capabilities for %s", (_label, actor, sellerId, listingStatus, expected) => {
+		expect(
+			deriveListingViewerCapabilities({
+				viewer: actor,
+				sellerId,
+				listingStatus,
+			}),
+		).toEqual(expected);
+	});
+});
 
 describe("getListingDetails", () => {
 	it.each(
@@ -232,6 +342,10 @@ function makeListing({
 		currencyCode: "TWD",
 		stock: 2,
 		listingStatus,
+		viewerCanEdit: false,
+		viewerCanDelete: false,
+		viewerCanApprove: false,
+		viewerCanDecline: false,
 		createdAt: new Date("2026-06-18T00:00:00.000Z"),
 		updatedAt: new Date("2026-06-18T00:00:00.000Z"),
 		seller: {

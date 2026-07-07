@@ -4,8 +4,18 @@ import type {
 } from "@/domains/listings/dto/listing-view";
 
 const image = (url: string) => ({ imageId: url, url });
+const publicListingCapabilities = {
+	viewerCanEdit: false,
+	viewerCanDelete: false,
+	viewerCanApprove: false,
+	viewerCanDecline: false,
+};
+type PublicMockListing = Omit<
+	ListingResponse,
+	keyof typeof publicListingCapabilities | "listingStatus"
+>;
 
-export const mockListings: ListingResponse[] = [
+const publicMockListings = [
 	{
 		id: "prod-001",
 		name: "American Professional II Stratocaster",
@@ -198,7 +208,15 @@ export const mockListings: ListingResponse[] = [
 		sellerId: "user-012",
 		seller: { firstName: "FuzzFactory", lastName: "", email: "" },
 	},
-];
+] satisfies PublicMockListing[];
+
+export const mockListings: ListingResponse[] = publicMockListings.map(
+	(listing) => ({
+		...listing,
+		listingStatus: "APPROVED" as const,
+		...publicListingCapabilities,
+	}),
+);
 
 export const mockCategories: ListingCategoryMeta[] = [
 	{
