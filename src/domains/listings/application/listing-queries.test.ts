@@ -286,7 +286,7 @@ function readListingDetails(actor: Actor | null, listing: ListingView) {
 
 function makeListings(listings: ListingView[]): ListingDetailQueryPort {
 	return {
-		findById: async (listingId) =>
+		findById: async (listingId, _viewer) =>
 			listings.find((listing) => listing.id === listingId) ?? null,
 	};
 }
@@ -295,7 +295,7 @@ function makeSellerListingPort(
 	listings: ListingView[],
 ): SellerListingQueryPort {
 	return {
-		listForSeller: async (sellerId) =>
+		listForSeller: async (sellerId, _viewer) =>
 			listings.filter((listing) => listing.sellerId === sellerId),
 	};
 }
@@ -304,14 +304,14 @@ function makePendingModerationListingPort(
 	listings: ListingView[],
 ): PendingModerationListingQueryPort {
 	return {
-		listPendingModeration: async () =>
+		listPendingModeration: async (_viewer) =>
 			listings.filter((listing) => listing.listingStatus === "PENDING"),
 	};
 }
 
 function makeCartListingPort(listings: ListingView[]): CartListingQueryPort {
 	return {
-		findByIds: async (listingIds) =>
+		findByIds: async (listingIds, _viewer) =>
 			listings.filter((listing) => listingIds.includes(listing.id)),
 	};
 }

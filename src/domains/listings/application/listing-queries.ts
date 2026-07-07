@@ -42,7 +42,7 @@ export type ListingViewerCapabilityInput = {
 export interface ListingDetailQueryPort {
 	findById(
 		listingId: string,
-		viewer?: Actor | null,
+		viewer: Actor | null,
 	): Promise<ListingView | null>;
 }
 
@@ -61,19 +61,16 @@ export type ApprovedListingSearchQuery = {
 export interface ApprovedListingSearchPort {
 	searchApproved(
 		query: ApprovedListingSearchQuery,
-		viewer?: Actor | null,
+		viewer: Actor | null,
 	): Promise<ListingView[]>;
 }
 
 export interface SellerListingQueryPort {
-	listForSeller(
-		sellerId: string,
-		viewer?: Actor | null,
-	): Promise<ListingView[]>;
+	listForSeller(sellerId: string, viewer: Actor | null): Promise<ListingView[]>;
 }
 
 export interface PendingModerationListingQueryPort {
-	listPendingModeration(viewer?: Actor | null): Promise<ListingView[]>;
+	listPendingModeration(viewer: Actor | null): Promise<ListingView[]>;
 }
 
 export interface ListingCountQueryPort {
@@ -85,15 +82,12 @@ export interface ListingCountQueryPort {
 export interface RecentApprovedListingQueryPort {
 	listRecentApproved(
 		limit: number,
-		viewer?: Actor | null,
+		viewer: Actor | null,
 	): Promise<ListingView[]>;
 }
 
 export interface CartListingQueryPort {
-	findByIds(
-		listingIds: string[],
-		viewer?: Actor | null,
-	): Promise<ListingView[]>;
+	findByIds(listingIds: string[], viewer: Actor | null): Promise<ListingView[]>;
 }
 
 export async function getListingDetails(

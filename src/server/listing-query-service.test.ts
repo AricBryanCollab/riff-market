@@ -57,6 +57,7 @@ describe("listing query behavior", () => {
 		const listings = makeApprovedListingSearchPort([telecaster]);
 
 		const result = await searchApprovedListingResponses(
+			null,
 			{
 				limit: "5",
 				offset: "10",
@@ -104,7 +105,7 @@ function makeListingDetailPort(
 	listings: ListingView[],
 ): ListingDetailQueryPort {
 	return {
-		findById: async (listingId) =>
+		findById: async (listingId, _viewer) =>
 			listings.find((listing) => listing.id === listingId) ?? null,
 	};
 }
@@ -113,7 +114,7 @@ function makeApprovedListingSearchPort(
 	listings: ListingView[],
 ): ApprovedListingSearchPort {
 	return {
-		searchApproved: async (query) =>
+		searchApproved: async (query, _viewer) =>
 			query.limit === 5 &&
 			query.offset === 10 &&
 			query.random === false &&

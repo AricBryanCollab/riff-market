@@ -79,13 +79,16 @@ describeDb("Prisma listing queries", () => {
 			isApproved: false,
 		});
 
-		const listings = await queries.searchApproved({
-			limit: 10,
-			offset: 0,
-			random: false,
-			priceMinAmountMinor: undefined,
-			priceMaxAmountMinor: undefined,
-		});
+		const listings = await queries.searchApproved(
+			{
+				limit: 10,
+				offset: 0,
+				random: false,
+				priceMinAmountMinor: undefined,
+				priceMaxAmountMinor: undefined,
+			},
+			null,
+		);
 
 		expect(listings.map((listing) => listing.id)).toEqual([
 			"approved-1",
@@ -115,13 +118,16 @@ describeDb("Prisma listing queries", () => {
 			priceAmountMinor: 35000,
 		});
 
-		const listings = await queries.searchApproved({
-			limit: 10,
-			offset: 0,
-			random: false,
-			priceMinAmountMinor: 19995,
-			priceMaxAmountMinor: 19995,
-		});
+		const listings = await queries.searchApproved(
+			{
+				limit: 10,
+				offset: 0,
+				random: false,
+				priceMinAmountMinor: 19995,
+				priceMaxAmountMinor: 19995,
+			},
+			null,
+		);
 
 		expect(listings.map((listing) => listing.id)).toEqual(["minor-priced"]);
 	});
@@ -194,15 +200,18 @@ describeDb("Prisma listing queries", () => {
 			description: "Bright twang guitar",
 		});
 
-		const listings = await queries.searchApproved({
-			limit: 10,
-			offset: 0,
-			random: false,
-			category: "ELECTRIC",
-			condition: "USED",
-			brand: "Fender",
-			search: "tele",
-		});
+		const listings = await queries.searchApproved(
+			{
+				limit: 10,
+				offset: 0,
+				random: false,
+				category: "ELECTRIC",
+				condition: "USED",
+				brand: "Fender",
+				search: "tele",
+			},
+			null,
+		);
 
 		expect(listings.map((listing) => listing.id)).toEqual(["matching-tele"]);
 	});
@@ -215,7 +224,7 @@ describeDb("Prisma listing queries", () => {
 			isApproved: false,
 		});
 
-		const listing = await queries.findById("pending-detail");
+		const listing = await queries.findById("pending-detail", null);
 
 		expect(listing).toMatchObject({
 			id: "pending-detail",
@@ -303,7 +312,7 @@ describeDb("Prisma listing queries", () => {
 			createdAt: new Date("2026-06-18T04:00:00.000Z"),
 		});
 
-		const listings = await queries.listForSeller("seller-1");
+		const listings = await queries.listForSeller("seller-1", null);
 
 		expect(listings.map((listing) => listing.id)).toEqual([
 			"seller-newer",
@@ -357,7 +366,7 @@ describeDb("Prisma listing queries", () => {
 			createdAt: new Date("2026-06-18T06:00:00.000Z"),
 		});
 
-		const listings = await queries.listPendingModeration();
+		const listings = await queries.listPendingModeration(null);
 
 		expect(listings.map((listing) => listing.id)).toEqual([
 			"pending-newer",
@@ -478,7 +487,7 @@ describeDb("Prisma listing queries", () => {
 			updatedAt: new Date("2026-06-18T02:00:00.000Z"),
 		});
 
-		const listings = await queries.listRecentApproved(8);
+		const listings = await queries.listRecentApproved(8, null);
 
 		expect(listings.map((listing) => listing.id)).toEqual([
 			"approved-newer",
@@ -515,7 +524,10 @@ describeDb("Prisma listing queries", () => {
 			isApproved: true,
 		});
 
-		const listings = await queries.findByIds(["cart-approved", "cart-pending"]);
+		const listings = await queries.findByIds(
+			["cart-approved", "cart-pending"],
+			null,
+		);
 
 		expect(
 			[...listings].sort((a, b) => a.id.localeCompare(b.id)),

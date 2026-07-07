@@ -71,7 +71,7 @@ export class PrismaListingQueries
 
 	async findById(
 		listingId: string,
-		viewer: Actor | null = null,
+		viewer: Actor | null,
 	): Promise<ListingView | null> {
 		const listing = await this.db.listing.findFirst({
 			where: {
@@ -85,7 +85,7 @@ export class PrismaListingQueries
 
 	async searchApproved(
 		query: ApprovedListingSearchQuery,
-		viewer: Actor | null = null,
+		viewer: Actor | null,
 	): Promise<ListingView[]> {
 		const { limit = 12, offset = 0, random = false } = query;
 		const where = toApprovedListingWhere(query);
@@ -120,7 +120,7 @@ export class PrismaListingQueries
 
 	async listForSeller(
 		sellerId: string,
-		viewer: Actor | null = null,
+		viewer: Actor | null,
 	): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { sellerId },
@@ -133,9 +133,7 @@ export class PrismaListingQueries
 		return toListingViews(listings, viewer);
 	}
 
-	async listPendingModeration(
-		viewer: Actor | null = null,
-	): Promise<ListingView[]> {
+	async listPendingModeration(viewer: Actor | null): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "PENDING" },
 			orderBy: {
@@ -194,7 +192,7 @@ export class PrismaListingQueries
 
 	async listRecentApproved(
 		limit: number,
-		viewer: Actor | null = null,
+		viewer: Actor | null,
 	): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "APPROVED" },
@@ -208,7 +206,7 @@ export class PrismaListingQueries
 
 	async findByIds(
 		listingIds: string[],
-		viewer: Actor | null = null,
+		viewer: Actor | null,
 	): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: {
