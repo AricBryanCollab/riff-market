@@ -1,3 +1,4 @@
+import { isValidPhoneNumber } from "@/domains/accounts/domain/phone-number";
 import type {
 	AccountDeletionResult,
 	AccountProfile,
@@ -12,7 +13,8 @@ import {
 
 export type AccountProfileErrorCode =
 	| "ACCOUNT_PROFILE_NOT_FOUND"
-	| "ACCOUNT_DELETE_EMAIL_MISMATCH";
+	| "ACCOUNT_DELETE_EMAIL_MISMATCH"
+	| "ACCOUNT_PROFILE_INVALID_PHONE_NUMBER";
 
 export type AccountProfileError = AppError<AccountProfileErrorCode>;
 
@@ -51,6 +53,16 @@ export async function updateAccountProfile(
 	},
 	accounts: AccountProfileReadPort & AccountProfileWritePort,
 ): Promise<Result<AccountProfile, AccountProfileError>> {
+	if (command.data.phone != null && !isValidPhoneNumber(command.data.phone)) {
+		return err(
+			accountError(
+				"ACCOUNT_PROFILE_INVALID_PHONE_NUMBER",
+				"Phone number must be 10-12 digits",
+				"validation",
+			),
+		);
+	}
+
 	const account = await accounts.findById(command.userId);
 
 	if (!account) {

@@ -1,5 +1,6 @@
 import z from "zod";
 import { themeClasses } from "@/constants/theme-classes";
+import { isValidPhoneNumber } from "@/domains/accounts/domain/phone-number";
 
 const emptyStringAsNull = z
 	.string()
@@ -32,7 +33,7 @@ export const updateUserSchema = z
 				z
 					.string()
 					.trim()
-					.regex(/^[0-9]+$/, "Phone number must contain only digits (0-9)"),
+					.refine(isValidPhoneNumber, "Phone number must be 10-12 digits"),
 				z.null(),
 			])
 			.optional(),

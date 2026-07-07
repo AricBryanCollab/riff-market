@@ -48,6 +48,59 @@ describe("account profile use cases", () => {
 		);
 	});
 
+	it("rejects a phone number that is not 10-12 digits", async () => {
+		const account = makeAccount();
+		const accounts = new InMemoryAccounts([account]);
+
+		const result = await updateAccountProfile(
+			{
+				userId: account.id,
+				data: { phone: "123" },
+			},
+			accounts,
+		);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: {
+				code: "ACCOUNT_PROFILE_INVALID_PHONE_NUMBER",
+				kind: "validation",
+			},
+		});
+		await expect(accounts.findById(account.id)).resolves.toEqual(account);
+	});
+
+	it("accepts a valid phone number and allows clearing it", async () => {
+		const account = makeAccount({ phone: "0123456789" });
+		const accounts = new InMemoryAccounts([account]);
+
+		const updated = await updateAccountProfile(
+			{
+				userId: account.id,
+				data: { phone: "098765432109" },
+			},
+			accounts,
+		);
+
+		expect(updated).toEqual({
+			ok: true,
+			value: makeAccount({ phone: "098765432109" }),
+		});
+
+		const cleared = await updateAccountProfile(
+			{
+				userId: account.id,
+				data: { phone: null },
+			},
+			accounts,
+		);
+
+		expect(cleared).toEqual({
+			ok: true,
+			value: makeAccount({ phone: null }),
+		});
+	});
+
 	it("does not update a missing account profile", async () => {
 		const account = makeAccount();
 		const accounts = new InMemoryAccounts([account]);
