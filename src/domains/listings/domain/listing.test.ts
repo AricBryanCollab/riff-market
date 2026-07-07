@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { Money } from "@/domains/shared/domain/money";
 import {
+	isListingOrderable,
 	Listing,
 	ListingLifecycleError,
 	ListingPurchaseError,
@@ -27,6 +28,16 @@ function makeListing(overrides: Partial<ListingSnapshot> = {}) {
 }
 
 describe("Listing purchase behavior", () => {
+	it.each([
+		["APPROVED", 1, true],
+		["APPROVED", 0, false],
+		["PENDING", 1, false],
+		["DECLINED", 1, false],
+		["WITHDRAWN", 1, false],
+	] as const)("returns %s stock %s orderability as %s", (status, stock, expected) => {
+		expect(isListingOrderable(status, stock)).toBe(expected);
+	});
+
 	it("reserves approved listing stock and returns a purchase snapshot", () => {
 		const listing = makeListing();
 

@@ -282,6 +282,7 @@ function toListingResponse(listing: ListingView): ListingResponse {
 		stock: listing.stock,
 		isApproved: listing.listingStatus === "APPROVED",
 		listingStatus: listing.listingStatus,
+		isOrderable: listing.isOrderable,
 		viewerCanEdit: listing.viewerCanEdit,
 		viewerCanDelete: listing.viewerCanDelete,
 		viewerCanApprove: listing.viewerCanApprove,

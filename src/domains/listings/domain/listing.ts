@@ -78,6 +78,10 @@ export function canDeclineListingStatus(status: ListingStatus) {
 	return status !== "DECLINED" && status !== "WITHDRAWN";
 }
 
+export function isListingOrderable(status: ListingStatus, stock: number) {
+	return status === "APPROVED" && stock > 0;
+}
+
 export class ListingPurchaseError extends Error {
 	readonly code: ListingPurchaseErrorCode;
 
@@ -153,7 +157,7 @@ export class Listing implements RecordsDomainEvents {
 	}
 
 	isOrderable() {
-		return this.currentStatus === "APPROVED" && this.availableStock > 0;
+		return isListingOrderable(this.currentStatus, this.availableStock);
 	}
 
 	approve(actor: Actor) {

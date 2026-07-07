@@ -11,6 +11,7 @@ import type {
 	SellerListingQueryPort,
 } from "@/domains/listings/application/listing-queries";
 import { deriveListingViewerCapabilities } from "@/domains/listings/application/listing-queries";
+import { isListingOrderable } from "@/domains/listings/domain/listing";
 import {
 	normalizeListingBrand,
 	toListingBrandKey,
@@ -322,6 +323,7 @@ function toListingView(
 	return {
 		...listing,
 		images: toListingImageDtos(listing.images),
+		isOrderable: isListingOrderable(listing.listingStatus, listing.stock),
 		...deriveListingViewerCapabilities({
 			viewer,
 			sellerId: listing.sellerId,

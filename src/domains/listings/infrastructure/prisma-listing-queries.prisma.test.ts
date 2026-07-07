@@ -250,6 +250,14 @@ describeDb("Prisma listing queries", () => {
 			name: "Approved Capabilities",
 			listingStatus: "APPROVED",
 			isApproved: true,
+			stock: 3,
+		});
+		await seedListing(db, {
+			id: "out-of-stock-capabilities",
+			name: "Out Of Stock Capabilities",
+			listingStatus: "APPROVED",
+			isApproved: true,
+			stock: 0,
 		});
 		await seedListing(db, {
 			id: "withdrawn-capabilities",
@@ -269,12 +277,19 @@ describeDb("Prisma listing queries", () => {
 		await expect(
 			queries.findById("approved-capabilities", adminActor),
 		).resolves.toMatchObject({
+			isOrderable: true,
 			viewerCanApprove: false,
 			viewerCanDecline: true,
 		});
 		await expect(
+			queries.findById("out-of-stock-capabilities", adminActor),
+		).resolves.toMatchObject({
+			isOrderable: false,
+		});
+		await expect(
 			queries.findById("withdrawn-capabilities", adminActor),
 		).resolves.toMatchObject({
+			isOrderable: false,
 			viewerCanApprove: false,
 			viewerCanDecline: false,
 		});

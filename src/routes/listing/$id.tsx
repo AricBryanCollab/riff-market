@@ -188,6 +188,7 @@ function RouteComponent() {
 						<ListingDetailsActions
 							quantity={quantity}
 							stock={listing.stock}
+							isOrderable={listing.isOrderable}
 							viewerCanEdit={listing.viewerCanEdit}
 							viewerCanDelete={listing.viewerCanDelete}
 							viewerCanApprove={listing.viewerCanApprove}

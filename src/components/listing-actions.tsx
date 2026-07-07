@@ -111,6 +111,7 @@ export function ShopPageListingActions({
 interface ListingDetailsActionsProps {
 	quantity: number;
 	stock: number;
+	isOrderable: boolean;
 	viewerCanEdit: boolean;
 	viewerCanDelete: boolean;
 	viewerCanApprove: boolean;
@@ -121,6 +122,7 @@ interface ListingDetailsActionsProps {
 export function ListingDetailsActions({
 	quantity,
 	stock,
+	isOrderable,
 	handleQuantityChange,
 	viewerCanEdit,
 	viewerCanDelete,
@@ -151,7 +153,7 @@ export function ListingDetailsActions({
 		delete: viewerCanDelete,
 		approve: viewerCanApprove,
 		decline: viewerCanDecline,
-		addToCart: true,
+		addToCart: isOrderable,
 		toggleFavorite: true,
 	};
 
@@ -204,6 +206,10 @@ export function ListingDetailsActions({
 				break;
 
 			case "addToCart":
+				if (!isOrderable) {
+					return;
+				}
+
 				handleAddToCart();
 				break;
 
@@ -248,15 +254,12 @@ export function ListingDetailsActions({
 				{actions.map((action) => {
 					const Icon = action.icon;
 					const isSecondary = action.variant === "secondary";
-
-					const isOutOfStock = action.requiresStock && stock === 0;
 					const isPending =
 						isListingModerationPending &&
 						(action.onClickKey === "approve" ||
 							action.onClickKey === "decline");
 					const isActionAllowed = capabilities[action.onClickKey];
-					const isButtonDisabled =
-						isOutOfStock || isPending || !isActionAllowed;
+					const isButtonDisabled = isPending || !isActionAllowed;
 					return (
 						<button
 							key={action.onClickKey}
@@ -267,11 +270,13 @@ export function ListingDetailsActions({
 								!isActionAllowed &&
 								(action.onClickKey === "edit" || action.onClickKey === "delete")
 									? "You can only modify your own listings"
-									: !isActionAllowed &&
-											(action.onClickKey === "approve" ||
-												action.onClickKey === "decline")
-										? "This listing cannot be moderated with this action"
-										: undefined
+									: !isActionAllowed && action.onClickKey === "addToCart"
+										? "Listing is not available for purchase"
+										: !isActionAllowed &&
+												(action.onClickKey === "approve" ||
+													action.onClickKey === "decline")
+											? "This listing cannot be moderated with this action"
+											: undefined
 							}
 							className={listingActionButtonVariants({
 								variant: action.variant as RoleActionVariant,

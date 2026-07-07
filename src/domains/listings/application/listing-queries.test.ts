@@ -342,6 +342,7 @@ function makeListing({
 		currencyCode: "TWD",
 		stock: 2,
 		listingStatus,
+		isOrderable: listingStatus === "APPROVED",
 		viewerCanEdit: false,
 		viewerCanDelete: false,
 		viewerCanApprove: false,

@@ -12,7 +12,7 @@ const publicListingCapabilities = {
 };
 type PublicMockListing = Omit<
 	ListingResponse,
-	keyof typeof publicListingCapabilities | "listingStatus"
+	keyof typeof publicListingCapabilities | "listingStatus" | "isOrderable"
 >;
 
 const publicMockListings = [
@@ -214,6 +214,7 @@ export const mockListings: ListingResponse[] = publicMockListings.map(
 	(listing) => ({
 		...listing,
 		listingStatus: "APPROVED" as const,
+		isOrderable: true,
 		...publicListingCapabilities,
 	}),
 );
