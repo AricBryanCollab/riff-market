@@ -14,6 +14,10 @@ import {
 	type RecentApprovedListingQueryPort,
 	type SellerListingQueryPort,
 } from "@/domains/listings/application/listing-queries";
+import {
+	LISTING_CATEGORIES,
+	LISTING_CONDITIONS,
+} from "@/domains/listings/domain/listing-attributes";
 import type {
 	ListingBrandCount,
 	ListingCategoryCount,
@@ -36,14 +40,8 @@ type ListingQueryServiceError = {
 	readonly details?: object;
 };
 
-const listingCategorySchema = z.enum([
-	"ELECTRIC",
-	"ACOUSTIC",
-	"KEYBOARD",
-	"PEDALS",
-	"ACCESSORY",
-]);
-const listingConditionSchema = z.enum(["NEW", "USED", "MINT"]);
+const listingCategorySchema = z.enum(LISTING_CATEGORIES);
+const listingConditionSchema = z.enum(LISTING_CONDITIONS);
 
 const optionalListingPriceInputSchema = z
 	.string()

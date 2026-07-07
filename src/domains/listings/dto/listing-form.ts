@@ -3,6 +3,10 @@ import {
 	parseListingPriceInputToAmountMinor,
 	priceAmountMinorToDecimalPrice,
 } from "@/domains/listings/application/listing-money";
+import {
+	LISTING_CATEGORIES,
+	LISTING_CONDITIONS,
+} from "@/domains/listings/domain/listing-attributes";
 
 const fileSchema = z
 	.instanceof(File)
@@ -59,8 +63,8 @@ function parseWithListingPriceIssue<T>(
 
 export const createListingFormSchema = z.object({
 	name: z.string().trim().min(1, "Listing name is required"),
-	category: z.enum(["ELECTRIC", "ACOUSTIC", "KEYBOARD", "PEDALS", "ACCESSORY"]),
-	condition: z.enum(["NEW", "USED", "MINT"]),
+	category: z.enum(LISTING_CATEGORIES),
+	condition: z.enum(LISTING_CONDITIONS),
 	brand: z.string().trim().min(1, "Brand is required"),
 	model: z.string().trim().min(1, "Model is required"),
 	images: z

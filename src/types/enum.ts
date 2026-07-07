@@ -1,13 +1,9 @@
 export type UserRole = "ADMIN" | "SELLER" | "CUSTOMER";
 
-export type ListingCategory =
-	| "ELECTRIC"
-	| "ACOUSTIC"
-	| "KEYBOARD"
-	| "PEDALS"
-	| "ACCESSORY";
-
-export type ListingCondition = "NEW" | "USED" | "MINT";
+export type {
+	ListingCategory,
+	ListingCondition,
+} from "@/domains/listings/domain/listing-attributes";
 
 export type BuyerOrderSummaryStatus =
 	| "PENDING_PAYMENT"
