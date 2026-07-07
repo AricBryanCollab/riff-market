@@ -156,10 +156,6 @@ export class Listing implements RecordsDomainEvents {
 		return this.currentStatus;
 	}
 
-	isOrderable() {
-		return isListingOrderable(this.currentStatus, this.availableStock);
-	}
-
 	approve(actor: Actor) {
 		if (!canApproveListingStatus(this.currentStatus)) {
 			if (this.currentStatus === "WITHDRAWN") {
