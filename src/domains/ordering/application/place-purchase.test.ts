@@ -181,6 +181,24 @@ describe("PlacePurchase", () => {
 		expect(unitOfWork.transactionCount).toBe(0);
 	});
 
+	it("rejects a shipping address shorter than 5 characters before opening a transaction", async () => {
+		const { unitOfWork, runPlacePurchase } = makeHarness([makeListing()]);
+
+		const result = await runPlacePurchase(
+			customer,
+			makeCommand(undefined, { shippingAddress: "1 st" }),
+		);
+
+		expect(result).toEqual({
+			ok: false,
+			error: expect.objectContaining({
+				code: "PLACE_PURCHASE_INVALID_SHIPPING_ADDRESS",
+				kind: "validation",
+			}),
+		});
+		expect(unitOfWork.transactionCount).toBe(0);
+	});
+
 	it("rejects missing listings through the listing reservation port", async () => {
 		const { purchasePort, unitOfWork, runPlacePurchase } = makeHarness([]);
 

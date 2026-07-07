@@ -1,6 +1,7 @@
 import z from "zod";
 import { themeClasses } from "@/constants/theme-classes";
 import { isValidPhoneNumber } from "@/domains/accounts/domain/phone-number";
+import { isValidProfileAddress } from "@/domains/accounts/domain/profile-address";
 
 const emptyStringAsNull = z
 	.string()
@@ -40,7 +41,13 @@ export const updateUserSchema = z
 		address: z
 			.union([
 				emptyStringAsNull,
-				z.string().trim().min(10, "Please provide a valid address"),
+				z
+					.string()
+					.trim()
+					.refine(
+						isValidProfileAddress,
+						"Address must be at least 5 characters",
+					),
 				z.null(),
 			])
 			.optional(),

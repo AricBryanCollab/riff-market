@@ -1,4 +1,5 @@
 import { isValidPhoneNumber } from "@/domains/accounts/domain/phone-number";
+import { isValidProfileAddress } from "@/domains/accounts/domain/profile-address";
 import type {
 	AccountDeletionResult,
 	AccountProfile,
@@ -14,7 +15,8 @@ import {
 export type AccountProfileErrorCode =
 	| "ACCOUNT_PROFILE_NOT_FOUND"
 	| "ACCOUNT_DELETE_EMAIL_MISMATCH"
-	| "ACCOUNT_PROFILE_INVALID_PHONE_NUMBER";
+	| "ACCOUNT_PROFILE_INVALID_PHONE_NUMBER"
+	| "ACCOUNT_PROFILE_INVALID_ADDRESS";
 
 export type AccountProfileError = AppError<AccountProfileErrorCode>;
 
@@ -58,6 +60,19 @@ export async function updateAccountProfile(
 			accountError(
 				"ACCOUNT_PROFILE_INVALID_PHONE_NUMBER",
 				"Phone number must be 10-12 digits",
+				"validation",
+			),
+		);
+	}
+
+	if (
+		command.data.address != null &&
+		!isValidProfileAddress(command.data.address)
+	) {
+		return err(
+			accountError(
+				"ACCOUNT_PROFILE_INVALID_ADDRESS",
+				"Address must be at least 5 characters",
 				"validation",
 			),
 		);

@@ -6,6 +6,7 @@ import {
 } from "@/domains/ordering/domain/purchase";
 import type { SellerOrderItemSnapshot } from "@/domains/ordering/domain/seller-order";
 import { SellerOrder } from "@/domains/ordering/domain/seller-order";
+import { isValidShippingAddress } from "@/domains/ordering/domain/shipping-address";
 import type { UnitOfWork } from "@/domains/shared/application/unit-of-work";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { DomainEvent } from "@/domains/shared/domain/domain-event";
@@ -40,6 +41,7 @@ export type PlacePurchaseErrorCode =
 	| "PLACE_PURCHASE_EMPTY_ITEMS"
 	| "PLACE_PURCHASE_INVALID_ITEM_QUANTITY"
 	| "PLACE_PURCHASE_INVALID_BUYER_SNAPSHOT"
+	| "PLACE_PURCHASE_INVALID_SHIPPING_ADDRESS"
 	| "PLACE_PURCHASE_LISTING_NOT_FOUND"
 	| "PLACE_PURCHASE_LISTING_NOT_ORDERABLE"
 	| "PLACE_PURCHASE_INSUFFICIENT_STOCK"
@@ -280,6 +282,14 @@ function validateCommand(command: PlacePurchaseCommand) {
 			{
 				missingFields: missingBuyerFields.map(([field]) => field),
 			},
+		);
+	}
+
+	if (!isValidShippingAddress(command.shippingAddress)) {
+		return placePurchaseError(
+			"PLACE_PURCHASE_INVALID_SHIPPING_ADDRESS",
+			"Shipping address must be at least 5 characters",
+			"validation",
 		);
 	}
 

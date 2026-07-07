@@ -101,6 +101,59 @@ describe("account profile use cases", () => {
 		});
 	});
 
+	it("rejects an address shorter than 5 characters", async () => {
+		const account = makeAccount();
+		const accounts = new InMemoryAccounts([account]);
+
+		const result = await updateAccountProfile(
+			{
+				userId: account.id,
+				data: { address: "1 st" },
+			},
+			accounts,
+		);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: {
+				code: "ACCOUNT_PROFILE_INVALID_ADDRESS",
+				kind: "validation",
+			},
+		});
+		await expect(accounts.findById(account.id)).resolves.toEqual(account);
+	});
+
+	it("accepts a valid address and allows clearing it", async () => {
+		const account = makeAccount({ address: "123 Market St" });
+		const accounts = new InMemoryAccounts([account]);
+
+		const updated = await updateAccountProfile(
+			{
+				userId: account.id,
+				data: { address: "456 Mission St" },
+			},
+			accounts,
+		);
+
+		expect(updated).toEqual({
+			ok: true,
+			value: makeAccount({ address: "456 Mission St" }),
+		});
+
+		const cleared = await updateAccountProfile(
+			{
+				userId: account.id,
+				data: { address: null },
+			},
+			accounts,
+		);
+
+		expect(cleared).toEqual({
+			ok: true,
+			value: makeAccount({ address: null }),
+		});
+	});
+
 	it("does not update a missing account profile", async () => {
 		const account = makeAccount();
 		const accounts = new InMemoryAccounts([account]);
