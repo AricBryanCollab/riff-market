@@ -5,6 +5,7 @@ import {
 	type ListingStatus,
 } from "@/domains/listings/domain/listing";
 import { normalizeListingBrand } from "@/domains/listings/domain/listing-brand";
+import { isValidInitialStock } from "@/domains/listings/domain/listing-stock";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { AppError, Result } from "@/domains/shared/domain/result";
 import { err, ok } from "@/domains/shared/domain/result";
@@ -121,6 +122,7 @@ export type ListingCommandErrorCode =
 	| "LISTING_COMMAND_INVALID_TRANSITION"
 	| "LISTING_COMMAND_SAVE_FAILED"
 	| "LISTING_COMMAND_INVALID_IMAGES"
+	| "LISTING_COMMAND_INVALID_STOCK"
 	| "LISTING_COMMAND_IMAGE_UPLOAD_FAILED";
 
 export type ListingCommandError = AppError<ListingCommandErrorCode>;
@@ -166,6 +168,10 @@ export async function createListing(
 
 	if (!canManageListings(actor)) {
 		return err(unauthorizedError("Only sellers or admins can create listings"));
+	}
+
+	if (!isValidInitialStock(command.stock)) {
+		return err(invalidStockError());
 	}
 
 	let uploadedImages: ImageAssetRef[];
@@ -547,6 +553,14 @@ function invalidImagesError(message: string): ListingCommandError {
 		kind: "validation",
 		code: "LISTING_COMMAND_INVALID_IMAGES",
 		message,
+	};
+}
+
+function invalidStockError(): ListingCommandError {
+	return {
+		kind: "validation",
+		code: "LISTING_COMMAND_INVALID_STOCK",
+		message: "New listings must have at least 1 stock",
 	};
 }
 

@@ -7,6 +7,7 @@ import {
 	LISTING_CATEGORIES,
 	LISTING_CONDITIONS,
 } from "@/domains/listings/domain/listing-attributes";
+import { isValidInitialStock } from "@/domains/listings/domain/listing-stock";
 
 const fileSchema = z
 	.instanceof(File)
@@ -73,12 +74,17 @@ export const createListingFormSchema = z.object({
 		.max(5, "Maximum 5 images allowed"),
 	description: z.string().trim().min(1, "Description is required"),
 	price: listingPriceSchema,
-	stock: z.number().int().min(0, "Stock must be at least 0"),
+	stock: z
+		.number()
+		.int()
+		.refine(isValidInitialStock, "Stock must be at least 1"),
 });
 
 export const updateListingFormSchema = createListingFormSchema
 	.partial()
 	.extend({
+		// Unlike creation, existing listings may legitimately sit at 0 stock.
+		stock: z.number().int().min(0, "Stock must be at least 0").optional(),
 		imageUpdateMode: z.literal("replace").optional(),
 		imageUpdateItems: z.array(imageUpdateItemSchema).max(5).optional(),
 	})

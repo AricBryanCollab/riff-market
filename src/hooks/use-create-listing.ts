@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { isValidInitialStock } from "@/domains/listings/domain/listing-stock";
 import type {
 	ListingFormDraftFields,
 	ListingMutationResponseDto,
@@ -119,8 +120,8 @@ const useCreateListing = () => {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (listingDraft.stock === 0) {
-			showToast("Stock must not be equal to zero", "default");
+		if (!isValidInitialStock(listingDraft.stock)) {
+			showToast("Stock must be at least 1", "default");
 			return;
 		}
 

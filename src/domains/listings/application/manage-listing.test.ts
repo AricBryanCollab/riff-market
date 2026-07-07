@@ -173,6 +173,36 @@ describe("listing command use cases", () => {
 		expect(repository.createListing).not.toHaveBeenCalled();
 	});
 
+	it("rejects zero-stock listings before uploading images", async () => {
+		const { repository, images, dependencies } = createFakes();
+
+		const result = await createListing(
+			sellerActor,
+			{
+				name: "Telecaster",
+				category: "ELECTRIC",
+				condition: "NEW",
+				brand: "Fender",
+				model: "Player",
+				description: "A listing",
+				price: 19995,
+				stock: 0,
+				imageFiles: [imageFile("listing.jpg")],
+			},
+			dependencies,
+		);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: {
+				code: "LISTING_COMMAND_INVALID_STOCK",
+				kind: "validation",
+			},
+		});
+		expect(images.uploadImages).not.toHaveBeenCalled();
+		expect(repository.createListing).not.toHaveBeenCalled();
+	});
+
 	it("cleans up uploaded create images when persistence does not save", async () => {
 		const { repository, images, dependencies } = createFakes();
 		vi.mocked(repository.createListing).mockResolvedValue(null);
