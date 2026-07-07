@@ -26,12 +26,15 @@ export const sellerStatusCommands = [
 
 export type SellerStatusCommand = (typeof sellerStatusCommands)[number];
 
-const sellerStatusCommandSources = {
+const sellerStatusCommandSources: Record<
+	SellerStatusCommand,
+	readonly SellerOrderStatus[]
+> = {
 	PROCESSING: ["NEW"],
 	SHIPPED: ["PROCESSING"],
 	DELIVERED: ["SHIPPED"],
 	CANCELED: ["ON_HOLD_PAYMENT", "NEW", "PROCESSING"],
-} as const satisfies Record<SellerStatusCommand, readonly SellerOrderStatus[]>;
+};
 
 export function allowedSellerStatusCommands(
 	status: SellerOrderStatus,
@@ -209,7 +212,7 @@ export class SellerOrder implements RecordsDomainEvents {
 
 	private transitionTo(
 		nextStatus: SellerOrderStatus,
-		allowedCurrentStatuses: SellerOrderStatus[],
+		allowedCurrentStatuses: readonly SellerOrderStatus[],
 		trackingNumber = this.trackingNumber,
 	) {
 		if (this.status === nextStatus) {
