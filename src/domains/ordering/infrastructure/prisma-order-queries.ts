@@ -6,6 +6,7 @@ import {
 	type OrderDetailQueryPort,
 	type SellerOrderDashboardPort,
 } from "@/domains/ordering/application/order-queries";
+import { allowedSellerStatusCommands } from "@/domains/ordering/domain/seller-order";
 import type {
 	BuyerPurchaseView,
 	OrderItemView,
@@ -218,6 +219,7 @@ function toSellerOrderDashboardView(
 		trackingNumber:
 			sellerOrder.trackingNumber ?? sellerOrder.purchase.purchaseNumber,
 		status: sellerOrder.status,
+		allowedStatusCommands: allowedSellerStatusCommands(sellerOrder.status),
 		items: sellerOrder.items.map((item) =>
 			toOrderItemView(sellerOrder.id, item),
 		),

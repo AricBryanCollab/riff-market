@@ -1,7 +1,9 @@
-import type {
-	SellerOrder,
-	SellerOrderStatus,
-	SellerOrderStatusChangedEvent,
+import {
+	allowedSellerStatusCommands,
+	type SellerOrder,
+	type SellerOrderStatus,
+	type SellerOrderStatusChangedEvent,
+	type SellerStatusCommand,
 } from "@/domains/ordering/domain/seller-order";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { DomainEvent } from "@/domains/shared/domain/domain-event";
@@ -195,6 +197,17 @@ function applyTransition(
 	sellerOrder: SellerOrder,
 	command: ChangeSellerOrderStatusCommand,
 ) {
+	if (
+		!isSellerStatusCommand(command.status) ||
+		!allowedSellerStatusCommands(sellerOrder.status).includes(command.status)
+	) {
+		return changeSellerOrderStatusError(
+			"CHANGE_SELLER_ORDER_STATUS_INVALID_COMMAND",
+			`Cannot command seller order status ${command.status}`,
+			"validation",
+		);
+	}
+
 	try {
 		switch (command.status) {
 			case "PROCESSING":
@@ -209,13 +222,6 @@ function applyTransition(
 			case "CANCELED":
 				sellerOrder.cancel({ id: "system", role: "ADMIN" });
 				return undefined;
-			case "NEW":
-			case "ON_HOLD_PAYMENT":
-				return changeSellerOrderStatusError(
-					"CHANGE_SELLER_ORDER_STATUS_INVALID_COMMAND",
-					`Cannot command seller order status ${command.status}`,
-					"validation",
-				);
 		}
 	} catch (error) {
 		return changeSellerOrderStatusError(
@@ -227,6 +233,17 @@ function applyTransition(
 			error,
 		);
 	}
+}
+
+function isSellerStatusCommand(
+	status: SellerOrderStatus,
+): status is SellerStatusCommand {
+	return (
+		status === "PROCESSING" ||
+		status === "SHIPPED" ||
+		status === "DELIVERED" ||
+		status === "CANCELED"
+	);
 }
 
 function statusChangedEvents(events: DomainEvent[]) {

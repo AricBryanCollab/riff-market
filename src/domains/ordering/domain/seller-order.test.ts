@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { Money } from "@/domains/shared/domain/money";
-import { SellerOrder, type SellerOrderItemSnapshot } from "./seller-order";
+import {
+	allowedSellerStatusCommands,
+	SellerOrder,
+	type SellerOrderItemSnapshot,
+} from "./seller-order";
 
 function makeItem(
 	overrides: Partial<SellerOrderItemSnapshot> = {},
@@ -169,6 +173,38 @@ describe("SellerOrder", () => {
 		sellerOrder.cancel({ id: "customer-1", role: "CUSTOMER" });
 
 		expect(sellerOrder.status).toBe("CANCELED");
+	});
+
+	it("allows canceling an on-hold seller order", () => {
+		const sellerOrder = SellerOrder.reconstitute({
+			id: "seller-order-1",
+			purchaseId: "purchase-1",
+			sellerId: "seller-1",
+			status: "ON_HOLD_PAYMENT",
+			trackingNumber: null,
+			items: [makeItem()],
+		});
+
+		sellerOrder.cancel({ id: "seller-1", role: "SELLER" });
+
+		expect(sellerOrder.status).toBe("CANCELED");
+	});
+
+	it("offers only the valid status commands for each order status", () => {
+		expect(allowedSellerStatusCommands("ON_HOLD_PAYMENT")).toEqual([
+			"CANCELED",
+		]);
+		expect(allowedSellerStatusCommands("NEW")).toEqual([
+			"PROCESSING",
+			"CANCELED",
+		]);
+		expect(allowedSellerStatusCommands("PROCESSING")).toEqual([
+			"SHIPPED",
+			"CANCELED",
+		]);
+		expect(allowedSellerStatusCommands("SHIPPED")).toEqual(["DELIVERED"]);
+		expect(allowedSellerStatusCommands("DELIVERED")).toEqual([]);
+		expect(allowedSellerStatusCommands("CANCELED")).toEqual([]);
 	});
 
 	it("rejects invalid status transitions", () => {

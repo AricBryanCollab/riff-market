@@ -1,3 +1,4 @@
+import type { SellerStatusCommand } from "@/domains/ordering/domain/seller-order";
 import type { OrderDisplayStatus } from "@/types/enum";
 
 export interface OrderItem {
@@ -52,6 +53,7 @@ export interface OrderResponse {
 	shippingAddress: string;
 	trackingNumber: string;
 	status: OrderDisplayStatus;
+	allowedStatusCommands?: readonly SellerStatusCommand[];
 	items?: OrderItemResponse[];
 	customer?: {
 		id?: string;

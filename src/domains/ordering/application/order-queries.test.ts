@@ -371,6 +371,7 @@ function makeSellerOrderView(
 		shippingAddress: "123 Main St",
 		trackingNumber: "TRACK-1001",
 		status: "NEW",
+		allowedStatusCommands: ["PROCESSING", "CANCELED"],
 		items: [],
 		customer: {
 			id: "customer-1",

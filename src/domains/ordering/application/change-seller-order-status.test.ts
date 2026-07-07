@@ -142,7 +142,7 @@ describe("changeSellerOrderStatus", () => {
 		expect(repo.saved).toBeUndefined();
 	});
 
-	it("rejects invalid domain transitions", async () => {
+	it("rejects status commands that are not valid for the order's current status", async () => {
 		const repo = new FakeSellerOrderStatusRepository(makeRecord());
 		const changeStatus = makeChangeStatus(repo);
 
@@ -157,8 +157,27 @@ describe("changeSellerOrderStatus", () => {
 		expect(result).toMatchObject({
 			ok: false,
 			error: {
-				code: "CHANGE_SELLER_ORDER_STATUS_INVALID_TRANSITION",
-				message: "Cannot change seller order status from NEW to DELIVERED",
+				code: "CHANGE_SELLER_ORDER_STATUS_INVALID_COMMAND",
+				message: "Cannot command seller order status DELIVERED",
+			},
+		});
+	});
+
+	it("allows the owning seller to cancel an on-hold seller order", async () => {
+		const repo = new FakeSellerOrderStatusRepository(
+			makeRecord({ status: "ON_HOLD_PAYMENT" }),
+		);
+		const changeStatus = makeChangeStatus(repo);
+
+		const result = await changeStatus(
+			{ id: "seller-1", role: "SELLER" },
+			{ sellerOrderId: "seller-order-1", status: "CANCELED" },
+		);
+
+		expect(result).toMatchObject({
+			ok: true,
+			value: {
+				status: "CANCELED",
 			},
 		});
 	});

@@ -17,6 +17,30 @@ export const sellerOrderStatuses = [
 
 export type SellerOrderStatus = (typeof sellerOrderStatuses)[number];
 
+export const sellerStatusCommands = [
+	"PROCESSING",
+	"SHIPPED",
+	"DELIVERED",
+	"CANCELED",
+] as const;
+
+export type SellerStatusCommand = (typeof sellerStatusCommands)[number];
+
+const sellerStatusCommandSources = {
+	PROCESSING: ["NEW"],
+	SHIPPED: ["PROCESSING"],
+	DELIVERED: ["SHIPPED"],
+	CANCELED: ["ON_HOLD_PAYMENT", "NEW", "PROCESSING"],
+} as const satisfies Record<SellerStatusCommand, readonly SellerOrderStatus[]>;
+
+export function allowedSellerStatusCommands(
+	status: SellerOrderStatus,
+): SellerStatusCommand[] {
+	return sellerStatusCommands.filter((command) =>
+		sellerStatusCommandSources[command].includes(status),
+	);
+}
+
 export function isSellerOrderStatus(value: string): value is SellerOrderStatus {
 	return sellerOrderStatuses.includes(value as SellerOrderStatus);
 }
@@ -153,23 +177,23 @@ export class SellerOrder implements RecordsDomainEvents {
 	}
 
 	process() {
-		this.transitionTo("PROCESSING", ["NEW"]);
+		this.transitionTo("PROCESSING", sellerStatusCommandSources.PROCESSING);
 	}
 
 	ship(trackingNumber: string) {
 		this.transitionTo(
 			"SHIPPED",
-			["PROCESSING"],
+			sellerStatusCommandSources.SHIPPED,
 			normalizeTrackingNumber(trackingNumber),
 		);
 	}
 
 	deliver() {
-		this.transitionTo("DELIVERED", ["SHIPPED"]);
+		this.transitionTo("DELIVERED", sellerStatusCommandSources.DELIVERED);
 	}
 
 	cancel(_actor: Actor) {
-		this.transitionTo("CANCELED", ["ON_HOLD_PAYMENT", "NEW", "PROCESSING"]);
+		this.transitionTo("CANCELED", sellerStatusCommandSources.CANCELED);
 	}
 
 	pullDomainEvents() {

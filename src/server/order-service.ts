@@ -12,6 +12,7 @@ import {
 	type SellerOrderDashboardPort,
 } from "@/domains/ordering/application/order-queries";
 import type { SellerOrderStatus } from "@/domains/ordering/domain/seller-order";
+import { sellerStatusCommands } from "@/domains/ordering/domain/seller-order";
 import type { OrderView } from "@/domains/ordering/dto/order-view";
 import type { Actor } from "@/domains/shared/domain/actor";
 import type { ServerUserContext } from "@/server/function-middleware";
@@ -20,12 +21,7 @@ import {
 	unwrapResultOrThrowRequestError,
 } from "@/server/request-error";
 
-const sellerOrderCommandStatuses = [
-	"PROCESSING",
-	"SHIPPED",
-	"DELIVERED",
-	"CANCELED",
-] as const satisfies readonly SellerOrderStatus[];
+const sellerOrderCommandStatuses = sellerStatusCommands;
 
 const orderDetailInputSchema = z.object({
 	orderId: z.string().trim().min(1, "Order ID is required"),

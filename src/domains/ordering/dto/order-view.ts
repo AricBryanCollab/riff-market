@@ -1,3 +1,5 @@
+import type { SellerStatusCommand } from "@/domains/ordering/domain/seller-order";
+
 export const buyerOrderSummaryStatuses = [
 	"PENDING_PAYMENT",
 	"OPEN",
@@ -69,6 +71,7 @@ export type SellerOrderView = OrderViewBase & {
 	readonly purchaseId: string;
 	readonly sellerOrderId: string;
 	readonly status: SellerOrderViewStatus;
+	readonly allowedStatusCommands: readonly SellerStatusCommand[];
 	readonly customer: {
 		readonly id: string;
 		readonly email: string;

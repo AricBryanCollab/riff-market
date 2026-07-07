@@ -4,10 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BodyLarge, BodySmall, H4 } from "@/components/ui/typography";
+import type { SellerStatusCommand } from "@/domains/ordering/domain/seller-order";
 import { useOrdersByRole, useUpdateOrderStatus } from "@/hooks/use-get-orders";
 import { cn } from "@/lib/utils";
 import { useToastStore } from "@/store/toast";
-import type { OrderDisplayStatus, OrderStatus, UserRole } from "@/types/enum";
+import type { OrderDisplayStatus, UserRole } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 import { formatRelativeTime } from "@/utils/format-date";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
@@ -45,11 +46,6 @@ interface SettingsOrdersSectionBaseProps extends SettingsOrdersSectionProps {
 	variant: SettingsOrdersSectionVariant;
 	sellerStatusControls?: SellerStatusControlsProps;
 }
-
-type SellerStatusCommand = Extract<
-	OrderStatus,
-	"PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELED"
->;
 
 type SellerStatusControlsProps = {
 	isUpdatingStatus: boolean;
@@ -351,7 +347,7 @@ function SellerOrderStatusControls({
 	onTrackingNumberChange,
 	onStatusCommand,
 }: SellerStatusControlsProps & { order: OrderResponse }) {
-	const commands = getSellerStatusCommands(order.status);
+	const commands = order.allowedStatusCommands ?? [];
 
 	if (commands.length === 0) {
 		return null;
@@ -395,21 +391,6 @@ function SellerOrderStatusControls({
 			</div>
 		</div>
 	);
-}
-
-function getSellerStatusCommands(
-	status: OrderDisplayStatus,
-): SellerStatusCommand[] {
-	switch (status) {
-		case "NEW":
-			return ["PROCESSING", "CANCELED"];
-		case "PROCESSING":
-			return ["SHIPPED", "CANCELED"];
-		case "SHIPPED":
-			return ["DELIVERED"];
-		default:
-			return [];
-	}
 }
 
 function getSellerStatusCommandLabel(command: SellerStatusCommand) {
