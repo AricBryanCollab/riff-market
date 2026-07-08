@@ -46,7 +46,7 @@ describe("review use cases", () => {
 			reviews,
 		);
 
-		const listingReviews = await getListingReviews(" listing-1 ", reviews);
+		const listingReviews = await getListingReviews("listing-1", reviews);
 
 		expect(listingReviews).toMatchObject({
 			ok: true,

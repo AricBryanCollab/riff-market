@@ -62,19 +62,7 @@ export async function getListingReviews(
 	listingId: string,
 	reviews: ListingReviewPort,
 ): Promise<Result<ListingReview[], ReviewError>> {
-	const normalizedListingId = listingId.trim();
-
-	if (normalizedListingId.length === 0) {
-		return err(
-			reviewError(
-				"REVIEW_INVALID_LISTING_ID",
-				"Listing ID is required",
-				"validation",
-			),
-		);
-	}
-
-	return ok(await reviews.listByListingId(normalizedListingId));
+	return ok(await reviews.listByListingId(listingId));
 }
 
 export function reviewAlreadyExistsError(): ReviewError {
