@@ -5,9 +5,9 @@ import {
 import { beforeEach, expect, it } from "vitest";
 import { PrismaAccountProfiles } from "@/domains/accounts/infrastructure/prisma-account-profiles";
 import {
-	deleteAccount,
-	getAccountProfile,
-	updateAccountProfile,
+	deleteCurrentUser,
+	getCurrentUser,
+	updateCurrentUser,
 } from "@/server/account-service";
 import {
 	describeDb,
@@ -28,26 +28,24 @@ describeDb("account service Prisma integration", () => {
 	});
 
 	it("reads and updates persisted account profile data", async () => {
-		await expect(getAccountProfile("customer-1", accounts)).resolves.toEqual({
-			data: {
-				id: "customer-1",
-				firstName: "Pat",
-				lastName: "Buyer",
-				email: "customer@example.com",
-				role: "CUSTOMER",
-				theme: "light",
-				phone: null,
-				profilePic: null,
-				address: null,
-			},
+		await expect(getCurrentUser("customer-1", accounts)).resolves.toEqual({
+			id: "customer-1",
+			firstName: "Pat",
+			lastName: "Buyer",
+			email: "customer@example.com",
+			role: "CUSTOMER",
+			theme: "light",
+			phone: null,
+			profilePic: null,
+			address: null,
 		});
 
 		await expect(
-			updateAccountProfile(
+			updateCurrentUser(
 				"customer-1",
 				{
 					firstName: "Patricia",
-					phone: "555-0100",
+					phone: "5550100000",
 					theme: "dark",
 				},
 				accounts,
@@ -55,17 +53,17 @@ describeDb("account service Prisma integration", () => {
 		).resolves.toMatchObject({
 			id: "customer-1",
 			firstName: "Patricia",
-			phone: "555-0100",
+			phone: "5550100000",
 			theme: "dark",
 		});
 
-		await expect(getAccountProfile("customer-1", accounts)).resolves.toEqual({
-			data: expect.objectContaining({
+		await expect(getCurrentUser("customer-1", accounts)).resolves.toMatchObject(
+			{
 				firstName: "Patricia",
-				phone: "555-0100",
+				phone: "5550100000",
 				theme: "dark",
-			}),
-		});
+			},
+		);
 	});
 
 	it("deletes matching accounts and stages media cleanup jobs", async () => {
@@ -91,19 +89,16 @@ describeDb("account service Prisma integration", () => {
 		});
 
 		await expect(
-			deleteAccount("seller-1", "seller-1@example.com", accounts),
+			deleteCurrentUser("seller-1", "seller-1@example.com", accounts),
 		).resolves.toEqual({
 			message: "Account has been deleted successfully",
 			deletedUserId: "seller-1",
 		});
 
-		await expect(
-			getAccountProfile("seller-1", accounts),
-		).resolves.toMatchObject({
+		await expect(getCurrentUser("seller-1", accounts)).rejects.toMatchObject({
 			code: "ACCOUNT_PROFILE_NOT_FOUND",
-			error: "User not found",
-			kind: "not-found",
 			message: "User not found",
+			status: 404,
 		});
 		await expect(
 			db.mediaCleanupJob.findMany({

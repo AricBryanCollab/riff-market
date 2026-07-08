@@ -1,94 +1,153 @@
+import z from "zod";
 import {
 	type AccountDeletionPort,
 	type AccountProfileReadPort,
 	type AccountProfileWritePort,
-	deleteAccount as deleteAccountUseCase,
-	getAccountProfile as getAccountProfileUseCase,
-	updateAccountProfile as updateAccountProfileUseCase,
+	deleteAccount,
+	getAccountProfile,
+	updateAccountProfile,
 } from "@/domains/accounts/application/account-profile";
 import {
 	type AccountProfilePictureCleanupPort,
 	type AccountProfilePictureReadPort,
 	type AccountProfilePictureUploadPort,
 	type AccountProfilePictureWritePort,
-	updateAccountProfilePicture as updateAccountProfilePictureUseCase,
+	updateAccountProfilePicture,
 } from "@/domains/accounts/application/account-profile-picture";
-import type {
-	AccountDeletionResult,
-	AccountProfile,
-	AccountProfileUpdate,
-} from "@/domains/accounts/dto/account-profile";
-import type { AccountProfilePictureUpdateResult } from "@/domains/accounts/dto/account-profile-picture";
+import type { AccountProfile } from "@/domains/accounts/dto/account-profile";
 import { PrismaAccountProfiles } from "@/domains/accounts/infrastructure/prisma-account-profiles";
-import type { AppError } from "@/domains/shared/domain/result";
 import { logger } from "@/lib/logger";
+import {
+	type UpdateUserInput,
+	updateProfilePictureSchema,
+	updateUserSchema,
+} from "@/lib/zod/user-validation";
+import {
+	RequestError,
+	toRequestError,
+	unwrapResultOrThrowRequestError,
+} from "@/server/request-error";
 import type { UserProfile } from "@/types/user";
 
-export type AccountServiceError = AppError & {
-	readonly error: string;
-};
+const deleteCurrentUserSchema = z.object({
+	email: z.email("Enter the email address on your account"),
+});
 
-export async function getAccountProfile(
+export type DeleteCurrentUserInput = z.infer<typeof deleteCurrentUserSchema>;
+
+export function validateCurrentUserUpdateInput(data: unknown): UpdateUserInput {
+	const parsed = updateUserSchema.safeParse(data);
+
+	if (!parsed.success) {
+		throw new RequestError("Invalid user data to update", {
+			details: z.flattenError(parsed.error),
+		});
+	}
+
+	return parsed.data;
+}
+
+export function validateDeleteCurrentUserInput(
+	data: unknown,
+): DeleteCurrentUserInput {
+	const parsed = deleteCurrentUserSchema.safeParse(data);
+
+	if (!parsed.success) {
+		throw new RequestError("Invalid account deletion request", {
+			details: z.flattenError(parsed.error),
+		});
+	}
+
+	return parsed.data;
+}
+
+export function validateProfilePictureFormData(data: FormData) {
+	if (!(data instanceof FormData)) {
+		throw new RequestError("Expected profile picture form data");
+	}
+
+	const profilePic = data.get("profilePic");
+	const parsed = updateProfilePictureSchema.safeParse({ profilePic });
+
+	if (!parsed.success) {
+		throw new RequestError("Invalid profile picture", {
+			details: z.flattenError(parsed.error),
+		});
+	}
+
+	return parsed.data;
+}
+
+export async function getCurrentUser(
 	userId: string,
 	accounts?: AccountProfileReadPort,
-): Promise<{ readonly data: UserProfile } | AccountServiceError> {
-	const result = await getAccountProfileUseCase(
+): Promise<UserProfile> {
+	const result = await getAccountProfile(
+		userId,
+		accounts ?? (await createPrismaAccountProfiles()),
+	);
+
+	return toUserProfile(unwrapResultOrThrowRequestError(result));
+}
+
+export async function getOptionalCurrentUser(
+	userId: string | null | undefined,
+	accounts?: AccountProfileReadPort,
+): Promise<UserProfile | null> {
+	if (!userId) {
+		return null;
+	}
+
+	const result = await getAccountProfile(
 		userId,
 		accounts ?? (await createPrismaAccountProfiles()),
 	);
 
 	if (!result.ok) {
-		return toAccountServiceError(result.error);
-	}
+		if (result.error.code === "ACCOUNT_PROFILE_NOT_FOUND") {
+			return null;
+		}
 
-	return { data: toUserProfile(result.value) };
-}
-
-export async function updateAccountProfile(
-	userId: string,
-	data: AccountProfileUpdate,
-	accounts?: AccountProfileReadPort & AccountProfileWritePort,
-): Promise<UserProfile | AccountServiceError> {
-	const result = await updateAccountProfileUseCase(
-		{
-			userId,
-			data,
-		},
-		accounts ?? (await createPrismaAccountProfiles()),
-	);
-
-	if (!result.ok) {
-		return toAccountServiceError(result.error);
+		throw toRequestError(result.error);
 	}
 
 	return toUserProfile(result.value);
 }
 
-export async function deleteAccount(
+export async function updateCurrentUser(
+	userId: string,
+	data: UpdateUserInput,
+	accounts?: AccountProfileReadPort & AccountProfileWritePort,
+): Promise<UserProfile> {
+	const result = await updateAccountProfile(
+		{ userId, data },
+		accounts ?? (await createPrismaAccountProfiles()),
+	);
+
+	return toUserProfile(unwrapResultOrThrowRequestError(result));
+}
+
+export async function deleteCurrentUser(
 	userId: string,
 	email: string,
 	accounts?: AccountProfileReadPort & AccountDeletionPort,
-): Promise<AccountDeletionResult | AccountServiceError> {
-	const result = await deleteAccountUseCase(
+) {
+	const result = await deleteAccount(
 		{ userId, email },
 		accounts ?? (await createPrismaAccountProfiles()),
 	);
 
-	if (!result.ok) {
-		return toAccountServiceError(result.error);
-	}
-
-	return result.value;
+	return unwrapResultOrThrowRequestError(result);
 }
 
-export async function updateAccountProfilePicture(
+export async function updateCurrentUserProfilePicture(
 	userId: string,
 	profilePic: File | null,
 	accounts?: AccountProfilePictureReadPort & AccountProfilePictureWritePort,
 	imageAssets?: AccountProfilePictureUploadPort<File> &
 		AccountProfilePictureCleanupPort,
-): Promise<AccountProfilePictureUpdateResult | AccountServiceError> {
-	const result = await updateAccountProfilePictureUseCase(
+): Promise<string | null> {
+	const result = await updateAccountProfilePicture(
 		profilePic === null
 			? { userId, kind: "remove" }
 			: { userId, kind: "replace", profilePic },
@@ -97,22 +156,18 @@ export async function updateAccountProfilePicture(
 		logger,
 	);
 
-	if (!result.ok) {
-		return toAccountServiceError(result.error);
-	}
+	return unwrapResultOrThrowRequestError(result).profilePic;
+}
 
-	return result.value;
+export function toProfilePictureResponse(profilePic: string | null) {
+	return {
+		message: "Profile picture has been updated successfully",
+		profilePic,
+	};
 }
 
 function toUserProfile(account: AccountProfile): UserProfile {
 	return { ...account };
-}
-
-function toAccountServiceError(error: AppError): AccountServiceError {
-	return {
-		...error,
-		error: error.message,
-	};
 }
 
 async function createPrismaAccountProfiles() {

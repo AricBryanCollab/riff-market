@@ -10,7 +10,7 @@ import {
 	validateCurrentUserUpdateInput,
 	validateDeleteCurrentUserInput,
 	validateProfilePictureFormData,
-} from "@/server/current-user-service";
+} from "@/server/account-service";
 import { authenticatedServerFunctionMiddleware } from "@/server/function-middleware";
 import { useAppSession } from "@/utils/session";
 
