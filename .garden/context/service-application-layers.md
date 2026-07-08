@@ -22,3 +22,5 @@ Application use cases should be plain functions shaped like `useCase(actor, comm
 `src/domains/*/infrastructure/*` implements application ports with Prisma, assets, external systems, and other IO details.
 
 When adding behavior, put transport shape and HTTP-ish error mapping in the server service, use-case decisions in the application layer, pure invariants in the domain layer, and persistence details in infrastructure. If a server service only forwards arguments without validation, mapping, response shaping, or boundary translation, consider whether that function can stay thinner or be removed.
+
+Read queries with no authorization or visibility policy may call application query ports directly from the server adapter after boundary validation; do not add a pass-through use case for dumb fetches.
