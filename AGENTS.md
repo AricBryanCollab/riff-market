@@ -33,6 +33,8 @@ Index:
 |src/components/sidebar/price-range-filters.tsx:.garden/context/listing-money-read-contract.md
 |src/domains/**:.garden/context/service-application-layers.md
 |src/domains/listings/**:.garden/context/listing-money-read-contract.md
+|src/domains/listings/application/listing-queries.ts:.garden/context/listing-query-read-paths.md
+|src/domains/listings/infrastructure/prisma-listing-queries.ts:.garden/context/listing-query-read-paths.md
 |src/hooks/use-cart-details.*:.garden/context/listing-money-read-contract.md
 |src/hooks/use-update-listing.ts:.garden/context/listing-money-read-contract.md
 |src/routes/cart.tsx:.garden/context/listing-money-read-contract.md
@@ -40,5 +42,6 @@ Index:
 |src/routes/product/**:.garden/context/listing-money-read-contract.md
 |src/server/**:.garden/context/service-application-layers.md
 |src/server/listing-*:.garden/context/listing-money-read-contract.md
+|src/server/listing-query-service.ts:.garden/context/listing-query-read-paths.md
 <!-- garden:index:end -->
 <!-- garden:agents:end -->
