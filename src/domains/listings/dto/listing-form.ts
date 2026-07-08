@@ -84,7 +84,7 @@ export const updateListingFormSchema = createListingFormSchema
 	.partial()
 	.extend({
 		// Unlike creation, existing listings may legitimately sit at 0 stock.
-		stock: z.number().int().min(0, "Stock must be at least 0").optional(),
+		stock: z.number().int().min(0, "Stock cannot be negative").optional(),
 		imageUpdateMode: z.literal("replace").optional(),
 		imageUpdateItems: z.array(imageUpdateItemSchema).max(5).optional(),
 	})
