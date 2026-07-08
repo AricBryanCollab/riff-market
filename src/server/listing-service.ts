@@ -9,10 +9,10 @@ import {
 	type UpdateListingCommand,
 	updateListing,
 } from "@/domains/listings/application/manage-listing";
-import type {
-	ListingModerationResult,
-	ListingModerationWorkflowPort,
-	ModerateListingCommand,
+import {
+	type ListingModerationResult,
+	type ModerateListingCommand,
+	moderateListing,
 } from "@/domains/listings/application/moderate-listing";
 import type {
 	ListingMutationResponseDto,
@@ -48,8 +48,15 @@ export type ListingMutationResponse = ListingMutationResponseDto;
 export type RemoveListingResponse = ListingRemovalResponseDto;
 
 export type ListingCommandServiceDependencies = ListingCommandDependencies;
-export type ListingModerationServiceDependencies =
-	ListingModerationWorkflowPort;
+
+export type ListingModerationWorkflow = {
+	readonly moderateListing: (
+		actor: Actor,
+		command: ModerateListingCommand,
+	) => ReturnType<typeof moderateListing>;
+};
+
+export type ListingModerationServiceDependencies = ListingModerationWorkflow;
 
 export function validateModerateListingInput(
 	data: unknown,
@@ -217,7 +224,7 @@ export async function moderateListingForCurrentUser(
 		dependencies ?? (await createPrismaListingModerationDependencies());
 	const actor = toActor(user);
 	const command = toCommand(input);
-	const result = await moderationWorkflow.moderate(actor, command);
+	const result = await moderationWorkflow.moderateListing(actor, command);
 
 	return unwrapResultOrThrowRequestError(result);
 }
@@ -246,7 +253,17 @@ async function createPrismaListingModerationDependencies(): Promise<ListingModer
 		import("@/domains/listings/infrastructure/prisma-listing-moderation"),
 	]);
 
-	return new moderation.PrismaListingModerationWorkflow(prisma);
+	return {
+		moderateListing: (actor, command) =>
+			prisma.$transaction((transaction) =>
+				moderateListing(
+					actor,
+					command,
+					new moderation.PrismaListingModerationRepository(transaction),
+					new moderation.PrismaListingModerationNotifier(transaction),
+				),
+			),
+	};
 }
 
 function toActor(user: ServerUserContext): Actor {

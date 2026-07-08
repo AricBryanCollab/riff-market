@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type {
 	ListingReview,
 	ListingReviewCreateData,
-	ListingReviewPort,
+	ListingReviewCreatePort,
 	ReviewError,
 } from "@/domains/reviews/application/review-use-cases";
 import { reviewAlreadyExistsError } from "@/domains/reviews/application/review-use-cases";
@@ -91,25 +91,17 @@ describe("review server service", () => {
 	});
 });
 
-class InMemoryListingReviews implements ListingReviewPort {
+class InMemoryListingReviews implements ListingReviewCreatePort {
 	async createReview(
 		data: ListingReviewCreateData,
 	): Promise<Result<ListingReview, ReviewError>> {
 		return ok(makeReview(data));
 	}
-
-	async listByListingId(): Promise<ListingReview[]> {
-		return [];
-	}
 }
 
-class DuplicateListingReviews implements ListingReviewPort {
+class DuplicateListingReviews implements ListingReviewCreatePort {
 	async createReview(): Promise<Result<ListingReview, ReviewError>> {
 		return err(reviewAlreadyExistsError());
-	}
-
-	async listByListingId(): Promise<ListingReview[]> {
-		return [];
 	}
 }
 

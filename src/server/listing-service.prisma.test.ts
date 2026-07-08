@@ -1,20 +1,18 @@
 import type { PrismaClient } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
 import type { ListingImageManagerPort } from "@/domains/listings/application/manage-listing";
-import type {
-	ListingApprovedEvent,
-	ListingDeclinedEvent,
-	ListingModerationNotifierPort,
-	ListingModerationRepositoryPort,
-	ListingModerationResult,
-	ListingModerationWorkflowPort,
+import {
+	type ListingApprovedEvent,
+	type ListingDeclinedEvent,
+	type ListingModerationNotifierPort,
+	type ListingModerationRepositoryPort,
+	type ListingModerationResult,
+	moderateListing,
 } from "@/domains/listings/application/moderate-listing";
-import { moderateListing } from "@/domains/listings/application/moderate-listing";
 import { PrismaListingCommandRepository } from "@/domains/listings/infrastructure/prisma-listing-commands";
 import {
 	PrismaListingModerationNotifier,
 	PrismaListingModerationRepository,
-	PrismaListingModerationWorkflow,
 } from "@/domains/listings/infrastructure/prisma-listing-moderation";
 import { PrismaNotifications } from "@/domains/notifications/infrastructure/prisma-notifications";
 import type { ServerUserContext } from "@/server/function-middleware";
@@ -433,14 +431,24 @@ function commandDependencies(
 function moderationDependencies(
 	db: PrismaClient,
 ): ListingModerationServiceDependencies {
-	return new PrismaListingModerationWorkflow(db);
+	return {
+		moderateListing: (actor, command) =>
+			db.$transaction((transaction) =>
+				moderateListing(
+					actor,
+					command,
+					new PrismaListingModerationRepository(transaction),
+					new PrismaListingModerationNotifier(transaction),
+				),
+			),
+	};
 }
 
 function failingModerationDependencies(
 	db: PrismaClient,
 ): ListingModerationServiceDependencies {
 	return {
-		moderate: (actor, command) =>
+		moderateListing: (actor, command) =>
 			db.$transaction((transaction) =>
 				moderateListing(
 					actor,
@@ -454,9 +462,9 @@ function failingModerationDependencies(
 
 function staleStatusModerationDependencies(
 	db: PrismaClient,
-): ListingModerationWorkflowPort {
+): ListingModerationServiceDependencies {
 	return {
-		moderate: (actor, command) =>
+		moderateListing: (actor, command) =>
 			moderateListing(
 				actor,
 				command,

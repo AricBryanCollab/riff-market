@@ -13,7 +13,7 @@ describe("listing moderation", () => {
 	it("maps admin user and approve input into workflow command", async () => {
 		const calls: unknown[] = [];
 		const workflow = {
-			moderate: async (actor: unknown, command: unknown) => {
+			moderateListing: async (actor: unknown, command: unknown) => {
 				calls.push({ actor, command });
 
 				return {
@@ -45,7 +45,7 @@ describe("listing moderation", () => {
 
 	it("maps workflow failures into request errors", async () => {
 		const workflow = {
-			moderate: async () => ({
+			moderateListing: async () => ({
 				ok: false as const,
 				error: {
 					kind: "not-found" as const,
