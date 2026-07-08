@@ -46,11 +46,6 @@ export async function getNotifications(
 	actor: Actor,
 	notifications: NotificationQueryPort,
 ): Promise<Result<NotificationView[], NotificationError>> {
-	const validationError = validateRequired(actor.id, "User ID");
-	if (validationError) {
-		return err(validationError);
-	}
-
 	return ok(await notifications.listForUser(actor.id));
 }
 
@@ -86,19 +81,6 @@ export async function readNotification(
 	},
 	notifications: NotificationReadPort,
 ): Promise<Result<NotificationView, NotificationError>> {
-	const notificationIdError = validateRequired(
-		command.notificationId,
-		"Notification ID",
-	);
-	if (notificationIdError) {
-		return err(notificationIdError);
-	}
-
-	const userIdError = validateRequired(command.actor.id, "User ID");
-	if (userIdError) {
-		return err(userIdError);
-	}
-
 	const notification = await notifications.markAsReadForUser(
 		command.notificationId,
 		command.actor.id,
@@ -121,11 +103,6 @@ export async function readAllNotifications(
 	actor: Actor,
 	notifications: NotificationReadAllPort,
 ): Promise<Result<{ readonly count: number }, NotificationError>> {
-	const userIdError = validateRequired(actor.id, "User ID");
-	if (userIdError) {
-		return err(userIdError);
-	}
-
 	return ok(await notifications.markAllAsReadForUser(actor.id));
 }
 
@@ -133,11 +110,6 @@ export async function getUnreadNotificationCount(
 	actor: Actor,
 	notifications: NotificationUnreadCountPort,
 ): Promise<Result<number, NotificationError>> {
-	const userIdError = validateRequired(actor.id, "User ID");
-	if (userIdError) {
-		return err(userIdError);
-	}
-
 	return ok(await notifications.countUnreadForUser(actor.id));
 }
 
