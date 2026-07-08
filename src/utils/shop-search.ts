@@ -1,6 +1,7 @@
 import { normalizeOptionalListingPriceInput } from "@/domains/listings/application/listing-money";
+import { APPROVED_LISTING_SHOP_PAGE_SIZE } from "@/domains/listings/application/listing-queries";
 
-export const SHOP_PAGE_SIZE = 8;
+export const SHOP_PAGE_SIZE = APPROVED_LISTING_SHOP_PAGE_SIZE;
 
 // Human-entered listing price in marketplace currency, not minor units.
 export type ListingPriceInput = string;

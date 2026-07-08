@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { APPROVED_LISTING_SEARCH_MAX_LIMIT } from "@/domains/listings/application/listing-queries";
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	authenticatedServerFunctionMiddleware,
@@ -40,7 +41,12 @@ const listingCountStatusServerInputSchema = z.object({
 });
 
 const recentListingsInputSchema = z.object({
-	limit: z.number().int().min(1).max(100).optional(),
+	limit: z
+		.number()
+		.int()
+		.min(1)
+		.max(APPROVED_LISTING_SEARCH_MAX_LIMIT)
+		.optional(),
 });
 
 const cartListingDetailsInputSchema = z.object({

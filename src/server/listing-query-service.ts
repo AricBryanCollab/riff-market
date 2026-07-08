@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { parseOptionalListingPriceInputToAmountMinor } from "@/domains/listings/application/listing-money";
 import {
+	APPROVED_LISTING_SEARCH_MAX_LIMIT,
+	APPROVED_LISTING_SHOP_PAGE_SIZE,
 	type ApprovedListingSearchPort,
 	type ApprovedListingSearchQuery,
 	type CartListingQueryPort,
@@ -11,6 +13,7 @@ import {
 	listPendingModerationListings,
 	listSellerListings,
 	type PendingModerationListingQueryPort,
+	RECENT_APPROVED_LISTINGS_LIMIT,
 	type RecentApprovedListingQueryPort,
 	type SellerListingQueryPort,
 } from "@/domains/listings/application/listing-queries";
@@ -66,8 +69,8 @@ const approvedListingSearchInputSchema = z
 		limit: z
 			.string()
 			.nullable()
-			.transform((v) => (v ? Number(v) : 12))
-			.pipe(z.number().min(1).max(100)),
+			.transform((v) => (v ? Number(v) : APPROVED_LISTING_SHOP_PAGE_SIZE))
+			.pipe(z.number().min(1).max(APPROVED_LISTING_SEARCH_MAX_LIMIT)),
 
 		offset: z
 			.string()
@@ -197,7 +200,7 @@ export async function getListingStatusCountDto(
 
 export async function listRecentListingResponses(
 	actor: Actor | null,
-	limit: number = 8,
+	limit: number = RECENT_APPROVED_LISTINGS_LIMIT,
 	listings?: RecentApprovedListingQueryPort,
 ): Promise<ListingResponse[] | ListingQueryServiceError> {
 	const listingQueries = listings ?? (await createPrismaListingQueries());

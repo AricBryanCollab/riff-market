@@ -19,6 +19,11 @@ import {
 } from "@/domains/shared/domain/result";
 import { canModifyListing } from "./manage-listing";
 
+export const APPROVED_LISTING_SHOP_PAGE_SIZE = 8;
+export const RECENT_APPROVED_LISTINGS_LIMIT = 8;
+export const FEATURED_LISTINGS_SAMPLE_SIZE = 5;
+export const APPROVED_LISTING_SEARCH_MAX_LIMIT = 100;
+
 export type ListingQueryErrorCode =
 	| "LISTING_QUERY_UNAUTHORIZED"
 	| "LISTING_QUERY_INVALID_ID"

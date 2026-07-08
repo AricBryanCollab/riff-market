@@ -10,7 +10,10 @@ import type {
 	RecentApprovedListingQueryPort,
 	SellerListingQueryPort,
 } from "@/domains/listings/application/listing-queries";
-import { deriveListingViewerCapabilities } from "@/domains/listings/application/listing-queries";
+import {
+	APPROVED_LISTING_SHOP_PAGE_SIZE,
+	deriveListingViewerCapabilities,
+} from "@/domains/listings/application/listing-queries";
 import { isListingOrderable } from "@/domains/listings/domain/listing";
 import {
 	normalizeListingBrand,
@@ -88,7 +91,11 @@ export class PrismaListingQueries
 		query: ApprovedListingSearchQuery,
 		viewer: Actor | null,
 	): Promise<ListingView[]> {
-		const { limit = 12, offset = 0, random = false } = query;
+		const {
+			limit = APPROVED_LISTING_SHOP_PAGE_SIZE,
+			offset = 0,
+			random = false,
+		} = query;
 		const where = toApprovedListingWhere(query);
 
 		if (random) {

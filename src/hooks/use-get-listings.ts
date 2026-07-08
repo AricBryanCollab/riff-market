@@ -1,4 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import { FEATURED_LISTINGS_SAMPLE_SIZE } from "@/domains/listings/application/listing-queries";
 import type {
 	ApprovedListingCount,
 	ListingResponse,
@@ -54,7 +55,9 @@ export const featuredListingsQueryOpt = queryOptions<ListingResponse[]>({
 	queryKey: queryKeys.listings.featured,
 	queryFn: async () => {
 		return fetchApprovedListings({
-			...toApprovedListingSearchServerInput({ limit: 5 }),
+			...toApprovedListingSearchServerInput({
+				limit: FEATURED_LISTINGS_SAMPLE_SIZE,
+			}),
 			random: "true",
 		});
 	},
