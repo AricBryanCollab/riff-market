@@ -21,24 +21,8 @@ Before editing a listed area, inspect all matching context cards.
 Index:
 <!-- garden:index:start -->
 [Garden Context Index]|root:.garden/context
-|IMPORTANT:Before editing a listed area, inspect the matching context card
-|src/components/cart-list.tsx:.garden/context/listing-money-read-contract.md
-|src/components/home/featured-listing-card.tsx:.garden/context/listing-money-read-contract.md
-|src/components/home/hero-carousel.tsx:.garden/context/listing-money-read-contract.md
-|src/components/home/mocks.ts:.garden/context/listing-money-read-contract.md
-|src/components/listing-card.tsx:.garden/context/listing-money-read-contract.md
-|src/components/order-list.tsx:.garden/context/listing-money-read-contract.md
-|src/components/order/order-summary.*:.garden/context/listing-money-read-contract.md
-|src/components/pending-listing-list.tsx:.garden/context/listing-money-read-contract.md
-|src/components/sidebar/price-range-filters.tsx:.garden/context/listing-money-read-contract.md
-|src/domains/**:.garden/context/service-application-layers.md
-|src/domains/listings/**:.garden/context/listing-money-read-contract.md
-|src/hooks/use-cart-details.*:.garden/context/listing-money-read-contract.md
-|src/hooks/use-update-listing.ts:.garden/context/listing-money-read-contract.md
-|src/routes/cart.tsx:.garden/context/listing-money-read-contract.md
-|src/routes/checkout.tsx:.garden/context/listing-money-read-contract.md
-|src/routes/product/**:.garden/context/listing-money-read-contract.md
-|src/server/**:.garden/context/service-application-layers.md
-|src/server/listing-*:.garden/context/listing-money-read-contract.md
+|IMPORTANT:Before editing a listed area, inspect all matching context cards
+|listing-money.md:{src/components/cart-list.tsx,src/components/home/featured-listing-card.tsx,src/components/home/hero-carousel.tsx,src/components/home/mocks.ts,src/components/listing-card.tsx,src/components/order-list.tsx,src/components/order/order-summary.*,src/components/pending-listing-list.tsx,src/components/sidebar/price-range-filters.tsx,src/domains/listings/**,src/hooks/use-cart-details.*,src/hooks/use-update-listing.ts,src/routes/cart.tsx,src/routes/checkout.tsx,src/routes/product/**,src/server/listing-*}
+|service-application-layers.md:{src/domains/**,src/server/**}
 <!-- garden:index:end -->
 <!-- garden:agents:end -->
