@@ -10,10 +10,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { BodySmall } from "@/components/ui/typography";
+import {
+	isAllowedImageMimeType,
+	PROFILE_IMAGE_MAX_BYTES,
+} from "@/domains/shared/domain/image-upload";
 import useUpdateProfilePicture from "@/hooks/use-update-profile-picture";
 
-const MAX_PROFILE_PHOTO_SIZE_MB = 4;
-const ACCEPTED_PROFILE_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const PROFILE_IMAGE_MAX_MB = PROFILE_IMAGE_MAX_BYTES / (1024 * 1024);
+const ACCEPT_FORMATS = "image/jpeg,image/png,image/webp";
 const PROFILE_PHOTO_INPUT_ID = "profilePic";
 const PROFILE_PHOTO_DESCRIPTION_ID = "profile-photo-description";
 
@@ -32,13 +36,13 @@ export function ProfilePictureDialog() {
 			return;
 		}
 
-		if (!ACCEPTED_PROFILE_PHOTO_TYPES.includes(file.type)) {
+		if (!isAllowedImageMimeType(file.type)) {
 			setError("Choose a JPEG, PNG, or WEBP image.");
 			return;
 		}
 
-		if (file.size > MAX_PROFILE_PHOTO_SIZE_MB * 1024 * 1024) {
-			setError(`Choose an image under ${MAX_PROFILE_PHOTO_SIZE_MB}MB.`);
+		if (file.size <= 0 || file.size > PROFILE_IMAGE_MAX_BYTES) {
+			setError(`Choose an image under ${PROFILE_IMAGE_MAX_MB}MB.`);
 			return;
 		}
 
@@ -62,13 +66,13 @@ export function ProfilePictureDialog() {
 					<Input
 						id={PROFILE_PHOTO_INPUT_ID}
 						type="file"
-						accept={ACCEPTED_PROFILE_PHOTO_TYPES.join(",")}
+						accept={ACCEPT_FORMATS}
 						onChange={handleFileChange}
 						aria-describedby={PROFILE_PHOTO_DESCRIPTION_ID}
 						aria-invalid={error ? true : undefined}
 					/>
 					<FieldDescription id={PROFILE_PHOTO_DESCRIPTION_ID}>
-						JPEG, PNG, or WEBP. Maximum {MAX_PROFILE_PHOTO_SIZE_MB}MB.
+						JPEG, PNG, or WEBP. Maximum {PROFILE_IMAGE_MAX_MB}MB.
 					</FieldDescription>
 					{selectedFile && (
 						<BodySmall className="truncate leading-6">

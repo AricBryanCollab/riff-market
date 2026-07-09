@@ -1,4 +1,8 @@
 import { useRef, useState } from "react";
+import {
+	isAllowedImageMimeType,
+	LISTING_IMAGE_MAX_BYTES,
+} from "@/domains/shared/domain/image-upload";
 
 export type ExistingImageFile = {
 	readonly kind: "existing";
@@ -40,16 +44,17 @@ export function isExistingImageFile(
 	return image.kind === "existing";
 }
 
+const LISTING_IMAGE_MAX_MB = LISTING_IMAGE_MAX_BYTES / (1024 * 1024);
+const ACCEPT_FORMATS = "image/jpeg,image/png,image/webp";
+
 const useUploadImage = <TImage extends ImageFile>(
 	images: TImage[],
 	maxImages: number,
-	maxSizeMB: number,
 	onChange: (images: ImageFileChange<TImage>) => void,
 ) => {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [dragActive, setDragActive] = useState(false);
 	const [error, setError] = useState<string>("");
-	const acceptFormats = "image/jpeg,image/png,image/webp";
 
 	const handleFileSelect = async (files: FileList | null) => {
 		if (!files || files.length === 0) return;
@@ -67,14 +72,12 @@ const useUploadImage = <TImage extends ImageFile>(
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
 
-			if (file.size > maxSizeMB * 1024 * 1024) {
-				setError(`${file.name} exceeds ${maxSizeMB}MB limit`);
+			if (file.size <= 0 || file.size > LISTING_IMAGE_MAX_BYTES) {
+				setError(`${file.name} exceeds ${LISTING_IMAGE_MAX_MB}MB limit`);
 				continue;
 			}
 
-			if (
-				!acceptFormats.split(",").some((format) => file.type === format.trim())
-			) {
+			if (!isAllowedImageMimeType(file.type)) {
 				setError(`${file.name} is not a supported format`);
 				continue;
 			}
@@ -156,7 +159,8 @@ const useUploadImage = <TImage extends ImageFile>(
 		error,
 		canAddMore,
 		fileInputRef,
-		acceptFormats,
+		acceptFormats: ACCEPT_FORMATS,
+		maxSizeMB: LISTING_IMAGE_MAX_MB,
 		triggerFileInput,
 		handleDragEnter,
 		handleRemoveImage,

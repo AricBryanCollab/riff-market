@@ -146,7 +146,6 @@ function RouteComponent() {
 						images={images}
 						onChange={onImagesChange}
 						maxImages={5}
-						maxSizeMB={5}
 						icon={Camera}
 					/>
 				</div>

@@ -19,7 +19,6 @@ interface ImageUploaderProps<TImage extends ImageFile> {
 	onChange: (images: ImageFileChange<TImage>) => void;
 	maxImages?: number;
 	icon?: LucideIcon;
-	maxSizeMB?: number;
 }
 
 const imageUploaderDropZoneVariants = cva(
@@ -44,7 +43,6 @@ const ImageUploader = <TImage extends ImageFile>({
 	onChange,
 	maxImages = 5,
 	icon: Icon,
-	maxSizeMB = 5,
 }: ImageUploaderProps<TImage>) => {
 	const {
 		dragActive,
@@ -52,6 +50,7 @@ const ImageUploader = <TImage extends ImageFile>({
 		canAddMore,
 		fileInputRef,
 		acceptFormats,
+		maxSizeMB,
 		triggerFileInput,
 		handleDragEnter,
 		handleRemoveImage,
@@ -60,7 +59,7 @@ const ImageUploader = <TImage extends ImageFile>({
 		handleInputChange,
 		handleDragLeave,
 		handleDragOver,
-	} = useUploadImage(images, maxImages, maxSizeMB, onChange);
+	} = useUploadImage(images, maxImages, onChange);
 
 	const getImageLabel = (imageFile: ImageFile) =>
 		isNewImageFile(imageFile) ? imageFile.file.name : "Existing listing photo";
