@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { isActorRole } from "@/domains/shared/domain/actor";
+import { type ActorRole, isActorRole } from "@/domains/shared/domain/actor";
 import { clientLogger } from "@/lib/client-logger";
-import type { UserRole } from "@/types/enum";
 
 export interface CartItem {
 	listingId: string;
@@ -12,11 +11,11 @@ export interface CartItem {
 interface CartState {
 	items: CartItem[];
 	userId: string | null;
-	userRole: UserRole | null;
+	userRole: ActorRole | null;
 	addItem: (
 		listingId: string,
 		userId: string,
-		userRole: UserRole,
+		userRole: ActorRole,
 		quantity?: number,
 	) => void;
 	removeItem: (listingId: string) => void;
@@ -106,9 +105,11 @@ function normalizePersistedCartState(
 		items: normalizePersistedItems(persistedState.items),
 		userId:
 			typeof persistedState.userId === "string" ? persistedState.userId : null,
-		userRole: isUserRole(persistedState.userRole)
-			? persistedState.userRole
-			: null,
+		userRole:
+			typeof persistedState.userRole === "string" &&
+			isActorRole(persistedState.userRole)
+				? persistedState.userRole
+				: null,
 	};
 }
 
@@ -147,10 +148,6 @@ function normalizePersistedQuantity(quantity: unknown) {
 	}
 
 	return quantity;
-}
-
-function isUserRole(value: unknown): value is UserRole {
-	return typeof value === "string" && isActorRole(value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -9,12 +9,12 @@ import {
 	RoleActionConfigs,
 	type RoleActionVariant,
 } from "@/constants/role-action-configs";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import useModerateListing from "@/hooks/use-moderate-listing";
 import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
-import type { UserRole } from "@/types/enum";
 
 const listingActionButtonVariants = cva(
 	"rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors",
@@ -140,7 +140,7 @@ export function ListingDetailsActions({
 	const { handleModerateListing, isListingModerationPending } =
 		useModerateListing();
 
-	const role: UserRole = user?.role ?? "CUSTOMER";
+	const role: ActorRole = user?.role ?? "CUSTOMER";
 
 	const actions = RoleActionConfigs[role] ?? RoleActionConfigs.CUSTOMER;
 	const actionKeys = actions.map((action) => action.onClickKey);

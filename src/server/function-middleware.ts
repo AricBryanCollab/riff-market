@@ -1,14 +1,14 @@
 import { createMiddleware, createServerOnlyFn } from "@tanstack/react-start";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 import { requestLoggerMiddleware } from "@/middleware";
 import { RequestError } from "@/server/request-error";
-import type { UserRole } from "@/types/enum";
 
 export type ServerUserContext = {
 	id: string;
 	email: string;
 	firstName: string;
 	lastName: string;
-	role: UserRole;
+	role: ActorRole;
 };
 
 type AppSession = Awaited<
@@ -115,7 +115,7 @@ const getServerUserLookup = createServerOnlyFn(
 			email: user.email,
 			firstName: user.firstName,
 			lastName: user.lastName,
-			role: user.role as UserRole,
+			role: user.role as ActorRole,
 		};
 
 		updateRequestContext({
@@ -127,7 +127,7 @@ const getServerUserLookup = createServerOnlyFn(
 	},
 );
 
-export const createServerRoleMiddleware = (allowedRoles: UserRole[]) =>
+export const createServerRoleMiddleware = (allowedRoles: ActorRole[]) =>
 	createMiddleware({ type: "function" })
 		.middleware([serverAuthMiddleware])
 		.server(async ({ context, next }) => {
@@ -176,7 +176,7 @@ export const authenticatedServerFunctionMiddleware = [
 	serverAuthMiddleware,
 ] as const;
 
-export const createRoleServerFunctionMiddleware = (allowedRoles: UserRole[]) =>
+export const createRoleServerFunctionMiddleware = (allowedRoles: ActorRole[]) =>
 	[
 		requestLoggerMiddleware,
 		requestErrorMiddleware,

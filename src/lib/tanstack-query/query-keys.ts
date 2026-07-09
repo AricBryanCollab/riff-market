@@ -1,5 +1,5 @@
+import type { ActorRole } from "@/domains/shared/domain/actor";
 import type { ListingCountStatusQuery } from "@/lib/tanstack-query/listing-query-client";
-import type { UserRole } from "@/types/enum";
 import type { ApprovedListingSearchFilterQuery } from "@/utils/shop-search";
 
 export type ListingDetailViewerScope = "public" | "admin";
@@ -22,7 +22,7 @@ const listingKeys = {
 };
 
 export function listingDetailViewerScopeForRole(
-	role: UserRole | null | undefined,
+	role: ActorRole | null | undefined,
 ): ListingDetailViewerScope {
 	return role === "ADMIN" ? "admin" : "public";
 }
@@ -38,7 +38,7 @@ export const queryKeys = {
 	},
 	orders: {
 		root: ["orders"] as const,
-		byRole: (userRole: UserRole) => ["orders", userRole] as const,
+		byRole: (userRole: ActorRole) => ["orders", userRole] as const,
 	},
 	listings: listingKeys,
 };

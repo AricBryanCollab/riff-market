@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BodyLarge, BodySmall, H4 } from "@/components/ui/typography";
 import type { SellerStatusCommand } from "@/domains/ordering/domain/seller-order";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 import { useOrdersByRole, useUpdateOrderStatus } from "@/hooks/use-get-orders";
 import { cn } from "@/lib/utils";
 import { useToastStore } from "@/store/toast";
-import type { OrderDisplayStatus, UserRole } from "@/types/enum";
+import type { OrderDisplayStatus } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 import { formatRelativeTime } from "@/utils/format-date";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
@@ -101,7 +102,7 @@ function getSettingsOrdersStatus({
 	return "ready";
 }
 
-export function SettingsOrdersSection({ userRole }: { userRole: UserRole }) {
+export function SettingsOrdersSection({ userRole }: { userRole: ActorRole }) {
 	if (userRole === "CUSTOMER") {
 		return <CustomerSettingsOrders />;
 	}

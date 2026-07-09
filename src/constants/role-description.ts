@@ -1,11 +1,11 @@
-import type { UserRole } from "@/types/enum";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 
 interface RoleInfo {
 	label: string;
 	description: string;
 }
 
-export const RoleDescription: Record<UserRole, RoleInfo> = {
+export const RoleDescription: Record<ActorRole, RoleInfo> = {
 	ADMIN: {
 		label: "Admin",
 		description: "Manages marketplace operations and approvals",

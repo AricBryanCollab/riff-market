@@ -8,6 +8,7 @@ import NavbarIconButtons from "@/components/navbar-icon-buttons";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import {
 	cartDetailsQueryOpt,
@@ -26,7 +27,6 @@ import useNotifications, {
 import { useSignOut } from "@/hooks/use-sign-out";
 import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";
-import type { UserRole } from "@/types/enum";
 
 const loadCartList = () => import("@/components/cart-list");
 const loadOrderList = () => import("@/components/order-list");
@@ -213,7 +213,7 @@ const AdminActions = () => {
 	);
 };
 
-const RoleActions = ({ role }: { role: UserRole }) => {
+const RoleActions = ({ role }: { role: ActorRole }) => {
 	switch (role) {
 		case "CUSTOMER":
 			return <CustomerActions />;
@@ -279,7 +279,7 @@ const NotificationsMenu = () => {
 	);
 };
 
-const AuthenticatedUserMenu = ({ role }: { role: UserRole }) => {
+const AuthenticatedUserMenu = ({ role }: { role: ActorRole }) => {
 	const { loading: signOutLoading, signOut } = useSignOut();
 
 	return (

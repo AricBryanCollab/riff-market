@@ -1,15 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useState } from "react";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 import { clientLogger } from "@/lib/client-logger";
 import { refreshAuthUser } from "@/lib/tanstack-query/auth-user-query";
 import { signUpFn } from "@/server/auth.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { SignUpRequest } from "@/types/auth";
-import type { UserRole } from "@/types/enum";
 
 type SignUpFormState = Omit<SignUpRequest, "role"> & {
-	readonly role: UserRole | null;
+	readonly role: ActorRole | null;
 };
 
 const initialSignUp: SignUpFormState = {
@@ -47,7 +47,7 @@ const useSignUp = () => {
 		setSignUpData({ ...signUpData, [e.target.id]: e.target.value });
 	};
 
-	const onChangeRole = (role: UserRole) => {
+	const onChangeRole = (role: ActorRole) => {
 		setSignUpData({ ...signUpData, role: role });
 	};
 

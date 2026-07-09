@@ -4,7 +4,7 @@ import AnimatedLoader from "@/components/animated-loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
-import type { UserRole } from "@/types/enum";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 import type { OrderResponse } from "@/types/order";
 import { formatRelativeTime } from "@/utils/format-date";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
@@ -40,7 +40,7 @@ interface OrderListProps {
 	orders: OrderResponse[];
 	isLoading: boolean;
 	isEmptyOrders: boolean;
-	userRole: UserRole;
+	userRole: ActorRole;
 }
 
 const OrderList = ({

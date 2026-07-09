@@ -1,12 +1,12 @@
 import type { themeClasses } from "@/constants/theme-classes";
-import type { UserRole } from "@/types/enum";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 
 export interface UserProfile {
 	id: string;
 	firstName: string;
 	lastName: string;
 	email: string;
-	role: UserRole;
+	role: ActorRole;
 	theme: string;
 	phone: string | null;
 	profilePic: string | null;

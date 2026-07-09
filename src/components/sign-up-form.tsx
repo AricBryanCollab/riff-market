@@ -4,9 +4,9 @@ import { FormSelect } from "@/components/form-select";
 import { PasswordField } from "@/components/password-field";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { roleOptions } from "@/constants/select-options";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 import useAuthDialog from "@/hooks/use-auth-dialog";
 import useSignUp from "@/hooks/use-sign-up";
-import type { UserRole } from "@/types/enum";
 
 const SignUpForm = () => {
 	const { signUpData, loading, isError, onChange, onChangeRole, handleSubmit } =
@@ -68,7 +68,7 @@ const SignUpForm = () => {
 						value: r.value,
 					}))}
 					value={signUpData.role as string}
-					onValueChange={(value: string) => onChangeRole(value as UserRole)}
+					onValueChange={(value: string) => onChangeRole(value as ActorRole)}
 					label="I want to..."
 				/>
 			</div>
