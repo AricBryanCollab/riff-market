@@ -21,8 +21,6 @@ import {
 } from "@/domains/shared/domain/result";
 import { canModifyListing } from "./manage-listing";
 
-export type { ListingViewerCapabilities } from "@/domains/listings/dto/listing-view";
-
 export const APPROVED_LISTING_SHOP_PAGE_SIZE = 8;
 export const RECENT_APPROVED_LISTINGS_LIMIT = 8;
 export const FEATURED_LISTINGS_SAMPLE_SIZE = 5;
