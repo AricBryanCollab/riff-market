@@ -23,6 +23,7 @@ export async function cancelAccountScopedQueries(queryClient: QueryClient) {
 	await Promise.all([
 		queryClient.cancelQueries({ queryKey: queryKeys.notifications.root }),
 		queryClient.cancelQueries({ queryKey: queryKeys.orders.root }),
+		queryClient.cancelQueries({ queryKey: queryKeys.listings.root }),
 	]);
 }
 
@@ -30,6 +31,7 @@ export async function clearAccountCache(queryClient: QueryClient) {
 	await cancelAccountScopedQueries(queryClient);
 	queryClient.removeQueries({ queryKey: queryKeys.notifications.root });
 	queryClient.removeQueries({ queryKey: queryKeys.orders.root });
+	queryClient.removeQueries({ queryKey: queryKeys.listings.root });
 	setCurrentUserCache(queryClient, null);
 }
 
