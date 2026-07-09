@@ -2,7 +2,18 @@ import type { QueryClient } from "@tanstack/react-query";
 import { useCartStore } from "@/store/cart";
 import { useThemeStore } from "@/store/theme";
 import { useUserStore } from "@/store/user";
-import { clearAccountCache } from "./tanstack-query/cache-policy";
+import { refreshAuthUser } from "./tanstack-query/auth-user-query";
+import {
+	clearAccountCache,
+	invalidateListingCache,
+} from "./tanstack-query/cache-policy";
+
+export async function refreshAuthenticatedClientState(
+	queryClient: QueryClient,
+) {
+	await refreshAuthUser(queryClient);
+	await invalidateListingCache(queryClient);
+}
 
 export async function clearAuthenticatedClientState(queryClient: QueryClient) {
 	await clearAccountCache(queryClient);
