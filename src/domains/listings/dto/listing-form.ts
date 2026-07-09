@@ -17,7 +17,7 @@ const fileSchema = z
 	.instanceof(File)
 	.refine(
 		(file) => file.size > 0 && file.size <= LISTING_IMAGE_MAX_BYTES,
-		"File size must be less than 10MB",
+		`File size must be less than ${LISTING_IMAGE_MAX_BYTES / (1024 * 1024)}MB`,
 	)
 	.refine(
 		(file) => isAllowedImageMimeType(file.type),

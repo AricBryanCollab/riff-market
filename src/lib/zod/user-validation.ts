@@ -17,7 +17,7 @@ const profilePictureFile = z
 	.instanceof(File)
 	.refine(
 		(file) => file.size > 0 && file.size <= PROFILE_IMAGE_MAX_BYTES,
-		"File size must be less than 4MB",
+		`File size must be less than ${PROFILE_IMAGE_MAX_BYTES / (1024 * 1024)}MB`,
 	)
 	.refine(
 		(file) => isAllowedImageMimeType(file.type),

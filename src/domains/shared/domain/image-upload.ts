@@ -2,7 +2,6 @@ const BYTES_PER_MEGABYTE = 1024 * 1024;
 
 export const ALLOWED_IMAGE_MIME_TYPES = [
 	"image/jpeg",
-	"image/jpg",
 	"image/png",
 	"image/webp",
 ] as const;
@@ -18,8 +17,4 @@ export function isAllowedImageMimeType(
 	mimeType: string,
 ): mimeType is AllowedImageMimeType {
 	return allowedImageMimeTypes.has(mimeType);
-}
-
-export function isValidImageUpload(file: File, maxBytes: number): boolean {
-	return file.size > 0 && file.size <= maxBytes && isAllowedImageMimeType(file.type);
 }
