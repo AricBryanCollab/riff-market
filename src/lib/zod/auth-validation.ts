@@ -1,5 +1,15 @@
 import { z } from "zod";
 import { selfAssignableRoles } from "@/domains/accounts/application/account-auth";
+import {
+	isValidPassword,
+	MIN_PASSWORD_LENGTH,
+} from "@/domains/accounts/domain/password";
+
+const passwordPolicyMessage = `Password must be at least ${MIN_PASSWORD_LENGTH} characters and include uppercase, lowercase, a number, and a special character`;
+
+const passwordSchema = z
+	.string()
+	.refine(isValidPassword, passwordPolicyMessage);
 
 export const signUpSchema = z
 	.object({
@@ -10,8 +20,8 @@ export const signUpSchema = z
 			.trim()
 			.min(1, "Email is required")
 			.email("Invalid email address"),
-		password: z.string().min(4, "Password must be at least 4 characters"),
-		confirmPassword: z.string().min(4),
+		password: passwordSchema,
+		confirmPassword: passwordSchema,
 		role: z.enum(selfAssignableRoles).optional().default("CUSTOMER"),
 	})
 	.refine((data) => data.password === data.confirmPassword, {

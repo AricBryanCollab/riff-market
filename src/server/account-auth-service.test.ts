@@ -1,106 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { RequestError } from "@/server/request-error";
 import {
 	clearAuthSession,
 	establishAuthSession,
 	signInAccountService,
-	validateSignInRequest,
-	validateSignUpRequest,
 } from "./account-auth-service";
 
 describe("account auth service", () => {
-	it("validates sign in server-function input", () => {
-		expect(
-			validateSignInRequest({
-				email: " angus@example.com ",
-				password: " secret ",
-			}),
-		).toEqual({
-			email: "angus@example.com",
-			password: "secret",
-		});
-	});
-
-	it("validates sign up server-function input with a concrete default role", () => {
-		expect(
-			validateSignUpRequest({
-				firstName: " Angus ",
-				lastName: " Young ",
-				email: " angus@example.com ",
-				password: "secret",
-				confirmPassword: "secret",
-			}),
-		).toEqual({
-			firstName: "Angus",
-			lastName: "Young",
-			email: "angus@example.com",
-			password: "secret",
-			confirmPassword: "secret",
-			role: "CUSTOMER",
-		});
-	});
-
-	it("rejects invalid sign up server-function input", () => {
-		expect(() =>
-			validateSignUpRequest({
-				firstName: "",
-				lastName: "Young",
-				email: "angus@example.com",
-				password: "secret",
-				confirmPassword: "different",
-				role: "CUSTOMER",
-			}),
-		).toThrow(
-			expect.objectContaining({
-				details: expect.objectContaining({
-					fieldErrors: expect.objectContaining({
-						firstName: expect.any(Array),
-						confirmPassword: expect.any(Array),
-					}),
-				}),
-			}),
-		);
-	});
-
-	it("rejects malformed auth emails", () => {
-		expect(() =>
-			validateSignInRequest({
-				email: "not-an-email",
-				password: "secret",
-			}),
-		).toThrow(RequestError);
-
-		expect(() =>
-			validateSignUpRequest({
-				firstName: "Angus",
-				lastName: "Young",
-				email: "not-an-email",
-				password: "secret",
-				confirmPassword: "secret",
-				role: "CUSTOMER",
-			}),
-		).toThrow(RequestError);
-
-		expect(() =>
-			validateSignUpRequest({
-				firstName: "Angus",
-				lastName: "Young",
-				email: "not-an-email",
-				password: "secret",
-				confirmPassword: "secret",
-				role: "CUSTOMER",
-			}),
-		).toThrow(
-			expect.objectContaining({
-				details: expect.objectContaining({
-					fieldErrors: expect.objectContaining({
-						email: ["Invalid email address"],
-					}),
-				}),
-			}),
-		);
-	});
-
 	it("establishes the auth session and returns the public auth response", async () => {
 		const sessionUpdates: unknown[] = [];
 

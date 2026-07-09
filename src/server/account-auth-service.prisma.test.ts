@@ -27,8 +27,8 @@ describeDb("account auth service Prisma integration", () => {
 				firstName: "Angus",
 				lastName: "Young",
 				email: "angus@example.com",
-				password: "secret",
-				confirmPassword: "secret",
+				password: "Password1!",
+				confirmPassword: "Password1!",
 				role: "CUSTOMER",
 			},
 			accounts,
@@ -65,8 +65,8 @@ describeDb("account auth service Prisma integration", () => {
 				firstName: "Angus",
 				lastName: "Young",
 				email: "angus@example.com",
-				password: "secret",
-				confirmPassword: "secret",
+				password: "Password1!",
+				confirmPassword: "Password1!",
 				role: "SELLER",
 			},
 			accounts,
@@ -75,7 +75,7 @@ describeDb("account auth service Prisma integration", () => {
 
 		await expect(
 			signInAccountService(
-				{ email: "angus@example.com", password: "secret" },
+				{ email: "angus@example.com", password: "Password1!" },
 				accounts,
 				new FakePasswords(),
 			),
@@ -91,8 +91,8 @@ describeDb("account auth service Prisma integration", () => {
 			firstName: "Angus",
 			lastName: "Young",
 			email: "angus@example.com",
-			password: "secret",
-			confirmPassword: "secret",
+			password: "Password1!",
+			confirmPassword: "Password1!",
 			role: "CUSTOMER" as const,
 		};
 
