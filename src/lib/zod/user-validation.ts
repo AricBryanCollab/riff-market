@@ -2,6 +2,10 @@ import z from "zod";
 import { themeClasses } from "@/constants/theme-classes";
 import { isValidPhoneNumber } from "@/domains/accounts/domain/phone-number";
 import { isValidProfileAddress } from "@/domains/accounts/domain/profile-address";
+import {
+	isAllowedImageMimeType,
+	PROFILE_IMAGE_MAX_BYTES,
+} from "@/domains/shared/domain/image-upload";
 
 const emptyStringAsNull = z
 	.string()
@@ -12,14 +16,11 @@ const emptyStringAsNull = z
 const profilePictureFile = z
 	.instanceof(File)
 	.refine(
-		(file) => file.size <= 4 * 1024 * 1024,
+		(file) => file.size > 0 && file.size <= PROFILE_IMAGE_MAX_BYTES,
 		"File size must be less than 4MB",
 	)
 	.refine(
-		(file) =>
-			["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
-				file.type,
-			),
+		(file) => isAllowedImageMimeType(file.type),
 		"File must be a JPEG, PNG, or WebP image",
 	);
 

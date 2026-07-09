@@ -8,18 +8,19 @@ import {
 	LISTING_CONDITIONS,
 } from "@/domains/listings/domain/listing-attributes";
 import { isValidInitialStock } from "@/domains/listings/domain/listing-stock";
+import {
+	isAllowedImageMimeType,
+	LISTING_IMAGE_MAX_BYTES,
+} from "@/domains/shared/domain/image-upload";
 
 const fileSchema = z
 	.instanceof(File)
 	.refine(
-		(file) => file.size <= 4 * 1024 * 1024,
-		"File size must be less than 4MB",
+		(file) => file.size > 0 && file.size <= LISTING_IMAGE_MAX_BYTES,
+		"File size must be less than 10MB",
 	)
 	.refine(
-		(file) =>
-			["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
-				file.type,
-			),
+		(file) => isAllowedImageMimeType(file.type),
 		"File must be a JPEG, PNG, or WebP image",
 	);
 
