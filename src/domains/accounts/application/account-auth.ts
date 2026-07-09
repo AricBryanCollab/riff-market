@@ -1,3 +1,7 @@
+import {
+	isValidPassword,
+	MIN_PASSWORD_LENGTH,
+} from "@/domains/accounts/domain/password";
 import type {
 	AccountAuthUser,
 	AccountSignInData,
@@ -18,6 +22,7 @@ export type SelfAssignableRole = (typeof selfAssignableRoles)[number];
 export type AccountAuthErrorCode =
 	| "ACCOUNT_AUTH_EMAIL_TAKEN"
 	| "ACCOUNT_AUTH_INVALID_CREDENTIALS"
+	| "ACCOUNT_AUTH_INVALID_PASSWORD"
 	| "ACCOUNT_AUTH_INVALID_SIGNUP_ROLE";
 
 export type AccountAuthError = AppError<AccountAuthErrorCode>;
@@ -61,6 +66,10 @@ export async function signUpAccount(
 		return err(invalidSignupRoleError());
 	}
 
+	if (!isValidPassword(data.password)) {
+		return err(invalidPasswordError());
+	}
+
 	const passwordHash = await passwords.hashPassword(data.password);
 	return accounts.createAccount({
 		firstName: data.firstName,
@@ -82,12 +91,12 @@ export async function signInAccount(
 		return err(invalidCredentialsError());
 	}
 
-	const isValidPassword = await passwords.verifyPassword(
+	const passwordMatches = await passwords.verifyPassword(
 		data.password,
 		account.passwordHash,
 	);
 
-	if (!isValidPassword) {
+	if (!passwordMatches) {
 		return err(invalidCredentialsError());
 	}
 
@@ -106,6 +115,13 @@ function invalidCredentialsError(): AccountAuthError {
 	return accountAuthError(
 		"ACCOUNT_AUTH_INVALID_CREDENTIALS",
 		"Invalid email or password",
+	);
+}
+
+function invalidPasswordError(): AccountAuthError {
+	return accountAuthError(
+		"ACCOUNT_AUTH_INVALID_PASSWORD",
+		`Password must be at least ${MIN_PASSWORD_LENGTH} characters and include uppercase, lowercase, a number, and a special character`,
 	);
 }
 

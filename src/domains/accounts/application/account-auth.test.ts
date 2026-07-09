@@ -34,7 +34,7 @@ describe("account auth use cases", () => {
 			id: "user-1",
 			email: data.email,
 			role: data.role,
-			passwordHash: "hashed-secret",
+			passwordHash: "hashed-Password1!",
 		});
 	});
 
@@ -44,7 +44,7 @@ describe("account auth use cases", () => {
 		const passwords = new FakePasswords();
 
 		const result = await signInAccount(
-			{ email: existingAccount.email, password: "secret" },
+			{ email: existingAccount.email, password: "Password1!" },
 			accounts,
 			passwords,
 		);
@@ -93,6 +93,26 @@ describe("account auth use cases", () => {
 		});
 	});
 
+	it("rejects signup when the password does not meet policy", async () => {
+		const accounts = new InMemoryAuthAccounts();
+		const passwords = new FakePasswords();
+		const data = makeSignUpData({ password: "secret" });
+
+		const result = await signUpAccount(data, accounts, passwords);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: {
+				code: "ACCOUNT_AUTH_INVALID_PASSWORD",
+				message:
+					"Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character",
+				kind: "validation",
+			},
+		});
+		expect(passwords.hashCalls).toBe(0);
+		await expect(accounts.findCredentialsByEmail(data.email)).resolves.toBeNull();
+	});
+
 	it("rejects sign in when the password does not match", async () => {
 		const existingAccount = makeCredentials();
 		const result = await signInAccount(
@@ -119,7 +139,7 @@ function makeSignUpData(
 		firstName: "Angus",
 		lastName: "Young",
 		email: "angus@example.com",
-		password: "secret",
+		password: "Password1!",
 		role: "CUSTOMER",
 		...overrides,
 	};
@@ -132,7 +152,7 @@ function makeCredentials(
 		id: "user-1",
 		email: "angus@example.com",
 		role: "CUSTOMER",
-		passwordHash: "hashed-secret",
+		passwordHash: "hashed-Password1!",
 		...overrides,
 	};
 }
@@ -174,7 +194,10 @@ class InMemoryAuthAccounts
 }
 
 class FakePasswords implements AccountPasswordPort {
+	hashCalls = 0;
+
 	async hashPassword(password: string): Promise<string> {
+		this.hashCalls += 1;
 		return `hashed-${password}`;
 	}
 
