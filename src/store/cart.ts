@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { isActorRole } from "@/domains/shared/domain/actor";
 import { clientLogger } from "@/lib/client-logger";
 import type { UserRole } from "@/types/enum";
 
@@ -149,7 +150,7 @@ function normalizePersistedQuantity(quantity: unknown) {
 }
 
 function isUserRole(value: unknown): value is UserRole {
-	return value === "ADMIN" || value === "SELLER" || value === "CUSTOMER";
+	return typeof value === "string" && isActorRole(value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

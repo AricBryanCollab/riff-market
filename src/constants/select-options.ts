@@ -1,14 +1,23 @@
 import {
+	type SelfAssignableRole,
+	selfAssignableRoles,
+} from "@/domains/accounts/application/account-auth";
+import {
 	LISTING_CATEGORIES,
 	LISTING_CONDITIONS,
 	type ListingCategory,
 	type ListingCondition,
 } from "@/domains/listings/domain/listing-attributes";
 
-export const roleOptions = [
-	{ value: "SELLER", label: "Seller" },
-	{ value: "CUSTOMER", label: "Customer" },
-] as const;
+const selfAssignableRoleLabels: Record<SelfAssignableRole, string> = {
+	SELLER: "Seller",
+	CUSTOMER: "Customer",
+};
+
+export const roleOptions = selfAssignableRoles.map((value) => ({
+	value,
+	label: selfAssignableRoleLabels[value],
+}));
 
 const listingCategoryLabels: Record<ListingCategory, string> = {
 	ELECTRIC: "Electric Guitar",

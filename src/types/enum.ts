@@ -1,4 +1,6 @@
-export type UserRole = "ADMIN" | "SELLER" | "CUSTOMER";
+import type { ActorRole } from "@/domains/shared/domain/actor";
+
+export type UserRole = ActorRole;
 
 export type {
 	ListingCategory,

@@ -4,6 +4,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
+import type { SelfAssignableRole } from "@/domains/accounts/application/account-auth";
 import { clientLogger } from "@/lib/client-logger";
 import {
 	getOrderByCustomer,
@@ -11,10 +12,10 @@ import {
 	updateOrderStatus,
 } from "@/lib/tanstack-query/orders-queries";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import type { OrderStatus, UserRole } from "@/types/enum";
+import type { OrderStatus } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 
-export type OrderQueryRole = Extract<UserRole, "CUSTOMER" | "SELLER">;
+export type OrderQueryRole = SelfAssignableRole;
 export type UpdateOrderStatusInput = {
 	id: string;
 	status: OrderStatus;
