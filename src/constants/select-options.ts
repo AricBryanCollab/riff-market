@@ -1,7 +1,5 @@
-import {
-	type SelfAssignableRole,
-	selfAssignableRoles,
-} from "@/domains/accounts/application/account-auth";
+import { RoleDescription } from "@/constants/role-description";
+import { selfAssignableRoles } from "@/domains/accounts/application/account-auth";
 import {
 	LISTING_CATEGORIES,
 	LISTING_CONDITIONS,
@@ -9,14 +7,9 @@ import {
 	type ListingCondition,
 } from "@/domains/listings/domain/listing-attributes";
 
-const selfAssignableRoleLabels: Record<SelfAssignableRole, string> = {
-	SELLER: "Seller",
-	CUSTOMER: "Customer",
-};
-
 export const roleOptions = selfAssignableRoles.map((value) => ({
 	value,
-	label: selfAssignableRoleLabels[value],
+	label: RoleDescription[value].label,
 }));
 
 const listingCategoryLabels: Record<ListingCategory, string> = {

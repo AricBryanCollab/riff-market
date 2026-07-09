@@ -15,7 +15,7 @@ export const RoleDescription: Record<ActorRole, RoleInfo> = {
 		description: "Creates listings and sells gear on the marketplace",
 	},
 	CUSTOMER: {
-		label: "Buyer",
+		label: "Customer",
 		description: "Browses and buys listed gear",
 	},
 };
