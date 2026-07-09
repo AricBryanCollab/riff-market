@@ -2,6 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { FEATURED_LISTINGS_SAMPLE_SIZE } from "@/domains/listings/application/listing-queries";
 import type {
 	ApprovedListingCount,
+	ListingDetailResponse,
 	ListingResponse,
 	PendingListingCount,
 } from "@/domains/listings/dto/listing-view";
@@ -68,7 +69,7 @@ export const listingByIdQueryOpt = (
 	id: string,
 	viewerScope: ListingDetailViewerScope = "public",
 ) =>
-	queryOptions<ListingResponse>({
+	queryOptions<ListingDetailResponse>({
 		queryKey: queryKeys.listings.detail(id, viewerScope),
 		queryFn: async () => fetchListingDetails(id),
 		retry: false,

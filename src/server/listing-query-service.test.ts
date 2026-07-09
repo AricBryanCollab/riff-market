@@ -49,6 +49,10 @@ describe("listing query behavior", () => {
 			id: "pending-listing",
 			isApproved: false,
 			listingStatus: "PENDING",
+			viewerCanEdit: true,
+			viewerCanDelete: true,
+			viewerCanApprove: true,
+			viewerCanDecline: true,
 		});
 	});
 
@@ -83,6 +87,13 @@ describe("listing query behavior", () => {
 				createdAt: "2026-06-18T00:00:00.000Z",
 			},
 		]);
+		expect(Array.isArray(result) && result[0]).toBeTruthy();
+		if (Array.isArray(result)) {
+			expect(result[0]).not.toHaveProperty("viewerCanEdit");
+			expect(result[0]).not.toHaveProperty("viewerCanDelete");
+			expect(result[0]).not.toHaveProperty("viewerCanApprove");
+			expect(result[0]).not.toHaveProperty("viewerCanDecline");
+		}
 	});
 
 	it("returns popular approved brand counts from the listing query view", async () => {
@@ -156,10 +167,6 @@ function makeListing({
 		stock: 2,
 		listingStatus,
 		isOrderable: listingStatus === "APPROVED",
-		viewerCanEdit: false,
-		viewerCanDelete: false,
-		viewerCanApprove: false,
-		viewerCanDecline: false,
 		createdAt: new Date("2026-06-18T00:00:00.000Z"),
 		updatedAt: new Date("2026-06-18T00:00:00.000Z"),
 		seller: {

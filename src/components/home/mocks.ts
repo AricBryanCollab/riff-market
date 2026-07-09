@@ -4,15 +4,9 @@ import type {
 } from "@/domains/listings/dto/listing-view";
 
 const image = (url: string) => ({ imageId: url, url });
-const publicListingCapabilities = {
-	viewerCanEdit: false,
-	viewerCanDelete: false,
-	viewerCanApprove: false,
-	viewerCanDecline: false,
-};
 type PublicMockListing = Omit<
 	ListingResponse,
-	keyof typeof publicListingCapabilities | "listingStatus" | "isOrderable"
+	"listingStatus" | "isOrderable"
 >;
 
 const publicMockListings = [
@@ -215,7 +209,6 @@ export const mockListings: ListingResponse[] = publicMockListings.map(
 		...listing,
 		listingStatus: "APPROVED" as const,
 		isOrderable: true,
-		...publicListingCapabilities,
 	}),
 );
 

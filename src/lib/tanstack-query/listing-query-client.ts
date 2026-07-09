@@ -2,6 +2,7 @@ import type {
 	ApprovedListingCount,
 	ListingBrandCountData,
 	ListingCategoryCountData,
+	ListingDetailResponse,
 	ListingResponse,
 	PendingListingCount,
 } from "@/domains/listings/dto/listing-view";
@@ -51,7 +52,7 @@ export async function fetchListingDetails(listingId: string) {
 		data: { listingId },
 	});
 
-	return unwrapListingResponseResult(result) as ListingResponse;
+	return unwrapListingResponseResult(result) as ListingDetailResponse;
 }
 
 export async function fetchListingStatusCount(status: ListingCountStatusQuery) {

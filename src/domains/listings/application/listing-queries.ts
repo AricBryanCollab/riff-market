@@ -6,9 +6,11 @@ import type {
 	ListingBrandCount,
 	ListingCategoryCount,
 	ListingCountStatus,
+	ListingDetailView,
 	ListingView,
 	ListingViewCategory,
 	ListingViewCondition,
+	ListingViewerCapabilities,
 } from "@/domains/listings/dto/listing-view";
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
@@ -18,6 +20,8 @@ import {
 	type Result,
 } from "@/domains/shared/domain/result";
 import { canModifyListing } from "./manage-listing";
+
+export type { ListingViewerCapabilities } from "@/domains/listings/dto/listing-view";
 
 export const APPROVED_LISTING_SHOP_PAGE_SIZE = 8;
 export const RECENT_APPROVED_LISTINGS_LIMIT = 8;
@@ -30,13 +34,6 @@ export type ListingQueryErrorCode =
 	| "LISTING_QUERY_NOT_FOUND";
 
 export type ListingQueryError = AppError<ListingQueryErrorCode>;
-
-export type ListingViewerCapabilities = {
-	readonly viewerCanEdit: boolean;
-	readonly viewerCanDelete: boolean;
-	readonly viewerCanApprove: boolean;
-	readonly viewerCanDecline: boolean;
-};
 
 export type ListingViewerCapabilityInput = {
 	readonly viewer: Actor | null;
@@ -99,7 +96,7 @@ export async function getListingDetails(
 	actor: Actor | null,
 	listingId: string,
 	listings: ListingDetailQueryPort,
-): Promise<Result<ListingView, ListingQueryError>> {
+): Promise<Result<ListingDetailView, ListingQueryError>> {
 	if (listingId.trim().length === 0) {
 		return err(
 			listingQueryError(
@@ -131,7 +128,14 @@ export async function getListingDetails(
 		);
 	}
 
-	return ok(listing);
+	return ok({
+		...listing,
+		...deriveListingViewerCapabilities({
+			viewer: actor,
+			sellerId: listing.sellerId,
+			listingStatus: listing.listingStatus,
+		}),
+	});
 }
 
 export async function listSellerListings(

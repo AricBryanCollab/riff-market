@@ -10,10 +10,7 @@ import type {
 	RecentApprovedListingQueryPort,
 	SellerListingQueryPort,
 } from "@/domains/listings/application/listing-queries";
-import {
-	APPROVED_LISTING_SHOP_PAGE_SIZE,
-	deriveListingViewerCapabilities,
-} from "@/domains/listings/application/listing-queries";
+import { APPROVED_LISTING_SHOP_PAGE_SIZE } from "@/domains/listings/application/listing-queries";
 import { isListingOrderable } from "@/domains/listings/domain/listing";
 import {
 	normalizeListingBrand,
@@ -75,7 +72,7 @@ export class PrismaListingQueries
 
 	async findById(
 		listingId: string,
-		viewer: Actor | null,
+		_viewer: Actor | null,
 	): Promise<ListingView | null> {
 		const listing = await this.db.listing.findFirst({
 			where: {
@@ -84,12 +81,12 @@ export class PrismaListingQueries
 			select: listingViewSelect,
 		});
 
-		return listing ? toListingView(listing, viewer) : null;
+		return listing ? toListingView(listing) : null;
 	}
 
 	async searchApproved(
 		query: ApprovedListingSearchQuery,
-		viewer: Actor | null,
+		_viewer: Actor | null,
 	): Promise<ListingView[]> {
 		const {
 			limit = APPROVED_LISTING_SHOP_PAGE_SIZE,
@@ -110,7 +107,7 @@ export class PrismaListingQueries
 				skip: randomSkip,
 			});
 
-			return toListingViews(listings, viewer);
+			return toListingViews(listings);
 		}
 
 		const listings = await this.db.listing.findMany({
@@ -123,12 +120,12 @@ export class PrismaListingQueries
 			skip: offset,
 		});
 
-		return toListingViews(listings, viewer);
+		return toListingViews(listings);
 	}
 
 	async listForSeller(
 		sellerId: string,
-		viewer: Actor | null,
+		_viewer: Actor | null,
 	): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { sellerId },
@@ -138,10 +135,10 @@ export class PrismaListingQueries
 			select: listingViewSelect,
 		});
 
-		return toListingViews(listings, viewer);
+		return toListingViews(listings);
 	}
 
-	async listPendingModeration(viewer: Actor | null): Promise<ListingView[]> {
+	async listPendingModeration(_viewer: Actor | null): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "PENDING" },
 			orderBy: {
@@ -150,7 +147,7 @@ export class PrismaListingQueries
 			select: listingViewSelect,
 		});
 
-		return toListingViews(listings, viewer);
+		return toListingViews(listings);
 	}
 
 	async listPopularApprovedBrandCounts(): Promise<ListingBrandCount[]> {
@@ -200,7 +197,7 @@ export class PrismaListingQueries
 
 	async listRecentApproved(
 		limit: number,
-		viewer: Actor | null,
+		_viewer: Actor | null,
 	): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "APPROVED" },
@@ -209,12 +206,12 @@ export class PrismaListingQueries
 			take: limit,
 		});
 
-		return toListingViews(listings, viewer);
+		return toListingViews(listings);
 	}
 
 	async findByIds(
 		listingIds: string[],
-		viewer: Actor | null,
+		_viewer: Actor | null,
 	): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: {
@@ -225,7 +222,7 @@ export class PrismaListingQueries
 			select: listingViewSelect,
 		});
 
-		return toListingViews(listings, viewer);
+		return toListingViews(listings);
 	}
 }
 
@@ -316,25 +313,14 @@ function mostCommonDisplayBrand(displayCounts: ReadonlyMap<string, number>) {
 	)[0][0];
 }
 
-function toListingViews(
-	listings: ListingViewRow[],
-	viewer: Actor | null,
-): ListingView[] {
-	return listings.map((listing) => toListingView(listing, viewer));
+function toListingViews(listings: ListingViewRow[]): ListingView[] {
+	return listings.map(toListingView);
 }
 
-function toListingView(
-	listing: ListingViewRow,
-	viewer: Actor | null,
-): ListingView {
+function toListingView(listing: ListingViewRow): ListingView {
 	return {
 		...listing,
 		images: toListingImageDtos(listing.images),
 		isOrderable: isListingOrderable(listing.listingStatus, listing.stock),
-		...deriveListingViewerCapabilities({
-			viewer,
-			sellerId: listing.sellerId,
-			listingStatus: listing.listingStatus,
-		}),
 	};
 }

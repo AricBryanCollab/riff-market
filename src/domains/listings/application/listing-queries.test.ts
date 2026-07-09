@@ -145,7 +145,14 @@ describe("getListingDetails", () => {
 
 		await expect(readListingDetails(actor, listing)).resolves.toEqual({
 			ok: true,
-			value: listing,
+			value: {
+				...listing,
+				...deriveListingViewerCapabilities({
+					viewer: actor,
+					sellerId: listing.sellerId,
+					listingStatus: listing.listingStatus,
+				}),
+			},
 		});
 	});
 
@@ -164,12 +171,33 @@ describe("getListingDetails", () => {
 		});
 	});
 
-	it("allows admins to read pending listing details", async () => {
+	it("allows admins to read pending listing details with capabilities", async () => {
 		const listing = makeListing({ listingStatus: "PENDING" });
 
 		await expect(readListingDetails(admin, listing)).resolves.toEqual({
 			ok: true,
-			value: listing,
+			value: {
+				...listing,
+				viewerCanEdit: true,
+				viewerCanDelete: true,
+				viewerCanApprove: true,
+				viewerCanDecline: true,
+			},
+		});
+	});
+
+	it("attaches seller capabilities on owned approved listings", async () => {
+		const listing = makeListing({ listingStatus: "APPROVED" });
+
+		await expect(readListingDetails(seller, listing)).resolves.toEqual({
+			ok: true,
+			value: {
+				...listing,
+				viewerCanEdit: true,
+				viewerCanDelete: true,
+				viewerCanApprove: false,
+				viewerCanDecline: false,
+			},
 		});
 	});
 
@@ -343,10 +371,6 @@ function makeListing({
 		stock: 2,
 		listingStatus,
 		isOrderable: listingStatus === "APPROVED",
-		viewerCanEdit: false,
-		viewerCanDelete: false,
-		viewerCanApprove: false,
-		viewerCanDecline: false,
 		createdAt: new Date("2026-06-18T00:00:00.000Z"),
 		updatedAt: new Date("2026-06-18T00:00:00.000Z"),
 		seller: {

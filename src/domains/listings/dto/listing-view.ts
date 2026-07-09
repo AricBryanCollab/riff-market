@@ -21,6 +21,13 @@ export type ListingImageDto = {
 	readonly url: string;
 };
 
+export type ListingViewerCapabilities = {
+	readonly viewerCanEdit: boolean;
+	readonly viewerCanDelete: boolean;
+	readonly viewerCanApprove: boolean;
+	readonly viewerCanDecline: boolean;
+};
+
 export type ListingView = {
 	readonly id: string;
 	readonly sellerId: string;
@@ -36,14 +43,12 @@ export type ListingView = {
 	readonly stock: number;
 	readonly listingStatus: ListingViewStatus;
 	readonly isOrderable: boolean;
-	readonly viewerCanEdit: boolean;
-	readonly viewerCanDelete: boolean;
-	readonly viewerCanApprove: boolean;
-	readonly viewerCanDecline: boolean;
 	readonly createdAt?: Date;
 	readonly updatedAt?: Date;
 	readonly seller: ListingViewSeller;
 };
+
+export type ListingDetailView = ListingView & ListingViewerCapabilities;
 
 export type ListingResponse = {
 	readonly id: string;
@@ -61,14 +66,12 @@ export type ListingResponse = {
 	readonly isApproved: boolean;
 	readonly listingStatus?: ListingViewStatus;
 	readonly isOrderable: boolean;
-	readonly viewerCanEdit: boolean;
-	readonly viewerCanDelete: boolean;
-	readonly viewerCanApprove: boolean;
-	readonly viewerCanDecline: boolean;
 	readonly createdAt?: string;
 	readonly updatedAt?: string;
 	readonly seller: ListingViewSeller;
 };
+
+export type ListingDetailResponse = ListingResponse & ListingViewerCapabilities;
 
 export type ListingCategoryCount = {
 	readonly category: ListingViewCategory;

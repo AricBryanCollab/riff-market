@@ -24,6 +24,8 @@ import {
 import type {
 	ListingBrandCount,
 	ListingCategoryCount,
+	ListingDetailResponse,
+	ListingDetailView,
 	ListingResponse,
 	ListingStatusCount,
 	ListingView,
@@ -111,7 +113,7 @@ export async function getListingDetailsResponse(
 	actor: Actor | null,
 	listingId: string,
 	listings?: ListingDetailQueryPort,
-): Promise<ListingResponse | ListingQueryServiceError> {
+): Promise<ListingDetailResponse | ListingQueryServiceError> {
 	const listingQueries = listings ?? (await createPrismaListingQueries());
 	const result = await getListingDetails(actor, listingId, listingQueries);
 
@@ -119,7 +121,7 @@ export async function getListingDetailsResponse(
 		return { error: result.error.message };
 	}
 
-	return toListingResponse(result.value);
+	return toListingDetailResponse(result.value);
 }
 
 export async function searchApprovedListingResponses(
@@ -284,12 +286,20 @@ function toListingResponse(listing: ListingView): ListingResponse {
 		isApproved: listing.listingStatus === "APPROVED",
 		listingStatus: listing.listingStatus,
 		isOrderable: listing.isOrderable,
+		createdAt: listing.createdAt?.toISOString(),
+		updatedAt: listing.updatedAt?.toISOString(),
+		seller: listing.seller,
+	};
+}
+
+function toListingDetailResponse(
+	listing: ListingDetailView,
+): ListingDetailResponse {
+	return {
+		...toListingResponse(listing),
 		viewerCanEdit: listing.viewerCanEdit,
 		viewerCanDelete: listing.viewerCanDelete,
 		viewerCanApprove: listing.viewerCanApprove,
 		viewerCanDecline: listing.viewerCanDecline,
-		createdAt: listing.createdAt?.toISOString(),
-		updatedAt: listing.updatedAt?.toISOString(),
-		seller: listing.seller,
 	};
 }

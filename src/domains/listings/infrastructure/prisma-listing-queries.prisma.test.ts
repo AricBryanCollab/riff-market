@@ -9,7 +9,6 @@ import {
 import { PrismaListingQueries } from "./prisma-listing-queries";
 
 const adminActor = { id: "admin-1", role: "ADMIN" } as const;
-const sellerActor = { id: "seller-1", role: "SELLER" } as const;
 
 describeDb("Prisma listing queries", () => {
 	let db: PrismaClient;
@@ -238,13 +237,7 @@ describeDb("Prisma listing queries", () => {
 		});
 	});
 
-	it("populates viewer capability flags in listing views", async () => {
-		await seedListing(db, {
-			id: "pending-capabilities",
-			name: "Pending Capabilities",
-			listingStatus: "PENDING",
-			isApproved: false,
-		});
+	it("maps public listing fields without viewer capability flags", async () => {
 		await seedListing(db, {
 			id: "approved-capabilities",
 			name: "Approved Capabilities",
@@ -267,19 +260,9 @@ describeDb("Prisma listing queries", () => {
 		});
 
 		await expect(
-			queries.findById("pending-capabilities", adminActor),
-		).resolves.toMatchObject({
-			viewerCanEdit: true,
-			viewerCanDelete: true,
-			viewerCanApprove: true,
-			viewerCanDecline: true,
-		});
-		await expect(
 			queries.findById("approved-capabilities", adminActor),
 		).resolves.toMatchObject({
 			isOrderable: true,
-			viewerCanApprove: false,
-			viewerCanDecline: true,
 		});
 		await expect(
 			queries.findById("out-of-stock-capabilities", adminActor),
@@ -290,17 +273,16 @@ describeDb("Prisma listing queries", () => {
 			queries.findById("withdrawn-capabilities", adminActor),
 		).resolves.toMatchObject({
 			isOrderable: false,
-			viewerCanApprove: false,
-			viewerCanDecline: false,
 		});
-		await expect(
-			queries.findById("pending-capabilities", sellerActor),
-		).resolves.toMatchObject({
-			viewerCanEdit: true,
-			viewerCanDelete: true,
-			viewerCanApprove: false,
-			viewerCanDecline: false,
-		});
+
+		const approved = await queries.findById(
+			"approved-capabilities",
+			adminActor,
+		);
+		expect(approved).not.toHaveProperty("viewerCanEdit");
+		expect(approved).not.toHaveProperty("viewerCanDelete");
+		expect(approved).not.toHaveProperty("viewerCanApprove");
+		expect(approved).not.toHaveProperty("viewerCanDecline");
 	});
 
 	it("returns a seller's listings newest first without other sellers' listings", async () => {
