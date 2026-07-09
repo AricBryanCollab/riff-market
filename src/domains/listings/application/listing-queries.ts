@@ -42,10 +42,7 @@ export type ListingViewerCapabilityInput = {
 };
 
 export interface ListingDetailQueryPort {
-	findById(
-		listingId: string,
-		viewer: Actor | null,
-	): Promise<ListingView | null>;
+	findById(listingId: string): Promise<ListingView | null>;
 }
 
 export type ApprovedListingSearchQuery = {
@@ -61,18 +58,15 @@ export type ApprovedListingSearchQuery = {
 };
 
 export interface ApprovedListingSearchPort {
-	searchApproved(
-		query: ApprovedListingSearchQuery,
-		viewer: Actor | null,
-	): Promise<ListingView[]>;
+	searchApproved(query: ApprovedListingSearchQuery): Promise<ListingView[]>;
 }
 
 export interface SellerListingQueryPort {
-	listForSeller(sellerId: string, viewer: Actor | null): Promise<ListingView[]>;
+	listForSeller(sellerId: string): Promise<ListingView[]>;
 }
 
 export interface PendingModerationListingQueryPort {
-	listPendingModeration(viewer: Actor | null): Promise<ListingView[]>;
+	listPendingModeration(): Promise<ListingView[]>;
 }
 
 export interface ListingCountQueryPort {
@@ -82,14 +76,11 @@ export interface ListingCountQueryPort {
 }
 
 export interface RecentApprovedListingQueryPort {
-	listRecentApproved(
-		limit: number,
-		viewer: Actor | null,
-	): Promise<ListingView[]>;
+	listRecentApproved(limit: number): Promise<ListingView[]>;
 }
 
 export interface CartListingQueryPort {
-	findByIds(listingIds: string[], viewer: Actor | null): Promise<ListingView[]>;
+	findByIds(listingIds: string[]): Promise<ListingView[]>;
 }
 
 export async function getListingDetails(
@@ -107,7 +98,7 @@ export async function getListingDetails(
 		);
 	}
 
-	const listing = await listings.findById(listingId, actor);
+	const listing = await listings.findById(listingId);
 	if (!listing) {
 		return err(
 			listingQueryError(
@@ -162,7 +153,7 @@ export async function listSellerListings(
 		);
 	}
 
-	return ok(await listings.listForSeller(actor.id, actor));
+	return ok(await listings.listForSeller(actor.id));
 }
 
 export async function listPendingModerationListings(
@@ -179,7 +170,7 @@ export async function listPendingModerationListings(
 		);
 	}
 
-	return ok(await listings.listPendingModeration(actor));
+	return ok(await listings.listPendingModeration());
 }
 
 export async function listCartListings(
@@ -197,7 +188,7 @@ export async function listCartListings(
 		);
 	}
 
-	return ok(await listings.findByIds(listingIds, actor));
+	return ok(await listings.findByIds(listingIds));
 }
 
 export function deriveListingViewerCapabilities(

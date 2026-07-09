@@ -70,12 +70,7 @@ export const getListingDetailsServerFn = createServerFn({ method: "GET" })
 export const getApprovedListingsServerFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => approvedListingSearchServerInputSchema.parse(data))
-	.handler(async ({ data }) =>
-		searchApprovedListingResponses(
-			toOptionalActor(await getOptionalServerUserContext()),
-			data,
-		),
-	);
+	.handler(async ({ data }) => searchApprovedListingResponses(data));
 
 export const getPendingModerationListingsServerFn = createServerFn({
 	method: "GET",
@@ -115,12 +110,7 @@ export const getListingStatusCountServerFn = createServerFn({
 export const getRecentListingsServerFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
 	.inputValidator((data) => recentListingsInputSchema.parse(data))
-	.handler(async ({ data }) =>
-		listRecentListingResponses(
-			toOptionalActor(await getOptionalServerUserContext()),
-			data.limit,
-		),
-	);
+	.handler(async ({ data }) => listRecentListingResponses(data.limit));
 
 export const getCartListingsServerFn = createServerFn({ method: "GET" })
 	.middleware(authenticatedServerFunctionMiddleware)

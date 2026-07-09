@@ -22,7 +22,6 @@ import type {
 	ListingCountStatus,
 	ListingView,
 } from "@/domains/listings/dto/listing-view";
-import type { Actor } from "@/domains/shared/domain/actor";
 import { toListingImageDtos } from "@/utils/image-asset-ref";
 
 type ListingQueryPrisma = Pick<PrismaClient, "listing">;
@@ -70,10 +69,7 @@ export class PrismaListingQueries
 {
 	constructor(private readonly db: ListingQueryPrisma) {}
 
-	async findById(
-		listingId: string,
-		_viewer: Actor | null,
-	): Promise<ListingView | null> {
+	async findById(listingId: string): Promise<ListingView | null> {
 		const listing = await this.db.listing.findFirst({
 			where: {
 				id: listingId,
@@ -86,7 +82,6 @@ export class PrismaListingQueries
 
 	async searchApproved(
 		query: ApprovedListingSearchQuery,
-		_viewer: Actor | null,
 	): Promise<ListingView[]> {
 		const {
 			limit = APPROVED_LISTING_SHOP_PAGE_SIZE,
@@ -123,10 +118,7 @@ export class PrismaListingQueries
 		return toListingViews(listings);
 	}
 
-	async listForSeller(
-		sellerId: string,
-		_viewer: Actor | null,
-	): Promise<ListingView[]> {
+	async listForSeller(sellerId: string): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { sellerId },
 			orderBy: {
@@ -138,7 +130,7 @@ export class PrismaListingQueries
 		return toListingViews(listings);
 	}
 
-	async listPendingModeration(_viewer: Actor | null): Promise<ListingView[]> {
+	async listPendingModeration(): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "PENDING" },
 			orderBy: {
@@ -195,10 +187,7 @@ export class PrismaListingQueries
 		});
 	}
 
-	async listRecentApproved(
-		limit: number,
-		_viewer: Actor | null,
-	): Promise<ListingView[]> {
+	async listRecentApproved(limit: number): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "APPROVED" },
 			orderBy: { updatedAt: "desc" },
@@ -209,10 +198,7 @@ export class PrismaListingQueries
 		return toListingViews(listings);
 	}
 
-	async findByIds(
-		listingIds: string[],
-		_viewer: Actor | null,
-	): Promise<ListingView[]> {
+	async findByIds(listingIds: string[]): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: {
 				id: {

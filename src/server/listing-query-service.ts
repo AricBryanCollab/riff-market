@@ -125,7 +125,6 @@ export async function getListingDetailsResponse(
 }
 
 export async function searchApprovedListingResponses(
-	actor: Actor | null,
 	rawQuery: unknown,
 	listings?: ApprovedListingSearchPort,
 ): Promise<ListingResponse[] | ListingQueryServiceError> {
@@ -140,7 +139,7 @@ export async function searchApprovedListingResponses(
 
 	const listingQueries = listings ?? (await createPrismaListingQueries());
 	const query = toListingSearchQuery(parsed.data);
-	const listingViews = await listingQueries.searchApproved(query, actor);
+	const listingViews = await listingQueries.searchApproved(query);
 
 	return listingViews.map(toListingResponse);
 }
@@ -201,12 +200,11 @@ export async function getListingStatusCountDto(
 }
 
 export async function listRecentListingResponses(
-	actor: Actor | null,
 	limit: number = RECENT_APPROVED_LISTINGS_LIMIT,
 	listings?: RecentApprovedListingQueryPort,
 ): Promise<ListingResponse[] | ListingQueryServiceError> {
 	const listingQueries = listings ?? (await createPrismaListingQueries());
-	const listingViews = await listingQueries.listRecentApproved(limit, actor);
+	const listingViews = await listingQueries.listRecentApproved(limit);
 
 	return listingViews.map(toListingResponse);
 }
