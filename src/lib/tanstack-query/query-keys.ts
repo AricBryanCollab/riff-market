@@ -1,8 +1,8 @@
 import type { ActorRole } from "@/domains/shared/domain/actor";
-import type { ListingCountStatusQuery } from "@/lib/tanstack-query/listing-query-client";
 import type { ApprovedListingSearchFilterQuery } from "@/utils/shop-search";
 
 export type ListingDetailViewerScope = "public" | "admin";
+export type ListingCountStatusQuery = "approved" | "pending";
 
 const listingKeys = {
 	root: ["listings"] as const,

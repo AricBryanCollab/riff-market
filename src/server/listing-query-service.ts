@@ -31,6 +31,10 @@ import type {
 	ListingView,
 } from "@/domains/listings/dto/listing-view";
 import type { Actor } from "@/domains/shared/domain/actor";
+import {
+	RequestError,
+	unwrapResultOrThrowRequestError,
+} from "@/server/request-error";
 
 type PrismaListingQueryPort = ListingDetailQueryPort &
 	ApprovedListingSearchPort &
@@ -39,11 +43,6 @@ type PrismaListingQueryPort = ListingDetailQueryPort &
 	ListingCountQueryPort &
 	RecentApprovedListingQueryPort &
 	CartListingQueryPort;
-
-type ListingQueryServiceError = {
-	readonly error: string;
-	readonly details?: object;
-};
 
 const listingCategorySchema = z.enum(LISTING_CATEGORIES);
 const listingConditionSchema = z.enum(LISTING_CONDITIONS);
@@ -113,28 +112,23 @@ export async function getListingDetailsResponse(
 	actor: Actor | null,
 	listingId: string,
 	listings?: ListingDetailQueryPort,
-): Promise<ListingDetailResponse | ListingQueryServiceError> {
+): Promise<ListingDetailResponse> {
 	const listingQueries = listings ?? (await createPrismaListingQueries());
 	const result = await getListingDetails(actor, listingId, listingQueries);
 
-	if (!result.ok) {
-		return { error: result.error.message };
-	}
-
-	return toListingDetailResponse(result.value);
+	return toListingDetailResponse(unwrapResultOrThrowRequestError(result));
 }
 
 export async function searchApprovedListingResponses(
 	rawQuery: unknown,
 	listings?: ApprovedListingSearchPort,
-): Promise<ListingResponse[] | ListingQueryServiceError> {
+): Promise<ListingResponse[]> {
 	const parsed = approvedListingSearchInputSchema.safeParse(rawQuery);
 
 	if (!parsed.success) {
-		return {
-			error: "Invalid listing queries",
+		throw new RequestError("Invalid listing queries", {
 			details: parsed.error,
-		};
+		});
 	}
 
 	const listingQueries = listings ?? (await createPrismaListingQueries());
@@ -147,41 +141,33 @@ export async function searchApprovedListingResponses(
 export async function listSellerListingResponses(
 	actor: Actor,
 	listings?: SellerListingQueryPort,
-): Promise<ListingResponse[] | ListingQueryServiceError> {
+): Promise<ListingResponse[]> {
 	const listingQueries = listings ?? (await createPrismaListingQueries());
 	const result = await listSellerListings(actor, listingQueries);
 
-	if (!result.ok) {
-		return toListingQueryServiceError(result.error);
-	}
-
-	return result.value.map(toListingResponse);
+	return unwrapResultOrThrowRequestError(result).map(toListingResponse);
 }
 
 export async function listPendingModerationListingResponses(
 	actor: Actor,
 	listings?: PendingModerationListingQueryPort,
-): Promise<ListingResponse[] | ListingQueryServiceError> {
+): Promise<ListingResponse[]> {
 	const listingQueries = listings ?? (await createPrismaListingQueries());
 	const result = await listPendingModerationListings(actor, listingQueries);
 
-	if (!result.ok) {
-		return toListingQueryServiceError(result.error);
-	}
-
-	return result.value.map(toListingResponse);
+	return unwrapResultOrThrowRequestError(result).map(toListingResponse);
 }
 
 export async function getPopularListingBrandCountDtos(
 	listings?: Pick<ListingCountQueryPort, "listPopularApprovedBrandCounts">,
-): Promise<ListingBrandCount[] | ListingQueryServiceError> {
+): Promise<ListingBrandCount[]> {
 	const listingQueries = listings ?? (await createPrismaListingQueries());
 	return listingQueries.listPopularApprovedBrandCounts();
 }
 
 export async function getListingCategoryCountDtos(
 	listings?: Pick<ListingCountQueryPort, "countApprovedByCategory">,
-): Promise<ListingCategoryCount[] | ListingQueryServiceError> {
+): Promise<ListingCategoryCount[]> {
 	const listingQueries = listings ?? (await createPrismaListingQueries());
 	return listingQueries.countApprovedByCategory();
 }
@@ -189,7 +175,7 @@ export async function getListingCategoryCountDtos(
 export async function getListingStatusCountDto(
 	isApproved: boolean,
 	listings?: Pick<ListingCountQueryPort, "countByStatus">,
-): Promise<ListingStatusCount | ListingQueryServiceError> {
+): Promise<ListingStatusCount> {
 	const listingQueries = listings ?? (await createPrismaListingQueries());
 	const status = isApproved ? "APPROVED" : "PENDING";
 	const count = await listingQueries.countByStatus(status);
@@ -202,7 +188,7 @@ export async function getListingStatusCountDto(
 export async function listRecentListingResponses(
 	limit: number = RECENT_APPROVED_LISTINGS_LIMIT,
 	listings?: RecentApprovedListingQueryPort,
-): Promise<ListingResponse[] | ListingQueryServiceError> {
+): Promise<ListingResponse[]> {
 	const listingQueries = listings ?? (await createPrismaListingQueries());
 	const listingViews = await listingQueries.listRecentApproved(limit);
 
@@ -213,25 +199,20 @@ export async function listCartListingResponses(
 	actor: Actor,
 	rawQuery: unknown,
 	listings?: CartListingQueryPort,
-): Promise<ListingResponse[] | ListingQueryServiceError> {
+): Promise<ListingResponse[]> {
 	const parsed = cartListingDetailsInputSchema.safeParse(rawQuery);
 
 	if (!parsed.success) {
-		return {
-			error: "Invalid listing IDs query",
+		throw new RequestError("Invalid listing IDs query", {
 			details: parsed.error,
-		};
+		});
 	}
 
 	const listingQueries = listings ?? (await createPrismaListingQueries());
 	const uniqueIds = Array.from(new Set(parsed.data.ids));
 	const result = await listCartListings(actor, uniqueIds, listingQueries);
 
-	if (!result.ok) {
-		return toListingQueryServiceError(result.error);
-	}
-
-	return result.value.map(toListingResponse);
+	return unwrapResultOrThrowRequestError(result).map(toListingResponse);
 }
 
 async function createPrismaListingQueries(): Promise<PrismaListingQueryPort> {
@@ -261,10 +242,6 @@ function toListingSearchQuery(
 			priceMaxAmountMinor: query.priceMaxAmountMinor,
 		}),
 	};
-}
-
-function toListingQueryServiceError(error: { readonly message: string }) {
-	return { error: error.message };
 }
 
 function toListingResponse(listing: ListingView): ListingResponse {

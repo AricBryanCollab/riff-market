@@ -7,17 +7,17 @@ import type {
 	PendingListingCount,
 } from "@/domains/listings/dto/listing-view";
 import {
-	type ApprovedListingSearchServerInput,
-	fetchApprovedListings,
-	fetchListingDetails,
-	fetchListingStatusCount,
 	type ListingCountStatusQuery,
-} from "@/lib/tanstack-query/listing-query-client";
-import {
 	type ListingDetailViewerScope,
 	listingDetailViewerScopeForRole,
 	queryKeys,
 } from "@/lib/tanstack-query/query-keys";
+import {
+	type ApprovedListingSearchServerInput,
+	getApprovedListingsServerFn,
+	getListingDetailsServerFn,
+	getListingStatusCountServerFn,
+} from "@/server/listing-query.functions";
 import type { ApprovedListingSearchFilterQuery } from "@/utils/shop-search";
 import { useAuthUser } from "./use-auth-user";
 
@@ -46,22 +46,24 @@ export const approvedListingsQueryOpt = (
 ) =>
 	queryOptions<ListingResponse[]>({
 		queryKey: queryKeys.listings.approved(filters),
-		queryFn: async () => {
-			return fetchApprovedListings(toApprovedListingSearchServerInput(filters));
-		},
+		queryFn: async () =>
+			getApprovedListingsServerFn({
+				data: toApprovedListingSearchServerInput(filters),
+			}),
 		staleTime: 1000 * 60 * 5,
 	});
 
 export const featuredListingsQueryOpt = queryOptions<ListingResponse[]>({
 	queryKey: queryKeys.listings.featured,
-	queryFn: async () => {
-		return fetchApprovedListings({
-			...toApprovedListingSearchServerInput({
-				limit: FEATURED_LISTINGS_SAMPLE_SIZE,
-			}),
-			random: "true",
-		});
-	},
+	queryFn: async () =>
+		getApprovedListingsServerFn({
+			data: {
+				...toApprovedListingSearchServerInput({
+					limit: FEATURED_LISTINGS_SAMPLE_SIZE,
+				}),
+				random: "true",
+			},
+		}),
 	staleTime: 1000 * 60 * 5,
 });
 
@@ -71,14 +73,20 @@ export const listingByIdQueryOpt = (
 ) =>
 	queryOptions<ListingDetailResponse>({
 		queryKey: queryKeys.listings.detail(id, viewerScope),
-		queryFn: async () => fetchListingDetails(id),
+		queryFn: async () =>
+			getListingDetailsServerFn({
+				data: { listingId: id },
+			}),
 		retry: false,
 	});
 
 export const listingCountByStatusQueryOpt = (status: ListingCountStatusQuery) =>
 	queryOptions<ApprovedListingCount | PendingListingCount>({
 		queryKey: queryKeys.listings.countByStatus(status),
-		queryFn: async () => fetchListingStatusCount(status),
+		queryFn: async () =>
+			getListingStatusCountServerFn({
+				data: { status },
+			}),
 	});
 
 export const useApprovedListings = (

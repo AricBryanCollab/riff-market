@@ -1,13 +1,13 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { ListingBrandCountData } from "@/domains/listings/dto/listing-view";
-import { fetchPopularListingBrandCounts } from "@/lib/tanstack-query/listing-query-client";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import { getPopularListingBrandCountsServerFn } from "@/server/listing-query.functions";
 
 export const popularListingBrandCountsOptions = queryOptions<
 	ListingBrandCountData[]
 >({
 	queryKey: queryKeys.listings.popularBrandCounts,
-	queryFn: fetchPopularListingBrandCounts,
+	queryFn: () => getPopularListingBrandCountsServerFn(),
 	staleTime: 5 * 60 * 1000,
 });
 

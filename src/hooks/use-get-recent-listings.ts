@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { RECENT_APPROVED_LISTINGS_LIMIT } from "@/domains/listings/application/listing-queries";
-import { fetchRecentListings } from "@/lib/tanstack-query/listing-query-client";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import { getRecentListingsServerFn } from "@/server/listing-query.functions";
 
 const useGetRecentListings = () => {
 	const {
@@ -11,7 +11,10 @@ const useGetRecentListings = () => {
 		refetch: refetchRecentListings,
 	} = useQuery({
 		queryKey: queryKeys.listings.recent,
-		queryFn: async () => fetchRecentListings(RECENT_APPROVED_LISTINGS_LIMIT),
+		queryFn: async () =>
+			getRecentListingsServerFn({
+				data: { limit: RECENT_APPROVED_LISTINGS_LIMIT },
+			}),
 		staleTime: 1000 * 60 * 5,
 	});
 

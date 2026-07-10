@@ -5,8 +5,8 @@ import {
 	type ListingCartSubtotalLine,
 } from "@/domains/listings/application/listing-money";
 import type { ListingResponse } from "@/domains/listings/dto/listing-view";
-import { fetchCartListings } from "@/lib/tanstack-query/listing-query-client";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import { getCartListingsServerFn } from "@/server/listing-query.functions";
 import { type CartItem, useCartStore } from "@/store/cart";
 import type { CartLine } from "@/types/cart";
 import type { OrderItem } from "@/types/order";
@@ -68,7 +68,10 @@ function toListingCartSubtotalLines(
 export const cartDetailsQueryOpt = (listingIds: string[]) =>
 	queryOptions<ListingResponse[]>({
 		queryKey: queryKeys.listings.cartDetails(listingIds),
-		queryFn: async () => fetchCartListings(listingIds),
+		queryFn: async () =>
+			getCartListingsServerFn({
+				data: { ids: listingIds },
+			}),
 		staleTime: 1000 * 60 * 2,
 	});
 

@@ -8,6 +8,7 @@ import type {
 	ListingViewStatus,
 } from "@/domains/listings/dto/listing-view";
 import type { Actor } from "@/domains/shared/domain/actor";
+import { RequestError } from "@/server/request-error";
 import {
 	getListingDetailsResponse,
 	getPopularListingBrandCountDtos,
@@ -24,16 +25,28 @@ describe("listing query behavior", () => {
 
 		await expect(
 			getListingDetailsResponse(null, "missing-listing", listings),
-		).resolves.toEqual({ error: "Listing not found" });
+		).rejects.toMatchObject({
+			name: "RequestError",
+			message: "Listing not found",
+		} satisfies Partial<RequestError>);
 		await expect(
 			getListingDetailsResponse(null, "pending-listing", listings),
-		).resolves.toEqual({ error: "Listing not found" });
+		).rejects.toMatchObject({
+			name: "RequestError",
+			message: "Listing not found",
+		} satisfies Partial<RequestError>);
 		await expect(
 			getListingDetailsResponse(null, "declined-listing", listings),
-		).resolves.toEqual({ error: "Listing not found" });
+		).rejects.toMatchObject({
+			name: "RequestError",
+			message: "Listing not found",
+		} satisfies Partial<RequestError>);
 		await expect(
 			getListingDetailsResponse(null, "withdrawn-listing", listings),
-		).resolves.toEqual({ error: "Listing not found" });
+		).rejects.toMatchObject({
+			name: "RequestError",
+			message: "Listing not found",
+		} satisfies Partial<RequestError>);
 	});
 
 	it("allows admins to read pending listing details for moderation", async () => {
@@ -86,13 +99,10 @@ describe("listing query behavior", () => {
 				createdAt: "2026-06-18T00:00:00.000Z",
 			},
 		]);
-		expect(Array.isArray(result) && result[0]).toBeTruthy();
-		if (Array.isArray(result)) {
-			expect(result[0]).not.toHaveProperty("viewerCanEdit");
-			expect(result[0]).not.toHaveProperty("viewerCanDelete");
-			expect(result[0]).not.toHaveProperty("viewerCanApprove");
-			expect(result[0]).not.toHaveProperty("viewerCanDecline");
-		}
+		expect(result[0]).not.toHaveProperty("viewerCanEdit");
+		expect(result[0]).not.toHaveProperty("viewerCanDelete");
+		expect(result[0]).not.toHaveProperty("viewerCanApprove");
+		expect(result[0]).not.toHaveProperty("viewerCanDecline");
 	});
 
 	it("returns popular approved brand counts from the listing query view", async () => {
