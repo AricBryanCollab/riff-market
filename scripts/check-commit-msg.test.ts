@@ -1,19 +1,33 @@
 import { describe, expect, it } from "vitest";
 import { validate } from "./check-commit-msg";
 
+const INVALID_FORMAT_REASON = [
+	"invalid commit title format.",
+	"expected either:",
+	"  <type>: <lowercase action title>",
+	"  <Title starting with a capital letter>",
+	"allowed types: init, feat, component, hooks, api, style, layout, structure, chore, docs, fix, ref",
+].join("\n");
+
 describe("validate", () => {
 	it("accepts typed lowercase titles", () => {
 		expect(validate("feat: add cart drawer")).toEqual({ ok: true });
+	});
+
+	it("accepts allowed type ref", () => {
+		expect(validate("ref: share listing fields")).toEqual({ ok: true });
 	});
 
 	it("accepts capital-led titles", () => {
 		expect(validate("Allow capital-led commit titles")).toEqual({ ok: true });
 	});
 
-	it("accepts capital-led titles that contain a colon", () => {
-		expect(validate("WIP: temporary")).toEqual({ ok: true });
-		expect(validate("HTTP: add header")).toEqual({ ok: true });
-		expect(validate("Allow: this")).toEqual({ ok: true });
+	it.each([
+		"WIP: temporary",
+		"HTTP: add header",
+		"Allow: this",
+	])("accepts capital-led title %s", (title) => {
+		expect(validate(title)).toEqual({ ok: true });
 	});
 
 	it("accepts merge and revert subjects", () => {
@@ -29,11 +43,11 @@ describe("validate", () => {
 	});
 
 	it("rejects non-ascii titles", () => {
-		const result = validate("feat: add 🚀");
-		expect(result.ok).toBe(false);
-		if (!result.ok) {
-			expect(result.reason).toContain("ASCII");
-		}
+		expect(validate("feat: add 🚀")).toEqual({
+			ok: false,
+			reason:
+				"commit title must use plain ASCII characters only (no emoji/unicode).",
+		});
 	});
 
 	it("suggests lowercase for cased typed titles", () => {
@@ -44,14 +58,12 @@ describe("validate", () => {
 		});
 	});
 
-	it("rejects unknown typed-looking lowercase prefixes as freeform", () => {
-		const result = validate("refactor: share listing fields");
-		expect(result.ok).toBe(false);
-		if (!result.ok) {
-			expect(result.suggestion).toBe("Refactor: share listing fields");
-			expect(result.reason).toContain("invalid commit title format");
-			expect(result.reason).not.toContain("[commit]");
-		}
+	it("suggests capitalizing unknown lowercase type prefixes", () => {
+		expect(validate("refactor: share listing fields")).toEqual({
+			ok: false,
+			reason: INVALID_FORMAT_REASON,
+			suggestion: "Refactor: share listing fields",
+		});
 	});
 
 	it("suggests inserting space after the colon", () => {
@@ -70,12 +82,10 @@ describe("validate", () => {
 	});
 
 	it("suggests capitalizing lowercase freeform titles", () => {
-		const result = validate("add cart drawer");
-		expect(result.ok).toBe(false);
-		if (!result.ok) {
-			expect(result.suggestion).toBe("Add cart drawer");
-			expect(result.reason).toContain("invalid commit title format");
-			expect(result.reason).not.toContain("[commit]");
-		}
+		expect(validate("add cart drawer")).toEqual({
+			ok: false,
+			reason: INVALID_FORMAT_REASON,
+			suggestion: "Add cart drawer",
+		});
 	});
 });
