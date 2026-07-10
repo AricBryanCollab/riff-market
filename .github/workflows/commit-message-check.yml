@@ -13,9 +13,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: '22'
+          bun-version: 1.3.11
 
       - name: Validate commit titles
         env:
@@ -24,5 +24,5 @@ jobs:
         run: |
           git log --format=%s "$BASE_SHA..$HEAD_SHA" | while IFS= read -r subject; do
             [ -z "$subject" ] && continue
-            node scripts/check-commit-msg.cjs --message "$subject"
+            bun scripts/check-commit-msg.ts --message "$subject"
           done
