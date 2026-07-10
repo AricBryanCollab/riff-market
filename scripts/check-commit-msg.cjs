@@ -19,7 +19,12 @@ const ALLOWED_TYPES = [
 
 const usage = () => {
   console.error('Usage: node scripts/check-commit-msg.cjs <commit-msg-file>');
-  console.error('   or: node scripts/check-commit-msg.cjs --message "type: lowercase title"');
+  console.error(
+    '   or: node scripts/check-commit-msg.cjs --message "type: lowercase title"',
+  );
+  console.error(
+    '   or: node scripts/check-commit-msg.cjs --message "Title starting with a capital"',
+  );
 };
 
 const getSubject = () => {
@@ -58,23 +63,26 @@ if (subject.startsWith('Merge ') || subject.startsWith('Revert "')) {
   process.exit(0);
 }
 
-const commitPattern = new RegExp(`^(${ALLOWED_TYPES.join('|')}): .+$`);
-if (!commitPattern.test(subject)) {
-  console.error('[commit] invalid commit title format.');
-  console.error(`[commit] expected: <type>: <lowercase action title>`);
-  console.error(`[commit] allowed types: ${ALLOWED_TYPES.join(', ')}`);
-  console.error(`[commit] received: ${subject}`);
-  process.exit(1);
-}
-
-if (subject !== subject.toLowerCase()) {
-  console.error('[commit] commit title must be lowercase.');
-  console.error(`[commit] received: ${subject}`);
-  process.exit(1);
-}
-
 if (!/^[\x20-\x7E]+$/.test(subject)) {
   console.error('[commit] commit title must use plain ASCII characters only (no emoji/unicode).');
+  console.error(`[commit] received: ${subject}`);
+  process.exit(1);
+}
+
+const typedAttempt = new RegExp(`^(${ALLOWED_TYPES.join('|')}): .+$`, 'i');
+
+if (typedAttempt.test(subject)) {
+  if (subject !== subject.toLowerCase()) {
+    console.error('[commit] typed commit titles must be lowercase.');
+    console.error(`[commit] received: ${subject}`);
+    process.exit(1);
+  }
+} else if (!/^[A-Z]/.test(subject)) {
+  console.error('[commit] invalid commit title format.');
+  console.error('[commit] expected either:');
+  console.error('[commit]   <type>: <lowercase action title>');
+  console.error('[commit]   <Title starting with a capital letter>');
+  console.error(`[commit] allowed types: ${ALLOWED_TYPES.join(', ')}`);
   console.error(`[commit] received: ${subject}`);
   process.exit(1);
 }
