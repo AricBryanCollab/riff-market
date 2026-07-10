@@ -18,10 +18,21 @@ export const ALLOWED_TYPES = [
 ] as const;
 
 export type ValidateOk = { ok: true };
-export type ValidateErr = { ok: false; reason: string; try?: string };
+export type ValidateErr = { ok: false; reason: string; suggestion?: string };
 export type ValidateResult = ValidateOk | ValidateErr;
 
-const TYPE_PATTERN = /^([A-Za-z]+)(:\s*)(.*)$/;
+/** Only matches when the prefix is an allowed type (case-insensitive). */
+const TYPED_PATTERN = new RegExp(
+	`^(${ALLOWED_TYPES.join("|")})(:\\s*)(.*)$`,
+	"i",
+);
+
+const HELP_LINES = [
+	"expected either:",
+	"  <type>: <lowercase action title>",
+	"  <Title starting with a capital letter>",
+	`allowed types: ${ALLOWED_TYPES.join(", ")}`,
+];
 
 function usage(): void {
 	console.error("Usage: bun scripts/check-commit-msg.ts <commit-msg-file>");
@@ -58,66 +69,20 @@ function getSubject(argv: string[]): string {
 	}
 }
 
-function editDistance(a: string, b: string): number {
-	const rows = a.length + 1;
-	const cols = b.length + 1;
-	const dp = Array.from({ length: rows }, () => Array<number>(cols).fill(0));
-
-	for (let i = 0; i < rows; i++) dp[i][0] = i;
-	for (let j = 0; j < cols; j++) dp[0][j] = j;
-
-	for (let i = 1; i < rows; i++) {
-		for (let j = 1; j < cols; j++) {
-			const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-			dp[i][j] = Math.min(
-				dp[i - 1][j] + 1,
-				dp[i][j - 1] + 1,
-				dp[i - 1][j - 1] + cost,
-			);
-		}
-	}
-
-	return dp[a.length][b.length];
-}
-
-function closestType(candidate: string): string | undefined {
-	const lower = candidate.toLowerCase();
-	let best: { type: string; score: number } | undefined;
-
-	for (const type of ALLOWED_TYPES) {
-		let score: number;
-		if (lower.startsWith(type) || type.startsWith(lower)) {
-			score = Math.abs(lower.length - type.length);
-		} else {
-			score = editDistance(lower, type);
-			if (score > 2) continue;
-		}
-
-		if (!best || score < best.score) {
-			best = { type, score };
-		}
-	}
-
-	return best?.type;
-}
-
 function typedSuggestion(type: string, description: string): string {
 	const body = description.trim().toLowerCase();
 	return body ? `${type}: ${body}` : `${type}: `;
 }
 
-function formatHelp(): string {
-	return [
-		"expected either:",
-		"  <type>: <lowercase action title>",
-		"  <Title starting with a capital letter>",
-		`allowed types: ${ALLOWED_TYPES.join(", ")}`,
-	].join("\n[commit] ");
+function formatError(reason: string, suggestion?: string): ValidateErr {
+	return suggestion === undefined
+		? { ok: false, reason }
+		: { ok: false, reason, suggestion };
 }
 
 export function validate(subject: string): ValidateResult {
 	if (!subject) {
-		return { ok: false, reason: "empty commit title is not allowed." };
+		return formatError("empty commit title is not allowed.");
 	}
 
 	if (subject.startsWith("Merge ") || subject.startsWith('Revert "')) {
@@ -125,58 +90,35 @@ export function validate(subject: string): ValidateResult {
 	}
 
 	if (!/^[\x20-\x7E]+$/.test(subject)) {
-		return {
-			ok: false,
-			reason: "commit title must use plain ASCII characters only (no emoji/unicode).",
-		};
+		return formatError(
+			"commit title must use plain ASCII characters only (no emoji/unicode).",
+		);
 	}
 
-	const typed = TYPE_PATTERN.exec(subject);
+	const typed = TYPED_PATTERN.exec(subject);
 	if (typed) {
 		const [, rawType, separator, description] = typed;
 		const type = rawType.toLowerCase();
-		const allowed = (ALLOWED_TYPES as readonly string[]).includes(type);
 
-		if (allowed) {
-			if (separator !== ": ") {
-				return {
-					ok: false,
-					reason: 'typed commit titles must use ": " after the type.',
-					try: typedSuggestion(type, description),
-				};
-			}
-
-			if (!description.trim()) {
-				return {
-					ok: false,
-					reason: "typed commit titles need a non-empty description.",
-				};
-			}
-
-			if (subject !== subject.toLowerCase()) {
-				return {
-					ok: false,
-					reason: "typed commit titles must be lowercase.",
-					try: typedSuggestion(type, description),
-				};
-			}
-
-			return { ok: true };
+		if (separator !== ": ") {
+			return formatError(
+				'typed commit titles must use ": " after the type.',
+				typedSuggestion(type, description),
+			);
 		}
 
-		const suggestion = closestType(rawType);
-		if (suggestion) {
-			return {
-				ok: false,
-				reason: `unknown type "${rawType}". Did you mean "${suggestion}"?`,
-				try: typedSuggestion(suggestion, description),
-			};
+		if (!description.trim()) {
+			return formatError("typed commit titles need a non-empty description.");
 		}
 
-		return {
-			ok: false,
-			reason: `unknown type "${rawType}".\n[commit] ${formatHelp()}`,
-		};
+		if (subject !== subject.toLowerCase()) {
+			return formatError(
+				"typed commit titles must be lowercase.",
+				typedSuggestion(type, description),
+			);
+		}
+
+		return { ok: true };
 	}
 
 	if (/^[A-Z]/.test(subject)) {
@@ -184,11 +126,10 @@ export function validate(subject: string): ValidateResult {
 	}
 
 	const capitalized = subject.replace(/^./, (ch) => ch.toUpperCase());
-	return {
-		ok: false,
-		reason: `invalid commit title format.\n[commit] ${formatHelp()}`,
-		try: capitalized !== subject ? capitalized : undefined,
-	};
+	return formatError(
+		["invalid commit title format.", ...HELP_LINES].join("\n"),
+		capitalized !== subject ? capitalized : undefined,
+	);
 }
 
 function printFailure(subject: string, result: ValidateErr): void {
@@ -196,8 +137,8 @@ function printFailure(subject: string, result: ValidateErr): void {
 		console.error(`[commit] ${line}`);
 	}
 	console.error(`[commit] received: ${subject}`);
-	if (result.try !== undefined) {
-		console.error(`[commit] try:      ${result.try}`);
+	if (result.suggestion !== undefined) {
+		console.error(`[commit] try:      ${result.suggestion}`);
 	}
 }
 
