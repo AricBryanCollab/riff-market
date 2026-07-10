@@ -119,7 +119,7 @@ export async function getListingDetails(
 
 	return ok({
 		...listing,
-		...deriveListingViewerCapabilities({
+		...toListingViewerCapabilities({
 			viewer: actor,
 			sellerId: listing.sellerId,
 			listingStatus: listing.listingStatus,
@@ -189,7 +189,7 @@ export async function listCartListings(
 	return ok(await listings.findByIds(listingIds));
 }
 
-export function deriveListingViewerCapabilities(
+export function toListingViewerCapabilities(
 	input: ListingViewerCapabilityInput,
 ): ListingViewerCapabilities {
 	const canModify = input.viewer

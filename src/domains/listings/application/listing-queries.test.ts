@@ -3,7 +3,7 @@ import type { Actor } from "@/domains/shared/domain/actor";
 import type { ListingView, ListingViewStatus } from "../dto/listing-view";
 import {
 	type CartListingQueryPort,
-	deriveListingViewerCapabilities,
+	toListingViewerCapabilities,
 	getListingDetails,
 	type ListingDetailQueryPort,
 	listCartListings,
@@ -28,7 +28,7 @@ const nonAdminActors = [
 	["seller", seller],
 ] as const;
 
-describe("deriveListingViewerCapabilities", () => {
+describe("toListingViewerCapabilities", () => {
 	it.each([
 		[
 			"admin viewing a pending listing",
@@ -128,7 +128,7 @@ describe("deriveListingViewerCapabilities", () => {
 		],
 	] as const)("derives capabilities for %s", (_label, actor, sellerId, listingStatus, expected) => {
 		expect(
-			deriveListingViewerCapabilities({
+			toListingViewerCapabilities({
 				viewer: actor,
 				sellerId,
 				listingStatus,
@@ -147,7 +147,7 @@ describe("getListingDetails", () => {
 			ok: true,
 			value: {
 				...listing,
-				...deriveListingViewerCapabilities({
+				...toListingViewerCapabilities({
 					viewer: actor,
 					sellerId: listing.sellerId,
 					listingStatus: listing.listingStatus,
