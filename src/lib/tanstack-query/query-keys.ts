@@ -6,6 +6,8 @@ export type ListingDetailViewerScope = "public" | "admin";
 
 const listingKeys = {
 	root: ["listings"] as const,
+	detailRoot: ["listings", "detail"] as const,
+	cartDetailsRoot: ["listings", "cart-details"] as const,
 	approved: (filters: ApprovedListingSearchFilterQuery) =>
 		["listings", "approved", filters] as const,
 	cartDetails: (listingIds: readonly string[]) =>

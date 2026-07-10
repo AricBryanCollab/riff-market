@@ -5,14 +5,14 @@ import { useUserStore } from "@/store/user";
 import { refreshAuthUser } from "./tanstack-query/auth-user-query";
 import {
 	clearAccountCache,
-	invalidateListingCache,
+	invalidateAccountScopedListingCache,
 } from "./tanstack-query/cache-policy";
 
 export async function refreshAuthenticatedClientState(
 	queryClient: QueryClient,
 ) {
 	await refreshAuthUser(queryClient);
-	await invalidateListingCache(queryClient);
+	await invalidateAccountScopedListingCache(queryClient);
 }
 
 export async function clearAuthenticatedClientState(queryClient: QueryClient) {

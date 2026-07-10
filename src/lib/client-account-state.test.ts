@@ -31,7 +31,7 @@ describe("clearAuthenticatedClientState", () => {
 		useThemeStore.getState().setTheme("light");
 	});
 
-	it("clears account-owned client state including listing cache", async () => {
+	it("clears account-owned client state and session listing queries", async () => {
 		const user = makeUser();
 
 		queryClient.setQueryData(queryKeys.auth.user, user);
@@ -43,6 +43,12 @@ describe("clearAuthenticatedClientState", () => {
 			{ id: "listing-1" },
 		]);
 		queryClient.setQueryData(queryKeys.listings.pending, [{ id: "listing-2" }]);
+		queryClient.setQueryData(queryKeys.listings.detail("listing-1", "public"), {
+			id: "listing-1",
+		});
+		queryClient.setQueryData(queryKeys.listings.cartDetails(["listing-1"]), [
+			{ id: "listing-1" },
+		]);
 
 		useCartStore.getState().addItem("listing-1", user.id, user.role);
 		useUserStore.getState().setUser(user);
@@ -58,11 +64,17 @@ describe("clearAuthenticatedClientState", () => {
 		expect(
 			queryClient.getQueryData(queryKeys.orders.byRole("CUSTOMER")),
 		).toBeUndefined();
-		expect(
-			queryClient.getQueryData(queryKeys.listings.featured),
-		).toBeUndefined();
+		expect(queryClient.getQueryData(queryKeys.listings.featured)).toEqual([
+			{ id: "listing-1" },
+		]);
 		expect(
 			queryClient.getQueryData(queryKeys.listings.pending),
+		).toBeUndefined();
+		expect(
+			queryClient.getQueryData(queryKeys.listings.detail("listing-1", "public")),
+		).toBeUndefined();
+		expect(
+			queryClient.getQueryData(queryKeys.listings.cartDetails(["listing-1"])),
 		).toBeUndefined();
 		expect(useCartStore.getState()).toMatchObject({
 			items: [],

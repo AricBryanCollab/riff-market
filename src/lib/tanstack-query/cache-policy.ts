@@ -2,6 +2,18 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { UserProfile } from "@/types/user";
 import { queryKeys } from "./query-keys";
 
+const accountScopedListingQueryKeys = [
+	queryKeys.listings.detailRoot,
+	queryKeys.listings.pending,
+	queryKeys.listings.cartDetailsRoot,
+] as const;
+
+const accountScopedQueryKeys = [
+	queryKeys.notifications.root,
+	queryKeys.orders.root,
+	...accountScopedListingQueryKeys,
+] as const;
+
 export function setCurrentUserCache(
 	queryClient: QueryClient,
 	user: UserProfile | null,
@@ -20,18 +32,18 @@ export function updateCurrentUserCache(
 }
 
 export async function cancelAccountScopedQueries(queryClient: QueryClient) {
-	await Promise.all([
-		queryClient.cancelQueries({ queryKey: queryKeys.notifications.root }),
-		queryClient.cancelQueries({ queryKey: queryKeys.orders.root }),
-		queryClient.cancelQueries({ queryKey: queryKeys.listings.root }),
-	]);
+	await Promise.all(
+		accountScopedQueryKeys.map((queryKey) =>
+			queryClient.cancelQueries({ queryKey }),
+		),
+	);
 }
 
 export async function clearAccountCache(queryClient: QueryClient) {
 	await cancelAccountScopedQueries(queryClient);
-	queryClient.removeQueries({ queryKey: queryKeys.notifications.root });
-	queryClient.removeQueries({ queryKey: queryKeys.orders.root });
-	queryClient.removeQueries({ queryKey: queryKeys.listings.root });
+	for (const queryKey of accountScopedQueryKeys) {
+		queryClient.removeQueries({ queryKey });
+	}
 	setCurrentUserCache(queryClient, null);
 }
 
@@ -41,4 +53,12 @@ export function invalidateOrdersCache(queryClient: QueryClient) {
 
 export function invalidateListingCache(queryClient: QueryClient) {
 	return queryClient.invalidateQueries({ queryKey: queryKeys.listings.root });
+}
+
+export function invalidateAccountScopedListingCache(queryClient: QueryClient) {
+	return Promise.all(
+		accountScopedListingQueryKeys.map((queryKey) =>
+			queryClient.invalidateQueries({ queryKey }),
+		),
+	);
 }
