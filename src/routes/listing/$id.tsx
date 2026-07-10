@@ -17,7 +17,6 @@ import { listingCategoryOptions } from "@/constants/select-options";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { listingByIdQueryOpt } from "@/hooks/use-get-listings";
 import { optionalAuthUserQueryOpt } from "@/lib/tanstack-query/auth-user-query";
-import { listingDetailViewerScopeForRole } from "@/lib/tanstack-query/query-keys";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 export const Route = createFileRoute("/listing/$id")({
@@ -28,10 +27,7 @@ export const Route = createFileRoute("/listing/$id")({
 
 		await context.queryClient
 			.ensureQueryData(
-				listingByIdQueryOpt(
-					params.id,
-					listingDetailViewerScopeForRole(user?.role),
-				),
+				listingByIdQueryOpt(params.id, user?.id ?? "public"),
 			)
 			.catch(() => undefined);
 	},
@@ -42,14 +38,14 @@ function RouteComponent() {
 	const { id } = useParams({ from: "/listing/$id" });
 	const navigate = useNavigate();
 	const { data: user, isPending: isAuthPending } = useAuthUser();
-	const viewerScope = listingDetailViewerScopeForRole(user?.role);
+	const viewerKey = user?.id ?? "public";
 
 	const {
 		data: listing,
 		isPending,
 		isError,
 	} = useQuery({
-		...listingByIdQueryOpt(id, viewerScope),
+		...listingByIdQueryOpt(id, viewerKey),
 		enabled: !isAuthPending,
 	});
 

@@ -8,8 +8,6 @@ import type {
 } from "@/domains/listings/dto/listing-view";
 import {
 	type ListingCountStatusQuery,
-	type ListingDetailViewerScope,
-	listingDetailViewerScopeForRole,
 	queryKeys,
 } from "@/lib/tanstack-query/query-keys";
 import {
@@ -69,10 +67,10 @@ export const featuredListingsQueryOpt = queryOptions<ListingResponse[]>({
 
 export const listingByIdQueryOpt = (
 	id: string,
-	viewerScope: ListingDetailViewerScope = "public",
+	viewerKey: string = "public",
 ) =>
 	queryOptions<ListingDetailResponse>({
-		queryKey: queryKeys.listings.detail(id, viewerScope),
+		queryKey: queryKeys.listings.detail(id, viewerKey),
 		queryFn: async () =>
 			getListingDetailsServerFn({
 				data: { listingId: id },
@@ -124,14 +122,14 @@ export const useApprovedListingCount = () => {
 
 export const useListingById = (id?: string | null) => {
 	const { data: user, isPending: isAuthPending } = useAuthUser();
-	const viewerScope = listingDetailViewerScopeForRole(user?.role);
+	const viewerKey = user?.id ?? "public";
 	const {
 		data: listing,
 		isPending: isListingLoading,
 		isError: isListingError,
 		refetch: refetchListingDetails,
 	} = useQuery({
-		...listingByIdQueryOpt(id ?? "", viewerScope),
+		...listingByIdQueryOpt(id ?? "", viewerKey),
 		enabled: !!id && !isAuthPending,
 	});
 

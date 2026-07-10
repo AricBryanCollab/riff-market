@@ -1,7 +1,6 @@
 import type { ActorRole } from "@/domains/shared/domain/actor";
 import type { ApprovedListingSearchFilterQuery } from "@/utils/shop-search";
 
-export type ListingDetailViewerScope = "public" | "admin";
 export type ListingCountStatusQuery = "approved" | "pending";
 
 const listingKeys = {
@@ -16,18 +15,12 @@ const listingKeys = {
 	countByCategory: ["listings", "count", "by-category"] as const,
 	countByStatus: (status: ListingCountStatusQuery) =>
 		["listings", "count", status] as const,
-	detail: (id: string, viewerScope: ListingDetailViewerScope) =>
-		["listings", "detail", id, viewerScope] as const,
+	detail: (id: string, viewerKey: string) =>
+		["listings", "detail", id, viewerKey] as const,
 	featured: ["listings", "featured"] as const,
 	pending: ["listings", "pending"] as const,
 	recent: ["listings", "recent"] as const,
 };
-
-export function listingDetailViewerScopeForRole(
-	role: ActorRole | null | undefined,
-): ListingDetailViewerScope {
-	return role === "ADMIN" ? "admin" : "public";
-}
 
 export const queryKeys = {
 	auth: {
