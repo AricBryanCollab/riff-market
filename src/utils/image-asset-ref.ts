@@ -1,9 +1,6 @@
 import { Prisma } from "generated/prisma/client";
 import z from "zod";
-import type {
-	CleanupImageAssetRef,
-	ImageAssetRef,
-} from "@/types/image-asset";
+import type { CleanupImageAssetRef, ImageAssetRef } from "@/types/image-asset";
 
 const LEGACY_IMAGE_ASSET_PROVIDER = "cloudinary";
 const LEGACY_IMAGE_ASSET_TYPE = "image";
@@ -54,6 +51,23 @@ export function toImageAssetRef(
 	return null;
 }
 
+export function toCleanupImageAssetRefFromImage(
+	image: ImageAssetRef,
+): CleanupImageAssetRef | null {
+	const providerAssetId = image.publicId.trim();
+
+	if (providerAssetId.length === 0) {
+		return null;
+	}
+
+	return {
+		url: image.url,
+		provider: LEGACY_IMAGE_ASSET_PROVIDER,
+		assetType: LEGACY_IMAGE_ASSET_TYPE,
+		providerAssetId,
+	};
+}
+
 export function toCleanupImageAssetRef(
 	value: Prisma.JsonValue | null | undefined,
 ): CleanupImageAssetRef | null {
@@ -83,12 +97,7 @@ export function toCleanupImageAssetRef(
 		return null;
 	}
 
-	return {
-		url: image.url,
-		provider: LEGACY_IMAGE_ASSET_PROVIDER,
-		assetType: LEGACY_IMAGE_ASSET_TYPE,
-		providerAssetId: image.publicId.trim(),
-	};
+	return toCleanupImageAssetRefFromImage(image);
 }
 
 export function toImageAssetUrls(value: Prisma.JsonValue | null | undefined) {
@@ -97,15 +106,25 @@ export function toImageAssetUrls(value: Prisma.JsonValue | null | undefined) {
 	}
 
 	return value
-		.map((image) =>
-			isImageAssetRef(image) ? toImageAssetUrl(image) : null,
-		)
+		.map((image) => (isImageAssetRef(image) ? toImageAssetUrl(image) : null))
 		.filter((imageUrl): imageUrl is string => imageUrl !== null);
 }
 
-export function toImageAssetRefs(
-	value: Prisma.JsonValue | null | undefined,
-) {
+export function toListingImageDtos(value: Prisma.JsonValue | null | undefined) {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+
+	return value
+		.map(toImageAssetRef)
+		.filter((image): image is ImageAssetRef => image !== null)
+		.map((image) => ({
+			imageId: image.publicId,
+			url: image.url,
+		}));
+}
+
+export function toImageAssetRefs(value: Prisma.JsonValue | null | undefined) {
 	if (Array.isArray(value)) {
 		return value
 			.map(toImageAssetRef)

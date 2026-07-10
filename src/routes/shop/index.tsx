@@ -1,23 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ListMusic } from "lucide-react";
-import { ProductErrorState } from "@/components/error-states";
-import { ProductLoadingState } from "@/components/loading-states";
+import { ListingErrorState } from "@/components/error-states";
+import ListingCard from "@/components/listing-card";
+import ListingFilterBadges from "@/components/listing-filter-badges";
+import { ListingLoadingState } from "@/components/loading-states";
 import { ShopPageHeader } from "@/components/page-headers";
-import ProductCard from "@/components/product-card";
-import ProductFilterBadges from "@/components/product-filter-badges";
 import SectionContainer from "@/components/section-container";
 import { Button } from "@/components/ui/button";
 import { H3 } from "@/components/ui/typography";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import useGetPendingProducts from "@/hooks/use-get-pending-products";
 import {
-	approvedProductsQueryOpt,
-	productCountByStatusQueryOpt,
-} from "@/hooks/use-get-products";
+	approvedListingsQueryOpt,
+	listingCountByStatusQueryOpt,
+} from "@/hooks/use-get-listings";
+import useGetPendingListings from "@/hooks/use-get-pending-listings";
 import useShopPagination from "@/hooks/use-shop-pagination";
-import { usePendingProductStore } from "@/store/pending-product";
+import { usePendingListingStore } from "@/store/pending-listing";
 import { getApprovedFiltersFromSearch } from "@/utils/shop-search";
-import { validateProductSearch } from "@/utils/validate-product-search";
+import { validateListingSearch } from "@/utils/validate-listing-search";
 
 export const Route = createFileRoute("/shop/")({
 	beforeLoad: async ({ context, search }) => {
@@ -25,27 +25,27 @@ export const Route = createFileRoute("/shop/")({
 
 		await Promise.all([
 			context.queryClient
-				.ensureQueryData(approvedProductsQueryOpt(filters))
+				.ensureQueryData(approvedListingsQueryOpt(filters))
 				.catch(() => undefined),
 			context.queryClient
-				.ensureQueryData(productCountByStatusQueryOpt("approved"))
+				.ensureQueryData(listingCountByStatusQueryOpt("approved"))
 				.catch(() => undefined),
 		]);
 	},
 	component: RouteComponent,
-	validateSearch: validateProductSearch,
+	validateSearch: validateListingSearch,
 });
 
 function RouteComponent() {
-	const { showPending } = usePendingProductStore();
+	const { showPending } = usePendingListingStore();
 	const { data: user } = useAuthUser();
 	const isAdmin = user?.role === "ADMIN";
 
 	const {
-		products,
+		listings,
 		isLoading,
 		isError,
-		refetchProducts,
+		refetchListings,
 		page,
 		totalPages,
 		isFirstPage,
@@ -55,39 +55,39 @@ function RouteComponent() {
 	} = useShopPagination();
 
 	const {
-		pendingProducts,
-		isLoadingPendingProducts,
-		isErrorPendingProducts,
-		refetch: refetchPendingProducts,
-	} = useGetPendingProducts({ isAdmin });
+		pendingListings,
+		isLoadingPendingListings,
+		isErrorPendingListings,
+		refetch: refetchPendingListings,
+	} = useGetPendingListings({ isAdmin });
 
-	const displayProducts = showPending ? pendingProducts : products;
-	const displayIsLoading = showPending ? isLoadingPendingProducts : isLoading;
-	const displayIsError = showPending ? isErrorPendingProducts : isError;
-	const displayRefetch = showPending ? refetchPendingProducts : refetchProducts;
+	const displayListings = showPending ? pendingListings : listings;
+	const displayIsLoading = showPending ? isLoadingPendingListings : isLoading;
+	const displayIsError = showPending ? isErrorPendingListings : isError;
+	const displayRefetch = showPending ? refetchPendingListings : refetchListings;
 
 	return (
 		<SectionContainer>
 			<ShopPageHeader />
 
-			<ProductFilterBadges />
+			<ListingFilterBadges />
 
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-h-200">
 				{displayIsLoading ? (
-					<ProductLoadingState />
-				) : displayIsError || !displayProducts ? (
-					<ProductErrorState refetch={displayRefetch} />
-				) : displayProducts.length > 0 ? (
-					displayProducts.map((product) => (
-						<ProductCard key={product.id} product={product} />
+					<ListingLoadingState />
+				) : displayIsError || !displayListings ? (
+					<ListingErrorState refetch={displayRefetch} />
+				) : displayListings.length > 0 ? (
+					displayListings.map((listing) => (
+						<ListingCard key={listing.id} listing={listing} />
 					))
 				) : (
 					<div className="col-span-full flex flex-col justify-center items-center gap-4 text-center py-8 text-muted-foreground">
 						<ListMusic size={40} />
 						<H3>
 							{showPending
-								? "No pending products for approval"
-								: "No products match your search here"}
+								? "No pending listings for approval"
+								: "No listings match your search here"}
 						</H3>
 					</div>
 				)}

@@ -11,6 +11,8 @@ interface NumberFieldProps {
 	onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 	placeholder?: string;
 	className?: string;
+	min?: number;
+	step?: number;
 }
 
 export function NumberField({
@@ -21,6 +23,8 @@ export function NumberField({
 	onChange,
 	placeholder,
 	className,
+	min,
+	step,
 }: NumberFieldProps) {
 	return (
 		<Field className={cn("my-2", className)}>
@@ -31,6 +35,8 @@ export function NumberField({
 				type="number"
 				value={value}
 				onChange={onChange}
+				min={min}
+				step={step}
 				disabled={disabled}
 				className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
 				placeholder={placeholder || label.toLowerCase()}

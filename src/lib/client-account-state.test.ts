@@ -31,7 +31,7 @@ describe("clearAuthenticatedClientState", () => {
 		useThemeStore.getState().setTheme("light");
 	});
 
-	it("clears account-owned client state without clearing product cache", () => {
+	it("clears account-owned client state and session listing queries", async () => {
 		const user = makeUser();
 
 		queryClient.setQueryData(queryKeys.auth.user, user);
@@ -39,16 +39,23 @@ describe("clearAuthenticatedClientState", () => {
 		queryClient.setQueryData(queryKeys.orders.byRole("CUSTOMER"), [
 			{ id: "order-1" },
 		]);
-		queryClient.setQueryData(queryKeys.products.featured, [
-			{ id: "product-1" },
+		queryClient.setQueryData(queryKeys.listings.featured, [
+			{ id: "listing-1" },
+		]);
+		queryClient.setQueryData(queryKeys.listings.pending, [{ id: "listing-2" }]);
+		queryClient.setQueryData(queryKeys.listings.detail("listing-1", "public"), {
+			id: "listing-1",
+		});
+		queryClient.setQueryData(queryKeys.listings.cartDetails(["listing-1"]), [
+			{ id: "listing-1" },
 		]);
 
-		useCartStore.getState().addItem("product-1", user.id, user.role);
+		useCartStore.getState().addItem("listing-1", user.id, user.role);
 		useUserStore.getState().setUser(user);
 		useThemeStore.getState().setTheme("dark");
 		useThemeStore.getState().setPreviewTheme("light");
 
-		clearAuthenticatedClientState(queryClient);
+		await clearAuthenticatedClientState(queryClient);
 
 		expect(queryClient.getQueryData(queryKeys.auth.user)).toBeNull();
 		expect(
@@ -57,9 +64,18 @@ describe("clearAuthenticatedClientState", () => {
 		expect(
 			queryClient.getQueryData(queryKeys.orders.byRole("CUSTOMER")),
 		).toBeUndefined();
-		expect(queryClient.getQueryData(queryKeys.products.featured)).toEqual([
-			{ id: "product-1" },
+		expect(queryClient.getQueryData(queryKeys.listings.featured)).toEqual([
+			{ id: "listing-1" },
 		]);
+		expect(
+			queryClient.getQueryData(queryKeys.listings.pending),
+		).toBeUndefined();
+		expect(
+			queryClient.getQueryData(queryKeys.listings.detail("listing-1", "public")),
+		).toBeUndefined();
+		expect(
+			queryClient.getQueryData(queryKeys.listings.cartDetails(["listing-1"])),
+		).toBeUndefined();
 		expect(useCartStore.getState()).toMatchObject({
 			items: [],
 			userId: null,

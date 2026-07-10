@@ -161,7 +161,8 @@ function CommunityComponent() {
 							<p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground">
 								RiffMarket connects players who care about the details: how gear
 								was treated, how it sounds in use, and whether a seller follows
-								through when it matters. That shared standard is the product.
+								through when it matters. That shared standard is the
+								marketplace.
 							</p>
 						</div>
 					</div>
@@ -172,7 +173,7 @@ function CommunityComponent() {
 				<SectionContainer>
 					<blockquote className="text-center">
 						<p className="mx-auto max-w-4xl text-3xl leading-tight font-bold md:text-5xl lg:text-6xl">
-							"A good marketplace moves products.
+							"A good marketplace moves listings.
 							<span className="text-background/60">
 								{" "}
 								A great one builds trust.

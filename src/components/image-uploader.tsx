@@ -1,15 +1,24 @@
 import { cva } from "class-variance-authority";
-import { type LucideIcon, Upload, X } from "lucide-react";
-import useUploadImage, { type ImageFile } from "@/hooks/use-upload-image";
+import {
+	ChevronLeft,
+	ChevronRight,
+	type LucideIcon,
+	Upload,
+	X,
+} from "lucide-react";
+import useUploadImage, {
+	type ImageFile,
+	type ImageFileChange,
+	isNewImageFile,
+} from "@/hooks/use-upload-image";
 
-interface ImageUploaderProps {
+interface ImageUploaderProps<TImage extends ImageFile> {
 	inputId: string;
 	label: string;
-	images: ImageFile[];
-	onChange: (images: ImageFile[]) => void;
+	images: TImage[];
+	onChange: (images: ImageFileChange<TImage>) => void;
 	maxImages?: number;
 	icon?: LucideIcon;
-	maxSizeMB?: number;
 }
 
 const imageUploaderDropZoneVariants = cva(
@@ -27,29 +36,34 @@ const imageUploaderDropZoneVariants = cva(
 	},
 );
 
-const ImageUploader = ({
+const ImageUploader = <TImage extends ImageFile>({
 	inputId,
 	label,
 	images,
 	onChange,
 	maxImages = 5,
 	icon: Icon,
-	maxSizeMB = 5,
-}: ImageUploaderProps) => {
+}: ImageUploaderProps<TImage>) => {
 	const {
 		dragActive,
 		error,
 		canAddMore,
 		fileInputRef,
 		acceptFormats,
+		maxSizeMB,
 		triggerFileInput,
 		handleDragEnter,
 		handleRemoveImage,
+		handleMoveImage,
 		handleDrop,
 		handleInputChange,
 		handleDragLeave,
 		handleDragOver,
-	} = useUploadImage(images, maxImages, maxSizeMB, onChange);
+	} = useUploadImage(images, maxImages, onChange);
+
+	const getImageLabel = (imageFile: ImageFile) =>
+		isNewImageFile(imageFile) ? imageFile.file.name : "Existing listing photo";
+
 	return (
 		<div className="flex flex-col gap-1 my-2">
 			<label
@@ -128,23 +142,47 @@ const ImageUploader = ({
 								>
 									<img
 										src={imageFile.preview}
-										alt={imageFile.file.name}
+										alt={getImageLabel(imageFile)}
 										className="w-full h-full object-cover"
 									/>
-									{/* Remove Button */}
-									<button
-										type="button"
-										onClick={() => handleRemoveImage(index)}
-										className="absolute top-2 right-2 cursor-pointer bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-										title="Remove image"
-									>
-										<X size={16} />
-									</button>
+									<div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-2">
+										<div className="flex items-center gap-1">
+											<button
+												type="button"
+												onClick={() => handleMoveImage(index, -1)}
+												disabled={index === 0}
+												className="cursor-pointer bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-black/80 disabled:pointer-events-none disabled:opacity-30"
+												title="Move image earlier"
+												aria-label="Move image earlier"
+											>
+												<ChevronLeft size={16} />
+											</button>
+											<button
+												type="button"
+												onClick={() => handleMoveImage(index, 1)}
+												disabled={index === images.length - 1}
+												className="cursor-pointer bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-black/80 disabled:pointer-events-none disabled:opacity-30"
+												title="Move image later"
+												aria-label="Move image later"
+											>
+												<ChevronRight size={16} />
+											</button>
+										</div>
+										<button
+											type="button"
+											onClick={() => handleRemoveImage(index)}
+											className="cursor-pointer bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+											title="Remove image"
+											aria-label="Remove image"
+										>
+											<X size={16} />
+										</button>
+									</div>
 
 									{/* Image Number & File Name */}
 									<div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-2 py-1">
 										<div className="font-semibold">{index + 1}</div>
-										<div className="truncate">{imageFile.file.name}</div>
+										<div className="truncate">{getImageLabel(imageFile)}</div>
 									</div>
 								</div>
 							))}

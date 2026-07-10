@@ -1,35 +1,40 @@
-export const roleOptions = [
-	{ value: "SELLER", label: "Seller" },
-	{ value: "CUSTOMER", label: "Customer" },
-] as const;
+import { RoleDescription } from "@/constants/role-description";
+import { selfAssignableRoles } from "@/domains/accounts/application/account-auth";
+import {
+	LISTING_CATEGORIES,
+	LISTING_CONDITIONS,
+	type ListingCategory,
+	type ListingCondition,
+} from "@/domains/listings/domain/listing-attributes";
 
-export const productCategoryOptions = [
-	{ value: "ELECTRIC", label: "Electric Guitar" },
-	{ value: "ACOUSTIC", label: "Acoustic Guitar" },
-	{ value: "KEYBOARD", label: "Keyboard/Piano" },
-	{ value: "PEDALS", label: "Pedals & Effects" },
-	{ value: "ACCESSORY", label: "Accessories" },
-] as const;
+export const roleOptions = selfAssignableRoles.map((value) => ({
+	value,
+	label: RoleDescription[value].label,
+}));
 
-export const productConditionOptions = [
-	{ value: "NEW", label: "Brand New" },
-	{ value: "MINT", label: "Mint Condition" },
-	{ value: "USED", label: "Used" },
-] as const;
+const listingCategoryLabels: Record<ListingCategory, string> = {
+	ELECTRIC: "Electric Guitar",
+	ACOUSTIC: "Acoustic Guitar",
+	KEYBOARD: "Keyboard/Piano",
+	PEDALS: "Pedals & Effects",
+	ACCESSORY: "Accessories",
+};
 
-export const paymentMethodOptions = [
-	{ value: "CASH", label: "Cash" },
-	{ value: "PAYPAL", label: "PayPal" },
-	{ value: "VISA", label: "Visa/Credit Card" },
-] as const;
+const listingConditionLabels: Record<ListingCondition, string> = {
+	NEW: "Brand New",
+	USED: "Used",
+	MINT: "Mint Condition",
+};
 
-export const orderStatusOptions = [
-	{ value: "PENDING", label: "Pending" },
-	{ value: "PROCESSING", label: "Processing" },
-	{ value: "SHIPPED", label: "Shipped" },
-	{ value: "DELIVERED", label: "Delivered" },
-	{ value: "CANCELED", label: "Canceled" },
-] as const;
+export const listingCategoryOptions = LISTING_CATEGORIES.map((value) => ({
+	value,
+	label: listingCategoryLabels[value],
+}));
+
+export const listingConditionOptions = LISTING_CONDITIONS.map((value) => ({
+	value,
+	label: listingConditionLabels[value],
+}));
 
 export const chatRoleOptions = [
 	{ value: "USER", label: "User" },

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { isValidPhoneNumber } from "@/domains/accounts/domain/phone-number";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { clientLogger } from "@/lib/client-logger";
 import { setCurrentUserCache } from "@/lib/tanstack-query/cache-policy";
@@ -7,7 +8,6 @@ import { updateCurrentUserFn } from "@/server/user.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { UpdateUserRequest } from "@/types/user";
-import { validatePhoneNumber } from "@/utils/validate-phone-number";
 
 const useUpdateUser = () => {
 	const queryClient = useQueryClient();
@@ -87,8 +87,8 @@ const useUpdateUser = () => {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (!validatePhoneNumber(userData?.phone || "")) {
-			showToast("Invalid phone number format", "default");
+		if (userData?.phone && !isValidPhoneNumber(userData.phone)) {
+			showToast("Phone number must be 10-12 digits", "default");
 			return;
 		}
 

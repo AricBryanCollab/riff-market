@@ -3,23 +3,33 @@ import { ArrowRight, ShoppingBag } from "lucide-react";
 import AnimatedLoader from "@/components/animated-loader";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
-import type { CartItem } from "@/types/cart";
+import type { CartPricingState } from "@/hooks/use-cart-details";
+import type { CartLine } from "@/types/cart";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 interface CartListProps {
 	isLoading: boolean;
 	isCartEmpty: boolean;
-	totalPrice: number;
+	cartPricing: CartPricingState;
 	cartCount: number;
-	cartWithDetails: CartItem[];
+	cartLines: CartLine[];
 }
 
 const CartList = ({
 	isLoading,
 	isCartEmpty,
-	totalPrice,
+	cartPricing,
 	cartCount,
-	cartWithDetails,
+	cartLines,
 }: CartListProps) => {
+	const subtotalText =
+		cartPricing.status === "priced"
+			? formatMoneyAmountMinor(
+					cartPricing.totalPriceAmountMinor,
+					cartPricing.currencyCode,
+				)
+			: cartPricing.message;
+
 	if (isLoading) {
 		return (
 			<div className="w-80 max-w-sm bg-background">
@@ -66,16 +76,16 @@ const CartList = ({
 			<div className="max-h-96 overflow-y-auto px-4 py-3">
 				{!isLoading && !isCartEmpty && (
 					<ul className="space-y-3">
-						{cartWithDetails.slice(0, 3).map((cart) => (
+						{cartLines.slice(0, 3).map((cart) => (
 							<li
-								key={cart.product?.id}
+								key={cart.listingId}
 								className="flex gap-3 p-2.5 rounded-lg hover:bg-accent/50 transition-colors group"
 							>
-								{cart.product?.images?.[0] && (
+								{cart.imageUrl && (
 									<div className="relative size-20 shrink-0 rounded-md overflow-hidden bg-muted border border-border">
 										<img
-											src={cart.product?.images?.[0]}
-											alt={cart.product.name}
+											src={cart.imageUrl}
+											alt={cart.imageAlt}
 											className="w-full h-full object-cover"
 										/>
 									</div>
@@ -83,10 +93,10 @@ const CartList = ({
 								<div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
 									<div>
 										<p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-											{cart.product?.name}
+											{cart.title}
 										</p>
 										<p className="text-xs text-muted-foreground mt-0.5 truncate">
-											{cart.product?.brand} • {cart.product?.model}
+											{cart.description}
 										</p>
 									</div>
 									<div className="flex items-center justify-between mt-1">
@@ -94,17 +104,17 @@ const CartList = ({
 											Qty: {cart.quantity}
 										</BodySmall>
 										<p className="text-sm font-semibold text-foreground">
-											${cart.product?.price.toFixed(2)}
+											{cart.status === "available" ? cart.unitPriceText : ""}
 										</p>
 									</div>
 								</div>
 							</li>
 						))}
-						{cartWithDetails.length > 3 && (
+						{cartLines.length > 3 && (
 							<div className="text-center pt-1 pb-1">
 								<BodySmall className="text-muted-foreground/80 text-xs">
-									+{cartWithDetails.length - 3} more{" "}
-									{cartWithDetails.length - 3 === 1 ? "item" : "items"}
+									+{cartLines.length - 3} more{" "}
+									{cartLines.length - 3 === 1 ? "item" : "items"}
 								</BodySmall>
 							</div>
 						)}
@@ -119,7 +129,7 @@ const CartList = ({
 							Subtotal:
 						</span>
 						<span className="text-lg font-bold text-foreground">
-							${totalPrice.toFixed(2)}
+							{subtotalText}
 						</span>
 					</div>
 					<Button>

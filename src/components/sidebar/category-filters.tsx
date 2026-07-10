@@ -2,7 +2,7 @@ import { Package, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { productCategoryOptions } from "@/constants/select-options";
+import { listingCategoryOptions } from "@/constants/select-options";
 import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 
 const CategoryFilters = () => {
@@ -29,7 +29,7 @@ const CategoryFilters = () => {
 				)}
 			</div>
 			<div className="space-y-2">
-				{productCategoryOptions.map((category) => (
+				{listingCategoryOptions.map((category) => (
 					<div key={category.value} className="flex items-center space-x-2">
 						<Checkbox
 							id={`category-${category.value}`}

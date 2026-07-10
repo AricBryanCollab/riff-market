@@ -1,8 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import OrderItemCard from "@/components/order/order-item-card";
-import OrderSummary from "@/components/order/order-summary";
-import PaymentMethodSelect from "@/components/order/payment-method-select";
+import {
+	DesktopOrderSummary,
+	MobileOrderSummary,
+	OrderSummaryLoading,
+	OrderSummaryUnavailable,
+} from "@/components/order/order-summary";
 import ShippingAddressField from "@/components/order/shipping-address-field";
 import SectionContainer from "@/components/section-container";
 import { Button } from "@/components/ui/button";
@@ -23,24 +27,35 @@ function RouteComponent() {
 
 	const {
 		isLoading: isLoadingCart,
-		cartWithDetails,
-		totalPrice: subtotal,
+		cartLines,
+		cartPricing,
+		checkoutCart,
 	} = useCartDetails();
 
 	const {
 		shippingAddress,
-		paymentMethod,
 		address: defaultAddress,
 		isPending: isPlacingOrder,
 		clearAddress,
 		handleDefaultAddress,
 		handleShippingAddressChange,
-		handlePaymentMethodChange,
 		handleSubmit,
-	} = usePlaceOrder();
+	} = usePlaceOrder(checkoutCart);
 
-	const tax = subtotal * 0.08;
+	const canSubmitOrder = checkoutCart.status === "ready";
+	const subtotalAmountMinor =
+		cartPricing.status === "priced" ? cartPricing.totalPriceAmountMinor : 0;
 	const isSubmittingOrder = isLoadingCart || isPlacingOrder;
+	const orderSummaryAmounts =
+		cartPricing.status === "priced"
+			? {
+					subtotalAmountMinor,
+					shippingAmountMinor: 0,
+					currencyCode: cartPricing.currencyCode,
+				}
+			: undefined;
+	const orderSummaryUnavailableMessage =
+		cartPricing.status === "priced" ? undefined : cartPricing.message;
 
 	return (
 		<SectionContainer>
@@ -62,7 +77,7 @@ function RouteComponent() {
 					<form onSubmit={handleSubmit} className="space-y-6">
 						<OrderItemCard
 							isLoadingCart={isLoadingCart}
-							cartWithDetails={cartWithDetails}
+							cartLines={cartLines}
 						/>
 
 						<ShippingAddressField
@@ -73,25 +88,22 @@ function RouteComponent() {
 							setDefaultAddress={handleDefaultAddress}
 						/>
 
-						<PaymentMethodSelect
-							value={paymentMethod}
-							onValueChange={handlePaymentMethodChange}
-						/>
-
 						<div className="lg:hidden">
-							<OrderSummary
-								subtotal={subtotal}
-								tax={tax}
-								shipping={0}
-								showBenefits={false}
-								isLoading={isLoadingCart}
-								isMobile={true}
-							/>
+							{isLoadingCart ? (
+								<OrderSummaryLoading />
+							) : orderSummaryAmounts ? (
+								<MobileOrderSummary {...orderSummaryAmounts} />
+							) : (
+								<OrderSummaryUnavailable
+									message={orderSummaryUnavailableMessage ?? ""}
+								/>
+							)}
 						</div>
 
 						<div className="flex flex-col w-full">
 							<LoadingButton
 								loading={isSubmittingOrder}
+								disabled={!canSubmitOrder}
 								type="submit"
 								className="w-full sm:w-auto"
 							>
@@ -102,14 +114,19 @@ function RouteComponent() {
 				</div>
 
 				<div className="hidden lg:block">
-					<OrderSummary
-						subtotal={subtotal}
-						tax={tax}
-						shipping={0}
-						showBenefits
-						isLoading={isLoadingCart}
-						className="sticky top-6"
-					/>
+					{isLoadingCart ? (
+						<OrderSummaryLoading className="sticky top-6" />
+					) : orderSummaryAmounts ? (
+						<DesktopOrderSummary
+							{...orderSummaryAmounts}
+							className="sticky top-6"
+						/>
+					) : (
+						<OrderSummaryUnavailable
+							message={orderSummaryUnavailableMessage ?? ""}
+							className="sticky top-6"
+						/>
+					)}
 				</div>
 			</div>
 		</SectionContainer>

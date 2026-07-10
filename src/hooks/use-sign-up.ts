@@ -1,15 +1,18 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useState } from "react";
+import type { ActorRole } from "@/domains/shared/domain/actor";
+import { refreshAuthenticatedClientState } from "@/lib/client-account-state";
 import { clientLogger } from "@/lib/client-logger";
-import { signUp } from "@/lib/tanstack-query/auth-queries";
-import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import { getCurrentUserFn } from "@/server/user.functions";
+import { signUpFn } from "@/server/auth.functions";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 import type { SignUpRequest } from "@/types/auth";
-import type { UserRole } from "@/types/enum";
 
-const initialSignUp = {
+type SignUpFormState = Omit<SignUpRequest, "role"> & {
+	readonly role: ActorRole | null;
+};
+
+const initialSignUp: SignUpFormState = {
 	firstName: "",
 	lastName: "",
 	email: "",
@@ -19,18 +22,15 @@ const initialSignUp = {
 };
 
 const useSignUp = () => {
-	const [signUpData, setSignUpData] = useState<SignUpRequest>(initialSignUp);
+	const [signUpData, setSignUpData] = useState<SignUpFormState>(initialSignUp);
 	const queryClient = useQueryClient();
 	const { showToast } = useToastStore();
 
 	const { setCloseDialog } = useDialogStore();
 	const { mutate, isPending, isError } = useMutation({
-		mutationFn: signUp,
+		mutationFn: (data: SignUpRequest) => signUpFn({ data }),
 		onSuccess: async () => {
-			await queryClient.fetchQuery({
-				queryKey: queryKeys.auth.user,
-				queryFn: () => getCurrentUserFn(),
-			});
+			await refreshAuthenticatedClientState(queryClient);
 			showToast("You have successfully signed up", "success");
 			setCloseDialog();
 		},
@@ -47,14 +47,19 @@ const useSignUp = () => {
 		setSignUpData({ ...signUpData, [e.target.id]: e.target.value });
 	};
 
-	const onChangeRole = (role: UserRole) => {
+	const onChangeRole = (role: ActorRole) => {
 		setSignUpData({ ...signUpData, role: role });
 	};
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		mutate({ ...signUpData, role: signUpData.role ?? "CUSTOMER" });
+		const request: SignUpRequest = {
+			...signUpData,
+			role: signUpData.role ?? "CUSTOMER",
+		};
+
+		mutate(request);
 	};
 
 	return {

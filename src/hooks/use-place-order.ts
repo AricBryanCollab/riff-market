@@ -1,16 +1,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import type { PlacePurchaseInput } from "@/domains/ordering/dto/place-purchase-request";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import type { CheckoutCartState } from "@/hooks/use-cart-details";
 import { clientLogger } from "@/lib/client-logger";
-import { invalidateOrdersCache } from "@/lib/tanstack-query/cache-policy";
-import { createOrder } from "@/lib/tanstack-query/orders-queries";
+import {
+	invalidateListingCache,
+	invalidateOrdersCache,
+} from "@/lib/tanstack-query/cache-policy";
+import { placePurchaseFn } from "@/server/order.functions";
 import { useCartStore } from "@/store/cart";
 import { useToastStore } from "@/store/toast";
-import type { PaymentMethod } from "@/types/enum";
 
-const usePlaceOrder = () => {
-	const cartItems = useCartStore((state) => state.items);
+const usePlaceOrder = (checkoutCart: CheckoutCartState) => {
 	const clearCart = useCartStore((state) => state.clearCart);
 	const { data: user } = useAuthUser();
 	const address = user?.address ?? null;
@@ -19,14 +22,15 @@ const usePlaceOrder = () => {
 	const queryClient = useQueryClient();
 
 	const [shippingAddress, setShippingAddress] = useState<string>("");
-	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
-		null,
-	);
 
 	const { mutate, isPending, isError } = useMutation({
-		mutationFn: createOrder,
+		mutationFn: (data: PlacePurchaseInput) => placePurchaseFn({ data }),
 		onSuccess: async () => {
-			await invalidateOrdersCache(queryClient);
+			// Placing an order changes both order history and listing stock.
+			await Promise.all([
+				invalidateOrdersCache(queryClient),
+				invalidateListingCache(queryClient),
+			]);
 			showToast(
 				"Order placed successfully! Please wait for seller confirmation",
 				"success",
@@ -59,10 +63,6 @@ const usePlaceOrder = () => {
 		}
 	};
 
-	const handlePaymentMethodChange = (value: string) => {
-		setPaymentMethod(value as PaymentMethod);
-	};
-
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -71,20 +71,14 @@ const usePlaceOrder = () => {
 			return;
 		}
 
-		if (!paymentMethod) {
-			showToast("Please select a payment method", "error");
-			return;
-		}
-
-		if (cartItems.length === 0) {
-			showToast("Your cart is empty", "error");
+		if (checkoutCart.status !== "ready") {
+			showToast(checkoutCart.message, "error");
 			return;
 		}
 
 		const orderPayload = {
-			items: cartItems,
+			items: checkoutCart.items,
 			shippingAddress,
-			paymentMethod,
 		};
 
 		mutate(orderPayload);
@@ -92,14 +86,12 @@ const usePlaceOrder = () => {
 
 	return {
 		shippingAddress,
-		paymentMethod,
 		address,
 		isPending,
 		isError,
 		clearAddress,
 		handleDefaultAddress,
 		handleShippingAddressChange,
-		handlePaymentMethodChange,
 		handleSubmit,
 	};
 };

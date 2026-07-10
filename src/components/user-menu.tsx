@@ -8,17 +8,18 @@ import NavbarIconButtons from "@/components/navbar-icon-buttons";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import {
 	cartDetailsQueryOpt,
 	default as useCartDetails,
 } from "@/hooks/use-cart-details";
+import { listingCountByStatusQueryOpt } from "@/hooks/use-get-listings";
 import { ordersByRoleQueryOpt, useOrdersByRole } from "@/hooks/use-get-orders";
 import {
-	pendingProductsQueryOpt,
-	default as useGetPendingProducts,
-} from "@/hooks/use-get-pending-products";
-import { productCountByStatusQueryOpt } from "@/hooks/use-get-products";
+	pendingListingsQueryOpt,
+	default as useGetPendingListings,
+} from "@/hooks/use-get-pending-listings";
 import useNotifications, {
 	notificationCountQueryOpt,
 	notificationsQueryOpt,
@@ -26,17 +27,16 @@ import useNotifications, {
 import { useSignOut } from "@/hooks/use-sign-out";
 import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";
-import type { UserRole } from "@/types/enum";
 
 const loadCartList = () => import("@/components/cart-list");
 const loadOrderList = () => import("@/components/order-list");
 const loadNotificationList = () => import("@/components/notification-list");
-const loadPendingProductList = () => import("./pending-product-list");
+const loadPendingListingList = () => import("./pending-listing-list");
 
 const CartList = lazy(loadCartList);
 const OrderList = lazy(loadOrderList);
 const NotificationList = lazy(loadNotificationList);
-const PendingProductList = lazy(loadPendingProductList);
+const PendingListingList = lazy(loadPendingListingList);
 
 const UserMenuFallback = () => (
 	<div className="flex items-center gap-4" aria-hidden>
@@ -66,27 +66,27 @@ const CustomerActions = () => {
 		[cartItems],
 	);
 
-	const uniqueProductIds = useMemo(
-		() => Array.from(new Set(cartItems.map((item) => item.productId))).sort(),
+	const uniqueListingIds = useMemo(
+		() => Array.from(new Set(cartItems.map((item) => item.listingId))).sort(),
 		[cartItems],
 	);
 
 	const {
 		isCartEmpty,
 		isLoading: isCartLoading,
-		totalPrice,
-		cartWithDetails,
+		cartPricing,
+		cartLines,
 	} = useCartDetails({ enabled: isOpen });
 
 	const prefetchCart = useCallback(() => {
 		void loadCartList();
 
-		if (uniqueProductIds.length === 0) {
+		if (uniqueListingIds.length === 0) {
 			return;
 		}
 
-		void queryClient.prefetchQuery(cartDetailsQueryOpt(uniqueProductIds));
-	}, [queryClient, uniqueProductIds]);
+		void queryClient.prefetchQuery(cartDetailsQueryOpt(uniqueListingIds));
+	}, [queryClient, uniqueListingIds]);
 
 	return (
 		<AppDropdown
@@ -108,9 +108,9 @@ const CustomerActions = () => {
 					<CartList
 						isLoading={isCartLoading}
 						isCartEmpty={isCartEmpty}
-						totalPrice={totalPrice}
+						cartPricing={cartPricing}
 						cartCount={cartCount}
-						cartWithDetails={cartWithDetails}
+						cartLines={cartLines}
 					/>
 				</Suspense>
 			) : null}
@@ -167,21 +167,21 @@ const AdminActions = () => {
 	const queryClient = useQueryClient();
 	const [isOpen, setIsOpen] = useState(false);
 
-	const { data: pendingProductCountData } = useQuery(
-		productCountByStatusQueryOpt("pending"),
+	const { data: pendingListingCountData } = useQuery(
+		listingCountByStatusQueryOpt("pending"),
 	);
 	const pendingCount =
-		pendingProductCountData && "pendingProductCount" in pendingProductCountData
-			? pendingProductCountData.pendingProductCount
+		pendingListingCountData && "pendingListingCount" in pendingListingCountData
+			? pendingListingCountData.pendingListingCount
 			: 0;
 
-	const { pendingProducts, isLoadingPendingProducts, isEmptyPendingProducts } =
-		useGetPendingProducts({ enabled: isOpen, isAdmin: true });
+	const { pendingListings, isLoadingPendingListings, isEmptyPendingListings } =
+		useGetPendingListings({ enabled: isOpen, isAdmin: true });
 
-	const prefetchPendingProducts = useCallback(() => {
-		void loadPendingProductList();
-		void queryClient.prefetchQuery(productCountByStatusQueryOpt("pending"));
-		void queryClient.prefetchQuery(pendingProductsQueryOpt);
+	const prefetchPendingListings = useCallback(() => {
+		void loadPendingListingList();
+		void queryClient.prefetchQuery(listingCountByStatusQueryOpt("pending"));
+		void queryClient.prefetchQuery(pendingListingsQueryOpt);
 	}, [queryClient]);
 
 	return (
@@ -190,22 +190,22 @@ const AdminActions = () => {
 				<NavbarIconButtons
 					icon={PackageSearch}
 					count={pendingCount}
-					ariaLabel="Pending Products"
+					ariaLabel="Pending Listings"
 				/>
 			}
 			open={isOpen}
 			onOpenChange={setIsOpen}
-			onTriggerPointerEnter={prefetchPendingProducts}
-			onTriggerFocus={prefetchPendingProducts}
+			onTriggerPointerEnter={prefetchPendingListings}
+			onTriggerFocus={prefetchPendingListings}
 			align="end"
 		>
 			{isOpen ? (
 				<Suspense fallback={<DropdownContentFallback />}>
-					<PendingProductList
-						pendingProducts={pendingProducts}
-						pendingProductCount={pendingCount}
-						isLoading={isLoadingPendingProducts}
-						isEmptyPendingProducts={isEmptyPendingProducts}
+					<PendingListingList
+						pendingListings={pendingListings}
+						pendingListingCount={pendingCount}
+						isLoading={isLoadingPendingListings}
+						isEmptyPendingListings={isEmptyPendingListings}
 					/>
 				</Suspense>
 			) : null}
@@ -213,7 +213,7 @@ const AdminActions = () => {
 	);
 };
 
-const RoleActions = ({ role }: { role: UserRole }) => {
+const RoleActions = ({ role }: { role: ActorRole }) => {
 	switch (role) {
 		case "CUSTOMER":
 			return <CustomerActions />;
@@ -279,7 +279,7 @@ const NotificationsMenu = () => {
 	);
 };
 
-const AuthenticatedUserMenu = ({ role }: { role: UserRole }) => {
+const AuthenticatedUserMenu = ({ role }: { role: ActorRole }) => {
 	const { loading: signOutLoading, signOut } = useSignOut();
 
 	return (

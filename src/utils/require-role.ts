@@ -1,16 +1,18 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
 import { RoleDescription } from "@/constants/role-description";
-import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import { getOptionalCurrentUserFn } from "@/server/user.functions";
-import type { UserRole } from "@/types/enum";
+import type { ActorRole } from "@/domains/shared/domain/actor";
+import {
+	optionalAuthUserQueryOpt,
+	refreshAuthUser,
+} from "@/lib/tanstack-query/auth-user-query";
 import type { UserProfile } from "@/types/user";
 
 async function getAuthUser(
 	queryClient: QueryClient,
 ): Promise<UserProfile | null> {
 	const cachedUser = queryClient.getQueryData<UserProfile | null>(
-		queryKeys.auth.user,
+		optionalAuthUserQueryOpt.queryKey,
 	);
 
 	if (cachedUser) {
@@ -18,12 +20,7 @@ async function getAuthUser(
 	}
 
 	try {
-		return await queryClient.fetchQuery({
-			queryKey: queryKeys.auth.user,
-			queryFn: () => getOptionalCurrentUserFn(),
-			retry: false,
-			staleTime: 1000 * 60 * 5,
-		});
+		return await refreshAuthUser(queryClient);
 	} catch {
 		return null;
 	}
@@ -44,7 +41,7 @@ export async function requireAuthUser(
 
 export async function requireRole(
 	queryClient: QueryClient,
-	allowedRoles: UserRole[],
+	allowedRoles: ActorRole[],
 ) {
 	const user = await requireAuthUser(queryClient, "/unauthorized");
 
@@ -56,11 +53,11 @@ export async function requireRole(
 }
 
 export function getRoleInfo(role: string | null | undefined) {
-	if (!role || !RoleDescription[role as UserRole]) {
+	if (!role || !RoleDescription[role as ActorRole]) {
 		return {
 			label: "Unknown",
 			description: "Role information not available",
 		};
 	}
-	return RoleDescription[role as UserRole];
+	return RoleDescription[role as ActorRole];
 }

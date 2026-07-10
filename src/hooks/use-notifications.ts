@@ -5,25 +5,25 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import { clientLogger } from "@/lib/client-logger";
-import {
-	getNotificationCount,
-	getUserNotifications,
-	readAllNotifications,
-	readNotificationById,
-} from "@/lib/tanstack-query/notifications-queries";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import {
+	getUnreadNotificationCountFn,
+	listNotificationsFn,
+	readAllNotificationsFn,
+	readNotificationFn,
+} from "@/server/notification.functions";
 import { useToastStore } from "@/store/toast";
 import type { NotificationData } from "@/types/notification";
 
 export const notificationsQueryOpt = queryOptions({
 	queryKey: queryKeys.notifications.root,
-	queryFn: getUserNotifications,
+	queryFn: () => listNotificationsFn() as Promise<NotificationData[]>,
 	staleTime: 30000,
 });
 
 export const notificationCountQueryOpt = queryOptions({
 	queryKey: queryKeys.notifications.count,
-	queryFn: getNotificationCount,
+	queryFn: () => getUnreadNotificationCountFn(),
 	staleTime: 30000,
 });
 
@@ -54,7 +54,12 @@ const useNotifications = (options: UseNotificationsOptions = {}) => {
 	).length;
 
 	const { mutate: markAsReadMutate } = useMutation({
-		mutationFn: readNotificationById,
+		mutationFn: (id: string) =>
+			readNotificationFn({
+				data: {
+					notificationId: id,
+				},
+			}) as Promise<NotificationData>,
 		onMutate: async (id) => {
 			await queryClient.cancelQueries({ queryKey: notificationsKey });
 			await queryClient.cancelQueries({ queryKey: notificationCountKey });
@@ -119,7 +124,7 @@ const useNotifications = (options: UseNotificationsOptions = {}) => {
 
 	const { mutate: markAllAsReadMutate, isPending: isMarkingAllAsRead } =
 		useMutation({
-			mutationFn: readAllNotifications,
+			mutationFn: () => readAllNotificationsFn(),
 			onMutate: async () => {
 				await queryClient.cancelQueries({ queryKey: notificationsKey });
 				await queryClient.cancelQueries({ queryKey: notificationCountKey });

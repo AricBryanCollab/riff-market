@@ -7,7 +7,7 @@ interface EmptyStateProps {
 	showPending: boolean;
 }
 
-export function EmptyFeaturedProductState() {
+export function EmptyFeaturedListingState() {
 	return (
 		<section className="py-16">
 			<div className="grid md:grid-cols-2 gap-12 items-center">
@@ -15,13 +15,13 @@ export function EmptyFeaturedProductState() {
 					<div className="text-center p-8">
 						<MusicNote size={128} />
 						<p className="text-muted-foreground">
-							No featured products available
+							No featured listings available
 						</p>
 					</div>
 				</div>
 				<div className="flex flex-col justify-center">
 					<h2 className="text-3xl font-semibold text-foreground">
-						No Products Yet
+						No Listings Yet
 					</h2>
 					<p className="text-muted-foreground mt-4">
 						Check back soon for exciting new listings!
@@ -43,28 +43,28 @@ export function CategoryGridEmpty() {
 		<div className="flex flex-col items-center justify-center py-12 gap-4 text-center border rounded-lg shadow-md">
 			<MusicNote size={64} />
 			<p className="text-muted-foreground text-lg">
-				No product categories available yet
+				No listing categories available yet
 			</p>
 		</div>
 	);
 }
 
-export function EmptyRecentProducts() {
+export function EmptyRecentListings() {
 	return (
 		<div className="flex flex-col items-center justify-center h-200 gap-4 text-center border rounded-lg shadow-md">
 			<ListMusic size={28} />
 			<p className="text-muted-foreground text-lg">
-				No recent products available
+				No recent listings available
 			</p>
 		</div>
 	);
 }
 
-export function EmptyProductState({ showPending }: EmptyStateProps) {
+export function EmptyListingState({ showPending }: EmptyStateProps) {
 	return (
 		<div className="col-span-full text-center py-12">
 			<p className="text-muted-foreground text-lg">
-				{showPending ? "No pending products" : "No products available"}
+				{showPending ? "No pending listings" : "No listings available"}
 			</p>
 		</div>
 	);

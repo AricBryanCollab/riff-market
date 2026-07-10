@@ -15,6 +15,14 @@ const ratingStarVariants = cva("size-6", {
 	},
 });
 
+const reviewDistribution = [
+	{ stars: 5, width: "78%", count: 84 },
+	{ stars: 4, width: "52%", count: 41 },
+	{ stars: 3, width: "24%", count: 18 },
+	{ stars: 2, width: "12%", count: 8 },
+	{ stars: 1, width: "7%", count: 5 },
+] as const;
+
 const ReviewSection = () => {
 	const avgRating = 4.2;
 	const reviewCount = 156;
@@ -50,19 +58,19 @@ const ReviewSection = () => {
 					</div>
 
 					<div className="col-span-2 space-y-3">
-						{[5, 4, 3, 2, 1].map((stars) => (
-							<div key={stars} className="flex items-center gap-3">
+						{reviewDistribution.map((rating) => (
+							<div key={rating.stars} className="flex items-center gap-3">
 								<span className="text-sm font-medium text-gray-700 w-8">
-									{stars}★
+									{rating.stars}★
 								</span>
 								<div className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden">
 									<div
 										className="h-full bg-yellow-400"
-										style={{ width: `${Math.random() * 70 + 10}%` }}
+										style={{ width: rating.width }}
 									/>
 								</div>
 								<span className="text-sm text-gray-500 w-12">
-									{Math.floor(Math.random() * 50)}
+									{rating.count}
 								</span>
 							</div>
 						))}

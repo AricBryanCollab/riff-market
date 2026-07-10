@@ -1,4 +1,4 @@
-import type { UserRole } from "@/types/enum";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 
 export interface SignInRequest {
 	email: string;
@@ -11,19 +11,10 @@ export interface SignUpRequest {
 	email: string;
 	password: string;
 	confirmPassword: string;
-	role: UserRole | null;
-}
-
-export interface AuthResponse {
-	success: boolean;
-	user: { id: string; email: string };
-}
-
-export interface SignOutResponse {
-	message: string;
+	role: ActorRole;
 }
 
 export type SessionData = {
 	userId?: string;
-	role?: UserRole;
+	role?: ActorRole;
 };

@@ -1,20 +1,60 @@
 import { useRef, useState } from "react";
+import {
+	isAllowedImageMimeType,
+	LISTING_IMAGE_MAX_BYTES,
+} from "@/domains/shared/domain/image-upload";
 
-export interface ImageFile {
-	file: File;
-	preview: string;
+export type ExistingImageFile = {
+	readonly kind: "existing";
+	readonly imageId: string;
+	readonly url: string;
+	readonly preview: string;
+};
+
+export type NewImageFile = {
+	readonly kind: "new";
+	readonly file: File;
+	readonly preview: string;
+};
+
+export type ImageFile = ExistingImageFile | NewImageFile;
+export type ImageFileChange<TImage extends ImageFile> = Array<
+	TImage | NewImageFile
+>;
+
+export function existingImageFile(image: {
+	readonly imageId: string;
+	readonly url: string;
+}): ExistingImageFile {
+	return {
+		kind: "existing",
+		imageId: image.imageId,
+		url: image.url,
+		preview: image.url,
+	};
 }
 
-const useUploadImage = (
-	images: ImageFile[],
+export function isNewImageFile(image: ImageFile): image is NewImageFile {
+	return image.kind === "new";
+}
+
+export function isExistingImageFile(
+	image: ImageFile,
+): image is ExistingImageFile {
+	return image.kind === "existing";
+}
+
+const LISTING_IMAGE_MAX_MB = LISTING_IMAGE_MAX_BYTES / (1024 * 1024);
+const ACCEPT_FORMATS = "image/jpeg,image/png,image/webp";
+
+const useUploadImage = <TImage extends ImageFile>(
+	images: TImage[],
 	maxImages: number,
-	maxSizeMB: number,
-	onChange: (images: ImageFile[]) => void,
+	onChange: (images: ImageFileChange<TImage>) => void,
 ) => {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [dragActive, setDragActive] = useState(false);
 	const [error, setError] = useState<string>("");
-	const acceptFormats = "image/jpeg,image/png,image/webp";
 
 	const handleFileSelect = async (files: FileList | null) => {
 		if (!files || files.length === 0) return;
@@ -27,25 +67,23 @@ const useUploadImage = (
 			return;
 		}
 
-		const newImages: ImageFile[] = [];
+		const newImages: NewImageFile[] = [];
 
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
 
-			if (file.size > maxSizeMB * 1024 * 1024) {
-				setError(`${file.name} exceeds ${maxSizeMB}MB limit`);
+			if (file.size <= 0 || file.size > LISTING_IMAGE_MAX_BYTES) {
+				setError(`${file.name} exceeds ${LISTING_IMAGE_MAX_MB}MB limit`);
 				continue;
 			}
 
-			if (
-				!acceptFormats.split(",").some((format) => file.type === format.trim())
-			) {
+			if (!isAllowedImageMimeType(file.type)) {
 				setError(`${file.name} is not a supported format`);
 				continue;
 			}
 
 			const preview = URL.createObjectURL(file);
-			newImages.push({ file, preview });
+			newImages.push({ kind: "new", file, preview });
 		}
 
 		if (newImages.length > 0) {
@@ -59,10 +97,28 @@ const useUploadImage = (
 	};
 
 	const handleRemoveImage = (index: number) => {
-		URL.revokeObjectURL(images[index].preview);
+		const image = images[index];
 
-		const newImages = images.filter((_, i) => i !== index);
-		onChange(newImages);
+		if (image && isNewImageFile(image)) {
+			URL.revokeObjectURL(image.preview);
+		}
+
+		const remainingImages = images.filter((_, i) => i !== index);
+		onChange(remainingImages);
+		setError("");
+	};
+
+	const handleMoveImage = (index: number, direction: -1 | 1) => {
+		const targetIndex = index + direction;
+
+		if (targetIndex < 0 || targetIndex >= images.length) {
+			return;
+		}
+
+		const reorderedImages = [...images];
+		const [image] = reorderedImages.splice(index, 1);
+		reorderedImages.splice(targetIndex, 0, image);
+		onChange(reorderedImages);
 		setError("");
 	};
 
@@ -103,10 +159,12 @@ const useUploadImage = (
 		error,
 		canAddMore,
 		fileInputRef,
-		acceptFormats,
+		acceptFormats: ACCEPT_FORMATS,
+		maxSizeMB: LISTING_IMAGE_MAX_MB,
 		triggerFileInput,
 		handleDragEnter,
 		handleRemoveImage,
+		handleMoveImage,
 		handleDrop,
 		handleInputChange,
 		handleDragLeave,

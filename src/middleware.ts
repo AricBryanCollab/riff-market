@@ -1,23 +1,52 @@
-import { createMiddleware } from "@tanstack/react-start";
+import { createMiddleware, createServerOnlyFn } from "@tanstack/react-start";
 import type { RequestServerResult } from "@tanstack/start-client-core";
 import type { User } from "generated/prisma/client";
-import { findUserById } from "@/data/auth-repo";
 import {
-	createRequestContext,
-	logger,
-	toErrorDetails,
-	updateRequestContext,
-	withRequestContext,
-} from "@/lib/logger";
-import { useAppSession } from "@/utils/session";
+	getRequestLogOutcome,
+	getRequestLogStatusCode,
+} from "@/server/request-log-status";
+
+const getRequestLoggerDependencies = createServerOnlyFn(async () => {
+	return await import("@/lib/logger");
+});
+
+const getAuthMiddlewareDependencies = createServerOnlyFn(async () => {
+	const [
+		{ prisma },
+		{ PrismaAccountLookup },
+		{ updateRequestContext },
+		{ useAppSession },
+	] = await Promise.all([
+		import("@/data/connect-db"),
+		import("@/domains/accounts/infrastructure/prisma-account-lookup"),
+		import("@/lib/logger"),
+		import("@/utils/session"),
+	]);
+	const accountLookup = new PrismaAccountLookup(prisma);
+
+	return {
+		findUserById: (userId: string) => accountLookup.findById(userId),
+		updateRequestContext,
+		useAppSession,
+	};
+});
 
 export const requestLoggerMiddleware = createMiddleware().server(
 	async ({ next, request, context }) => {
+		const {
+			createRequestContext,
+			logger,
+			toErrorDetails,
+			updateRequestContext,
+			withRequestContext,
+		} = await getRequestLoggerDependencies();
 		const requestContext = createRequestContext(request);
 		let nextResult:
 			| Response
 			| RequestServerResult<object, unknown, unknown>
 			| undefined;
+		let didThrow = false;
+		let thrownError: unknown;
 
 		return withRequestContext(requestContext, async () => {
 			try {
@@ -28,26 +57,26 @@ export const requestLoggerMiddleware = createMiddleware().server(
 					| Response
 					| RequestServerResult<object, unknown, unknown>;
 			} catch (error) {
+				didThrow = true;
+				thrownError = error;
+				const statusCode = getRequestLogStatusCode(undefined, {
+					didThrow,
+					error,
+				});
 				updateRequestContext({
-					statusCode: 500,
-					outcome: "error",
+					statusCode,
+					outcome: getRequestLogOutcome(statusCode),
 					error: toErrorDetails(error),
 				});
 				throw error;
 			} finally {
-				const response =
-					nextResult instanceof Response
-						? nextResult
-						: nextResult?.response || new Response(null, { status: 500 });
-				const statusCode = response?.status ?? 500;
+				const statusCode = getRequestLogStatusCode(nextResult, {
+					didThrow,
+					error: thrownError,
+				});
 				const durationMs =
 					Date.now() - (requestContext.requestStartAt || Date.now());
-				const hasServerError = statusCode >= 500;
-				const outcome = hasServerError
-					? "error"
-					: statusCode >= 400
-						? "warning"
-						: "success";
+				const outcome = getRequestLogOutcome(statusCode);
 
 				updateRequestContext({
 					statusCode,
@@ -68,6 +97,8 @@ export const requestLoggerMiddleware = createMiddleware().server(
 
 export const authMiddleware = createMiddleware().server(
 	async ({ next, context }) => {
+		const { findUserById, updateRequestContext, useAppSession } =
+			await getAuthMiddlewareDependencies();
 		const session = await useAppSession();
 
 		const userId = session.data.userId;
@@ -109,7 +140,12 @@ export const roleMiddleware = (allowedRoles: string[]) =>
 			const { role } = context as User;
 
 			if (!allowedRoles.includes(role)) {
-				throw new Error("Access denied, your role is not allowed for this");
+				return new Response(
+					JSON.stringify({
+						error: "Access denied, your role is not allowed for this",
+					}),
+					{ status: 403 },
+				);
 			}
 
 			return next();

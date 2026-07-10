@@ -12,7 +12,7 @@ import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import { ThemeProvider } from "@/components/theme-provider";
 import Toast from "@/components/toast";
-import { useAuthUser } from "@/hooks/use-auth-user";
+import { optionalAuthUserQueryOpt } from "@/lib/tanstack-query/auth-user-query";
 import TanStackAppDevtools from "@/lib/tanstack-query/devtools";
 import appCss from "../styles.css?url";
 
@@ -21,6 +21,9 @@ interface MyRouterContext {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+	loader: ({ context }) =>
+		context.queryClient.ensureQueryData(optionalAuthUserQueryOpt),
+
 	head: () => ({
 		meta: [
 			{
@@ -52,8 +55,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-	useAuthUser();
-
 	return (
 		<html lang="en">
 			<head>

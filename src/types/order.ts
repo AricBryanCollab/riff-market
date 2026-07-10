@@ -1,72 +1,66 @@
-import type { OrderStatus, PaymentMethod } from "@/types/enum";
+import type { SellerStatusCommand } from "@/domains/ordering/domain/seller-order";
+import type { OrderDisplayStatus } from "@/types/enum";
 
 export interface OrderItem {
-	productId: string;
+	listingId: string;
 	quantity: number;
 }
 
-interface OrderItemWithPricing extends OrderItem {
-	unitPrice: number;
-	subTotal: number;
+interface OrderDisplayItem {
+	listingId: string;
+	quantity: number;
 }
 
-interface BaseOrderData {
+export interface OrderItemWithPricing extends OrderDisplayItem {
+	unitPriceAmountMinor: number;
+	subTotalAmountMinor: number;
+	currencyCode: string;
+}
+
+interface OrderCheckoutData {
 	shippingAddress: string;
-	paymentMethod: PaymentMethod;
 }
 
-export interface OrderRequest extends BaseOrderData {
+export interface OrderRequest extends OrderCheckoutData {
 	items: OrderItem[];
 }
 
-export interface CreateOrderRepoData extends BaseOrderData {
-	orderDate: Date;
-	totalAmount: number;
-	trackingNumber: string;
-	items: OrderItemWithPricing[];
-}
-
 interface SellerDetails {
+	id?: string;
 	firstName: string;
 	lastName: string;
-	email: string;
+	email?: string;
 }
 
 interface OrderItemResponse extends OrderItemWithPricing {
 	id: string;
 	orderId: string;
-	product: {
+	listing: {
 		id: string;
 		name: string;
 		images: string[];
-		price: number;
+		priceAmountMinor: number;
+		currencyCode: string;
 		seller: SellerDetails;
 	};
 }
 
-export interface OrderResponse extends BaseOrderData {
+export interface OrderResponse {
 	id: string;
 	orderDate: Date;
-	totalAmount: number;
+	totalAmountMinor: number;
+	currencyCode: string;
+	shippingAddress: string;
 	trackingNumber: string;
-	paymentMethod: PaymentMethod;
-	status: OrderStatus;
+	status: OrderDisplayStatus;
+	allowedStatusCommands?: readonly SellerStatusCommand[];
 	items?: OrderItemResponse[];
 	customer?: {
+		id?: string;
 		email: string;
 		firstName: string;
 		lastName: string;
 	};
-}
-
-export interface OrderErrorResponse {
-	error: string;
-	details?: string | unknown;
-}
-
-export interface GetUserOrdersResponse {
-	orders: OrderResponse[];
-	total: number;
 }
 
 export interface GetUserOrdersErrorResponse {

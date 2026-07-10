@@ -4,28 +4,29 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
+import type { SelfAssignableRole } from "@/domains/accounts/application/account-auth";
 import { clientLogger } from "@/lib/client-logger";
-import {
-	getOrderByCustomer,
-	getOrderBySeller,
-	updateOrderStatus,
-} from "@/lib/tanstack-query/orders-queries";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
-import type { OrderStatus, UserRole } from "@/types/enum";
+import {
+	changeSellerOrderStatusFn,
+	listOrdersForCurrentUserFn,
+} from "@/server/order.functions";
+import type { OrderStatus } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 
-export type OrderQueryRole = Extract<UserRole, "CUSTOMER" | "SELLER">;
+export type OrderQueryRole = SelfAssignableRole;
+export type UpdateOrderStatusInput = {
+	id: string;
+	status: OrderStatus;
+	trackingNumber?: string | null;
+};
 
-export const ordersByRoleQueryOpt = (userRole: OrderQueryRole) => {
-	const queryFn =
-		userRole === "CUSTOMER" ? getOrderByCustomer : getOrderBySeller;
-
-	return queryOptions({
+export const ordersByRoleQueryOpt = (userRole: OrderQueryRole) =>
+	queryOptions({
 		queryKey: queryKeys.orders.byRole(userRole),
-		queryFn,
+		queryFn: () => listOrdersForCurrentUserFn(),
 		staleTime: 30000,
 	});
-};
 
 interface UseOrdersByRoleOptions {
 	polling?: boolean;
@@ -60,9 +61,15 @@ export const useUpdateOrderStatus = (userRole: OrderQueryRole) => {
 	const queryKey = queryKeys.orders.byRole(userRole);
 
 	const updateStatusMutation = useMutation({
-		mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
-			updateOrderStatus(id, status),
-		onMutate: async ({ id, status }) => {
+		mutationFn: ({ id, status, trackingNumber }: UpdateOrderStatusInput) =>
+			changeSellerOrderStatusFn({
+				data: {
+					sellerOrderId: id,
+					status,
+					trackingNumber,
+				},
+			}),
+		onMutate: async ({ id, status, trackingNumber }) => {
 			await queryClient.cancelQueries({ queryKey });
 
 			const previousOrders =
@@ -74,7 +81,13 @@ export const useUpdateOrderStatus = (userRole: OrderQueryRole) => {
 				}
 
 				return currentOrders.map((order) =>
-					order.id === id ? { ...order, status } : order,
+					order.id === id
+						? {
+								...order,
+								status,
+								trackingNumber: trackingNumber ?? order.trackingNumber,
+							}
+						: order,
 				);
 			});
 

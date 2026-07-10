@@ -1,6 +1,10 @@
 import { ClientOnly, createFileRoute } from "@tanstack/react-router";
-import { Bell, Package, ShoppingBag } from "lucide-react";
+import { Bell } from "lucide-react";
 import AnimatedLoader from "@/components/animated-loader";
+import {
+	NotificationOrderingBadge,
+	NotificationTypeIcon,
+} from "@/components/notification-display";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H3, H5 } from "@/components/ui/typography";
 import useNotifications, {
@@ -31,13 +35,6 @@ function NotificationsPage() {
 	} = useNotifications();
 
 	const isEmptyNotifications = !notifications || notifications.length === 0;
-
-	const getNotificationIcon = (notification: NotificationData) => {
-		if (notification.orderId) {
-			return <Package className="size-6 text-primary" />;
-		}
-		return <Bell className="size-6 text-primary" />;
-	};
 
 	const handleNotificationClick = (notification: NotificationData) => {
 		if (!notification.isRead && notification.id) {
@@ -101,7 +98,7 @@ function NotificationsPage() {
 							<H5 className="text-foreground mb-2">No notifications yet</H5>
 							<BodySmall className="text-muted-foreground/70 max-w-sm">
 								We'll notify you when something arrives. Check back later for
-								updates on your orders and account.
+								updates on your purchases, seller orders, and account.
 							</BodySmall>
 						</div>
 					) : (
@@ -126,7 +123,10 @@ function NotificationsPage() {
 										)}
 
 										<div className="shrink-0 mt-0.5">
-											{getNotificationIcon(notification)}
+											<NotificationTypeIcon
+												notification={notification}
+												className="size-6"
+											/>
 										</div>
 
 										<div className="flex-1 min-w-0">
@@ -140,12 +140,11 @@ function NotificationsPage() {
 												{notification.message}
 											</p>
 
-											{notification.orderId && (
-												<div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-md bg-muted text-sm text-muted-foreground">
-													<ShoppingBag className="size-3.5" />
-													<span>Order #{notification.orderId.slice(0, 8)}</span>
-												</div>
-											)}
+											<NotificationOrderingBadge
+												notification={notification}
+												className="gap-1.5 mt-2 px-2.5 py-1 text-sm"
+												iconClassName="size-3.5"
+											/>
 
 											<ClientOnly>
 												<p className="text-sm text-muted-foreground mt-2">

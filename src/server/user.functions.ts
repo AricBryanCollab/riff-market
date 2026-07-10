@@ -3,36 +3,27 @@ import { requestLoggerMiddleware } from "@/middleware";
 import {
 	deleteCurrentUser,
 	getCurrentUser,
+	getOptionalCurrentUser,
 	toProfilePictureResponse,
 	updateCurrentUser,
 	updateCurrentUserProfilePicture,
 	validateCurrentUserUpdateInput,
 	validateDeleteCurrentUserInput,
 	validateProfilePictureFormData,
-} from "@/server/current-user-service";
+} from "@/server/account-service";
 import { authenticatedServerFunctionMiddleware } from "@/server/function-middleware";
 import { useAppSession } from "@/utils/session";
+
+export const getCurrentUserFn = createServerFn({ method: "GET" })
+	.middleware(authenticatedServerFunctionMiddleware)
+	.handler(async ({ context }) => getCurrentUser(context.user.id));
 
 export const getOptionalCurrentUserFn = createServerFn({ method: "GET" })
 	.middleware([requestLoggerMiddleware])
 	.handler(async () => {
 		const session = await useAppSession();
-		const userId = session.data.userId;
-
-		if (!userId) {
-			return null;
-		}
-
-		try {
-			return await getCurrentUser(userId);
-		} catch {
-			return null;
-		}
+		return getOptionalCurrentUser(session.data.userId);
 	});
-
-export const getCurrentUserFn = createServerFn({ method: "GET" })
-	.middleware(authenticatedServerFunctionMiddleware)
-	.handler(async ({ context }) => getCurrentUser(context.user.id));
 
 export const updateCurrentUserFn = createServerFn({ method: "POST" })
 	.middleware(authenticatedServerFunctionMiddleware)

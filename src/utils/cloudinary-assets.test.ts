@@ -22,12 +22,12 @@ describe("cloudinary asset utilities", () => {
 
 	it("deletes an image asset with a stored public id without parsing the URL", async () => {
 		await deleteCloudinaryImageAsset({
-			url: "https://res.cloudinary.com/riff/image/upload/v123/products/telecaster.jpg",
-			publicId: "products/telecaster",
+			url: "https://res.cloudinary.com/riff/image/upload/v123/listings/telecaster.jpg",
+			publicId: "listings/telecaster",
 		});
 
 		expect(cloudinaryMock.deleteImage).toHaveBeenCalledWith(
-			"products/telecaster",
+			"listings/telecaster",
 		);
 	});
 

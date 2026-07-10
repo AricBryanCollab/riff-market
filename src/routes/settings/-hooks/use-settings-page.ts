@@ -30,8 +30,7 @@ function useSettingsTheme(userTheme: string | null | undefined) {
 	} = useThemeChange();
 
 	const savedThemeLabel = getThemeLabel(userTheme) ?? "Light";
-	const selectedThemeLabel =
-		getThemeLabel(themeValue) ?? savedThemeLabel;
+	const selectedThemeLabel = getThemeLabel(themeValue) ?? savedThemeLabel;
 
 	return {
 		themeValue,

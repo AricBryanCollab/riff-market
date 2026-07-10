@@ -4,33 +4,34 @@ import { useCallback, useEffect, useState } from "react";
 import MusicNote from "@/assets/music-note";
 import ConditionBadge from "@/components/home/condition-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import type { BaseProduct } from "@/types/product";
+import type { ListingResponse } from "@/domains/listings/dto/listing-view";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 interface HeroCarouselProps {
-	products: BaseProduct[];
+	listings: ListingResponse[];
 	autoPlayInterval?: number;
 }
 
 const HeroCarousel = ({
-	products,
+	listings,
 	autoPlayInterval = 5000,
 }: HeroCarouselProps) => {
 	const [currentIndex, setCurrentIndex] = useState(0);
 
 	const goToNext = useCallback(() => {
-		setCurrentIndex((prev) => (prev + 1) % products.length);
-	}, [products.length]);
+		setCurrentIndex((prev) => (prev + 1) % listings.length);
+	}, [listings.length]);
 
 	const goToPrev = useCallback(() => {
-		setCurrentIndex((prev) => (prev - 1 + products.length) % products.length);
-	}, [products.length]);
+		setCurrentIndex((prev) => (prev - 1 + listings.length) % listings.length);
+	}, [listings.length]);
 
 	useEffect(() => {
 		const timer = setInterval(goToNext, autoPlayInterval);
 		return () => clearInterval(timer);
 	}, [goToNext, autoPlayInterval]);
 
-	const product = products[currentIndex];
+	const listing = listings[currentIndex];
 
 	return (
 		<section className="py-16">
@@ -38,15 +39,15 @@ const HeroCarousel = ({
 				{/* Image Section */}
 				<div className="relative">
 					<Link
-						to={`/product/${product.id} ` as `/product/$id`}
-						params={{ id: product.id }}
+						to="/listing/$id"
+						params={{ id: listing.id }}
 						className="block relative aspect-square bg-muted rounded-2xl overflow-hidden"
 					>
 						<div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
-							{product.images && product.images.length > 0 ? (
+							{listing.images && listing.images.length > 0 ? (
 								<img
-									src={product.images[0]}
-									alt={product.name}
+									src={listing.images[0]?.url}
+									alt={listing.name}
 									className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
 								/>
 							) : (
@@ -55,7 +56,7 @@ const HeroCarousel = ({
 								</div>
 							)}
 						</div>
-						<ConditionBadge condition={product.condition} />
+						<ConditionBadge condition={listing.condition} />
 					</Link>
 
 					<Button
@@ -78,11 +79,11 @@ const HeroCarousel = ({
 						<ChevronRight className="w-5 h-5" />
 					</Button>
 
-					{/* Product Details: Right Side */}
+					{/* Listing Details: Right Side */}
 					<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-						{products.map((_, index) => (
+						{listings.map((_, index) => (
 							<button
-								key={products[index].id}
+								key={listings[index].id}
 								type="button"
 								onClick={() => setCurrentIndex(index)}
 								className={`w-2 h-2 rounded-full transition-colors ${
@@ -99,24 +100,24 @@ const HeroCarousel = ({
 						Featured
 					</p>
 					<h1 className="text-4xl md:text-5xl font-semibold text-foreground mt-2 leading-tight">
-						{product.name}
+						{listing.name}
 					</h1>
 					<p className="text-muted-foreground mt-4">
-						{product.brand} · {product.model}
+						{listing.brand} · {listing.model}
 					</p>
 					<p className="text-3xl font-semibold text-foreground mt-6">
-						$
-						{product.price.toLocaleString("en-US", {
-							minimumFractionDigits: 2,
-						})}
+						{formatMoneyAmountMinor(
+							listing.priceAmountMinor,
+							listing.currencyCode,
+						)}
 					</p>
 					<p className="text-sm text-muted-foreground mt-2">
-						Sold by {product.seller.firstName}{" "}
+						Sold by {listing.seller.firstName}{" "}
 					</p>
 
 					<Link
-						to={`/product/${product.id} ` as `/product/$id`}
-						params={{ id: product.id }}
+						to="/listing/$id"
+						params={{ id: listing.id }}
 						className={buttonVariants({ size: "lg", className: "mt-8 w-fit" })}
 					>
 						View Listing

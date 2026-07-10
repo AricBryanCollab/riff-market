@@ -15,6 +15,7 @@ todos.json
 CLAUDE.md
 tmp/
 .githuman/
+.codegraph/
 
 /generated/prisma
 /prisma/migrations/*

@@ -1,6 +1,15 @@
-import type { BaseProduct, CategoryMeta } from "@/types/product";
+import type {
+	ListingCategoryMeta,
+	ListingResponse,
+} from "@/domains/listings/dto/listing-view";
 
-export const mockProducts: BaseProduct[] = [
+const image = (url: string) => ({ imageId: url, url });
+type PublicMockListing = Omit<
+	ListingResponse,
+	"listingStatus" | "isOrderable"
+>;
+
+const publicMockListings = [
 	{
 		id: "prod-001",
 		name: "American Professional II Stratocaster",
@@ -8,8 +17,9 @@ export const mockProducts: BaseProduct[] = [
 		model: "Stratocaster",
 		category: "ELECTRIC",
 		condition: "MINT",
-		price: 1699.99,
-		images: ["/placeholder-guitar.jpg"],
+		priceAmountMinor: 169999,
+		currencyCode: "TWD",
+		images: [image("/placeholder-guitar.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
@@ -23,8 +33,9 @@ export const mockProducts: BaseProduct[] = [
 		model: "Les Paul",
 		category: "ELECTRIC",
 		condition: "USED",
-		price: 2299.0,
-		images: ["/placeholder-guitar.jpg"],
+		priceAmountMinor: 229900,
+		currencyCode: "TWD",
+		images: [image("/placeholder-guitar.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
@@ -38,8 +49,9 @@ export const mockProducts: BaseProduct[] = [
 		model: "D-28",
 		category: "ACOUSTIC",
 		condition: "NEW",
-		price: 3199.0,
-		images: ["/placeholder-acoustic.jpg"],
+		priceAmountMinor: 319900,
+		currencyCode: "TWD",
+		images: [image("/placeholder-acoustic.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
@@ -53,8 +65,9 @@ export const mockProducts: BaseProduct[] = [
 		model: "814ce",
 		category: "ACOUSTIC",
 		condition: "MINT",
-		price: 3999.0,
-		images: ["/placeholder-acoustic.jpg"],
+		priceAmountMinor: 399900,
+		currencyCode: "TWD",
+		images: [image("/placeholder-acoustic.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
@@ -68,8 +81,9 @@ export const mockProducts: BaseProduct[] = [
 		model: "Stage 4",
 		category: "KEYBOARD",
 		condition: "NEW",
-		price: 5499.0,
-		images: ["/placeholder-keyboard.jpg"],
+		priceAmountMinor: 549900,
+		currencyCode: "TWD",
+		images: [image("/placeholder-keyboard.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
@@ -83,8 +97,9 @@ export const mockProducts: BaseProduct[] = [
 		model: "Prophet Rev2",
 		category: "KEYBOARD",
 		condition: "USED",
-		price: 1899.0,
-		images: ["/placeholder-keyboard.jpg"],
+		priceAmountMinor: 189900,
+		currencyCode: "TWD",
+		images: [image("/placeholder-keyboard.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
@@ -98,8 +113,9 @@ export const mockProducts: BaseProduct[] = [
 		model: "TS9",
 		category: "ACCESSORY",
 		condition: "NEW",
-		price: 99.99,
-		images: ["/placeholder-pedal.jpg"],
+		priceAmountMinor: 9999,
+		currencyCode: "TWD",
+		images: [image("/placeholder-pedal.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
@@ -113,8 +129,9 @@ export const mockProducts: BaseProduct[] = [
 		model: "SM58",
 		category: "ACCESSORY",
 		condition: "MINT",
-		price: 99.0,
-		images: ["/placeholder-mic.jpg"],
+		priceAmountMinor: 9900,
+		currencyCode: "TWD",
+		images: [image("/placeholder-mic.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
@@ -128,8 +145,9 @@ export const mockProducts: BaseProduct[] = [
 		model: "Telecaster",
 		category: "ELECTRIC",
 		condition: "NEW",
-		price: 849.99,
-		images: ["/placeholder-guitar.jpg"],
+		priceAmountMinor: 84999,
+		currencyCode: "TWD",
+		images: [image("/placeholder-guitar.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
@@ -143,8 +161,9 @@ export const mockProducts: BaseProduct[] = [
 		model: "C40",
 		category: "ACOUSTIC",
 		condition: "USED",
-		price: 149.99,
-		images: ["/placeholder-acoustic.jpg"],
+		priceAmountMinor: 14999,
+		currencyCode: "TWD",
+		images: [image("/placeholder-acoustic.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
@@ -158,8 +177,9 @@ export const mockProducts: BaseProduct[] = [
 		model: "Minilogue XD",
 		category: "KEYBOARD",
 		condition: "MINT",
-		price: 649.0,
-		images: ["/placeholder-keyboard.jpg"],
+		priceAmountMinor: 64900,
+		currencyCode: "TWD",
+		images: [image("/placeholder-keyboard.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
@@ -173,17 +193,26 @@ export const mockProducts: BaseProduct[] = [
 		model: "Big Muff",
 		category: "ACCESSORY",
 		condition: "USED",
-		price: 79.0,
-		images: ["/placeholder-pedal.jpg"],
+		priceAmountMinor: 7900,
+		currencyCode: "TWD",
+		images: [image("/placeholder-pedal.jpg")],
 		description: "",
 		stock: 1,
 		isApproved: true,
 		sellerId: "user-012",
 		seller: { firstName: "FuzzFactory", lastName: "", email: "" },
 	},
-];
+] satisfies PublicMockListing[];
 
-export const mockCategories: CategoryMeta[] = [
+export const mockListings: ListingResponse[] = publicMockListings.map(
+	(listing) => ({
+		...listing,
+		listingStatus: "APPROVED" as const,
+		isOrderable: true,
+	}),
+);
+
+export const mockCategories: ListingCategoryMeta[] = [
 	{
 		category: "ELECTRIC",
 		label: "Electric Guitars",
@@ -210,5 +239,5 @@ export const mockCategories: CategoryMeta[] = [
 	},
 ];
 
-export const featuredProducts = mockProducts.slice(0, 4);
-export const recentProducts = mockProducts.slice(4, 10);
+export const featuredListings = mockListings.slice(0, 4);
+export const recentListings = mockListings.slice(4, 10);

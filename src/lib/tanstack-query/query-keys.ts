@@ -1,8 +1,26 @@
-import type { UserRole } from "@/types/enum";
-import type {
-	GetApprovedProductsFilterQuery,
-	ProductCountStatusQuery,
-} from "@/types/product";
+import type { ActorRole } from "@/domains/shared/domain/actor";
+import type { ApprovedListingSearchFilterQuery } from "@/utils/shop-search";
+
+export type ListingCountStatusQuery = "approved" | "pending";
+
+const listingKeys = {
+	root: ["listings"] as const,
+	detailRoot: ["listings", "detail"] as const,
+	cartDetailsRoot: ["listings", "cart-details"] as const,
+	approved: (filters: ApprovedListingSearchFilterQuery) =>
+		["listings", "approved", filters] as const,
+	cartDetails: (listingIds: readonly string[]) =>
+		["listings", "cart-details", listingIds] as const,
+	popularBrandCounts: ["listings", "popular-brand-counts"] as const,
+	countByCategory: ["listings", "count", "by-category"] as const,
+	countByStatus: (status: ListingCountStatusQuery) =>
+		["listings", "count", status] as const,
+	detail: (id: string, viewerKey: string) =>
+		["listings", "detail", id, viewerKey] as const,
+	featured: ["listings", "featured"] as const,
+	pending: ["listings", "pending"] as const,
+	recent: ["listings", "recent"] as const,
+};
 
 export const queryKeys = {
 	auth: {
@@ -15,20 +33,7 @@ export const queryKeys = {
 	},
 	orders: {
 		root: ["orders"] as const,
-		byRole: (userRole: UserRole) => ["orders", userRole] as const,
+		byRole: (userRole: ActorRole) => ["orders", userRole] as const,
 	},
-	products: {
-		root: ["products"] as const,
-		approved: (filters: GetApprovedProductsFilterQuery) =>
-			["products", "approved", filters] as const,
-		cartDetails: (productIds: readonly string[]) =>
-			["products", "cart-details", productIds] as const,
-		countByCategory: ["products", "count", "by-category"] as const,
-		countByStatus: (status: ProductCountStatusQuery) =>
-			["products", "count", status] as const,
-		detail: (id: string) => ["products", "detail", id] as const,
-		featured: ["products", "featured"] as const,
-		pending: ["products", "pending"] as const,
-		recent: ["products", "recent"] as const,
-	},
+	listings: listingKeys,
 };

@@ -2,7 +2,7 @@ import { CategoryGridEmpty } from "@/components/empty-states";
 import { CategoryGridError } from "@/components/error-states";
 import CategoryCard from "@/components/home/category-card";
 import { CategoryGridLoading } from "@/components/loading-states";
-import useGetProductCount from "@/hooks/use-get-product-count";
+import useGetListingCount from "@/hooks/use-get-listing-count";
 
 const CategoryGrid = () => {
 	const {
@@ -10,7 +10,7 @@ const CategoryGrid = () => {
 		loadingCategoryCounts,
 		isErrorCategoryCounts,
 		refetchCategoryCounts,
-	} = useGetProductCount();
+	} = useGetListingCount();
 
 	if (loadingCategoryCounts) {
 		return <CategoryGridLoading />;

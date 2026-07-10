@@ -108,7 +108,7 @@ const reviewFaqs = [
 			"Look for specifics: how the seller packed the item, whether the condition matched the listing, how quickly it shipped, and how the gear performed after setup.",
 	},
 	{
-		question: "Can reviews help me compare similar products?",
+		question: "Can reviews help me compare similar listings?",
 		answer:
 			"Yes. Reviews often expose differences between models that specs flatten out, like neck feel, pedal noise floor, amp breakup, or how gear responds in a mix.",
 	},
@@ -161,7 +161,7 @@ function ReviewsComponent() {
 							</p>
 							<p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground">
 								RiffMarket reviews are built to help you judge more than
-								popularity. They reveal how products arrive, how sellers
+								popularity. They reveal how listings arrive, how sellers
 								communicate, and how gear actually feels once it leaves the
 								listing page.
 							</p>

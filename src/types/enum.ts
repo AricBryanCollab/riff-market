@@ -1,27 +1,35 @@
-export type UserRole = "ADMIN" | "SELLER" | "CUSTOMER";
+export type {
+	ListingCategory,
+	ListingCondition,
+} from "@/domains/listings/domain/listing-attributes";
 
-export type ProductCategory =
-	| "ELECTRIC"
-	| "ACOUSTIC"
-	| "KEYBOARD"
-	| "PEDALS"
-	| "ACCESSORY";
+export type BuyerOrderSummaryStatus =
+	| "PENDING_PAYMENT"
+	| "OPEN"
+	| "PARTIALLY_SHIPPED"
+	| "SHIPPED"
+	| "DELIVERED"
+	| "PARTIALLY_CANCELED"
+	| "CANCELED";
 
-export type ProductCondition = "NEW" | "USED" | "MINT";
-
-export type PaymentMethod = "CASH" | "PAYPAL" | "VISA";
-
-export type OrderStatus =
-	| "PENDING"
+export type SellerOrderViewStatus =
+	| "ON_HOLD_PAYMENT"
+	| "NEW"
 	| "PROCESSING"
 	| "SHIPPED"
 	| "DELIVERED"
 	| "CANCELED";
 
+export type OrderDisplayStatus =
+	| BuyerOrderSummaryStatus
+	| SellerOrderViewStatus;
+
+export type OrderStatus = SellerOrderViewStatus;
+
 export type DialogType =
 	| "signin"
 	| "signup"
-	| "deleteProduct"
+	| "deleteListing"
 	| "updateUser"
 	| "updateProfilePic"
 	| "deleteUser";

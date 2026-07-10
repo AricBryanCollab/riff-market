@@ -19,7 +19,7 @@ enum Role {
   CUSTOMER
 }
 
-enum ProductCategory {
+enum ListingCategory {
   ELECTRIC
   ACOUSTIC
   KEYBOARD
@@ -27,24 +27,41 @@ enum ProductCategory {
   ACCESSORY
 }
 
-enum ProductCondtion {
+enum ListingCondition {
   NEW
   USED
   MINT
 }
 
-enum PaymentMethod {
-  CASH
-  PAYPAL
-  VISA
+enum PurchaseStatus {
+  OPEN
+  CANCELED
+  COMPLETED
 }
 
-enum OrderStatus {
-  PENDING
+enum PaymentStatus {
+  MANUALLY_CONFIRMED
+  PENDING_PAYMENT
+  AUTHORIZED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum SellerOrderStatus {
+  ON_HOLD_PAYMENT
+  NEW
   PROCESSING
   SHIPPED
   DELIVERED
   CANCELED
+}
+
+enum ListingStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  WITHDRAWN
 }
 
 enum ChatRole {
@@ -61,31 +78,32 @@ enum MediaCleanupJobStatus {
 
 enum MediaCleanupJobSourceType {
   USER_PROFILE
-  PRODUCT
+  LISTING
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String @id @default(uuid())
+  email     String @unique
   firstName String
   lastName  String
   password  String
-  role      Role     @default(CUSTOMER)
+  role      Role   @default(CUSTOMER)
 
   settings      UserSettings?
-  products       Product[]
-  orders        Order[]
+  listings      Listing[]
+  purchases     Purchase[]
+  sellerOrders  SellerOrder[]
   reviews       Review[]
   notifications Notification[]
-  favorites Favorite[]
+  favorites     Favorite[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model UserSettings {
-  id        String @id @default(uuid())
-  userId    String @unique
+  id     String @id @default(uuid())
+  userId String @unique
 
   theme      String
   phone      String?
@@ -96,83 +114,129 @@ model UserSettings {
 }
 
 model AppSettings {
-  id Int @id @default(1)
-  currency String @default("USD")
+  id        Int      @id @default(1)
+  currency  String   @default("TWD")
   updatedAt DateTime @updatedAt
 }
 
-model Order {
-  id               String @id @default(uuid())
-  userId           String
-  orderDate        DateTime
-  totalAmount      Float
-  shippingAddress  String
-  paymentMethod    PaymentMethod
-  trackingNumber   String
-  status OrderStatus @default(PENDING)
+model Purchase {
+  id                 String         @id @default(uuid())
+  customerId         String?
+  customerIdSnapshot String
+  purchaseNumber     String         @unique
+  totalAmountCents   Int
+  currencyCode       String         @default("TWD")
+  paymentStatus      PaymentStatus  @default(MANUALLY_CONFIRMED)
+  status             PurchaseStatus @default(OPEN)
+  buyerName          String
+  buyerEmail         String
+  buyerPhone         String?
+  shippingAddress    String
 
-  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items        OrderItem[]
+  customer      User?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  sellerOrders  SellerOrder[]
   notifications Notification[]
 
-  @@index([userId])
-  @@index([orderDate])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([customerIdSnapshot])
+  @@index([createdAt])
 }
 
-model OrderItem {
-  id        String @id @default(uuid())
-  orderId  String
-  productId String
+model SellerOrder {
+  id               String            @id @default(uuid())
+  purchaseId       String
+  sellerId         String?
+  sellerIdSnapshot String
+  subtotalCents    Int
+  currencyCode     String            @default("TWD")
+  status           SellerOrderStatus @default(NEW)
+  trackingNumber   String?
 
-  quantity  Int
-  unitPrice Float
-  subTotal  Float
+  purchase      Purchase          @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  seller        User?             @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  items         SellerOrderItem[]
+  notifications Notification[]
 
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([orderId])
-  @@index([productId])
+  @@index([purchaseId])
+  @@index([sellerId])
+  @@index([sellerIdSnapshot])
+  @@index([status])
+  @@index([createdAt])
 }
 
-model Product {
-  id          String @id @default(uuid())
-  sellerId    String
-  name        String
-  category    ProductCategory
-  condition   ProductCondtion
-  brand       String
-  model       String
-  images      Json
-  description String
-  price       Float
-  stock       Int
-  isApproved Boolean
-  favoritedBy Favorite[]
+model SellerOrderItem {
+  id                String @id @default(uuid())
+  sellerOrderId     String
+  listingId         String
+  listingName       String
+  brand             String
+  model             String
+  category          String
+  condition         String
+  primaryImageUrl   String
+  sellerId          String
+  sellerDisplayName String
+  unitPriceCents    Int
+  quantity          Int
+  subTotalCents     Int
+  currencyCode      String @default("TWD")
 
-  seller User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  orderItems OrderItem[]
-  reviews    Review[]
+  sellerOrder SellerOrder @relation(fields: [sellerOrderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([sellerOrderId])
+  @@index([listingId])
+  @@index([sellerId])
+}
+
+model Listing {
+  id               String           @id @default(uuid())
+  sellerId         String
+  name             String
+  category         ListingCategory
+  condition        ListingCondition
+  brand            String
+  model            String
+  images           Json
+  description      String
+  priceAmountMinor Int
+  currencyCode     String           @default("TWD")
+  stock            Int
+  isApproved       Boolean
+  listingStatus    ListingStatus    @default(PENDING)
+  favoritedBy      Favorite[]
+
+  seller  User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  reviews Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([sellerId])
   @@index([category])
+  @@index([priceAmountMinor])
   @@index([isApproved])
+  @@index([listingStatus])
 }
 
 model ChatBotSession {
-  id        String @id @default(uuid())
+  id       String    @id @default(uuid())
   messages Message[]
 
   createdAt DateTime @default(now())
 }
 
 model Message {
-  id        String @id @default(uuid())
+  id        String   @id @default(uuid())
   sessionId String
-  role ChatRole
+  role      ChatRole
   content   String
 
   session ChatBotSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
@@ -185,70 +249,73 @@ model Message {
 model Review {
   id        String @id @default(uuid())
   userId    String
-  productId String
+  listingId String
   rating    Int
   comment   String
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-
-  @@unique([userId, productId]) 
-  @@index([productId])
+  @@unique([userId, listingId])
+  @@index([listingId])
   @@index([userId])
 }
 
 model Favorite {
-  id String @id @default(uuid())
-  userId String
-  productId String
+  id        String @id @default(uuid())
+  userId    String
+  listingId String
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
-  @@unique([userId, productId])
+  @@unique([userId, listingId])
   @@index([userId])
-  @@index([productId])
+  @@index([listingId])
 }
 
 model Notification {
-  id      String @id @default(uuid())
-  userId  String
-  orderId String?
-  message String
-  isRead  Boolean @default(false)
+  id            String  @id @default(uuid())
+  userId        String
+  purchaseId    String?
+  sellerOrderId String?
+  message       String
+  isRead        Boolean @default(false)
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  order Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchase    Purchase?    @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  sellerOrder SellerOrder? @relation(fields: [sellerOrderId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
   @@index([userId, isRead])
+  @@index([purchaseId])
+  @@index([sellerOrderId])
 }
 
 model MediaCleanupJob {
-  id           String                    @id @default(uuid())
-  cleanupBatchId String
-  provider     String
-  assetType    String
+  id              String                    @id @default(uuid())
+  cleanupBatchId  String
+  provider        String
+  assetType       String
   providerAssetId String
-  sourceType   MediaCleanupJobSourceType
-  sourceId     String
-  sourceUserId String
-  status       MediaCleanupJobStatus     @default(PENDING)
-  attempts     Int                       @default(0)
-  maxAttempts  Int                       @default(5)
-  runAt        DateTime                  @default(now())
-  lockedUntil  DateTime?
-  lockedBy     String?
-  completedAt  DateTime?
-  failedAt     DateTime?
-  lastError    String?
+  sourceType      MediaCleanupJobSourceType
+  sourceId        String
+  sourceUserId    String
+  status          MediaCleanupJobStatus     @default(PENDING)
+  attempts        Int                       @default(0)
+  maxAttempts     Int                       @default(5)
+  runAt           DateTime                  @default(now())
+  lockedUntil     DateTime?
+  lockedBy        String?
+  completedAt     DateTime?
+  failedAt        DateTime?
+  lastError       String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

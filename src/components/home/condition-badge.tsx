@@ -1,10 +1,10 @@
-import type { ProductCondition } from "@/types/enum";
+import type { ListingCondition } from "@/types/enum";
 
 interface ConditionBadgeProps {
-	condition: ProductCondition;
+	condition: ListingCondition;
 }
 
-const CONDITION_LABELS: Record<ProductCondition, string> = {
+const CONDITION_LABELS: Record<ListingCondition, string> = {
 	NEW: "New",
 	USED: "Used",
 	MINT: "Mint",

@@ -1,18 +1,19 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import type { ShopSearch } from "@/types/product";
-import { getApprovedFiltersFromSearch, getShopPage } from "@/utils/shop-search";
+import {
+	getApprovedFiltersFromSearch,
+	getOptionalListingPriceSearchInput,
+	getShopPage,
+	type ListingShopSearch,
+} from "@/utils/shop-search";
 
 const getOptionalString = (value?: string) => (value ? value : undefined);
-
-const getOptionalNumber = (value?: number) =>
-	typeof value === "number" && Number.isFinite(value) ? value : undefined;
 
 const useShopSearchFilters = () => {
 	const searchParams = useSearch({ from: "/shop/" });
 	const navigate = useNavigate({ from: "/shop/" });
 
 	const updateSearch = (
-		updater: (previous: ShopSearch) => ShopSearch,
+		updater: (previous: ListingShopSearch) => ListingShopSearch,
 		replace = true,
 	) => {
 		navigate({
@@ -53,11 +54,11 @@ const useShopSearchFilters = () => {
 		}));
 	};
 
-	const setPriceRange = (priceMin?: number, priceMax?: number) => {
+	const setPriceRange = (priceMin?: string, priceMax?: string) => {
 		updateSearch((previous) => ({
 			...previous,
-			priceMin: getOptionalNumber(priceMin),
-			priceMax: getOptionalNumber(priceMax),
+			priceMin: getOptionalListingPriceSearchInput(priceMin),
+			priceMax: getOptionalListingPriceSearchInput(priceMax),
 			page: undefined,
 		}));
 	};

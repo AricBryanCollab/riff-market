@@ -1,4 +1,4 @@
-import { ShopPageProductActions } from "@/components/product-actions";
+import { ShopPageListingActions } from "@/components/listing-actions";
 import { Body, H3 } from "@/components/ui/typography";
 import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 
@@ -20,7 +20,7 @@ export function ShopPageHeader() {
 			</div>
 
 			<div className="flex flex-col md:flex-row items-center gap-2">
-				<ShopPageProductActions
+				<ShopPageListingActions
 					searchTerm={searchTerm}
 					handleSearchTerm={handleSearchChange}
 				/>

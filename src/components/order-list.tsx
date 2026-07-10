@@ -4,24 +4,34 @@ import AnimatedLoader from "@/components/animated-loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
-import type { UserRole } from "@/types/enum";
+import type { ActorRole } from "@/domains/shared/domain/actor";
 import type { OrderResponse } from "@/types/order";
 import { formatRelativeTime } from "@/utils/format-date";
+import { formatMoneyAmountMinor } from "@/utils/format-money";
+import { formatOrderStatusLabel } from "@/utils/order-status-label";
 
 const orderListBadgeVariants = cva(
 	"flex items-center text-xs px-1 py-0.5 rounded-md shrink-0",
 	{
 		variants: {
 			status: {
-				PENDING: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
+				PENDING_PAYMENT:
+					"bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
+				ON_HOLD_PAYMENT:
+					"bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
+				OPEN: "bg-blue-500/10 text-blue-700 border-blue-500/20",
+				NEW: "bg-blue-500/10 text-blue-700 border-blue-500/20",
 				PROCESSING: "bg-blue-500/10 text-blue-700 border-blue-500/20",
+				PARTIALLY_SHIPPED:
+					"bg-purple-500/10 text-purple-700 border-purple-500/20",
 				SHIPPED: "bg-purple-500/10 text-purple-700 border-purple-500/20",
 				DELIVERED: "bg-green-500/10 text-green-700 border-green-500/20",
+				PARTIALLY_CANCELED: "bg-red-500/10 text-red-700 border-red-500/20",
 				CANCELED: "bg-red-500/10 text-red-700 border-red-500/20",
 			},
 		},
 		defaultVariants: {
-			status: "PENDING",
+			status: "OPEN",
 		},
 	},
 );
@@ -30,7 +40,7 @@ interface OrderListProps {
 	orders: OrderResponse[];
 	isLoading: boolean;
 	isEmptyOrders: boolean;
-	userRole: UserRole;
+	userRole: ActorRole;
 }
 
 const OrderList = ({
@@ -86,7 +96,7 @@ const OrderList = ({
 						<BodySmall className="text-muted-foreground/70 text-xs mt-1">
 							{userRole === "CUSTOMER"
 								? "Start shopping to see your orders here"
-								: "Orders will appear here when customers buy your products"}
+								: "Orders will appear here when customers buy your listings"}
 						</BodySmall>
 					</div>
 				)}
@@ -112,7 +122,7 @@ const OrderList = ({
 												status: order.status,
 											})}
 										>
-											{order.status}
+											{formatOrderStatusLabel(order.status)}
 										</Badge>
 									</div>
 
@@ -132,10 +142,10 @@ const OrderList = ({
 													key={item.id}
 													className="relative size-12 shrink-0 rounded bg-muted border border-border overflow-hidden"
 												>
-													{item.product.images?.[0] && (
+													{item.listing.images?.[0] && (
 														<img
-															src={item.product.images[0]}
-															alt={item.product.name}
+															src={item.listing.images[0]}
+															alt={item.listing.name}
 															className="w-full h-full object-cover"
 														/>
 													)}
@@ -165,7 +175,10 @@ const OrderList = ({
 											)}
 										</div>
 										<span className="text-sm font-semibold text-foreground">
-											${order.totalAmount.toFixed(2)}
+											{formatMoneyAmountMinor(
+												order.totalAmountMinor,
+												order.currencyCode,
+											)}
 										</span>
 									</div>
 								</div>

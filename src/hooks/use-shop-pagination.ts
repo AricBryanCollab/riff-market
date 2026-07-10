@@ -1,26 +1,26 @@
+import type { ApprovedListingCount } from "@/domains/listings/dto/listing-view";
 import {
-	useApprovedProductCount,
-	useApprovedProducts,
-} from "@/hooks/use-get-products";
+	useApprovedListingCount,
+	useApprovedListings,
+} from "@/hooks/use-get-listings";
 import useShopSearchFilters from "@/hooks/use-shop-search-filters";
-import type { ApprovedProductCount } from "@/types/product";
 import { SHOP_PAGE_SIZE } from "@/utils/shop-search";
 
 const useShopPagination = () => {
 	const { approvedFilters, page, setPage } = useShopSearchFilters();
 	const pageSize = approvedFilters.limit ?? SHOP_PAGE_SIZE;
 
-	const { productCount, isErrorProductCount, loadingProductCount } =
-		useApprovedProductCount();
+	const { listingCount, isErrorListingCount, loadingListingCount } =
+		useApprovedListingCount();
 
-	const { products, isLoadingProducts, isErrorProducts, refetchProducts } =
-		useApprovedProducts(approvedFilters);
+	const { listings, isLoadingListings, isErrorListings, refetchListings } =
+		useApprovedListings(approvedFilters);
 
-	const totalProducts =
-		(productCount as ApprovedProductCount | undefined)?.approvedProductCount ??
+	const totalListings =
+		(listingCount as ApprovedListingCount | undefined)?.approvedListingCount ??
 		0;
 
-	const totalPages = Math.ceil(totalProducts / pageSize);
+	const totalPages = Math.ceil(totalListings / pageSize);
 
 	const nextPage = () => {
 		const nextPageNum = page + 1;
@@ -39,25 +39,25 @@ const useShopPagination = () => {
 		setPage(clampedPage);
 	};
 
-	const hasProducts = (products?.length ?? 0) > 0;
+	const hasListings = (listings?.length ?? 0) > 0;
 	const isFirstPage = page === 0;
 
 	const isLastPage = page >= totalPages - 1;
 
-	const isError = isErrorProducts || isErrorProductCount;
-	const isLoading = isLoadingProducts || loadingProductCount;
+	const isError = isErrorListings || isErrorListingCount;
+	const isLoading = isLoadingListings || loadingListingCount;
 
 	return {
-		products,
+		listings,
 		isLoading,
 		isError,
 		page,
 		pageSize,
 		totalPages,
-		hasProducts,
+		hasListings,
 		isFirstPage,
 		isLastPage,
-		refetchProducts,
+		refetchListings,
 		nextPage,
 		previousPage,
 		goToPage,

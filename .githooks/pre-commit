@@ -1,17 +1,33 @@
 #!/usr/bin/env sh
 set -euo pipefail
 
-if ! command -v bun >/dev/null 2>&1; then
-  echo "bun is required for docs checks but was not found in PATH." >&2
-  exit 1
+changed_files="$(git diff --cached --name-only)"
+garden_context_changed=false
+behavior_files_changed=false
+
+if printf '%s\n' "$changed_files" | grep -Eq '^AGENTS\.md$|^\.garden/context/'; then
+  garden_context_changed=true
 fi
 
-if git diff --cached --name-only | grep -Eq '^AGENTS\.md$|^docs/'; then
-  echo "Docs files changed. Running bun run docs:check..."
-  bun run docs:check
+if printf '%s\n' "$changed_files" | grep -Eq '^src/|^prisma/|^generated/|^public/|^package\.json$|^prisma\.config\.ts$|^vite\.config\.ts$|^tsconfig\.json$'; then
+  behavior_files_changed=true
 fi
 
-if git diff --cached --name-only | grep -Eq '^src/|^prisma/|^generated/|^public/|^package\.json$|^prisma\.config\.ts$|^vite\.config\.ts$|^tsconfig\.json$'; then
-  echo "Behavior-level files changed. Running bun run docs:report (non-blocking)..."
-  bun run docs:report || true
+if [ "$garden_context_changed" = false ] && [ "$behavior_files_changed" = false ]; then
+  exit 0
+fi
+
+if ! command -v garden >/dev/null 2>&1; then
+  echo "garden is not installed; skipping Garden context checks." >&2
+  exit 0
+fi
+
+if [ "$garden_context_changed" = true ]; then
+  echo "Garden context changed. Running garden lint..."
+  garden lint
+fi
+
+if [ "$behavior_files_changed" = true ]; then
+  echo "Behavior-level files changed. Running garden check (non-blocking)..."
+  git diff --cached --name-only -z | xargs -0 garden check || true
 fi
