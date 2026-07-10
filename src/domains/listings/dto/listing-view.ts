@@ -28,7 +28,7 @@ export type ListingViewerCapabilities = {
 	readonly viewerCanDecline: boolean;
 };
 
-export type ListingView = {
+type ListingDtoFields = {
 	readonly id: string;
 	readonly sellerId: string;
 	readonly name: string;
@@ -41,34 +41,23 @@ export type ListingView = {
 	readonly priceAmountMinor: number;
 	readonly currencyCode: string;
 	readonly stock: number;
-	readonly listingStatus: ListingViewStatus;
 	readonly isOrderable: boolean;
+	readonly seller: ListingViewSeller;
+};
+
+export type ListingView = ListingDtoFields & {
+	readonly listingStatus: ListingViewStatus;
 	readonly createdAt?: Date;
 	readonly updatedAt?: Date;
-	readonly seller: ListingViewSeller;
 };
 
 export type ListingDetailView = ListingView & ListingViewerCapabilities;
 
-export type ListingResponse = {
-	readonly id: string;
-	readonly sellerId: string;
-	readonly name: string;
-	readonly category: ListingViewCategory;
-	readonly condition: ListingViewCondition;
-	readonly brand: string;
-	readonly model: string;
-	readonly images: ListingImageDto[];
-	readonly description: string;
-	readonly priceAmountMinor: number;
-	readonly currencyCode: string;
-	readonly stock: number;
+export type ListingResponse = ListingDtoFields & {
 	readonly isApproved: boolean;
 	readonly listingStatus?: ListingViewStatus;
-	readonly isOrderable: boolean;
 	readonly createdAt?: string;
 	readonly updatedAt?: string;
-	readonly seller: ListingViewSeller;
 };
 
 export type ListingDetailResponse = ListingResponse & ListingViewerCapabilities;

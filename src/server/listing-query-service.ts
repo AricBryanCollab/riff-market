@@ -245,36 +245,33 @@ function toListingSearchQuery(
 }
 
 function toListingResponse(listing: ListingView): ListingResponse {
+	const { createdAt, updatedAt, listingStatus, ...fields } = listing;
+
 	return {
-		id: listing.id,
-		sellerId: listing.sellerId,
-		name: listing.name,
-		category: listing.category,
-		condition: listing.condition,
-		brand: listing.brand,
-		model: listing.model,
-		images: listing.images,
-		description: listing.description,
-		priceAmountMinor: listing.priceAmountMinor,
-		currencyCode: listing.currencyCode,
-		stock: listing.stock,
-		isApproved: listing.listingStatus === "APPROVED",
-		listingStatus: listing.listingStatus,
-		isOrderable: listing.isOrderable,
-		createdAt: listing.createdAt?.toISOString(),
-		updatedAt: listing.updatedAt?.toISOString(),
-		seller: listing.seller,
+		...fields,
+		isApproved: listingStatus === "APPROVED",
+		listingStatus,
+		createdAt: createdAt?.toISOString(),
+		updatedAt: updatedAt?.toISOString(),
 	};
 }
 
 function toListingDetailResponse(
 	listing: ListingDetailView,
 ): ListingDetailResponse {
+	const {
+		viewerCanEdit,
+		viewerCanDelete,
+		viewerCanApprove,
+		viewerCanDecline,
+		...view
+	} = listing;
+
 	return {
-		...toListingResponse(listing),
-		viewerCanEdit: listing.viewerCanEdit,
-		viewerCanDelete: listing.viewerCanDelete,
-		viewerCanApprove: listing.viewerCanApprove,
-		viewerCanDecline: listing.viewerCanDecline,
+		...toListingResponse(view),
+		viewerCanEdit,
+		viewerCanDelete,
+		viewerCanApprove,
+		viewerCanDecline,
 	};
 }
