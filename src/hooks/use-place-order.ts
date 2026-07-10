@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import type { PlacePurchaseInput } from "@/domains/ordering/dto/place-purchase-request";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import type { CheckoutCartState } from "@/hooks/use-cart-details";
 import { clientLogger } from "@/lib/client-logger";
@@ -8,7 +9,7 @@ import {
 	invalidateListingCache,
 	invalidateOrdersCache,
 } from "@/lib/tanstack-query/cache-policy";
-import { createOrder } from "@/lib/tanstack-query/orders-queries";
+import { placePurchaseFn } from "@/server/order.functions";
 import { useCartStore } from "@/store/cart";
 import { useToastStore } from "@/store/toast";
 
@@ -23,7 +24,7 @@ const usePlaceOrder = (checkoutCart: CheckoutCartState) => {
 	const [shippingAddress, setShippingAddress] = useState<string>("");
 
 	const { mutate, isPending, isError } = useMutation({
-		mutationFn: createOrder,
+		mutationFn: (data: PlacePurchaseInput) => placePurchaseFn({ data }),
 		onSuccess: async () => {
 			// Placing an order changes both order history and listing stock.
 			await Promise.all([

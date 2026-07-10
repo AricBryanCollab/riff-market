@@ -6,12 +6,11 @@ import {
 } from "@tanstack/react-query";
 import type { SelfAssignableRole } from "@/domains/accounts/application/account-auth";
 import { clientLogger } from "@/lib/client-logger";
-import {
-	getOrderByCustomer,
-	getOrderBySeller,
-	updateOrderStatus,
-} from "@/lib/tanstack-query/orders-queries";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
+import {
+	changeSellerOrderStatusFn,
+	listOrdersForCurrentUserFn,
+} from "@/server/order.functions";
 import type { OrderStatus } from "@/types/enum";
 import type { OrderResponse } from "@/types/order";
 
@@ -22,16 +21,12 @@ export type UpdateOrderStatusInput = {
 	trackingNumber?: string | null;
 };
 
-export const ordersByRoleQueryOpt = (userRole: OrderQueryRole) => {
-	const queryFn =
-		userRole === "CUSTOMER" ? getOrderByCustomer : getOrderBySeller;
-
-	return queryOptions({
+export const ordersByRoleQueryOpt = (userRole: OrderQueryRole) =>
+	queryOptions({
 		queryKey: queryKeys.orders.byRole(userRole),
-		queryFn,
+		queryFn: () => listOrdersForCurrentUserFn(),
 		staleTime: 30000,
 	});
-};
 
 interface UseOrdersByRoleOptions {
 	polling?: boolean;
@@ -67,7 +62,13 @@ export const useUpdateOrderStatus = (userRole: OrderQueryRole) => {
 
 	const updateStatusMutation = useMutation({
 		mutationFn: ({ id, status, trackingNumber }: UpdateOrderStatusInput) =>
-			updateOrderStatus(id, status, trackingNumber),
+			changeSellerOrderStatusFn({
+				data: {
+					sellerOrderId: id,
+					status,
+					trackingNumber,
+				},
+			}),
 		onMutate: async ({ id, status, trackingNumber }) => {
 			await queryClient.cancelQueries({ queryKey });
 
