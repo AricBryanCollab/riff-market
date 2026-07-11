@@ -25,14 +25,12 @@ export type ListingModerationResult = {
 export type ListingModerationErrorKind =
 	| "authorization"
 	| "not-found"
-	| "validation"
 	| "conflict"
 	| "unexpected";
 
 export type ListingModerationErrorCode =
 	| "MODERATE_LISTING_UNAUTHORIZED"
 	| "MODERATE_LISTING_NOT_FOUND"
-	| "MODERATE_LISTING_INVALID_DECISION"
 	| "MODERATE_LISTING_INVALID_TRANSITION"
 	| "MODERATE_LISTING_EVENT_MISSING"
 	| "MODERATE_LISTING_STALE_STATUS";
@@ -100,17 +98,6 @@ export async function moderateListing(
 				kind: "authorization",
 				code: "MODERATE_LISTING_UNAUTHORIZED",
 				message: "Only admins can moderate listings",
-			},
-		};
-	}
-
-	if (command.decision !== "APPROVE" && command.decision !== "DECLINE") {
-		return {
-			ok: false,
-			error: {
-				kind: "validation",
-				code: "MODERATE_LISTING_INVALID_DECISION",
-				message: "Listing moderation decision is invalid",
 			},
 		};
 	}

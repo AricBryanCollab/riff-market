@@ -19,7 +19,6 @@ import {
 
 export type OrderQueryErrorCode =
 	| "ORDER_QUERY_UNAUTHORIZED"
-	| "ORDER_QUERY_INVALID_ID"
 	| "ORDER_QUERY_NOT_FOUND";
 
 export type OrderQueryError = AppError<OrderQueryErrorCode>;
@@ -86,16 +85,6 @@ export async function getOrderDetail(
 	orderId: string,
 	orderDetails: OrderDetailQueryPort,
 ): Promise<Result<OrderView, OrderQueryError>> {
-	if (orderId.trim().length === 0) {
-		return err(
-			orderQueryError(
-				"ORDER_QUERY_INVALID_ID",
-				"Order ID is required",
-				"validation",
-			),
-		);
-	}
-
 	const order = await findAuthorizedOrder(actor, orderId, orderDetails);
 	if (!order) {
 		return err(

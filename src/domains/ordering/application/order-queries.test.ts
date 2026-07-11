@@ -199,25 +199,6 @@ describe("getOrderDetail", () => {
 		});
 		expect(port.requests).toEqual([["findForAdmin", "seller-order-1"]]);
 	});
-
-	it("rejects blank order IDs", async () => {
-		const port = new FakeOrderDetailQueryPort({});
-
-		const result = await getOrderDetail(
-			{ id: "customer-1", role: "CUSTOMER" },
-			" ",
-			port,
-		);
-
-		expect(result).toMatchObject({
-			ok: false,
-			error: {
-				code: "ORDER_QUERY_INVALID_ID",
-				kind: "validation",
-			},
-		});
-		expect(port.requests).toEqual([]);
-	});
 });
 
 describe("deriveBuyerOrderSummaryStatus", () => {
