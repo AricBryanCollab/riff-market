@@ -7,7 +7,6 @@ import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	type AppError,
 	err,
-	ok,
 	type Result,
 } from "@/domains/shared/domain/result";
 
@@ -62,13 +61,6 @@ export async function createListingReview(
 	}
 
 	return reviews.createReview(review.toCreateData());
-}
-
-export async function getListingReviews(
-	listingId: string,
-	reviews: ListingReviewQueryPort,
-): Promise<Result<ListingReview[], ReviewError>> {
-	return ok(await reviews.listByListingId(listingId));
 }
 
 export function reviewAlreadyExistsError(): ReviewError {

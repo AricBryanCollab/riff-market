@@ -1,9 +1,6 @@
 import type { PrismaClient } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
-import {
-	createListingReview,
-	getListingReviews,
-} from "@/domains/reviews/application/review-use-cases";
+import { createListingReview } from "@/domains/reviews/application/review-use-cases";
 import {
 	describeDb,
 	seedListing,
@@ -117,34 +114,31 @@ describeDb("Prisma listing reviews", () => {
 			},
 		});
 
-		const listingReviews = await getListingReviews("listing-1", reviews);
+		const listingReviews = await reviews.listByListingId("listing-1");
 
-		expect(listingReviews).toMatchObject({
-			ok: true,
-			value: [
-				{
-					id: "newer-review",
-					listingId: "listing-1",
-					userId: "customer-2",
-					rating: 4,
-					comment: "Good communication.",
-					reviewer: {
-						firstName: "Sam",
-						lastName: "Shopper",
-					},
+		expect(listingReviews).toMatchObject([
+			{
+				id: "newer-review",
+				listingId: "listing-1",
+				userId: "customer-2",
+				rating: 4,
+				comment: "Good communication.",
+				reviewer: {
+					firstName: "Sam",
+					lastName: "Shopper",
 				},
-				{
-					id: "older-review",
-					listingId: "listing-1",
-					userId: "customer-1",
-					rating: 5,
-					comment: "Exactly as described.",
-					reviewer: {
-						firstName: "Pat",
-						lastName: "Buyer",
-					},
+			},
+			{
+				id: "older-review",
+				listingId: "listing-1",
+				userId: "customer-1",
+				rating: 5,
+				comment: "Exactly as described.",
+				reviewer: {
+					firstName: "Pat",
+					lastName: "Buyer",
 				},
-			],
-		});
+			},
+		]);
 	});
 });

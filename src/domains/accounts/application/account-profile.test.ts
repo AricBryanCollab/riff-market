@@ -8,24 +8,10 @@ import {
 	type AccountProfileReadPort,
 	type AccountProfileWritePort,
 	deleteAccount,
-	getAccountProfile,
 	updateAccountProfile,
 } from "./account-profile";
 
 describe("account profile use cases", () => {
-	it("returns not found when reading a missing account", async () => {
-		const result = await getAccountProfile("missing", new InMemoryAccounts());
-
-		expect(result).toMatchObject({
-			ok: false,
-			error: {
-				code: "ACCOUNT_PROFILE_NOT_FOUND",
-				message: "User not found",
-				kind: "not-found",
-			},
-		});
-	});
-
 	it("updates an existing account profile", async () => {
 		const account = makeAccount();
 		const update = { firstName: "Malcolm", theme: "dark" };

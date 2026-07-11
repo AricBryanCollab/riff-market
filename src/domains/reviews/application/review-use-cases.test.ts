@@ -3,7 +3,6 @@ import type { Actor } from "@/domains/shared/domain/actor";
 import { err, ok, type Result } from "@/domains/shared/domain/result";
 import {
 	createListingReview,
-	getListingReviews,
 	type ListingReview,
 	type ListingReviewCreateData,
 	type ListingReviewPort,
@@ -12,7 +11,7 @@ import {
 } from "./review-use-cases";
 
 describe("review use cases", () => {
-	it("creates a listing review and reads reviews newest first", async () => {
+	it("creates a listing review", async () => {
 		const reviews = new InMemoryListingReviews();
 		const actor: Actor = { id: "customer-1", role: "CUSTOMER" };
 
@@ -34,36 +33,6 @@ describe("review use cases", () => {
 				rating: 5,
 				comment: "Exactly as described.",
 			},
-		});
-
-		await createListingReview(
-			{
-				listingId: "listing-1",
-				rating: 4,
-				comment: "Good communication.",
-			},
-			{ id: "customer-2", role: "CUSTOMER" },
-			reviews,
-		);
-
-		const listingReviews = await getListingReviews("listing-1", reviews);
-
-		expect(listingReviews).toMatchObject({
-			ok: true,
-			value: [
-				{
-					listingId: "listing-1",
-					userId: "customer-2",
-					rating: 4,
-					comment: "Good communication.",
-				},
-				{
-					listingId: "listing-1",
-					userId: "customer-1",
-					rating: 5,
-					comment: "Exactly as described.",
-				},
-			],
 		});
 	});
 

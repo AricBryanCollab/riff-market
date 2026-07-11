@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
 	createListingReview,
-	getListingReviews,
 	type ListingReviewCreatePort,
 	type ListingReviewPort,
 	type ListingReviewQueryPort,
@@ -73,13 +72,8 @@ export async function listListingReviews(
 	reviews?: ListingReviewQueryPort,
 ): Promise<ListingReview[]> {
 	const reviewPort = reviews ?? (await createPrismaReviewDependencies());
-	const result = await getListingReviews(input.listingId, reviewPort);
 
-	if (!result.ok) {
-		throw toRequestError(result.error);
-	}
-
-	return result.value;
+	return reviewPort.listByListingId(input.listingId);
 }
 
 async function createPrismaReviewDependencies(): Promise<ListingReviewPort> {

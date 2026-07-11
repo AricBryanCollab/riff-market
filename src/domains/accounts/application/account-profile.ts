@@ -35,19 +35,6 @@ export interface AccountDeletionPort {
 	deleteAccount(userId: string): Promise<void>;
 }
 
-export async function getAccountProfile(
-	userId: string,
-	accounts: AccountProfileReadPort,
-): Promise<Result<AccountProfile, AccountProfileError>> {
-	const account = await accounts.findById(userId);
-
-	if (!account) {
-		return err(accountNotFoundError());
-	}
-
-	return ok(account);
-}
-
 export async function updateAccountProfile(
 	command: {
 		readonly userId: string;

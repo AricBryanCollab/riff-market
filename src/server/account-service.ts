@@ -4,7 +4,6 @@ import {
 	type AccountProfileReadPort,
 	type AccountProfileWritePort,
 	deleteAccount,
-	getAccountProfile,
 	updateAccountProfile,
 } from "@/domains/accounts/application/account-profile";
 import {
@@ -24,7 +23,6 @@ import {
 } from "@/lib/zod/user-validation";
 import {
 	RequestError,
-	toRequestError,
 	unwrapResultOrThrowRequestError,
 } from "@/server/request-error";
 import type { UserProfile } from "@/types/user";
@@ -82,12 +80,17 @@ export async function getCurrentUser(
 	userId: string,
 	accounts?: AccountProfileReadPort,
 ): Promise<UserProfile> {
-	const result = await getAccountProfile(
-		userId,
-		accounts ?? (await createPrismaAccountProfiles()),
-	);
+	const accountProfiles = accounts ?? (await createPrismaAccountProfiles());
+	const account = await accountProfiles.findById(userId);
 
-	return toUserProfile(unwrapResultOrThrowRequestError(result));
+	if (!account) {
+		throw new RequestError("User not found", {
+			code: "ACCOUNT_PROFILE_NOT_FOUND",
+			status: 404,
+		});
+	}
+
+	return toUserProfile(account);
 }
 
 export async function getOptionalCurrentUser(
@@ -98,20 +101,14 @@ export async function getOptionalCurrentUser(
 		return null;
 	}
 
-	const result = await getAccountProfile(
-		userId,
-		accounts ?? (await createPrismaAccountProfiles()),
-	);
+	const accountProfiles = accounts ?? (await createPrismaAccountProfiles());
+	const account = await accountProfiles.findById(userId);
 
-	if (!result.ok) {
-		if (result.error.code === "ACCOUNT_PROFILE_NOT_FOUND") {
-			return null;
-		}
-
-		throw toRequestError(result.error);
+	if (!account) {
+		return null;
 	}
 
-	return toUserProfile(result.value);
+	return toUserProfile(account);
 }
 
 export async function updateCurrentUser(
