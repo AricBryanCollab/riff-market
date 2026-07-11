@@ -1,5 +1,11 @@
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
+	type AppError,
+	err,
+	ok,
+	type Result,
+} from "@/domains/shared/domain/result";
+import {
 	Listing,
 	ListingLifecycleError,
 	type ListingLifecycleEvent,
@@ -22,12 +28,6 @@ export type ListingModerationResult = {
 	readonly isApproved: boolean;
 };
 
-export type ListingModerationErrorKind =
-	| "authorization"
-	| "not-found"
-	| "conflict"
-	| "unexpected";
-
 export type ListingModerationErrorCode =
 	| "MODERATE_LISTING_UNAUTHORIZED"
 	| "MODERATE_LISTING_NOT_FOUND"
@@ -35,16 +35,12 @@ export type ListingModerationErrorCode =
 	| "MODERATE_LISTING_EVENT_MISSING"
 	| "MODERATE_LISTING_STALE_STATUS";
 
-export type ListingModerationError = {
-	readonly kind: ListingModerationErrorKind;
-	readonly code: ListingModerationErrorCode;
-	readonly message: string;
-	readonly details?: unknown;
-};
+export type ListingModerationError = AppError<ListingModerationErrorCode>;
 
-export type ModerateListingResult =
-	| { readonly ok: true; readonly value: ListingModerationResult }
-	| { readonly ok: false; readonly error: ListingModerationError };
+export type ModerateListingResult = Result<
+	ListingModerationResult,
+	ListingModerationError
+>;
 
 export interface ListingModerationRepositoryPort {
 	findListingForModeration(listingId: string): Promise<ListingSnapshot | null>;
@@ -92,27 +88,21 @@ export async function moderateListing(
 	notifier: ListingModerationNotifierPort,
 ): Promise<ModerateListingResult> {
 	if (actor.role !== "ADMIN") {
-		return {
-			ok: false,
-			error: {
-				kind: "authorization",
-				code: "MODERATE_LISTING_UNAUTHORIZED",
-				message: "Only admins can moderate listings",
-			},
-		};
+		return err({
+			kind: "authorization",
+			code: "MODERATE_LISTING_UNAUTHORIZED",
+			message: "Only admins can moderate listings",
+		});
 	}
 
 	const snapshot = await listings.findListingForModeration(command.listingId);
 
 	if (!snapshot) {
-		return {
-			ok: false,
-			error: {
-				kind: "not-found",
-				code: "MODERATE_LISTING_NOT_FOUND",
-				message: "Listing not found",
-			},
-		};
+		return err({
+			kind: "not-found",
+			code: "MODERATE_LISTING_NOT_FOUND",
+			message: "Listing not found",
+		});
 	}
 
 	const listing = Listing.reconstitute(snapshot);
@@ -125,15 +115,12 @@ export async function moderateListing(
 		}
 	} catch (error) {
 		if (error instanceof ListingLifecycleError) {
-			return {
-				ok: false,
-				error: {
-					kind: "conflict",
-					code: "MODERATE_LISTING_INVALID_TRANSITION",
-					message: error.message,
-					details: { code: error.code },
-				},
-			};
+			return err({
+				kind: "conflict",
+				code: "MODERATE_LISTING_INVALID_TRANSITION",
+				message: error.message,
+				details: { code: error.code },
+			});
 		}
 
 		throw error;
@@ -144,14 +131,11 @@ export async function moderateListing(
 		listing.status,
 	);
 	if (!moderationEvent) {
-		return {
-			ok: false,
-			error: {
-				kind: "unexpected",
-				code: "MODERATE_LISTING_EVENT_MISSING",
-				message: "Listing moderation event was not recorded",
-			},
-		};
+		return err({
+			kind: "unexpected",
+			code: "MODERATE_LISTING_EVENT_MISSING",
+			message: "Listing moderation event was not recorded",
+		});
 	}
 
 	const savedListing = await listings.saveListingStatus(
@@ -161,22 +145,16 @@ export async function moderateListing(
 	);
 
 	if (!savedListing) {
-		return {
-			ok: false,
-			error: {
-				kind: "conflict",
-				code: "MODERATE_LISTING_STALE_STATUS",
-				message: "Listing status changed before moderation completed",
-			},
-		};
+		return err({
+			kind: "conflict",
+			code: "MODERATE_LISTING_STALE_STATUS",
+			message: "Listing status changed before moderation completed",
+		});
 	}
 
 	await notifyModerationResult(notifier, savedListing, moderationEvent);
 
-	return {
-		ok: true,
-		value: savedListing,
-	};
+	return ok(savedListing);
 }
 
 async function notifyModerationResult(
