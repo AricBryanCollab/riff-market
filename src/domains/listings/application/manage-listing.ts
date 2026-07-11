@@ -23,8 +23,8 @@ export type ListingMutationFields = {
 	readonly stock?: number;
 };
 
-export type CreateListingCommand = Required<ListingMutationFields> & {
-	readonly imageFiles: File[];
+export type CreateListingCommand<TUploadInput> = Required<ListingMutationFields> & {
+	readonly imageFiles: TUploadInput[];
 };
 
 export type ListingImageUpdateItem =
@@ -41,9 +41,9 @@ export type ListingImageUpdate = {
 	readonly items: ListingImageUpdateItem[];
 };
 
-export type UpdateListingCommand = ListingMutationFields & {
+export type UpdateListingCommand<TUploadInput> = ListingMutationFields & {
 	readonly listingId: string;
-	readonly imageFiles?: File[];
+	readonly imageFiles?: TUploadInput[];
 	readonly imageUpdate?: ListingImageUpdate;
 };
 
@@ -145,8 +145,8 @@ export interface ListingCommandRepositoryPort {
 	): Promise<ListingMutationResult | null>;
 }
 
-export interface ListingImageManagerPort {
-	uploadImages(imageFiles: File[]): Promise<ImageAssetRef[]>;
+export interface ListingImageManagerPort<TUploadInput> {
+	uploadImages(imageFiles: TUploadInput[]): Promise<ImageAssetRef[]>;
 	cleanupUploadedImagesBestEffort(images: ImageAssetRef[]): Promise<void>;
 	cleanupPersistedImagesBestEffort(
 		images: ImageAssetRef[],
@@ -154,15 +154,15 @@ export interface ListingImageManagerPort {
 	): Promise<void>;
 }
 
-export type ListingCommandDependencies = {
+export type ListingCommandDependencies<TUploadInput> = {
 	readonly listings: ListingCommandRepositoryPort;
-	readonly images: ListingImageManagerPort;
+	readonly images: ListingImageManagerPort<TUploadInput>;
 };
 
-export async function createListing(
+export async function createListing<TUploadInput>(
 	actor: Actor,
-	command: CreateListingCommand,
-	dependencies: ListingCommandDependencies,
+	command: CreateListingCommand<TUploadInput>,
+	dependencies: ListingCommandDependencies<TUploadInput>,
 ): Promise<Result<ListingMutationResult, ListingCommandError>> {
 	const { listings, images } = dependencies;
 
@@ -202,10 +202,10 @@ export async function createListing(
 	}
 }
 
-export async function updateListing(
+export async function updateListing<TUploadInput>(
 	actor: Actor,
-	command: UpdateListingCommand,
-	dependencies: ListingCommandDependencies,
+	command: UpdateListingCommand<TUploadInput>,
+	dependencies: ListingCommandDependencies<TUploadInput>,
 ): Promise<Result<ListingMutationResult, ListingCommandError>> {
 	const { listings, images } = dependencies;
 	const existing = await listings.findListingForMutation(command.listingId);
@@ -261,10 +261,10 @@ export async function updateListing(
 	}
 }
 
-export async function removeListing(
+export async function removeListing<TUploadInput>(
 	actor: Actor,
 	command: RemoveListingCommand,
-	dependencies: ListingCommandDependencies,
+	dependencies: ListingCommandDependencies<TUploadInput>,
 ): Promise<Result<ListingRemovalResult, ListingCommandError>> {
 	const { listings, images } = dependencies;
 	const existing = await listings.findListingForMutation(command.listingId);
@@ -316,10 +316,10 @@ type ImageUpdatePlan = {
 	readonly removedImages: ImageAssetRef[];
 };
 
-async function prepareImageUpdate(
-	command: UpdateListingCommand,
+async function prepareImageUpdate<TUploadInput>(
+	command: UpdateListingCommand<TUploadInput>,
 	existing: ListingRemovalSnapshot,
-	images: ListingImageManagerPort,
+	images: ListingImageManagerPort<TUploadInput>,
 ): Promise<Result<ImageUpdatePlan, ListingCommandError>> {
 	const hasNewImages = command.imageFiles && command.imageFiles.length > 0;
 	const imageUpdate =
@@ -485,7 +485,7 @@ function hasReferences(snapshot: ListingRemovalSnapshot) {
 }
 
 function toCreatePersistenceFields(
-	command: CreateListingCommand,
+	command: CreateListingCommand<unknown>,
 ): ListingPersistenceFields {
 	const price = toListingMoneyPersistence(command.price);
 

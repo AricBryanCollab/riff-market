@@ -386,7 +386,7 @@ describeDb("listing service Prisma integration", () => {
 	});
 });
 
-class FakeListingImageManager implements ListingImageManagerPort {
+class FakeListingImageManager implements ListingImageManagerPort<File> {
 	uploadedFileNames: string[] = [];
 	cleanedImages: ImageAssetRef[] = [];
 	private nextUpload = 1;
@@ -420,7 +420,7 @@ class FakeListingImageManager implements ListingImageManagerPort {
 
 function commandDependencies(
 	db: PrismaClient,
-	imageManager: ListingImageManagerPort,
+	imageManager: ListingImageManagerPort<File>,
 ) {
 	return {
 		listings: new PrismaListingCommandRepository(db),

@@ -143,7 +143,9 @@ function toListingCleanupImageAssetRefs(
 		.filter((asset): asset is CleanupImageAssetRef => asset !== null);
 }
 
-export class CloudinaryListingImageManager implements ListingImageManagerPort {
+export class CloudinaryListingImageManager
+	implements ListingImageManagerPort<File>
+{
 	constructor(
 		private readonly cleanupStaging?: ListingMediaCleanupStagingPort,
 	) {}

@@ -47,7 +47,7 @@ export type RemoveListingInput = {
 export type ListingMutationResponse = ListingMutationResponseDto;
 export type RemoveListingResponse = ListingRemovalResponseDto;
 
-export type ListingCommandServiceDependencies = ListingCommandDependencies;
+export type ListingCommandServiceDependencies = ListingCommandDependencies<File>;
 
 export type ListingModerationWorkflow = {
 	readonly moderateListing: (
@@ -282,7 +282,7 @@ function toCommand(input: ModerateListingInput): ModerateListingCommand {
 
 function toCreateListingCommand(
 	input: CreateListingInput,
-): CreateListingCommand {
+): CreateListingCommand<File> {
 	return {
 		name: input.name,
 		category: input.category,
@@ -298,7 +298,7 @@ function toCreateListingCommand(
 
 function toUpdateListingCommand(
 	input: UpdateListingInput,
-): UpdateListingCommand {
+): UpdateListingCommand<File> {
 	return {
 		listingId: input.listingId,
 		...(input.data.name !== undefined && { name: input.data.name }),

@@ -98,12 +98,12 @@ function createFakes() {
 			}),
 		),
 	};
-	const images: ListingImageManagerPort = {
+	const images: ListingImageManagerPort<File> = {
 		uploadImages: vi.fn(async () => [image("https://cdn.example.com/new.jpg")]),
 		cleanupUploadedImagesBestEffort: vi.fn(async () => undefined),
 		cleanupPersistedImagesBestEffort: vi.fn(async () => undefined),
 	};
-	const dependencies: ListingCommandDependencies = {
+	const dependencies: ListingCommandDependencies<File> = {
 		listings: repository,
 		images,
 	};
