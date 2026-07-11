@@ -99,24 +99,19 @@ export async function listOrdersForCurrentUser(
 	const actor = toActor(user);
 	const orderQueries = queries ?? (await createPrismaOrderQueries());
 
-	if (actor.role === "CUSTOMER") {
-		const result = await listBuyerPurchaseHistory(actor, orderQueries);
+	switch (actor.role) {
+		case "CUSTOMER": {
+			const result = await listBuyerPurchaseHistory(actor, orderQueries);
 
-		return unwrapResultOrThrowRequestError(result);
+			return unwrapResultOrThrowRequestError(result);
+		}
+		case "SELLER":
+		case "ADMIN": {
+			const result = await listSellerOrderDashboard(actor, orderQueries);
+
+			return unwrapResultOrThrowRequestError(result);
+		}
 	}
-
-	if (actor.role === "SELLER" || actor.role === "ADMIN") {
-		const result = await listSellerOrderDashboard(actor, orderQueries);
-
-		return unwrapResultOrThrowRequestError(result);
-	}
-
-	throw new RequestError(
-		"Only customers, sellers, and admins can read orders",
-		{
-			status: 403,
-		},
-	);
 }
 
 export async function getOrderDetailForCurrentUser(
