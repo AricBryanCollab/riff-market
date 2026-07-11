@@ -280,7 +280,7 @@ describe("listPendingModerationListings", () => {
 });
 
 describe("listCartListings", () => {
-	it("allows customers to query cart listings", async () => {
+	it("allows customers to query approved cart listings", async () => {
 		const listing = makeListing();
 		const listings = makeCartListingPort([listing]);
 
@@ -289,6 +289,26 @@ describe("listCartListings", () => {
 		).resolves.toEqual({
 			ok: true,
 			value: [listing],
+		});
+	});
+
+	it("omits non-approved listings from cart results", async () => {
+		const approved = makeListing({ id: "approved-1" });
+		const pending = makeListing({
+			id: "pending-1",
+			listingStatus: "PENDING",
+		});
+		const listings = makeCartListingPort([approved, pending]);
+
+		await expect(
+			listCartListings(
+				customer,
+				[approved.id, pending.id],
+				listings,
+			),
+		).resolves.toEqual({
+			ok: true,
+			value: [approved],
 		});
 	});
 
@@ -339,8 +359,12 @@ function makePendingModerationListingPort(
 
 function makeCartListingPort(listings: ListingView[]): CartListingQueryPort {
 	return {
-		findByIds: async (listingIds) =>
-			listings.filter((listing) => listingIds.includes(listing.id)),
+		findApprovedByIds: async (listingIds) =>
+			listings.filter(
+				(listing) =>
+					listingIds.includes(listing.id) &&
+					listing.listingStatus === "APPROVED",
+			),
 	};
 }
 

@@ -487,7 +487,7 @@ describeDb("Prisma listing queries", () => {
 		});
 	});
 
-	it("returns cart listings for requested ids with image URLs", async () => {
+	it("returns only approved cart listings for requested ids", async () => {
 		await seedListing(db, {
 			id: "cart-approved",
 			name: "Cart Approved",
@@ -507,30 +507,18 @@ describeDb("Prisma listing queries", () => {
 			isApproved: true,
 		});
 
-		const listings = await queries.findByIds([
+		const listings = await queries.findApprovedByIds([
 			"cart-approved",
 			"cart-pending",
 		]);
 
-		expect(
-			[...listings].sort((a, b) => a.id.localeCompare(b.id)),
-		).toMatchObject([
+		expect(listings).toMatchObject([
 			{
 				id: "cart-approved",
 				images: [
 					{
 						imageId: "cart-approved",
 						url: "https://cdn.example.com/cart-approved.jpg",
-					},
-				],
-				seller: { email: "seller@example.com" },
-			},
-			{
-				id: "cart-pending",
-				images: [
-					{
-						imageId: "cart-pending",
-						url: "https://cdn.example.com/cart-pending.jpg",
 					},
 				],
 				seller: { email: "seller@example.com" },

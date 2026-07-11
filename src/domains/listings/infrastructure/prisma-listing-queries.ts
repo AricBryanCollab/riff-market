@@ -198,12 +198,13 @@ export class PrismaListingQueries
 		return toListingViews(listings);
 	}
 
-	async findByIds(listingIds: string[]): Promise<ListingView[]> {
+	async findApprovedByIds(listingIds: string[]): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: {
 				id: {
 					in: listingIds,
 				},
+				listingStatus: "APPROVED",
 			},
 			select: listingViewSelect,
 		});

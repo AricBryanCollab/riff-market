@@ -78,7 +78,7 @@ export interface RecentApprovedListingQueryPort {
 }
 
 export interface CartListingQueryPort {
-	findByIds(listingIds: string[]): Promise<ListingView[]>;
+	findApprovedByIds(listingIds: string[]): Promise<ListingView[]>;
 }
 
 export async function getListingDetails(
@@ -186,7 +186,7 @@ export async function listCartListings(
 		);
 	}
 
-	return ok(await listings.findByIds(listingIds));
+	return ok(await listings.findApprovedByIds(listingIds));
 }
 
 export function toListingViewerCapabilities(
