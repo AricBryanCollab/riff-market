@@ -1,19 +1,15 @@
-import { Review, ReviewDomainError } from "@/domains/reviews/domain/review";
-import type {
-	ListingReview,
-	ListingReviewCreateData,
-} from "@/domains/reviews/dto/listing-review";
+import {
+	type ReviewCreateData,
+	Review,
+	ReviewDomainError,
+} from "@/domains/reviews/domain/review";
+import type { ListingReview } from "@/domains/reviews/dto/listing-review";
 import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	type AppError,
 	err,
 	type Result,
 } from "@/domains/shared/domain/result";
-
-export type {
-	ListingReview,
-	ListingReviewCreateData,
-} from "@/domains/reviews/dto/listing-review";
 
 export type ReviewErrorCode =
 	| ReviewDomainError["code"]
@@ -23,7 +19,7 @@ export type ReviewError = AppError<ReviewErrorCode>;
 
 export interface ListingReviewCreatePort {
 	createReview(
-		data: ListingReviewCreateData,
+		data: ReviewCreateData,
 	): Promise<Result<ListingReview, ReviewError>>;
 }
 

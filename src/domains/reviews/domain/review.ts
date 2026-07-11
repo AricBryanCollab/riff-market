@@ -1,4 +1,9 @@
-import type { ListingReviewCreateData } from "@/domains/reviews/dto/listing-review";
+export type ReviewCreateData = {
+	readonly listingId: string;
+	readonly userId: string;
+	readonly rating: number;
+	readonly comment: string;
+};
 
 export type ReviewDomainErrorCode =
 	| "REVIEW_UNAUTHENTICATED"
@@ -17,9 +22,9 @@ export class ReviewDomainError extends Error {
 }
 
 export class Review {
-	private constructor(private readonly data: ListingReviewCreateData) {}
+	private constructor(private readonly data: ReviewCreateData) {}
 
-	static create(data: ListingReviewCreateData): Review {
+	static create(data: ReviewCreateData): Review {
 		const listingId = data.listingId.trim();
 		const userId = data.userId.trim();
 		const comment = data.comment.trim();
@@ -60,7 +65,7 @@ export class Review {
 		});
 	}
 
-	toCreateData(): ListingReviewCreateData {
+	toCreateData(): ReviewCreateData {
 		return this.data;
 	}
 }

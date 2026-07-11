@@ -1,11 +1,11 @@
 import type { Prisma, PrismaClient } from "generated/prisma/client";
 import type {
-	ListingReview,
-	ListingReviewCreateData,
 	ListingReviewPort,
 	ReviewError,
 } from "@/domains/reviews/application/review-use-cases";
 import { reviewAlreadyExistsError } from "@/domains/reviews/application/review-use-cases";
+import type { ReviewCreateData } from "@/domains/reviews/domain/review";
+import type { ListingReview } from "@/domains/reviews/dto/listing-review";
 import { err, ok, type Result } from "@/domains/shared/domain/result";
 import { isPrismaUniqueConflict } from "@/domains/shared/infrastructure/prisma-errors";
 
@@ -35,7 +35,7 @@ export class PrismaListingReviews implements ListingReviewPort {
 	constructor(private readonly db: ReviewPrisma) {}
 
 	async createReview(
-		data: ListingReviewCreateData,
+		data: ReviewCreateData,
 	): Promise<Result<ListingReview, ReviewError>> {
 		try {
 			const review = await this.db.review.create({

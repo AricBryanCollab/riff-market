@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
+import type { ReviewCreateData } from "@/domains/reviews/domain/review";
+import type { ListingReview } from "@/domains/reviews/dto/listing-review";
 import type { Actor } from "@/domains/shared/domain/actor";
 import { err, ok, type Result } from "@/domains/shared/domain/result";
 import {
 	createListingReview,
-	type ListingReview,
-	type ListingReviewCreateData,
 	type ListingReviewPort,
 	type ReviewError,
 	reviewAlreadyExistsError,
@@ -122,7 +122,7 @@ class InMemoryListingReviews implements ListingReviewPort {
 	private readonly reviews: ListingReview[] = [];
 
 	async createReview(
-		data: ListingReviewCreateData,
+		data: ReviewCreateData,
 	): Promise<Result<ListingReview, ReviewError>> {
 		if (
 			this.reviews.some(

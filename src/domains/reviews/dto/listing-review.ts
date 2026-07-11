@@ -14,13 +14,6 @@ export interface ListingReview {
 	readonly updatedAt: Date;
 }
 
-export interface ListingReviewCreateData {
-	readonly listingId: string;
-	readonly userId: string;
-	readonly rating: number;
-	readonly comment: string;
-}
-
 export const createListingReviewSchema = z.object({
 	listingId: z.string().trim().uuid("Invalid listing ID"),
 	rating: z.number().int().min(1).max(5, "Rating must be between 1 and 5"),
