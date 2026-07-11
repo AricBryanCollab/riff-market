@@ -2,7 +2,6 @@ import type {
 	CreateNotificationCommand,
 	NotificationView,
 } from "@/domains/notifications/dto/notification";
-import type { Actor } from "@/domains/shared/domain/actor";
 import {
 	type AppError,
 	err,
@@ -10,9 +9,7 @@ import {
 	type Result,
 } from "@/domains/shared/domain/result";
 
-export type NotificationErrorCode =
-	| "NOTIFICATION_INVALID_COMMAND"
-	| "NOTIFICATION_NOT_FOUND";
+export type NotificationErrorCode = "NOTIFICATION_INVALID_COMMAND";
 
 export type NotificationError = AppError<NotificationErrorCode>;
 
@@ -42,13 +39,6 @@ export interface NotificationReadAllPort {
 export type NotificationReadStatePort = NotificationReadPort &
 	NotificationReadAllPort;
 
-export async function getNotifications(
-	actor: Actor,
-	notifications: NotificationQueryPort,
-): Promise<Result<NotificationView[], NotificationError>> {
-	return ok(await notifications.listForUser(actor.id));
-}
-
 export async function createNotification(
 	command: CreateNotificationCommand,
 	notifications: NotificationCreatePort,
@@ -72,45 +62,6 @@ export async function createNotification(
 			isRead: command.isRead ?? false,
 		}),
 	);
-}
-
-export async function readNotification(
-	command: {
-		readonly notificationId: string;
-		readonly actor: Actor;
-	},
-	notifications: NotificationReadPort,
-): Promise<Result<NotificationView, NotificationError>> {
-	const notification = await notifications.markAsReadForUser(
-		command.notificationId,
-		command.actor.id,
-	);
-
-	if (!notification) {
-		return err(
-			notificationError(
-				"NOTIFICATION_NOT_FOUND",
-				"Notification not found",
-				"not-found",
-			),
-		);
-	}
-
-	return ok(notification);
-}
-
-export async function readAllNotifications(
-	actor: Actor,
-	notifications: NotificationReadAllPort,
-): Promise<Result<{ readonly count: number }, NotificationError>> {
-	return ok(await notifications.markAllAsReadForUser(actor.id));
-}
-
-export async function getUnreadNotificationCount(
-	actor: Actor,
-	notifications: NotificationUnreadCountPort,
-): Promise<Result<number, NotificationError>> {
-	return ok(await notifications.countUnreadForUser(actor.id));
 }
 
 function validateRequired(value: string, label: string) {

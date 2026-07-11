@@ -1,23 +1,13 @@
 import { z } from "zod";
-import {
-	getNotifications,
-	getUnreadNotificationCount,
-	type NotificationError,
-	type NotificationQueryPort,
-	type NotificationReadAllPort,
-	type NotificationReadPort,
-	type NotificationUnreadCountPort,
-	readAllNotifications,
-	readNotification,
+import type {
+	NotificationQueryPort,
+	NotificationReadAllPort,
+	NotificationReadPort,
+	NotificationUnreadCountPort,
 } from "@/domains/notifications/application/notification-use-cases";
 import type { NotificationView } from "@/domains/notifications/dto/notification";
-import type { Actor } from "@/domains/shared/domain/actor";
-import type { Result } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
-import {
-	RequestError,
-	unwrapResultOrThrowRequestError,
-} from "@/server/request-error";
+import { RequestError } from "@/server/request-error";
 
 const notificationIdInputSchema = z.object({
 	notificationId: z.string().trim().min(1, "Notification ID is required"),
@@ -49,24 +39,20 @@ export async function getNotificationsForCurrentUser(
 	user: ServerUserContext,
 	dependencies?: NotificationQueryPort,
 ): Promise<NotificationView[]> {
-	return executeNotificationUseCase(
-		user,
-		dependencies,
-		createPrismaNotificationDependencies,
-		(notifications, actor) => getNotifications(actor, notifications),
-	);
+	const notifications =
+		dependencies ?? (await createPrismaNotificationDependencies());
+
+	return notifications.listForUser(user.id);
 }
 
 export async function getUnreadNotificationCountForCurrentUser(
 	user: ServerUserContext,
 	dependencies?: NotificationUnreadCountPort,
 ): Promise<number> {
-	return executeNotificationUseCase(
-		user,
-		dependencies,
-		createPrismaNotificationDependencies,
-		(notifications, actor) => getUnreadNotificationCount(actor, notifications),
-	);
+	const notifications =
+		dependencies ?? (await createPrismaNotificationDependencies());
+
+	return notifications.countUnreadForUser(user.id);
 }
 
 export async function getUnreadNotificationCountForOptionalUser(
@@ -77,12 +63,10 @@ export async function getUnreadNotificationCountForOptionalUser(
 		return 0;
 	}
 
-	return executeNotificationUseCase(
-		user,
-		dependencies,
-		createPrismaNotificationDependencies,
-		(notifications, actor) => getUnreadNotificationCount(actor, notifications),
-	);
+	const notifications =
+		dependencies ?? (await createPrismaNotificationDependencies());
+
+	return notifications.countUnreadForUser(user.id);
 }
 
 export async function readNotificationForCurrentUser(
@@ -90,46 +74,31 @@ export async function readNotificationForCurrentUser(
 	input: NotificationIdInput,
 	dependencies?: NotificationReadPort,
 ): Promise<NotificationView> {
-	return executeNotificationUseCase(
-		user,
-		dependencies,
-		createPrismaNotificationDependencies,
-		(notifications, actor) =>
-			readNotification(
-				{
-					notificationId: input.notificationId,
-					actor,
-				},
-				notifications,
-			),
+	const notifications =
+		dependencies ?? (await createPrismaNotificationDependencies());
+	const notification = await notifications.markAsReadForUser(
+		input.notificationId,
+		user.id,
 	);
+
+	if (!notification) {
+		throw new RequestError("Notification not found", {
+			code: "NOTIFICATION_NOT_FOUND",
+			status: 404,
+		});
+	}
+
+	return notification;
 }
 
 export async function readAllNotificationsForCurrentUser(
 	user: ServerUserContext,
 	dependencies?: NotificationReadAllPort,
 ): Promise<{ readonly count: number }> {
-	return executeNotificationUseCase(
-		user,
-		dependencies,
-		createPrismaNotificationDependencies,
-		(notifications, actor) => readAllNotifications(actor, notifications),
-	);
-}
+	const notifications =
+		dependencies ?? (await createPrismaNotificationDependencies());
 
-async function executeNotificationUseCase<T, TNotifications>(
-	user: NotificationActorContext,
-	dependencies: TNotifications | undefined,
-	createNotifications: () => Promise<TNotifications>,
-	execute: (
-		notifications: TNotifications,
-		actor: Actor,
-	) => Promise<Result<T, NotificationError>>,
-): Promise<T> {
-	const notifications = dependencies ?? (await createNotifications());
-	const result = await execute(notifications, toActor(user));
-
-	return unwrapResultOrThrowRequestError(result);
+	return notifications.markAllAsReadForUser(user.id);
 }
 
 async function createPrismaNotificationDependencies(): Promise<NotificationServiceDependencies> {
@@ -139,11 +108,4 @@ async function createPrismaNotificationDependencies(): Promise<NotificationServi
 	]);
 
 	return new PrismaNotifications(prisma);
-}
-
-function toActor(user: NotificationActorContext): Actor {
-	return {
-		id: user.id,
-		role: user.role,
-	};
 }

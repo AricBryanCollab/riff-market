@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type {
 	NotificationQueryPort,
+	NotificationReadAllPort,
 	NotificationReadPort,
 	NotificationUnreadCountPort,
 } from "@/domains/notifications/application/notification-use-cases";
@@ -10,6 +11,7 @@ import type { RequestError } from "@/server/request-error";
 import {
 	getNotificationsForCurrentUser,
 	getUnreadNotificationCountForOptionalUser,
+	readAllNotificationsForCurrentUser,
 	readNotificationForCurrentUser,
 } from "./notification-service";
 
@@ -77,6 +79,21 @@ describe("notification server service", () => {
 			code: "NOTIFICATION_NOT_FOUND",
 		} satisfies Partial<RequestError>);
 	});
+
+	it("marks all unread notifications for the current user as read", async () => {
+		const notifications = makeNotificationReadAllPort([
+			makeNotification({ id: "notification-1", userId: "customer-1" }),
+			makeNotification({ id: "notification-2", userId: "customer-1" }),
+			makeNotification({ id: "notification-3", userId: "seller-1" }),
+		]);
+
+		await expect(
+			readAllNotificationsForCurrentUser(customerUser, notifications),
+		).resolves.toEqual({ count: 2 });
+		await expect(
+			getUnreadNotificationCountForOptionalUser(customerUser, notifications),
+		).resolves.toBe(0);
+	});
 });
 
 function makeNotificationQueryPort(
@@ -111,6 +128,34 @@ function makeNotificationReadPort(
 
 			return notification ? { ...notification, isRead: true } : null;
 		},
+	};
+}
+
+function makeNotificationReadAllPort(
+	notifications: NotificationView[],
+): NotificationReadAllPort & NotificationUnreadCountPort {
+	const items = [...notifications];
+
+	return {
+		markAllAsReadForUser: async (userId) => {
+			let count = 0;
+
+			for (const [index, notification] of items.entries()) {
+				if (notification.userId !== userId || notification.isRead) {
+					continue;
+				}
+
+				items[index] = { ...notification, isRead: true };
+				count += 1;
+			}
+
+			return { count };
+		},
+		countUnreadForUser: async (userId) =>
+			items.filter(
+				(notification) =>
+					notification.userId === userId && notification.isRead === false,
+			).length,
 	};
 }
 
