@@ -6,7 +6,6 @@ import type {
 import type { DomainEvent } from "@/domains/shared/domain/domain-event";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
 import type { NotificationCreatePort } from "./notification-use-cases";
-import { createNotification } from "./notification-use-cases";
 
 export class NotificationEventHandlerError extends Error {
 	constructor(message: string) {
@@ -45,11 +44,12 @@ export async function createPurchasePlacedNotifications(
 	const purchaseEvent = getPurchasePlacedEvent(input);
 	const sellerOrderEvents = getSellerOrderCreatedEvents(input);
 
-	await createOrThrow(notifications, {
+	await notifications.create({
 		userId: purchaseEvent.payload.customerId,
 		purchaseId: purchaseEvent.payload.purchaseId,
 		sellerOrderId: null,
 		message: `Your purchase #${purchaseEvent.payload.purchaseNumber} has been placed successfully! Total: ${formatMoneyAmountMinor(purchaseEvent.payload.totalAmountCents, purchaseEvent.payload.currencyCode)}`,
+		isRead: false,
 	});
 
 	for (const sellerOrder of input.sellerOrders) {
@@ -60,11 +60,12 @@ export async function createPurchasePlacedNotifications(
 			);
 		}
 
-		await createOrThrow(notifications, {
+		await notifications.create({
 			userId: sellerOrderEvent.payload.sellerId,
 			purchaseId: sellerOrderEvent.payload.purchaseId,
 			sellerOrderId: sellerOrderEvent.payload.sellerOrderId,
 			message: `New seller order for purchase #${purchaseEvent.payload.purchaseNumber}: ${sellerOrder.listingNames.join(", ")}. Amount: ${formatMoneyAmountMinor(sellerOrderEvent.payload.subtotalCents, sellerOrderEvent.payload.currencyCode)}`,
+			isRead: false,
 		});
 	}
 }
@@ -84,23 +85,13 @@ export async function createListingModerationNotification(
 			? `Great News! Your listing ${input.listingName} has been approved and live at the RiffMarket shop`
 			: `Your listing ${input.listingName} has been declined by the admin`;
 
-	await createOrThrow(notifications, {
+	await notifications.create({
 		userId: sellerId,
 		purchaseId: null,
 		sellerOrderId: null,
 		message,
+		isRead: false,
 	});
-}
-
-async function createOrThrow(
-	notifications: NotificationCreatePort,
-	command: Parameters<NotificationCreatePort["create"]>[0],
-) {
-	const result = await createNotification(command, notifications);
-
-	if (!result.ok) {
-		throw new NotificationEventHandlerError(result.error.message);
-	}
 }
 
 function getPurchasePlacedEvent({
