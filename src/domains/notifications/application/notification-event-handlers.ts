@@ -5,7 +5,7 @@ import type {
 } from "@/domains/notifications/dto/notification-event";
 import type { DomainEvent } from "@/domains/shared/domain/domain-event";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
-import type { NotificationCreatePort } from "./notification-use-cases";
+import type { NotificationCreatePort } from "./notification-ports";
 
 export class NotificationEventHandlerError extends Error {
 	constructor(message: string) {

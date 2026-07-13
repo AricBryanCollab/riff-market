@@ -1,10 +1,5 @@
 import type { Prisma, PrismaClient } from "generated/prisma/client";
-import type {
-	NotificationCreatePort,
-	NotificationQueryPort,
-	NotificationReadStatePort,
-	NotificationUnreadCountPort,
-} from "@/domains/notifications/application/notification-use-cases";
+import type { NotificationsPort } from "@/domains/notifications/application/notification-ports";
 import type {
 	CreateNotificationCommand,
 	NotificationView,
@@ -26,13 +21,7 @@ type NotificationRow = Prisma.NotificationGetPayload<{
 	select: typeof notificationViewSelect;
 }>;
 
-export class PrismaNotifications
-	implements
-		NotificationCreatePort,
-		NotificationQueryPort,
-		NotificationUnreadCountPort,
-		NotificationReadStatePort
-{
+export class PrismaNotifications implements NotificationsPort {
 	constructor(private readonly db: NotificationPrisma) {}
 
 	async create(command: CreateNotificationCommand): Promise<NotificationView> {

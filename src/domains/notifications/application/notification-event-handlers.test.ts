@@ -5,7 +5,6 @@ import {
 	createListingModerationNotification,
 	createPurchasePlacedNotifications,
 } from "./notification-event-handlers";
-
 describe("notification event handlers", () => {
 	it("creates buyer and seller notifications from purchase placement events", async () => {
 		const notifications = new CreatedNotifications();
