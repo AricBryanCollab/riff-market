@@ -17,9 +17,7 @@ import {
 	type Result,
 } from "@/domains/shared/domain/result";
 
-export type OrderQueryErrorCode =
-	| "ORDER_QUERY_UNAUTHORIZED"
-	| "ORDER_QUERY_NOT_FOUND";
+export type OrderQueryErrorCode = "ORDER_QUERY_NOT_FOUND";
 
 export type OrderQueryError = AppError<OrderQueryErrorCode>;
 
@@ -31,6 +29,9 @@ export interface SellerOrderDashboardPort {
 	listForSeller(sellerId: string): Promise<SellerOrderView[]>;
 	listAllForAdmin(): Promise<SellerOrderView[]>;
 }
+
+export type OrderListQueryPort = BuyerPurchaseHistoryPort &
+	SellerOrderDashboardPort;
 
 export interface OrderDetailQueryPort {
 	findPurchaseForCustomer(
@@ -44,40 +45,18 @@ export interface OrderDetailQueryPort {
 	findForAdmin(orderId: string): Promise<OrderView | null>;
 }
 
-export async function listBuyerPurchaseHistory(
+export async function listOrdersForActor(
 	actor: Actor,
-	purchases: BuyerPurchaseHistoryPort,
-): Promise<Result<BuyerPurchaseView[], OrderQueryError>> {
-	if (actor.role !== "CUSTOMER") {
-		return err(
-			orderQueryError(
-				"ORDER_QUERY_UNAUTHORIZED",
-				"Only customers can read purchase history",
-			),
-		);
+	queries: OrderListQueryPort,
+): Promise<Result<OrderView[], OrderQueryError>> {
+	switch (actor.role) {
+		case "CUSTOMER":
+			return ok(await queries.listForCustomer(actor.id));
+		case "SELLER":
+			return ok(await queries.listForSeller(actor.id));
+		case "ADMIN":
+			return ok(await queries.listAllForAdmin());
 	}
-
-	return ok(await purchases.listForCustomer(actor.id));
-}
-
-export async function listSellerOrderDashboard(
-	actor: Actor,
-	sellerOrders: SellerOrderDashboardPort,
-): Promise<Result<SellerOrderView[], OrderQueryError>> {
-	if (actor.role !== "SELLER" && actor.role !== "ADMIN") {
-		return err(
-			orderQueryError(
-				"ORDER_QUERY_UNAUTHORIZED",
-				"Only sellers and admins can read seller orders",
-			),
-		);
-	}
-
-	if (actor.role === "ADMIN") {
-		return ok(await sellerOrders.listAllForAdmin());
-	}
-
-	return ok(await sellerOrders.listForSeller(actor.id));
 }
 
 export async function getOrderDetail(

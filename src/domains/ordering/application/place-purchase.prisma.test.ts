@@ -3,8 +3,7 @@ import { beforeEach, expect, it } from "vitest";
 import { changeSellerOrderStatus } from "@/domains/ordering/application/change-seller-order-status";
 import {
 	getOrderDetail,
-	listBuyerPurchaseHistory,
-	listSellerOrderDashboard,
+	listOrdersForActor,
 } from "@/domains/ordering/application/order-queries";
 import type {
 	PurchaseNumberGeneratorPort,
@@ -267,7 +266,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		}
 
 		const queries = new PrismaOrderQueries(db);
-		const buyerHistory = await listBuyerPurchaseHistory(
+		const buyerHistory = await listOrdersForActor(
 			{
 				id: "customer-1",
 				role: "CUSTOMER",
@@ -312,7 +311,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 			],
 		});
 
-		const sellerDashboard = await listSellerOrderDashboard(
+		const sellerDashboard = await listOrdersForActor(
 			{
 				id: "seller-1",
 				role: "SELLER",

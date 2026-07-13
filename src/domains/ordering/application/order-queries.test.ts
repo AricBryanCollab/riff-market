@@ -1,13 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-	type BuyerPurchaseHistoryPort,
 	deriveBuyerOrderSummaryStatus,
 	getOrderDetail,
-	listBuyerPurchaseHistory,
-	listSellerOrderDashboard,
 	type OrderDetailQueryPort,
-	type SellerOrderDashboardPort,
 } from "@/domains/ordering/application/order-queries";
 import type {
 	BuyerPurchaseView,
@@ -17,109 +13,6 @@ import type {
 
 const customerOrder = makeBuyerPurchaseView({ id: "purchase-1" });
 const sellerOrder = makeSellerOrderView({ id: "seller-order-1" });
-
-describe("listBuyerPurchaseHistory", () => {
-	it("allows customers to read only their own purchase history", async () => {
-		const port = new FakeBuyerPurchaseHistoryPort([customerOrder]);
-
-		const result = await listBuyerPurchaseHistory(
-			{
-				id: "customer-1",
-				role: "CUSTOMER",
-			},
-			port,
-		);
-
-		expect(result).toEqual({
-			ok: true,
-			value: [customerOrder],
-		});
-		expect(port.requestedCustomerIds).toEqual(["customer-1"]);
-	});
-
-	it("rejects non-customer purchase history reads", async () => {
-		const port = new FakeBuyerPurchaseHistoryPort([customerOrder]);
-
-		const result = await listBuyerPurchaseHistory(
-			{
-				id: "seller-1",
-				role: "SELLER",
-			},
-			port,
-		);
-
-		expect(result).toMatchObject({
-			ok: false,
-			error: {
-				code: "ORDER_QUERY_UNAUTHORIZED",
-				kind: "authorization",
-			},
-		});
-		expect(port.requestedCustomerIds).toEqual([]);
-	});
-});
-
-describe("listSellerOrderDashboard", () => {
-	it("allows sellers to read their seller orders", async () => {
-		const port = new FakeSellerOrderDashboardPort([sellerOrder]);
-
-		const result = await listSellerOrderDashboard(
-			{
-				id: "seller-1",
-				role: "SELLER",
-			},
-			port,
-		);
-
-		expect(result).toEqual({
-			ok: true,
-			value: [sellerOrder],
-		});
-		expect(port.requestedSellerIds).toEqual(["seller-1"]);
-		expect(port.adminReadCount).toBe(0);
-	});
-
-	it("allows admins to read all seller orders", async () => {
-		const port = new FakeSellerOrderDashboardPort([sellerOrder]);
-
-		const result = await listSellerOrderDashboard(
-			{
-				id: "admin-1",
-				role: "ADMIN",
-			},
-			port,
-		);
-
-		expect(result).toEqual({
-			ok: true,
-			value: [sellerOrder],
-		});
-		expect(port.requestedSellerIds).toEqual([]);
-		expect(port.adminReadCount).toBe(1);
-	});
-
-	it("rejects customer seller-order dashboard reads", async () => {
-		const port = new FakeSellerOrderDashboardPort([sellerOrder]);
-
-		const result = await listSellerOrderDashboard(
-			{
-				id: "customer-1",
-				role: "CUSTOMER",
-			},
-			port,
-		);
-
-		expect(result).toMatchObject({
-			ok: false,
-			error: {
-				code: "ORDER_QUERY_UNAUTHORIZED",
-				kind: "authorization",
-			},
-		});
-		expect(port.requestedSellerIds).toEqual([]);
-		expect(port.adminReadCount).toBe(0);
-	});
-});
 
 describe("getOrderDetail", () => {
 	it("allows customers to read their own purchase detail", async () => {
@@ -258,37 +151,6 @@ describe("deriveBuyerOrderSummaryStatus", () => {
 		expect(deriveBuyerOrderSummaryStatus(input)).toBe(expected);
 	});
 });
-
-class FakeBuyerPurchaseHistoryPort implements BuyerPurchaseHistoryPort {
-	readonly requestedCustomerIds: string[] = [];
-
-	constructor(private readonly orders: BuyerPurchaseView[]) {}
-
-	async listForCustomer(customerId: string) {
-		this.requestedCustomerIds.push(customerId);
-
-		return this.orders;
-	}
-}
-
-class FakeSellerOrderDashboardPort implements SellerOrderDashboardPort {
-	readonly requestedSellerIds: string[] = [];
-	adminReadCount = 0;
-
-	constructor(private readonly orders: SellerOrderView[]) {}
-
-	async listForSeller(sellerId: string) {
-		this.requestedSellerIds.push(sellerId);
-
-		return this.orders;
-	}
-
-	async listAllForAdmin() {
-		this.adminReadCount += 1;
-
-		return this.orders;
-	}
-}
 
 class FakeOrderDetailQueryPort implements OrderDetailQueryPort {
 	readonly requests: unknown[][] = [];

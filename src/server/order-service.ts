@@ -4,12 +4,10 @@ import {
 	type SellerOrderStatusRepositoryPort,
 } from "@/domains/ordering/application/change-seller-order-status";
 import {
-	type BuyerPurchaseHistoryPort,
 	getOrderDetail,
-	listBuyerPurchaseHistory,
-	listSellerOrderDashboard,
+	listOrdersForActor,
 	type OrderDetailQueryPort,
-	type SellerOrderDashboardPort,
+	type OrderListQueryPort,
 } from "@/domains/ordering/application/order-queries";
 import type { SellerOrderStatus } from "@/domains/ordering/domain/seller-order";
 import { sellerStatusCommands } from "@/domains/ordering/domain/seller-order";
@@ -62,8 +60,6 @@ export type SellerOrderStatusChangeResponse = {
 	readonly trackingNumber: string | null;
 };
 
-type OrderListQueryPort = BuyerPurchaseHistoryPort & SellerOrderDashboardPort;
-
 type PrismaOrderQueryPort = OrderListQueryPort & OrderDetailQueryPort;
 
 export function validateOrderDetailInput(data: unknown): OrderDetailInput {
@@ -96,22 +92,10 @@ export async function listOrdersForCurrentUser(
 	user: ServerUserContext,
 	queries?: OrderListQueryPort,
 ): Promise<OrderView[]> {
-	const actor = toActor(user);
 	const orderQueries = queries ?? (await createPrismaOrderQueries());
+	const result = await listOrdersForActor(toActor(user), orderQueries);
 
-	switch (actor.role) {
-		case "CUSTOMER": {
-			const result = await listBuyerPurchaseHistory(actor, orderQueries);
-
-			return unwrapResultOrThrowRequestError(result);
-		}
-		case "SELLER":
-		case "ADMIN": {
-			const result = await listSellerOrderDashboard(actor, orderQueries);
-
-			return unwrapResultOrThrowRequestError(result);
-		}
-	}
+	return unwrapResultOrThrowRequestError(result);
 }
 
 export async function getOrderDetailForCurrentUser(
