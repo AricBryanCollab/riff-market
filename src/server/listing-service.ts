@@ -9,11 +9,12 @@ import {
 	type UpdateListingCommand,
 	updateListing,
 } from "@/domains/listings/application/manage-listing";
-import {
-	type ListingModerationResult,
-	type ModerateListingCommand,
-	moderateListing,
+import type {
+	ListingModerationError,
+	ListingModerationResult,
+	ModerateListingCommand,
 } from "@/domains/listings/application/moderate-listing";
+import { moderateListing } from "@/domains/listings/application/moderate-listing";
 import type {
 	ListingMutationResponseDto,
 	ListingRemovalResponseDto,
@@ -23,6 +24,7 @@ import {
 	updateListingFormSchema,
 } from "@/domains/listings/dto/listing-form";
 import type { Actor } from "@/domains/shared/domain/actor";
+import type { Result } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	RequestError,
@@ -49,14 +51,10 @@ export type RemoveListingResponse = ListingRemovalResponseDto;
 
 export type ListingCommandServiceDependencies = ListingCommandDependencies<File>;
 
-export type ListingModerationWorkflow = {
-	readonly moderateListing: (
-		actor: Actor,
-		command: ModerateListingCommand,
-	) => ReturnType<typeof moderateListing>;
-};
-
-export type ListingModerationServiceDependencies = ListingModerationWorkflow;
+type ModerateListingRunner = (
+	actor: Actor,
+	command: ModerateListingCommand,
+) => Promise<Result<ListingModerationResult, ListingModerationError>>;
 
 export function validateModerateListingInput(
 	data: unknown,
@@ -218,13 +216,13 @@ export async function removeListingForCurrentUser(
 export async function moderateListingForCurrentUser(
 	user: ServerUserContext,
 	input: ModerateListingInput,
-	dependencies?: ListingModerationServiceDependencies,
+	runModerateListing?: ModerateListingRunner,
 ): Promise<ListingModerationResult> {
-	const moderationWorkflow =
-		dependencies ?? (await createPrismaListingModerationDependencies());
+	const moderateListingRunner =
+		runModerateListing ?? (await createPrismaListingModerationRunner());
 	const actor = toActor(user);
 	const command = toCommand(input);
-	const result = await moderationWorkflow.moderateListing(actor, command);
+	const result = await moderateListingRunner(actor, command);
 
 	return unwrapResultOrThrowRequestError(result);
 }
@@ -247,23 +245,21 @@ async function createListingCommandInfrastructure(): Promise<ListingCommandServi
 	};
 }
 
-async function createPrismaListingModerationDependencies(): Promise<ListingModerationServiceDependencies> {
+async function createPrismaListingModerationRunner(): Promise<ModerateListingRunner> {
 	const [{ prisma }, moderation] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/listings/infrastructure/prisma-listing-moderation"),
 	]);
 
-	return {
-		moderateListing: (actor, command) =>
-			prisma.$transaction((transaction) =>
-				moderateListing(
-					actor,
-					command,
-					new moderation.PrismaListingModerationRepository(transaction),
-					new moderation.PrismaListingModerationNotifier(transaction),
-				),
+	return (actor, command) =>
+		prisma.$transaction((transaction) =>
+			moderateListing(
+				actor,
+				command,
+				new moderation.PrismaListingModerationRepository(transaction),
+				new moderation.PrismaListingModerationNotifier(transaction),
 			),
-	};
+		);
 }
 
 function toActor(user: ServerUserContext): Actor {

@@ -5,18 +5,13 @@ import type {
 	ListingModerationNotifierPort,
 	ListingModerationRepositoryPort,
 	ListingModerationResult,
-	ListingModerationWorkflowPort,
-	ModerateListingCommand,
-	ModerateListingResult,
 } from "@/domains/listings/application/moderate-listing";
-import { moderateListing } from "@/domains/listings/application/moderate-listing";
 import type {
 	ListingSnapshot,
 	ListingStatus,
 } from "@/domains/listings/domain/listing";
 import { createListingModerationNotification } from "@/domains/notifications/application/notification-event-handlers";
 import { PrismaNotifications } from "@/domains/notifications/infrastructure/prisma-notifications";
-import type { Actor } from "@/domains/shared/domain/actor";
 import { Money } from "@/domains/shared/domain/money";
 import { toImageAssetUrls } from "@/utils/image-asset-ref";
 
@@ -43,26 +38,6 @@ const listingModerationSelect = {
 		},
 	},
 } satisfies Prisma.ListingSelect;
-
-export class PrismaListingModerationWorkflow
-	implements ListingModerationWorkflowPort
-{
-	constructor(private readonly db: PrismaClient) {}
-
-	async moderate(
-		actor: Actor,
-		command: ModerateListingCommand,
-	): Promise<ModerateListingResult> {
-		return this.db.$transaction((transaction) =>
-			moderateListing(
-				actor,
-				command,
-				new PrismaListingModerationRepository(transaction),
-				new PrismaListingModerationNotifier(transaction),
-			),
-		);
-	}
-}
 
 export class PrismaListingModerationRepository
 	implements ListingModerationRepositoryPort

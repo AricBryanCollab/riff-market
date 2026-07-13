@@ -12,27 +12,25 @@ function imageFile(name: string) {
 describe("listing moderation", () => {
 	it("maps admin user and approve input into workflow command", async () => {
 		const calls: unknown[] = [];
-		const workflow = {
-			moderateListing: async (actor: unknown, command: unknown) => {
-				calls.push({ actor, command });
+		const runModerateListing = async (actor: unknown, command: unknown) => {
+			calls.push({ actor, command });
 
-				return {
-					ok: true as const,
-					value: {
-						id: "listing-1",
-						name: "Telecaster",
-						sellerId: "seller-1",
-						status: "APPROVED" as const,
-						isApproved: true,
-					},
-				};
-			},
+			return {
+				ok: true as const,
+				value: {
+					id: "listing-1",
+					name: "Telecaster",
+					sellerId: "seller-1",
+					status: "APPROVED" as const,
+					isApproved: true,
+				},
+			};
 		};
 
 		await moderateListingForCurrentUser(
 			adminUser(),
 			{ listingId: "listing-1", decision: "APPROVE" },
-			workflow,
+			runModerateListing,
 		);
 
 		expect(calls).toEqual([
@@ -44,22 +42,20 @@ describe("listing moderation", () => {
 	});
 
 	it("maps workflow failures into request errors", async () => {
-		const workflow = {
-			moderateListing: async () => ({
-				ok: false as const,
-				error: {
-					kind: "not-found" as const,
-					code: "MODERATE_LISTING_NOT_FOUND" as const,
-					message: "Listing not found",
-				},
-			}),
-		};
+		const runModerateListing = async () => ({
+			ok: false as const,
+			error: {
+				kind: "not-found" as const,
+				code: "MODERATE_LISTING_NOT_FOUND" as const,
+				message: "Listing not found",
+			},
+		});
 
 		await expect(
 			moderateListingForCurrentUser(
 				adminUser(),
 				{ listingId: "missing", decision: "APPROVE" },
-				workflow,
+				runModerateListing,
 			),
 		).rejects.toMatchObject({
 			name: "RequestError",

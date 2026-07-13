@@ -7,6 +7,7 @@ import {
 	type ListingModerationNotifierPort,
 	type ListingModerationRepositoryPort,
 	type ListingModerationResult,
+	type ModerateListingCommand,
 	moderateListing,
 } from "@/domains/listings/application/moderate-listing";
 import { PrismaListingCommandRepository } from "@/domains/listings/infrastructure/prisma-listing-commands";
@@ -15,10 +16,10 @@ import {
 	PrismaListingModerationRepository,
 } from "@/domains/listings/infrastructure/prisma-listing-moderation";
 import { PrismaNotifications } from "@/domains/notifications/infrastructure/prisma-notifications";
+import type { Actor } from "@/domains/shared/domain/actor";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	createListingForCurrentUser,
-	type ListingModerationServiceDependencies,
 	moderateListingForCurrentUser,
 	removeListingForCurrentUser,
 	updateListingForCurrentUser,
@@ -195,12 +196,12 @@ describeDb("listing service Prisma integration", () => {
 		await moderateListingForCurrentUser(
 			adminUser(),
 			{ listingId: "listing-approve", decision: "APPROVE" },
-			moderationDependencies(db),
+			moderationRunner(db),
 		);
 		await moderateListingForCurrentUser(
 			adminUser(),
 			{ listingId: "listing-decline", decision: "DECLINE" },
-			moderationDependencies(db),
+			moderationRunner(db),
 		);
 
 		const approved = await db.listing.findUniqueOrThrow({
@@ -240,7 +241,7 @@ describeDb("listing service Prisma integration", () => {
 			moderateListingForCurrentUser(
 				adminUser(),
 				{ listingId: "listing-rollback", decision: "APPROVE" },
-				failingModerationDependencies(db),
+				failingModerationRunner(db),
 			),
 		).rejects.toThrow("Notification write failed");
 
@@ -270,7 +271,7 @@ describeDb("listing service Prisma integration", () => {
 			moderateListingForCurrentUser(
 				adminUser(),
 				{ listingId: "listing-stale", decision: "DECLINE" },
-				staleStatusModerationDependencies(db),
+				staleStatusModerationRunner(db),
 			),
 		).rejects.toMatchObject({
 			name: "RequestError",
@@ -428,50 +429,38 @@ function commandDependencies(
 	};
 }
 
-function moderationDependencies(
-	db: PrismaClient,
-): ListingModerationServiceDependencies {
-	return {
-		moderateListing: (actor, command) =>
-			db.$transaction((transaction) =>
-				moderateListing(
-					actor,
-					command,
-					new PrismaListingModerationRepository(transaction),
-					new PrismaListingModerationNotifier(transaction),
-				),
-			),
-	};
-}
-
-function failingModerationDependencies(
-	db: PrismaClient,
-): ListingModerationServiceDependencies {
-	return {
-		moderateListing: (actor, command) =>
-			db.$transaction((transaction) =>
-				moderateListing(
-					actor,
-					command,
-					new PrismaListingModerationRepository(transaction),
-					new FailingListingModerationNotifier(),
-				),
-			),
-	};
-}
-
-function staleStatusModerationDependencies(
-	db: PrismaClient,
-): ListingModerationServiceDependencies {
-	return {
-		moderateListing: (actor, command) =>
+function moderationRunner(db: PrismaClient) {
+	return (actor: Actor, command: ModerateListingCommand) =>
+		db.$transaction((transaction) =>
 			moderateListing(
 				actor,
 				command,
-				new StaleStatusListingModerationRepository(db),
-				new PrismaListingModerationNotifier(db),
+				new PrismaListingModerationRepository(transaction),
+				new PrismaListingModerationNotifier(transaction),
 			),
-	};
+		);
+}
+
+function failingModerationRunner(db: PrismaClient) {
+	return (actor: Actor, command: ModerateListingCommand) =>
+		db.$transaction((transaction) =>
+			moderateListing(
+				actor,
+				command,
+				new PrismaListingModerationRepository(transaction),
+				new FailingListingModerationNotifier(),
+			),
+		);
+}
+
+function staleStatusModerationRunner(db: PrismaClient) {
+	return (actor: Actor, command: ModerateListingCommand) =>
+		moderateListing(
+			actor,
+			command,
+			new StaleStatusListingModerationRepository(db),
+			new PrismaListingModerationNotifier(db),
+		);
 }
 
 class StaleStatusListingModerationRepository

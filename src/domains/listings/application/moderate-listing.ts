@@ -62,13 +62,6 @@ export interface ListingModerationNotifierPort {
 	): Promise<void>;
 }
 
-export interface ListingModerationWorkflowPort {
-	moderate(
-		actor: Actor,
-		command: ModerateListingCommand,
-	): Promise<ModerateListingResult>;
-}
-
 export type ListingApprovedEvent = Extract<
 	ListingLifecycleEvent,
 	{ readonly eventName: "ListingApproved" }
