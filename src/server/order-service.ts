@@ -25,28 +25,18 @@ const orderDetailInputSchema = z.object({
 	orderId: z.string().trim().min(1, "Order ID is required"),
 });
 
-const changeSellerOrderStatusInputSchema = z
-	.object({
-		sellerOrderId: z.string().trim().min(1, "Seller order ID is required"),
-		status: z.enum(sellerOrderCommandStatuses),
-		trackingNumber: z.preprocess((value) => {
-			if (typeof value !== "string") {
-				return value;
-			}
-
-			const trimmed = value.trim();
-			return trimmed.length > 0 ? trimmed : undefined;
-		}, z.string().optional().nullable()),
-	})
-	.superRefine((input, context) => {
-		if (input.status === "SHIPPED" && !input.trackingNumber) {
-			context.addIssue({
-				code: "custom",
-				path: ["trackingNumber"],
-				message: "Tracking number is required to ship seller order",
-			});
+const changeSellerOrderStatusInputSchema = z.object({
+	sellerOrderId: z.string().trim().min(1, "Seller order ID is required"),
+	status: z.enum(sellerOrderCommandStatuses),
+	trackingNumber: z.preprocess((value) => {
+		if (typeof value !== "string") {
+			return value;
 		}
-	});
+
+		const trimmed = value.trim();
+		return trimmed.length > 0 ? trimmed : undefined;
+	}, z.string().optional().nullable()),
+});
 
 export type OrderDetailInput = z.infer<typeof orderDetailInputSchema>;
 export type ChangeSellerOrderStatusInput = z.infer<

@@ -61,16 +61,6 @@ describe("order server service", () => {
 		});
 	});
 
-	it("requires a tracking number before shipping", () => {
-		expect(() => {
-			validateChangeSellerOrderStatusInput({
-				sellerOrderId: "seller-order-1",
-				status: "SHIPPED",
-				trackingNumber: " ",
-			});
-		}).toThrow(RequestError);
-	});
-
 	it("trims tracking numbers for shipping commands", () => {
 		const input = validateChangeSellerOrderStatusInput({
 			sellerOrderId: " seller-order-1 ",
@@ -82,6 +72,23 @@ describe("order server service", () => {
 			sellerOrderId: "seller-order-1",
 			status: "SHIPPED",
 			trackingNumber: "TRACK-123",
+		});
+	});
+
+	it("maps missing tracking numbers for shipping into request errors", async () => {
+		await expect(
+			changeSellerOrderStatusForCurrentUser(
+				sellerUser,
+				{
+					sellerOrderId: "seller-order-1",
+					status: "SHIPPED",
+				},
+				new MissingSellerOrderStatusRepository(),
+			),
+		).rejects.toMatchObject({
+			name: "RequestError",
+			code: "CHANGE_SELLER_ORDER_STATUS_INVALID_COMMAND",
+			message: "Tracking number is required to ship seller order",
 		});
 	});
 
