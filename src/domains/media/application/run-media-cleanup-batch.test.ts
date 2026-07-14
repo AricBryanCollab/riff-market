@@ -7,7 +7,7 @@ import {
 } from "@/domains/media/domain/media-cleanup-job";
 import {
 	type MediaCleanupBatchPorts,
-	runMediaCleanupBatchUseCase,
+	runMediaCleanupBatch,
 } from "./run-media-cleanup-batch";
 
 const fixedNow = new Date("2026-06-09T10:00:00.000Z");
@@ -232,7 +232,7 @@ function createFakeCleanupPorts({
 	};
 }
 
-describe("runMediaCleanupBatchUseCase", () => {
+describe("runMediaCleanupBatch", () => {
 	it("schedules a retry after a temporary target deletion failure", async () => {
 		const jobs = [makeJob()];
 		const { ports } = createFakeCleanupPorts({
@@ -240,7 +240,7 @@ describe("runMediaCleanupBatchUseCase", () => {
 			deleteError: new Error("network down"),
 		});
 
-		const summary = await runMediaCleanupBatchUseCase({
+		const summary = await runMediaCleanupBatch({
 			workerId: "worker-1",
 			ports,
 		});
@@ -271,7 +271,7 @@ describe("runMediaCleanupBatchUseCase", () => {
 			deleteError: new Error("still down"),
 		});
 
-		const summary = await runMediaCleanupBatchUseCase({
+		const summary = await runMediaCleanupBatch({
 			workerId: "worker-1",
 			ports,
 		});
@@ -305,7 +305,7 @@ describe("runMediaCleanupBatchUseCase", () => {
 		];
 		const { ports } = createFakeCleanupPorts({ jobs });
 
-		const summary = await runMediaCleanupBatchUseCase({
+		const summary = await runMediaCleanupBatch({
 			workerId: "worker-1",
 			ports,
 		});
@@ -336,7 +336,7 @@ describe("runMediaCleanupBatchUseCase", () => {
 		];
 		const { deletedTargets, ports } = createFakeCleanupPorts({ jobs });
 
-		const summary = await runMediaCleanupBatchUseCase({
+		const summary = await runMediaCleanupBatch({
 			workerId: "worker-1",
 			limit: 2,
 			ports,
@@ -380,7 +380,7 @@ describe("runMediaCleanupBatchUseCase", () => {
 			expiredExhaustedJobs: [exhaustedJob],
 		});
 
-		const summary = await runMediaCleanupBatchUseCase({
+		const summary = await runMediaCleanupBatch({
 			workerId: "worker-1",
 			ports,
 		});

@@ -1,4 +1,4 @@
-import type { CleanupImageAssetRef } from "@/types/image-asset";
+import type { CleanupImageAssetRef } from "@/domains/shared/domain/image-asset";
 
 export type StageListingMediaCleanupCommand = {
 	readonly cleanupBatchId: string;

@@ -1,6 +1,9 @@
 import type { ListingStatus } from "@/domains/listings/domain/listing";
+import type {
+	ListingCategory,
+	ListingCondition,
+} from "@/domains/listings/domain/listing-attributes";
 import type { ListingImageDto } from "@/domains/listings/dto/listing-view";
-import type { ListingCategory, ListingCondition } from "@/types/enum";
 
 export type ListingFormDraftFields = {
 	readonly name: string;

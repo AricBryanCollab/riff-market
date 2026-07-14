@@ -35,7 +35,7 @@ import {
 	seedPurchaseWithSellerOrders,
 	setupPrismaTestDatabase,
 } from "@/test/prisma-vitest-support";
-import type { ImageAssetRef } from "@/types/image-asset";
+import type { ImageAssetRef } from "@/domains/shared/domain/image-asset";
 
 describeDb("listing service Prisma integration", () => {
 	let db: PrismaClient;

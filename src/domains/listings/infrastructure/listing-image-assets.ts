@@ -7,9 +7,12 @@ import {
 	type ListingMediaCleanupStagingPort,
 	stageListingMediaForCleanup,
 } from "@/domains/media/application/stage-listing-media-cleanup";
+import type {
+	CleanupImageAssetRef,
+	ImageAssetRef,
+} from "@/domains/shared/domain/image-asset";
 import { env } from "@/env";
 import type { CloudinaryUploadResult } from "@/types/cloudinary";
-import type { CleanupImageAssetRef, ImageAssetRef } from "@/types/image-asset";
 import { unsignedUploadImage } from "@/utils/cloudinary";
 import { tryDeleteCloudinaryImageAssets } from "@/utils/cloudinary-assets";
 import { compressImage } from "@/utils/compress-image";

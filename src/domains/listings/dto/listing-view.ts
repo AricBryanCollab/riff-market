@@ -1,5 +1,8 @@
 import type { ListingStatus } from "@/domains/listings/domain/listing";
-import type { ListingCategory, ListingCondition } from "@/types/enum";
+import type {
+	ListingCategory,
+	ListingCondition,
+} from "@/domains/listings/domain/listing-attributes";
 
 export type ListingViewStatus = ListingStatus;
 export type ListingCountStatus = Extract<

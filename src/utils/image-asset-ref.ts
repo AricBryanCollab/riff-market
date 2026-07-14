@@ -1,6 +1,9 @@
 import { Prisma } from "generated/prisma/client";
 import z from "zod";
-import type { CleanupImageAssetRef, ImageAssetRef } from "@/types/image-asset";
+import type {
+	CleanupImageAssetRef,
+	ImageAssetRef,
+} from "@/domains/shared/domain/image-asset";
 
 const LEGACY_IMAGE_ASSET_PROVIDER = "cloudinary";
 const LEGACY_IMAGE_ASSET_TYPE = "image";

@@ -10,7 +10,7 @@ import type { Actor } from "@/domains/shared/domain/actor";
 import { Money } from "@/domains/shared/domain/money";
 import type { AppError, Result } from "@/domains/shared/domain/result";
 import { err, ok } from "@/domains/shared/domain/result";
-import type { ImageAssetRef } from "@/types/image-asset";
+import type { ImageAssetRef } from "@/domains/shared/domain/image-asset";
 import { toListingMoneyPersistence } from "./listing-money";
 
 export type ListingMutationFields = {

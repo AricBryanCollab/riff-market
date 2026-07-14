@@ -10,7 +10,7 @@ import {
 	type SellerOrderStatus,
 } from "generated/prisma/client";
 import { MARKETPLACE_CURRENCY_CODE } from "@/domains/shared/domain/currency";
-import type { ImageAssetRef } from "@/types/image-asset";
+import type { ImageAssetRef } from "@/domains/shared/domain/image-asset";
 
 const databaseUrlSource = "TEST_DATABASE_URL";
 const safeTestDatabaseNamePattern =

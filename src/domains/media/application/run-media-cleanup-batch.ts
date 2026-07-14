@@ -78,7 +78,7 @@ export type MediaCleanupBatchSummary = {
 	expiredFailed: number;
 };
 
-export type RunMediaCleanupBatchUseCaseOptions = {
+export type RunMediaCleanupBatchOptions = {
 	limit?: number;
 	workerId: string;
 	lockMs?: number;
@@ -210,13 +210,13 @@ async function processClaimedMediaCleanupJob({
 	}
 }
 
-export async function runMediaCleanupBatchUseCase({
+export async function runMediaCleanupBatch({
 	limit: limitOption,
 	workerId,
 	lockMs: lockMsOption,
 	deleteTimeoutMs: deleteTimeoutMsOption,
 	ports,
-}: RunMediaCleanupBatchUseCaseOptions): Promise<MediaCleanupBatchSummary> {
+}: RunMediaCleanupBatchOptions): Promise<MediaCleanupBatchSummary> {
 	const limit = normalizePositiveInteger(
 		limitOption,
 		DEFAULT_MEDIA_CLEANUP_BATCH_LIMIT,

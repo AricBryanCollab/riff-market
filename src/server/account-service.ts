@@ -13,7 +13,6 @@ import {
 	type AccountProfilePictureWritePort,
 	updateAccountProfilePicture,
 } from "@/domains/accounts/application/account-profile-picture";
-import type { AccountProfile } from "@/domains/accounts/dto/account-profile";
 import { PrismaAccountProfiles } from "@/domains/accounts/infrastructure/prisma-account-profiles";
 import { logger } from "@/lib/logger";
 import {
@@ -90,7 +89,7 @@ export async function getCurrentUser(
 		});
 	}
 
-	return toUserProfile(account);
+	return account;
 }
 
 export async function getOptionalCurrentUser(
@@ -108,7 +107,7 @@ export async function getOptionalCurrentUser(
 		return null;
 	}
 
-	return toUserProfile(account);
+	return account;
 }
 
 export async function updateCurrentUser(
@@ -121,7 +120,7 @@ export async function updateCurrentUser(
 		accounts ?? (await createPrismaAccountProfiles()),
 	);
 
-	return toUserProfile(unwrapResultOrThrowRequestError(result));
+	return unwrapResultOrThrowRequestError(result);
 }
 
 export async function deleteCurrentUser(
@@ -161,10 +160,6 @@ export function toProfilePictureResponse(profilePic: string | null) {
 		message: "Profile picture has been updated successfully",
 		profilePic,
 	};
-}
-
-function toUserProfile(account: AccountProfile): UserProfile {
-	return { ...account };
 }
 
 async function createPrismaAccountProfiles() {

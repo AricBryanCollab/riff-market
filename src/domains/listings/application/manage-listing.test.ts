@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { Money } from "@/domains/shared/domain/money";
-import type { ImageAssetRef } from "@/types/image-asset";
+import type { ImageAssetRef } from "@/domains/shared/domain/image-asset";
 import {
 	createListing,
 	type ListingCommandDependencies,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { CleanupImageAssetRef } from "@/types/image-asset";
+import type { CleanupImageAssetRef } from "@/domains/shared/domain/image-asset";
 import {
 	type ListingMediaCleanupStagingPort,
 	type StagedListingMediaCleanupJob,

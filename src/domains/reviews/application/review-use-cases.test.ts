@@ -16,12 +16,12 @@ describe("review use cases", () => {
 		const actor: Actor = { id: "customer-1", role: "CUSTOMER" };
 
 		const created = await createListingReview(
+			actor,
 			{
 				listingId: " listing-1 ",
 				rating: 5,
 				comment: " Exactly as described. ",
 			},
-			actor,
 			reviews,
 		);
 
@@ -41,12 +41,12 @@ describe("review use cases", () => {
 
 		await expect(
 			createListingReview(
+				{ id: "customer-1", role: "CUSTOMER" },
 				{
 					listingId: "",
 					rating: 5,
 					comment: "Valid comment.",
 				},
-				{ id: "customer-1", role: "CUSTOMER" },
 				reviews,
 			),
 		).resolves.toEqual({
@@ -60,12 +60,12 @@ describe("review use cases", () => {
 
 		await expect(
 			createListingReview(
+				{ id: "customer-1", role: "CUSTOMER" },
 				{
 					listingId: "listing-1",
 					rating: 6,
 					comment: "Too many stars.",
 				},
-				{ id: "customer-1", role: "CUSTOMER" },
 				reviews,
 			),
 		).resolves.toEqual({
@@ -86,23 +86,23 @@ describe("review use cases", () => {
 
 		await expect(
 			createListingReview(
+				actor,
 				{
 					listingId: "listing-1",
 					rating: 5,
 					comment: "First review.",
 				},
-				actor,
 				reviews,
 			),
 		).resolves.toMatchObject({ ok: true });
 
 		const duplicate = await createListingReview(
+			actor,
 			{
 				listingId: "listing-1",
 				rating: 4,
 				comment: "Changed my mind.",
 			},
-			actor,
 			reviews,
 		);
 

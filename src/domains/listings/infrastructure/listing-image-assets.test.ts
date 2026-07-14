@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, type Mock, vi } from "vitest";
 import type { ListingMediaCleanupStagingPort } from "@/domains/media/application/stage-listing-media-cleanup";
-import type { ImageAssetRef } from "@/types/image-asset";
+import type { ImageAssetRef } from "@/domains/shared/domain/image-asset";
 
 const { cloudinaryMock, compressImageMock } = vi.hoisted(() => {
 	const cloudinaryMock = {

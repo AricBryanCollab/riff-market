@@ -1,6 +1,6 @@
 import {
-	type ReviewCreateData,
 	Review,
+	type ReviewCreateData,
 	ReviewDomainError,
 } from "@/domains/reviews/domain/review";
 import type { ListingReview } from "@/domains/reviews/dto/listing-review";
@@ -31,12 +31,12 @@ export type ListingReviewPort = ListingReviewCreatePort &
 	ListingReviewQueryPort;
 
 export async function createListingReview(
+	actor: Actor,
 	command: {
 		readonly listingId: string;
 		readonly rating: number;
 		readonly comment: string;
 	},
-	actor: Actor,
 	reviews: ListingReviewCreatePort,
 ): Promise<Result<ListingReview, ReviewError>> {
 	let review: Review;

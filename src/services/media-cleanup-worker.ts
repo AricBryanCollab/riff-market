@@ -7,8 +7,8 @@ import {
 	formatMediaCleanupJobError,
 	type MediaCleanupBatchPorts,
 	type MediaCleanupBatchSummary,
-	type RunMediaCleanupBatchUseCaseOptions,
-	runMediaCleanupBatchUseCase,
+	type RunMediaCleanupBatchOptions as RunMediaCleanupBatchWithPortsOptions,
+	runMediaCleanupBatch as runMediaCleanupBatchWithPorts,
 } from "@/domains/media/application/run-media-cleanup-batch";
 import { deleteMediaCleanupTarget } from "@/domains/media/infrastructure/cloudinary-media-cleanup-targets";
 import { PrismaMediaCleanupJobQueue } from "@/domains/media/infrastructure/prisma-media-cleanup-job-queue";
@@ -24,7 +24,7 @@ export {
 export type { MediaCleanupBatchPorts, MediaCleanupBatchSummary };
 
 export type RunMediaCleanupBatchOptions = Omit<
-	RunMediaCleanupBatchUseCaseOptions,
+	RunMediaCleanupBatchWithPortsOptions,
 	"ports" | "workerId"
 > & {
 	workerId?: string;
@@ -55,7 +55,7 @@ export function createMediaCleanupWorkerId() {
 export async function runMediaCleanupBatch(
 	options: RunMediaCleanupBatchOptions = {},
 ): Promise<MediaCleanupBatchSummary> {
-	return runMediaCleanupBatchUseCase({
+	return runMediaCleanupBatchWithPorts({
 		limit: options.limit,
 		workerId: options.workerId ?? createMediaCleanupWorkerId(),
 		lockMs: options.lockMs,

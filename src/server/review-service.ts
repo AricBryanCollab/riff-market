@@ -55,7 +55,7 @@ export async function createListingReviewForCurrentUser(
 	reviews?: ListingReviewCreatePort,
 ): Promise<ReviewCreationResponse> {
 	const reviewPort = reviews ?? (await createPrismaReviewDependencies());
-	const result = await createListingReview(input, toActor(user), reviewPort);
+	const result = await createListingReview(toActor(user), input, reviewPort);
 
 	if (!result.ok) {
 		throw toRequestError(result.error);

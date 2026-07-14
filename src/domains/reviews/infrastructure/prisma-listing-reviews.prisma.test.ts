@@ -45,12 +45,12 @@ describeDb("Prisma listing reviews", () => {
 
 	it("enforces one review per customer for a listing", async () => {
 		const created = await createListingReview(
+			{ id: "customer-1", role: "CUSTOMER" },
 			{
 				listingId: "listing-1",
 				rating: 5,
 				comment: "Exactly as described.",
 			},
-			{ id: "customer-1", role: "CUSTOMER" },
 			reviews,
 		);
 
@@ -69,12 +69,12 @@ describeDb("Prisma listing reviews", () => {
 		});
 
 		const duplicate = await createListingReview(
+			{ id: "customer-1", role: "CUSTOMER" },
 			{
 				listingId: "listing-1",
 				rating: 4,
 				comment: "Changed my mind.",
 			},
-			{ id: "customer-1", role: "CUSTOMER" },
 			reviews,
 		);
 

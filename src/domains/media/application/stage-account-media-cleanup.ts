@@ -1,4 +1,4 @@
-import type { CleanupImageAssetRef } from "@/types/image-asset";
+import type { CleanupImageAssetRef } from "@/domains/shared/domain/image-asset";
 
 export type AccountMediaInventory = {
 	readonly profile: AccountProfileMedia | null;
