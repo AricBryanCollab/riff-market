@@ -51,7 +51,7 @@ function makeCommand(
 }
 
 function makeListing(overrides: Partial<ListingSnapshot> = {}) {
-	return Listing.reconstitute({
+	return Listing.fromExisting({
 		id: "listing-1",
 		sellerId: "seller-1",
 		sellerDisplayName: "A Seller",
@@ -60,6 +60,7 @@ function makeListing(overrides: Partial<ListingSnapshot> = {}) {
 		model: "American Standard",
 		category: "ELECTRIC",
 		condition: "USED",
+		description: "A listing",
 		primaryImageUrl: "https://cdn.example.com/listing-1.jpg",
 		price: Money.fromMinor(100_00, "USD"),
 		stock: 5,

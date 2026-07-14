@@ -25,6 +25,7 @@ function makeListing(
 		model: "American Standard",
 		category: "ELECTRIC",
 		condition: "USED",
+		description: "A listing",
 		primaryImageUrl: "https://cdn.example.com/listing.jpg",
 		price: Money.fromMinor(1250, "TWD"),
 		stock: 3,

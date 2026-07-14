@@ -7,6 +7,7 @@ import {
 import { normalizeListingBrand } from "@/domains/listings/domain/listing-brand";
 import { isValidInitialStock } from "@/domains/listings/domain/listing-stock";
 import type { Actor } from "@/domains/shared/domain/actor";
+import { Money } from "@/domains/shared/domain/money";
 import type { AppError, Result } from "@/domains/shared/domain/result";
 import { err, ok } from "@/domains/shared/domain/result";
 import type { ImageAssetRef } from "@/types/image-asset";
@@ -171,7 +172,7 @@ export async function createListing<TUploadInput>(
 	}
 
 	if (!isValidInitialStock(command.stock)) {
-		return err(invalidStockError());
+		return err(invalidStockError("New listings must have at least 1 stock"));
 	}
 
 	let uploadedImages: ImageAssetRef[];
@@ -181,21 +182,35 @@ export async function createListing<TUploadInput>(
 		return err(imageUploadError(error));
 	}
 
+	if (uploadedImages.length === 0) {
+		return err(invalidImagesError("Listing must keep at least one image"));
+	}
+
+	const price = toListingMoneyPersistence(command.price);
+
 	try {
-		const listing = await listings.createListing({
-			...toCreatePersistenceFields(command),
+		const saved = await listings.createListing({
 			sellerId: actor.id,
-			images: uploadedImages,
+			name: command.name,
+			category: command.category,
+			condition: command.condition,
+			brand: normalizeListingBrand(command.brand),
+			model: command.model,
+			description: command.description,
+			priceAmountMinor: price.priceAmountMinor,
+			currencyCode: price.currencyCode,
+			stock: command.stock,
 			status: "PENDING",
 			isApproved: false,
+			images: uploadedImages,
 		});
 
-		if (!listing) {
+		if (!saved) {
 			await images.cleanupUploadedImagesBestEffort(uploadedImages);
 			return err(saveFailedError("Failed to create listing"));
 		}
 
-		return ok(listing);
+		return ok(saved);
 	} catch (error) {
 		await images.cleanupUploadedImagesBestEffort(uploadedImages);
 		throw error;
@@ -226,17 +241,29 @@ export async function updateListing<TUploadInput>(
 	}
 
 	const imageUpdate = imageUpdateResult.value;
-	const status = actor.role === "ADMIN" ? "APPROVED" : "PENDING";
+	const listing = Listing.fromExisting(existing);
+	listing.applyEdit(actor, {
+		...(command.name !== undefined && { name: command.name }),
+		...(command.brand !== undefined && { brand: command.brand }),
+		...(command.model !== undefined && { model: command.model }),
+		...(command.category !== undefined && { category: command.category }),
+		...(command.condition !== undefined && { condition: command.condition }),
+		...(command.description !== undefined && {
+			description: command.description,
+		}),
+		...(command.stock !== undefined && { stock: command.stock }),
+		...(command.price !== undefined && {
+			price: toListingMoney(command.price),
+		}),
+	});
 
 	try {
-		const listing = await listings.updateListing(command.listingId, {
-			...toUpdatePersistenceFields(command),
+		const saved = await listings.updateListing(command.listingId, {
+			...toUpdatePersistenceFields(listing, command),
 			...(imageUpdate.nextImages ? { images: imageUpdate.nextImages } : {}),
-			status,
-			isApproved: status === "APPROVED",
 		});
 
-		if (!listing) {
+		if (!saved) {
 			if (imageUpdate.uploadedImages.length > 0) {
 				await images.cleanupUploadedImagesBestEffort(
 					imageUpdate.uploadedImages,
@@ -252,7 +279,7 @@ export async function updateListing<TUploadInput>(
 			);
 		}
 
-		return ok(listing);
+		return ok(saved);
 	} catch (error) {
 		if (imageUpdate.uploadedImages.length > 0) {
 			await images.cleanupUploadedImagesBestEffort(imageUpdate.uploadedImages);
@@ -440,7 +467,7 @@ async function withdrawReferencedListing(
 	existing: ListingRemovalSnapshot,
 	listings: ListingCommandRepositoryPort,
 ): Promise<Result<ListingRemovalResult, ListingCommandError>> {
-	const listing = Listing.reconstitute(existing);
+	const listing = Listing.fromExisting(existing);
 
 	try {
 		listing.withdraw(actor);
@@ -484,43 +511,31 @@ function hasReferences(snapshot: ListingRemovalSnapshot) {
 	return Object.values(snapshot.referenceCounts).some((count) => count > 0);
 }
 
-function toCreatePersistenceFields(
-	command: CreateListingCommand<unknown>,
-): ListingPersistenceFields {
-	const price = toListingMoneyPersistence(command.price);
-
-	return {
-		name: command.name,
-		category: command.category,
-		condition: command.condition,
-		brand: normalizeListingBrand(command.brand),
-		model: command.model,
-		description: command.description,
-		priceAmountMinor: price.priceAmountMinor,
-		currencyCode: price.currencyCode,
-		stock: command.stock,
-	};
+function toListingMoney(price: string | number): Money {
+	const persistence = toListingMoneyPersistence(price);
+	return Money.fromMinor(persistence.priceAmountMinor, persistence.currencyCode);
 }
 
 function toUpdatePersistenceFields(
-	fields: ListingMutationFields,
-): Partial<ListingPersistenceFields> {
-	const priceData =
-		fields.price !== undefined ? toListingMoneyPersistence(fields.price) : {};
-
+	listing: Listing,
+	command: ListingMutationFields,
+): UpdateListingPersistenceInput {
 	return {
-		...(fields.name !== undefined && { name: fields.name }),
-		...(fields.category !== undefined && { category: fields.category }),
-		...(fields.condition !== undefined && { condition: fields.condition }),
-		...(fields.brand !== undefined && {
-			brand: normalizeListingBrand(fields.brand),
+		...(command.name !== undefined && { name: listing.name }),
+		...(command.category !== undefined && { category: listing.category }),
+		...(command.condition !== undefined && { condition: listing.condition }),
+		...(command.brand !== undefined && { brand: listing.brand }),
+		...(command.model !== undefined && { model: listing.model }),
+		...(command.description !== undefined && {
+			description: listing.description,
 		}),
-		...(fields.model !== undefined && { model: fields.model }),
-		...(fields.description !== undefined && {
-			description: fields.description,
+		...(command.price !== undefined && {
+			priceAmountMinor: listing.price.amountMinor,
+			currencyCode: listing.price.currencyCode,
 		}),
-		...priceData,
-		...(fields.stock !== undefined && { stock: fields.stock }),
+		...(command.stock !== undefined && { stock: listing.stock }),
+		status: listing.status,
+		isApproved: listing.isApproved,
 	};
 }
 
@@ -556,11 +571,11 @@ function invalidImagesError(message: string): ListingCommandError {
 	};
 }
 
-function invalidStockError(): ListingCommandError {
+function invalidStockError(message: string): ListingCommandError {
 	return {
 		kind: "validation",
 		code: "LISTING_COMMAND_INVALID_STOCK",
-		message: "New listings must have at least 1 stock",
+		message,
 	};
 }
 

@@ -65,6 +65,7 @@ function makeRemovalSnapshot(
 		model: "Player",
 		category: "ELECTRIC",
 		condition: "NEW",
+		description: "A listing",
 		primaryImageUrl: "https://cdn.example.com/current.jpg",
 		price: Money.fromMinor(19995, "TWD"),
 		stock: 2,

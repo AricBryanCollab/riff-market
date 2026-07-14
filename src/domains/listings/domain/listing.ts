@@ -5,6 +5,7 @@ import {
 	type RecordsDomainEvents,
 } from "@/domains/shared/domain/domain-event";
 import type { Money } from "@/domains/shared/domain/money";
+import { normalizeListingBrand } from "./listing-brand";
 
 export const listingStatuses = [
 	"PENDING",
@@ -24,10 +25,22 @@ export type ListingSnapshot = {
 	readonly model: string;
 	readonly category: string;
 	readonly condition: string;
+	readonly description?: string;
 	readonly primaryImageUrl: string;
 	readonly price: Money;
 	readonly stock: number;
 	readonly status: ListingStatus;
+};
+
+export type ListingEditInput = {
+	readonly name?: string;
+	readonly brand?: string;
+	readonly model?: string;
+	readonly category?: string;
+	readonly condition?: string;
+	readonly description?: string;
+	readonly price?: Money;
+	readonly stock?: number;
 };
 
 export type ReservedListingItemSnapshot = {
@@ -106,14 +119,15 @@ export class Listing implements RecordsDomainEvents {
 	readonly id: string;
 	readonly sellerId: string;
 	readonly sellerDisplayName: string;
-	readonly name: string;
-	readonly brand: string;
-	readonly model: string;
-	readonly category: string;
-	readonly condition: string;
-	readonly primaryImageUrl: string;
-	readonly price: Money;
 
+	private listingName: string;
+	private listingBrand: string;
+	private listingModel: string;
+	private listingCategory: string;
+	private listingCondition: string;
+	private listingDescription: string;
+	private listingPrimaryImageUrl: string;
+	private listingPrice: Money;
 	private availableStock: number;
 	private currentStatus: ListingStatus;
 	private domainEvents: ListingLifecycleEvent[] = [];
@@ -133,19 +147,52 @@ export class Listing implements RecordsDomainEvents {
 		this.id = snapshot.id;
 		this.sellerId = snapshot.sellerId;
 		this.sellerDisplayName = snapshot.sellerDisplayName;
-		this.name = snapshot.name;
-		this.brand = snapshot.brand;
-		this.model = snapshot.model;
-		this.category = snapshot.category;
-		this.condition = snapshot.condition;
-		this.primaryImageUrl = snapshot.primaryImageUrl;
-		this.price = snapshot.price;
+		this.listingName = snapshot.name;
+		this.listingBrand = snapshot.brand;
+		this.listingModel = snapshot.model;
+		this.listingCategory = snapshot.category;
+		this.listingCondition = snapshot.condition;
+		this.listingDescription = snapshot.description ?? "";
+		this.listingPrimaryImageUrl = snapshot.primaryImageUrl;
+		this.listingPrice = snapshot.price;
 		this.availableStock = snapshot.stock;
 		this.currentStatus = snapshot.status;
 	}
 
-	static reconstitute(snapshot: ListingSnapshot): Listing {
+	static fromExisting(snapshot: ListingSnapshot): Listing {
 		return new Listing(snapshot);
+	}
+
+	get name() {
+		return this.listingName;
+	}
+
+	get brand() {
+		return this.listingBrand;
+	}
+
+	get model() {
+		return this.listingModel;
+	}
+
+	get category() {
+		return this.listingCategory;
+	}
+
+	get condition() {
+		return this.listingCondition;
+	}
+
+	get description() {
+		return this.listingDescription;
+	}
+
+	get primaryImageUrl() {
+		return this.listingPrimaryImageUrl;
+	}
+
+	get price() {
+		return this.listingPrice;
 	}
 
 	get stock() {
@@ -154,6 +201,53 @@ export class Listing implements RecordsDomainEvents {
 
 	get status() {
 		return this.currentStatus;
+	}
+
+	get isApproved() {
+		return this.currentStatus === "APPROVED";
+	}
+
+	applyEdit(actor: Actor, edit: ListingEditInput = {}) {
+		if (edit.name !== undefined) {
+			assertPresent(edit.name, "Listing name");
+			this.listingName = edit.name;
+		}
+
+		if (edit.brand !== undefined) {
+			this.listingBrand = normalizeListingBrand(edit.brand);
+			assertPresent(this.listingBrand, "Listing brand");
+		}
+
+		if (edit.model !== undefined) {
+			assertPresent(edit.model, "Listing model");
+			this.listingModel = edit.model;
+		}
+
+		if (edit.category !== undefined) {
+			assertPresent(edit.category, "Listing category");
+			this.listingCategory = edit.category;
+		}
+
+		if (edit.condition !== undefined) {
+			assertPresent(edit.condition, "Listing condition");
+			this.listingCondition = edit.condition;
+		}
+
+		if (edit.description !== undefined) {
+			assertPresent(edit.description, "Listing description");
+			this.listingDescription = edit.description.trim();
+		}
+
+		if (edit.price !== undefined) {
+			this.listingPrice = edit.price;
+		}
+
+		if (edit.stock !== undefined) {
+			assertSafeNonNegativeInteger(edit.stock, "Listing stock");
+			this.availableStock = edit.stock;
+		}
+
+		this.currentStatus = actor.role === "ADMIN" ? "APPROVED" : "PENDING";
 	}
 
 	approve(actor: Actor) {
@@ -233,15 +327,15 @@ export class Listing implements RecordsDomainEvents {
 
 		return {
 			listingId: this.id,
-			listingName: this.name,
-			brand: this.brand,
-			model: this.model,
-			category: this.category,
-			condition: this.condition,
-			primaryImageUrl: this.primaryImageUrl,
+			listingName: this.listingName,
+			brand: this.listingBrand,
+			model: this.listingModel,
+			category: this.listingCategory,
+			condition: this.listingCondition,
+			primaryImageUrl: this.listingPrimaryImageUrl,
 			sellerId: this.sellerId,
 			sellerDisplayName: this.sellerDisplayName,
-			unitPrice: this.price,
+			unitPrice: this.listingPrice,
 			quantity,
 		};
 	}

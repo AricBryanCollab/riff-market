@@ -98,7 +98,7 @@ export async function moderateListing(
 		});
 	}
 
-	const listing = Listing.reconstitute(snapshot);
+	const listing = Listing.fromExisting(snapshot);
 
 	try {
 		if (command.decision === "APPROVE") {

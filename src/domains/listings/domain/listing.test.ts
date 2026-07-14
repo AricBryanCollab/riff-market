@@ -10,7 +10,7 @@ import {
 } from "./listing";
 
 function makeListing(overrides: Partial<ListingSnapshot> = {}) {
-	return Listing.reconstitute({
+	return Listing.fromExisting({
 		id: "listing-1",
 		sellerId: "seller-1",
 		sellerDisplayName: "A Seller",
@@ -19,6 +19,7 @@ function makeListing(overrides: Partial<ListingSnapshot> = {}) {
 		model: "American Standard",
 		category: "ELECTRIC",
 		condition: "USED",
+		description: "A listing",
 		primaryImageUrl: "https://cdn.example.com/listing.jpg",
 		price: Money.fromMinor(1250, "TWD"),
 		stock: 3,
@@ -195,5 +196,34 @@ describe("Listing lifecycle behavior", () => {
 			),
 		);
 		expect(listing.status).toBe("WITHDRAWN");
+	});
+});
+
+describe("Listing edit behavior", () => {
+	const seller = { id: "seller-1", role: "SELLER" } as const;
+	const admin = { id: "admin-1", role: "ADMIN" } as const;
+
+	it("seller edits return the listing to pending", () => {
+		const listing = makeListing({ status: "APPROVED", brand: "Fender" });
+
+		listing.applyEdit(seller, {
+			name: "Updated",
+			brand: " Fender   Offset ",
+		});
+
+		expect(listing.status).toBe("PENDING");
+		expect(listing.isApproved).toBe(false);
+		expect(listing.name).toBe("Updated");
+		expect(listing.brand).toBe("Fender Offset");
+	});
+
+	it("admin edits auto-approve the listing", () => {
+		const listing = makeListing({ status: "PENDING" });
+
+		listing.applyEdit(admin, { name: "Admin update" });
+
+		expect(listing.status).toBe("APPROVED");
+		expect(listing.isApproved).toBe(true);
+		expect(listing.name).toBe("Admin update");
 	});
 });

@@ -191,7 +191,7 @@ function toListing(listing: ListingForPurchase) {
 	}
 
 	return ok(
-		Listing.reconstitute({
+		Listing.fromExisting({
 			id: listing.id,
 			sellerId: listing.sellerId,
 			sellerDisplayName: [listing.seller.firstName, listing.seller.lastName]

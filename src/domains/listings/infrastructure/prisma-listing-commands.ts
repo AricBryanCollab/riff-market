@@ -206,6 +206,7 @@ function toRemovalSnapshot(
 		model: listing.model,
 		category: listing.category,
 		condition: listing.condition,
+		description: listing.description,
 		primaryImageUrl: imageUrls[0] ?? "missing-image",
 		price: Money.fromMinor(listing.priceAmountMinor, listing.currencyCode),
 		stock: listing.stock,
