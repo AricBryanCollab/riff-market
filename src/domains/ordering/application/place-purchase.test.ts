@@ -127,21 +127,6 @@ describe("PlacePurchase", () => {
 		expect(purchasePort.saved).toBeUndefined();
 	});
 
-	it("rejects empty purchases before opening a transaction", async () => {
-		const { unitOfWork, runPlacePurchase } = makeHarness([makeListing()]);
-
-		const result = await runPlacePurchase(customer, makeCommand([]));
-
-		expect(result).toEqual({
-			ok: false,
-			error: expect.objectContaining({
-				code: "PLACE_PURCHASE_EMPTY_ITEMS",
-				kind: "validation",
-			}),
-		});
-		expect(unitOfWork.transactionCount).toBe(0);
-	});
-
 	it("rejects invalid item quantities before opening a transaction", async () => {
 		const { unitOfWork, runPlacePurchase } = makeHarness([makeListing()]);
 

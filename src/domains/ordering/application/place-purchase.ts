@@ -38,7 +38,6 @@ export type ReservedSellerListingGroup = {
 
 export type PlacePurchaseErrorCode =
 	| "PLACE_PURCHASE_UNAUTHORIZED"
-	| "PLACE_PURCHASE_EMPTY_ITEMS"
 	| "PLACE_PURCHASE_INVALID_ITEM_QUANTITY"
 	| "PLACE_PURCHASE_INVALID_BUYER_SNAPSHOT"
 	| "PLACE_PURCHASE_INVALID_SHIPPING_ADDRESS"
@@ -247,14 +246,6 @@ class PlacePurchaseRollback extends Error {
 }
 
 function validateCommand(command: PlacePurchaseCommand) {
-	if (command.items.length === 0) {
-		return placePurchaseError(
-			"PLACE_PURCHASE_EMPTY_ITEMS",
-			"Purchase requires at least one item",
-			"validation",
-		);
-	}
-
 	for (const item of command.items) {
 		if (!Number.isSafeInteger(item.quantity) || item.quantity <= 0) {
 			return placePurchaseError(
