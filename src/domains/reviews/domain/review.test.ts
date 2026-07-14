@@ -10,7 +10,7 @@ describe("Review", () => {
 			comment: " Exactly as described. ",
 		});
 
-		expect(review.toCreateData()).toEqual({
+		expect(review).toEqual({
 			listingId: "listing-1",
 			userId: "customer-1",
 			rating: 5,

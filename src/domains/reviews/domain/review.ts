@@ -22,7 +22,22 @@ export class ReviewDomainError extends Error {
 }
 
 export class Review {
-	private constructor(private readonly data: ReviewCreateData) {}
+	readonly listingId: string;
+	readonly userId: string;
+	readonly rating: number;
+	readonly comment: string;
+
+	private constructor(
+		listingId: string,
+		userId: string,
+		rating: number,
+		comment: string,
+	) {
+		this.listingId = listingId;
+		this.userId = userId;
+		this.rating = rating;
+		this.comment = comment;
+	}
 
 	static create(data: ReviewCreateData): Review {
 		const listingId = data.listingId.trim();
@@ -57,15 +72,6 @@ export class Review {
 			);
 		}
 
-		return new Review({
-			listingId,
-			userId,
-			rating: data.rating,
-			comment,
-		});
-	}
-
-	toCreateData(): ReviewCreateData {
-		return this.data;
+		return new Review(listingId, userId, data.rating, comment);
 	}
 }

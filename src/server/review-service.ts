@@ -1,8 +1,7 @@
 import { z } from "zod";
 import {
 	createListingReview,
-	type ListingReviewCreatePort,
-	type ListingReviewPort,
+	type CreateListingReviewDependencies,
 	type ListingReviewQueryPort,
 } from "@/domains/reviews/application/review-use-cases";
 import {
@@ -52,10 +51,11 @@ export function validateGetListingReviewsInput(
 export async function createListingReviewForCurrentUser(
 	user: ServerUserContext,
 	input: CreateListingReviewInput,
-	reviews?: ListingReviewCreatePort,
+	dependencies?: CreateListingReviewDependencies,
 ): Promise<ReviewCreationResponse> {
-	const reviewPort = reviews ?? (await createPrismaReviewDependencies());
-	const result = await createListingReview(toActor(user), input, reviewPort);
+	const deps =
+		dependencies ?? (await createPrismaCreateListingReviewDependencies());
+	const result = await createListingReview(toActor(user), input, deps);
 
 	if (!result.ok) {
 		throw toRequestError(result.error);
@@ -71,12 +71,26 @@ export async function listListingReviews(
 	input: GetListingReviewsQuery,
 	reviews?: ListingReviewQueryPort,
 ): Promise<ListingReview[]> {
-	const reviewPort = reviews ?? (await createPrismaReviewDependencies());
+	const reviewPort = reviews ?? (await createPrismaListingReviewQueryPort());
 
 	return reviewPort.listByListingId(input.listingId);
 }
 
-async function createPrismaReviewDependencies(): Promise<ListingReviewPort> {
+async function createPrismaCreateListingReviewDependencies(): Promise<CreateListingReviewDependencies> {
+	const [{ prisma }, { PrismaListingReviews }, { PrismaListingReviewEligibility }] =
+		await Promise.all([
+			import("@/data/connect-db"),
+			import("@/domains/reviews/infrastructure/prisma-listing-reviews"),
+			import("@/domains/reviews/infrastructure/prisma-listing-review-eligibility"),
+		]);
+
+	return {
+		reviews: new PrismaListingReviews(prisma),
+		eligibility: new PrismaListingReviewEligibility(prisma),
+	};
+}
+
+async function createPrismaListingReviewQueryPort(): Promise<ListingReviewQueryPort> {
 	const [{ prisma }, { PrismaListingReviews }] = await Promise.all([
 		import("@/data/connect-db"),
 		import("@/domains/reviews/infrastructure/prisma-listing-reviews"),

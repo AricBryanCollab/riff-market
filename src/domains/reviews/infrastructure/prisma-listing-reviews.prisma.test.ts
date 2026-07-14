@@ -1,6 +1,6 @@
 import type { PrismaClient } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
-import { createListingReview } from "@/domains/reviews/application/review-use-cases";
+import { Review } from "@/domains/reviews/domain/review";
 import {
 	describeDb,
 	seedListing,
@@ -44,14 +44,13 @@ describeDb("Prisma listing reviews", () => {
 	});
 
 	it("enforces one review per customer for a listing", async () => {
-		const created = await createListingReview(
-			{ id: "customer-1", role: "CUSTOMER" },
-			{
+		const created = await reviews.save(
+			Review.create({
 				listingId: "listing-1",
+				userId: "customer-1",
 				rating: 5,
 				comment: "Exactly as described.",
-			},
-			reviews,
+			}),
 		);
 
 		expect(created).toMatchObject({
@@ -68,14 +67,13 @@ describeDb("Prisma listing reviews", () => {
 			},
 		});
 
-		const duplicate = await createListingReview(
-			{ id: "customer-1", role: "CUSTOMER" },
-			{
+		const duplicate = await reviews.save(
+			Review.create({
 				listingId: "listing-1",
+				userId: "customer-1",
 				rating: 4,
 				comment: "Changed my mind.",
-			},
-			reviews,
+			}),
 		);
 
 		expect(duplicate).toMatchObject({
@@ -85,9 +83,7 @@ describeDb("Prisma listing reviews", () => {
 				kind: "conflict",
 			},
 		});
-		await expect(
-			db.review.count({ where: { listingId: "listing-1" } }),
-		).resolves.toBe(1);
+		await expect(reviews.listByListingId("listing-1")).resolves.toHaveLength(1);
 	});
 
 	it("lists persisted listing reviews newest first with reviewer names", async () => {

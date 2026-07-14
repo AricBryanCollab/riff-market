@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type {
-	ListingReviewCreatePort,
-	ReviewError,
+import {
+	type CreateListingReviewDependencies,
+	type ListingReviewCreatePort,
+	type ReviewError,
+	reviewAlreadyExistsError,
 } from "@/domains/reviews/application/review-use-cases";
-import { reviewAlreadyExistsError } from "@/domains/reviews/application/review-use-cases";
-import type { ReviewCreateData } from "@/domains/reviews/domain/review";
+import type { Review } from "@/domains/reviews/domain/review";
 import type { ListingReview } from "@/domains/reviews/dto/listing-review";
 import { err, ok, type Result } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
@@ -23,6 +24,12 @@ const customer: ServerUserContext = {
 	firstName: "Pat",
 	lastName: "Buyer",
 	role: "CUSTOMER",
+};
+
+const alwaysEligible = {
+	async hasDeliveredPurchaseOfListing(): Promise<boolean> {
+		return true;
+	},
 };
 
 describe("review server service", () => {
@@ -48,6 +55,10 @@ describe("review server service", () => {
 
 	it("creates a review for the current user", async () => {
 		const reviews = new InMemoryListingReviews();
+		const dependencies: CreateListingReviewDependencies = {
+			reviews,
+			eligibility: alwaysEligible,
+		};
 
 		const response = await createListingReviewForCurrentUser(
 			customer,
@@ -56,7 +67,7 @@ describe("review server service", () => {
 				rating: 5,
 				comment: "Exactly as described.",
 			},
-			reviews,
+			dependencies,
 		);
 
 		expect(response).toMatchObject({
@@ -72,6 +83,10 @@ describe("review server service", () => {
 
 	it("maps duplicate review conflicts to request errors", async () => {
 		const reviews = new DuplicateListingReviews();
+		const dependencies: CreateListingReviewDependencies = {
+			reviews,
+			eligibility: alwaysEligible,
+		};
 
 		await expect(
 			createListingReviewForCurrentUser(
@@ -81,7 +96,7 @@ describe("review server service", () => {
 					rating: 5,
 					comment: "Exactly as described.",
 				},
-				reviews,
+				dependencies,
 			),
 		).rejects.toMatchObject({
 			name: "RequestError",
@@ -92,26 +107,24 @@ describe("review server service", () => {
 });
 
 class InMemoryListingReviews implements ListingReviewCreatePort {
-	async createReview(
-		data: ReviewCreateData,
-	): Promise<Result<ListingReview, ReviewError>> {
-		return ok(makeReview(data));
+	async save(review: Review): Promise<Result<ListingReview, ReviewError>> {
+		return ok(makeReview(review));
 	}
 }
 
 class DuplicateListingReviews implements ListingReviewCreatePort {
-	async createReview(): Promise<Result<ListingReview, ReviewError>> {
+	async save(): Promise<Result<ListingReview, ReviewError>> {
 		return err(reviewAlreadyExistsError());
 	}
 }
 
-function makeReview(data: ReviewCreateData): ListingReview {
+function makeReview(review: Review): ListingReview {
 	return {
 		id: "review-1",
-		listingId: data.listingId,
-		userId: data.userId,
-		rating: data.rating,
-		comment: data.comment,
+		listingId: review.listingId,
+		userId: review.userId,
+		rating: review.rating,
+		comment: review.comment,
 		reviewer: {
 			firstName: "Pat",
 			lastName: "Buyer",

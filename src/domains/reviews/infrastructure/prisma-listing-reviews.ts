@@ -4,7 +4,7 @@ import type {
 	ReviewError,
 } from "@/domains/reviews/application/review-use-cases";
 import { reviewAlreadyExistsError } from "@/domains/reviews/application/review-use-cases";
-import type { ReviewCreateData } from "@/domains/reviews/domain/review";
+import type { Review } from "@/domains/reviews/domain/review";
 import type { ListingReview } from "@/domains/reviews/dto/listing-review";
 import { err, ok, type Result } from "@/domains/shared/domain/result";
 import { isPrismaUniqueConflict } from "@/domains/shared/infrastructure/prisma-errors";
@@ -34,21 +34,19 @@ type ListingReviewRow = Prisma.ReviewGetPayload<{
 export class PrismaListingReviews implements ListingReviewPort {
 	constructor(private readonly db: ReviewPrisma) {}
 
-	async createReview(
-		data: ReviewCreateData,
-	): Promise<Result<ListingReview, ReviewError>> {
+	async save(review: Review): Promise<Result<ListingReview, ReviewError>> {
 		try {
-			const review = await this.db.review.create({
+			const saved = await this.db.review.create({
 				data: {
-					listingId: data.listingId,
-					userId: data.userId,
-					rating: data.rating,
-					comment: data.comment,
+					listingId: review.listingId,
+					userId: review.userId,
+					rating: review.rating,
+					comment: review.comment,
 				},
 				select: listingReviewSelect,
 			});
 
-			return ok(toListingReview(review));
+			return ok(toListingReview(saved));
 		} catch (error) {
 			if (isUniqueReviewConflict(error)) {
 				return err(reviewAlreadyExistsError());

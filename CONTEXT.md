@@ -43,3 +43,7 @@ _Avoid_: product price
 **Listing Currency**:
 The currency in which a Listing Price is stated.
 _Avoid_: display currency, settlement currency
+
+**Listing Review**:
+Customer feedback on a Listing. A Customer may create a Listing Review only after a SellerOrder that includes that Listing has been delivered.
+_Avoid_: product review, rating-only feedback

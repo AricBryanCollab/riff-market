@@ -1,18 +1,22 @@
 import { describe, expect, it } from "vitest";
-import type { ReviewCreateData } from "@/domains/reviews/domain/review";
+import type { Review } from "@/domains/reviews/domain/review";
 import type { ListingReview } from "@/domains/reviews/dto/listing-review";
 import type { Actor } from "@/domains/shared/domain/actor";
 import { err, ok, type Result } from "@/domains/shared/domain/result";
 import {
 	createListingReview,
+	type ListingReviewEligibilityPort,
 	type ListingReviewPort,
 	type ReviewError,
 	reviewAlreadyExistsError,
 } from "./review-use-cases";
 
 describe("review use cases", () => {
-	it("creates a listing review", async () => {
+	it("creates a listing review when the customer has a delivered purchase", async () => {
 		const reviews = new InMemoryListingReviews();
+		const eligibility = new InMemoryListingReviewEligibility({
+			"customer-1:listing-1": true,
+		});
 		const actor: Actor = { id: "customer-1", role: "CUSTOMER" };
 
 		const created = await createListingReview(
@@ -22,7 +26,7 @@ describe("review use cases", () => {
 				rating: 5,
 				comment: " Exactly as described. ",
 			},
-			reviews,
+			{ reviews, eligibility },
 		);
 
 		expect(created).toMatchObject({
@@ -36,8 +40,65 @@ describe("review use cases", () => {
 		});
 	});
 
-	it("rejects invalid create commands before persistence", async () => {
+	it("rejects non-customers without creating a review", async () => {
 		const reviews = new InMemoryListingReviews();
+		const eligibility = new InMemoryListingReviewEligibility({
+			"seller-1:listing-1": true,
+		});
+
+		const rejected = await createListingReview(
+			{ id: "seller-1", role: "SELLER" },
+			{
+				listingId: "listing-1",
+				rating: 5,
+				comment: "I sell this gear.",
+			},
+			{ reviews, eligibility },
+		);
+
+		expect(rejected).toEqual({
+			ok: false,
+			error: {
+				code: "REVIEW_UNAUTHORIZED",
+				message: "Only customers can create listing reviews",
+				kind: "authorization",
+			},
+		});
+		await expect(reviews.listByListingId("listing-1")).resolves.toEqual([]);
+	});
+
+	it("rejects customers without a delivered purchase of the listing", async () => {
+		const reviews = new InMemoryListingReviews();
+		const eligibility = new InMemoryListingReviewEligibility({});
+
+		const rejected = await createListingReview(
+			{ id: "customer-1", role: "CUSTOMER" },
+			{
+				listingId: "listing-1",
+				rating: 5,
+				comment: "Looks great in photos.",
+			},
+			{ reviews, eligibility },
+		);
+
+		expect(rejected).toEqual({
+			ok: false,
+			error: {
+				code: "REVIEW_NOT_ELIGIBLE",
+				message:
+					"Only customers with a delivered purchase of this listing can leave a review",
+				kind: "authorization",
+			},
+		});
+		await expect(reviews.listByListingId("listing-1")).resolves.toEqual([]);
+	});
+
+	it("rejects create commands with invalid listing id or rating", async () => {
+		const reviews = new InMemoryListingReviews();
+		const eligibility = new InMemoryListingReviewEligibility({
+			"customer-1:listing-1": true,
+		});
+		const dependencies = { reviews, eligibility };
 
 		await expect(
 			createListingReview(
@@ -47,7 +108,7 @@ describe("review use cases", () => {
 					rating: 5,
 					comment: "Valid comment.",
 				},
-				reviews,
+				dependencies,
 			),
 		).resolves.toEqual({
 			ok: false,
@@ -66,7 +127,7 @@ describe("review use cases", () => {
 					rating: 6,
 					comment: "Too many stars.",
 				},
-				reviews,
+				dependencies,
 			),
 		).resolves.toEqual({
 			ok: false,
@@ -80,9 +141,13 @@ describe("review use cases", () => {
 		await expect(reviews.listByListingId("listing-1")).resolves.toEqual([]);
 	});
 
-	it("maps duplicate reviews through the review port", async () => {
+	it("rejects a second review from the same customer for a listing", async () => {
 		const reviews = new InMemoryListingReviews();
+		const eligibility = new InMemoryListingReviewEligibility({
+			"customer-1:listing-1": true,
+		});
 		const actor: Actor = { id: "customer-1", role: "CUSTOMER" };
+		const dependencies = { reviews, eligibility };
 
 		await expect(
 			createListingReview(
@@ -92,7 +157,7 @@ describe("review use cases", () => {
 					rating: 5,
 					comment: "First review.",
 				},
-				reviews,
+				dependencies,
 			),
 		).resolves.toMatchObject({ ok: true });
 
@@ -103,7 +168,7 @@ describe("review use cases", () => {
 				rating: 4,
 				comment: "Changed my mind.",
 			},
-			reviews,
+			dependencies,
 		);
 
 		expect(duplicate).toEqual({
@@ -121,24 +186,23 @@ class InMemoryListingReviews implements ListingReviewPort {
 	private nextId = 1;
 	private readonly reviews: ListingReview[] = [];
 
-	async createReview(
-		data: ReviewCreateData,
-	): Promise<Result<ListingReview, ReviewError>> {
+	async save(review: Review): Promise<Result<ListingReview, ReviewError>> {
 		if (
 			this.reviews.some(
-				(review) =>
-					review.listingId === data.listingId && review.userId === data.userId,
+				(existing) =>
+					existing.listingId === review.listingId &&
+					existing.userId === review.userId,
 			)
 		) {
 			return err(reviewAlreadyExistsError());
 		}
 
-		const review = {
+		const saved = {
 			id: `review-${this.nextId}`,
-			listingId: data.listingId,
-			userId: data.userId,
-			rating: data.rating,
-			comment: data.comment,
+			listingId: review.listingId,
+			userId: review.userId,
+			rating: review.rating,
+			comment: review.comment,
 			reviewer: {
 				firstName: `Customer ${this.nextId}`,
 				lastName: "Reviewer",
@@ -148,8 +212,8 @@ class InMemoryListingReviews implements ListingReviewPort {
 		};
 
 		this.nextId += 1;
-		this.reviews.push(review);
-		return ok(review);
+		this.reviews.push(saved);
+		return ok(saved);
 	}
 
 	async listByListingId(listingId: string): Promise<ListingReview[]> {
@@ -159,5 +223,16 @@ class InMemoryListingReviews implements ListingReviewPort {
 			.sort(
 				(left, right) => right.createdAt.getTime() - left.createdAt.getTime(),
 			);
+	}
+}
+
+class InMemoryListingReviewEligibility implements ListingReviewEligibilityPort {
+	constructor(private readonly delivered: Record<string, boolean>) {}
+
+	async hasDeliveredPurchaseOfListing(
+		customerId: string,
+		listingId: string,
+	): Promise<boolean> {
+		return this.delivered[`${customerId}:${listingId}`] === true;
 	}
 }
