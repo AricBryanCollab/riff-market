@@ -7,8 +7,9 @@ import type {
 import {
 	SellerOrder,
 	type SellerOrderItemSnapshot,
-	type SellerOrderStatusChangedEvent,
+	type SellerOrderStatus,
 } from "@/domains/ordering/domain/seller-order";
+import type { PrismaTransactionContext } from "@/domains/shared/infrastructure/prisma-unit-of-work";
 
 type SellerOrderStatusPrisma = Pick<PrismaClient, "sellerOrder">;
 
@@ -26,7 +27,7 @@ type SellerOrderStatusRow = Prisma.SellerOrderGetPayload<{
 type SellerOrderItemRow = SellerOrderStatusRow["items"][number];
 
 export class PrismaSellerOrderStatusRepository
-	implements SellerOrderStatusRepositoryPort
+	implements SellerOrderStatusRepositoryPort<PrismaTransactionContext>
 {
 	constructor(private readonly db: SellerOrderStatusPrisma) {}
 
@@ -55,18 +56,22 @@ export class PrismaSellerOrderStatusRepository
 	}
 
 	async save(
+		context: PrismaTransactionContext,
 		sellerOrder: SellerOrder,
-		_domainEvents: SellerOrderStatusChangedEvent[],
+		expectedCurrentStatus: SellerOrderStatus,
 	) {
-		await this.db.sellerOrder.update({
+		const updateResult = await context.sellerOrder.updateMany({
 			where: {
 				id: sellerOrder.id,
+				status: expectedCurrentStatus,
 			},
 			data: {
 				status: sellerOrder.status,
 				trackingNumber: sellerOrder.trackingNumber,
 			},
 		});
+
+		return updateResult.count === 1;
 	}
 }
 

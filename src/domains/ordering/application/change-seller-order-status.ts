@@ -2,11 +2,10 @@ import {
 	allowedSellerStatusCommands,
 	type SellerOrder,
 	type SellerOrderStatus,
-	type SellerOrderStatusChangedEvent,
 	type SellerStatusCommand,
 } from "@/domains/ordering/domain/seller-order";
+import type { UnitOfWork } from "@/domains/shared/application/unit-of-work";
 import type { Actor } from "@/domains/shared/domain/actor";
-import type { DomainEvent } from "@/domains/shared/domain/domain-event";
 import {
 	type AppError,
 	err,
@@ -42,23 +41,43 @@ export type ChangeSellerOrderStatusErrorCode =
 export type ChangeSellerOrderStatusError =
 	AppError<ChangeSellerOrderStatusErrorCode>;
 
-export interface SellerOrderStatusRepositoryPort {
+export type ListingStockReleaseItem = {
+	readonly listingId: string;
+	readonly quantity: number;
+};
+
+export interface ListingStockReleasePort<TContext> {
+	releaseForCanceledOrder(
+		context: TContext,
+		items: readonly ListingStockReleaseItem[],
+	): Promise<void>;
+}
+
+export interface SellerOrderStatusRepositoryPort<TContext> {
 	findById(
 		sellerOrderId: string,
 	): Promise<SellerOrderStatusChangeRecord | null>;
 	save(
+		context: TContext,
 		sellerOrder: SellerOrder,
-		domainEvents: SellerOrderStatusChangedEvent[],
-	): Promise<void>;
+		expectedCurrentStatus: SellerOrderStatus,
+	): Promise<boolean>;
 }
 
-export async function changeSellerOrderStatus(
+export type ChangeSellerOrderStatusDependencies<TContext> = {
+	readonly sellerOrders: SellerOrderStatusRepositoryPort<TContext>;
+	readonly listingStock: ListingStockReleasePort<TContext>;
+	readonly unitOfWork: UnitOfWork<TContext>;
+};
+
+export async function changeSellerOrderStatus<TContext>(
 	actor: Actor,
 	command: ChangeSellerOrderStatusCommand,
-	sellerOrders: SellerOrderStatusRepositoryPort,
+	dependencies: ChangeSellerOrderStatusDependencies<TContext>,
 ): Promise<
 	Result<ChangeSellerOrderStatusResult, ChangeSellerOrderStatusError>
 > {
+	const { sellerOrders, listingStock, unitOfWork } = dependencies;
 	const commandError = validateCommand(command);
 	if (commandError) {
 		return err(commandError);
@@ -84,16 +103,42 @@ export async function changeSellerOrderStatus(
 		return ok(toResult(record.sellerOrder));
 	}
 
+	const expectedCurrentStatus = record.sellerOrder.status;
 	const transitionError = applyTransition(record.sellerOrder, command);
 	if (transitionError) {
 		return err(transitionError);
 	}
 
 	try {
-		await sellerOrders.save(
-			record.sellerOrder,
-			statusChangedEvents(record.sellerOrder.pullDomainEvents()),
-		);
+		const saved = await unitOfWork.runInTransaction(async (context) => {
+			const updated = await sellerOrders.save(
+				context,
+				record.sellerOrder,
+				expectedCurrentStatus,
+			);
+			if (!updated) {
+				return false;
+			}
+
+			if (record.sellerOrder.status === "CANCELED") {
+				await listingStock.releaseForCanceledOrder(
+					context,
+					toStockReleaseItems(record.sellerOrder),
+				);
+			}
+
+			return true;
+		});
+
+		if (!saved) {
+			return err(
+				changeSellerOrderStatusError(
+					"CHANGE_SELLER_ORDER_STATUS_INVALID_TRANSITION",
+					"Seller order status changed by another request",
+					"conflict",
+				),
+			);
+		}
 	} catch (error) {
 		return err(
 			changeSellerOrderStatusError(
@@ -106,6 +151,15 @@ export async function changeSellerOrderStatus(
 	}
 
 	return ok(toResult(record.sellerOrder));
+}
+
+function toStockReleaseItems(
+	sellerOrder: SellerOrder,
+): ListingStockReleaseItem[] {
+	return sellerOrder.items.map((item) => ({
+		listingId: item.listingId,
+		quantity: item.quantity,
+	}));
 }
 
 export function changeSellerOrderStatusError(
@@ -243,13 +297,6 @@ function isSellerStatusCommand(
 		status === "SHIPPED" ||
 		status === "DELIVERED" ||
 		status === "CANCELED"
-	);
-}
-
-function statusChangedEvents(events: DomainEvent[]) {
-	return events.filter(
-		(event): event is SellerOrderStatusChangedEvent =>
-			event.eventName === "SellerOrderStatusChanged",
 	);
 }
 

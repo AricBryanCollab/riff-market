@@ -1,7 +1,13 @@
 import type { PrismaClient } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
+import type { ChangeSellerOrderStatusDependencies } from "@/domains/ordering/application/change-seller-order-status";
+import { releaseListingStockForCanceledOrder } from "@/domains/ordering/infrastructure/prisma-listings-for-purchase";
 import { PrismaOrderQueries } from "@/domains/ordering/infrastructure/prisma-order-queries";
 import { PrismaSellerOrderStatusRepository } from "@/domains/ordering/infrastructure/prisma-seller-order-status-repository";
+import {
+	type PrismaTransactionContext,
+	PrismaUnitOfWork,
+} from "@/domains/shared/infrastructure/prisma-unit-of-work";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	changeSellerOrderStatusForCurrentUser,
@@ -165,13 +171,13 @@ describeDb("order service Prisma integration", () => {
 
 	it("persists seller-order status changes by current-user command", async () => {
 		await seedOrderServicePurchase(db);
-		const sellerOrders = new PrismaSellerOrderStatusRepository(db);
+		const dependencies = createChangeSellerOrderStatusDependencies(db);
 
 		await expect(
 			changeSellerOrderStatusForCurrentUser(
 				sellerTwoUser,
 				{ sellerOrderId: "seller-order-1", status: "PROCESSING" },
-				sellerOrders,
+				dependencies,
 			),
 		).rejects.toMatchObject({
 			name: "RequestError",
@@ -186,7 +192,7 @@ describeDb("order service Prisma integration", () => {
 		const processed = await changeSellerOrderStatusForCurrentUser(
 			sellerUser,
 			{ sellerOrderId: "seller-order-1", status: "PROCESSING" },
-			sellerOrders,
+			dependencies,
 		);
 		expect(processed).toEqual({
 			sellerOrderId: "seller-order-1",
@@ -202,7 +208,7 @@ describeDb("order service Prisma integration", () => {
 				status: "SHIPPED",
 				trackingNumber: "TRACK-1",
 			},
-			sellerOrders,
+			dependencies,
 		);
 		expect(shipped).toEqual({
 			sellerOrderId: "seller-order-1",
@@ -225,6 +231,18 @@ describeDb("order service Prisma integration", () => {
 		});
 	});
 });
+
+function createChangeSellerOrderStatusDependencies(
+	db: PrismaClient,
+): ChangeSellerOrderStatusDependencies<PrismaTransactionContext> {
+	return {
+		sellerOrders: new PrismaSellerOrderStatusRepository(db),
+		listingStock: {
+			releaseForCanceledOrder: releaseListingStockForCanceledOrder,
+		},
+		unitOfWork: new PrismaUnitOfWork(db),
+	};
+}
 
 async function sellerOrderStatus(db: PrismaClient, sellerOrderId: string) {
 	return db.sellerOrder.findUniqueOrThrow({

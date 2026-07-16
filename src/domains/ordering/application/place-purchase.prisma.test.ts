@@ -1,6 +1,9 @@
 import type { PrismaClient } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
-import { changeSellerOrderStatus } from "@/domains/ordering/application/change-seller-order-status";
+import {
+	type ChangeSellerOrderStatusDependencies,
+	changeSellerOrderStatus,
+} from "@/domains/ordering/application/change-seller-order-status";
 import {
 	getOrderDetail,
 	listOrdersForActor,
@@ -10,11 +13,15 @@ import type {
 	PurchasePlacedNotificationCreatorPort,
 	PurchasePlacedNotificationInput,
 } from "@/domains/ordering/application/place-purchase";
+import { releaseListingStockForCanceledOrder } from "@/domains/ordering/infrastructure/prisma-listings-for-purchase";
 import { PrismaOrderQueries } from "@/domains/ordering/infrastructure/prisma-order-queries";
 import { createPrismaPlacePurchase } from "@/domains/ordering/infrastructure/prisma-place-purchase";
 import { PrismaPurchasePlacedNotificationCreator } from "@/domains/ordering/infrastructure/prisma-purchase-placed-notification-creator";
 import { PrismaSellerOrderStatusRepository } from "@/domains/ordering/infrastructure/prisma-seller-order-status-repository";
-import type { PrismaTransactionContext } from "@/domains/shared/infrastructure/prisma-unit-of-work";
+import {
+	type PrismaTransactionContext,
+	PrismaUnitOfWork,
+} from "@/domains/shared/infrastructure/prisma-unit-of-work";
 import {
 	describeDb,
 	listingStock,
@@ -469,11 +476,12 @@ describeDb("PlacePurchase Prisma integration", () => {
 			throw new Error("Expected seller order");
 		}
 
-		const sellerOrderStatuses = new PrismaSellerOrderStatusRepository(db);
+		const sellerOrderStatusDependencies =
+			createChangeSellerOrderStatusDependencies(db);
 		const denied = await changeSellerOrderStatus(
 			{ id: "seller-2", role: "SELLER" },
 			{ sellerOrderId, status: "PROCESSING" },
-			sellerOrderStatuses,
+			sellerOrderStatusDependencies,
 		);
 
 		expect(denied).toMatchObject({
@@ -486,7 +494,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 		const processed = await changeSellerOrderStatus(
 			{ id: "seller-1", role: "SELLER" },
 			{ sellerOrderId, status: "PROCESSING" },
-			sellerOrderStatuses,
+			sellerOrderStatusDependencies,
 		);
 		expect(processed).toMatchObject({
 			ok: true,
@@ -503,7 +511,7 @@ describeDb("PlacePurchase Prisma integration", () => {
 				status: "SHIPPED",
 				trackingNumber: "TRACK-1",
 			},
-			sellerOrderStatuses,
+			sellerOrderStatusDependencies,
 		);
 		expect(shipped).toMatchObject({
 			ok: true,
@@ -524,6 +532,61 @@ describeDb("PlacePurchase Prisma integration", () => {
 			status: "SHIPPED",
 			trackingNumber: "TRACK-1",
 		});
+	});
+
+	it("restores listing stock when a customer cancels their seller order", async () => {
+		await seedMarketplaceUsers(db);
+		await seedListing(db, {
+			id: "listing-1",
+			sellerId: "seller-1",
+			priceAmountMinor: 125,
+			stock: 2,
+		});
+		const placePurchase = createPlacePurchaseRunner(
+			db,
+			new SequentialPurchaseNumberGenerator(),
+		);
+		const placed = await placePurchase(
+			{ id: "customer-1", role: "CUSTOMER" },
+			{
+				items: [{ listingId: "listing-1", quantity: 1 }],
+				buyerName: "Pat Buyer",
+				buyerEmail: "pat@example.com",
+				buyerPhone: null,
+				shippingAddress: "123 Market St",
+			},
+		);
+
+		expect(placed.ok).toBe(true);
+		if (!placed.ok) {
+			throw new Error(placed.error.message);
+		}
+		const sellerOrderId = placed.value.sellerOrderIds[0];
+		if (!sellerOrderId) {
+			throw new Error("Expected seller order");
+		}
+		expect(await listingStock(db, "listing-1")).toBe(1);
+
+		const canceled = await changeSellerOrderStatus(
+			{ id: "customer-1", role: "CUSTOMER" },
+			{ sellerOrderId, status: "CANCELED" },
+			createChangeSellerOrderStatusDependencies(db),
+		);
+
+		expect(canceled).toMatchObject({
+			ok: true,
+			value: {
+				sellerOrderId,
+				status: "CANCELED",
+			},
+		});
+		expect(await listingStock(db, "listing-1")).toBe(2);
+		await expect(
+			db.sellerOrder.findUniqueOrThrow({
+				where: { id: sellerOrderId },
+				select: { status: true },
+			}),
+		).resolves.toEqual({ status: "CANCELED" });
 	});
 
 	it("combines duplicate cart rows for the same listing", async () => {
@@ -728,6 +791,18 @@ describeDb("PlacePurchase Prisma integration", () => {
 		expect(await db.sellerOrder.count()).toBe(1);
 	});
 });
+
+function createChangeSellerOrderStatusDependencies(
+	db: PrismaClient,
+): ChangeSellerOrderStatusDependencies<PrismaTransactionContext> {
+	return {
+		sellerOrders: new PrismaSellerOrderStatusRepository(db),
+		listingStock: {
+			releaseForCanceledOrder: releaseListingStockForCanceledOrder,
+		},
+		unitOfWork: new PrismaUnitOfWork(db),
+	};
+}
 
 function createPlacePurchaseRunner(
 	db: PrismaClient,

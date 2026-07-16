@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
-import type { SellerOrderStatusRepositoryPort } from "@/domains/ordering/application/change-seller-order-status";
+import type {
+	ChangeSellerOrderStatusDependencies,
+	ListingStockReleasePort,
+	SellerOrderStatusRepositoryPort,
+} from "@/domains/ordering/application/change-seller-order-status";
 import type {
 	BuyerPurchaseView,
 	OrderView,
 	SellerOrderView,
 } from "@/domains/ordering/dto/order-view";
+import type { UnitOfWork } from "@/domains/shared/application/unit-of-work";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	changeSellerOrderStatusForCurrentUser,
@@ -17,6 +22,10 @@ import { RequestError } from "@/server/request-error";
 type OrderQueries = NonNullable<
 	Parameters<typeof getOrderDetailForCurrentUser>[2]
 >;
+
+type FakeTransaction = {
+	readonly id: string;
+};
 
 const customerUser: ServerUserContext = {
 	id: "customer-1",
@@ -83,7 +92,7 @@ describe("order server service", () => {
 					sellerOrderId: "seller-order-1",
 					status: "SHIPPED",
 				},
-				new MissingSellerOrderStatusRepository(),
+				missingSellerOrderDependencies(),
 			),
 		).rejects.toMatchObject({
 			name: "RequestError",
@@ -100,7 +109,7 @@ describe("order server service", () => {
 					sellerOrderId: "missing-seller-order",
 					status: "PROCESSING",
 				},
-				new MissingSellerOrderStatusRepository(),
+				missingSellerOrderDependencies(),
 			),
 		).rejects.toMatchObject({
 			name: "RequestError",
@@ -124,14 +133,36 @@ class EmptyOrderQueries implements OrderQueries {
 	}
 }
 
+function missingSellerOrderDependencies(): ChangeSellerOrderStatusDependencies<FakeTransaction> {
+	return {
+		sellerOrders: new MissingSellerOrderStatusRepository(),
+		listingStock: new NoopListingStockRelease(),
+		unitOfWork: new ImmediateUnitOfWork(),
+	};
+}
+
 class MissingSellerOrderStatusRepository
-	implements SellerOrderStatusRepositoryPort
+	implements SellerOrderStatusRepositoryPort<FakeTransaction>
 {
 	async findById() {
 		return null;
 	}
 
-	async save() {
+	async save(): Promise<boolean> {
 		throw new Error("Missing seller orders cannot be saved");
+	}
+}
+
+class NoopListingStockRelease
+	implements ListingStockReleasePort<FakeTransaction>
+{
+	async releaseForCanceledOrder() {}
+}
+
+class ImmediateUnitOfWork implements UnitOfWork<FakeTransaction> {
+	async runInTransaction<TResult>(
+		handler: (context: FakeTransaction) => Promise<TResult>,
+	): Promise<TResult> {
+		return handler({ id: "tx-1" });
 	}
 }

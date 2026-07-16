@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
+	type ChangeSellerOrderStatusDependencies,
 	changeSellerOrderStatus,
-	type SellerOrderStatusRepositoryPort,
 } from "@/domains/ordering/application/change-seller-order-status";
 import {
 	getOrderDetail,
@@ -100,20 +100,24 @@ export async function getOrderDetailForCurrentUser(
 	return unwrapResultOrThrowRequestError(result);
 }
 
-export async function changeSellerOrderStatusForCurrentUser(
+export async function changeSellerOrderStatusForCurrentUser<TContext>(
 	user: ServerUserContext,
 	input: ChangeSellerOrderStatusInput,
-	repository?: SellerOrderStatusRepositoryPort,
+	dependencies?: ChangeSellerOrderStatusDependencies<TContext>,
 ): Promise<SellerOrderStatusChangeResponse> {
-	const sellerOrders =
-		repository ?? (await createPrismaSellerOrderStatusRepository());
 	const actor = toActor(user);
 	const command = {
 		sellerOrderId: input.sellerOrderId,
 		status: input.status,
 		trackingNumber: input.trackingNumber,
 	};
-	const result = await changeSellerOrderStatus(actor, command, sellerOrders);
+	const result = dependencies
+		? await changeSellerOrderStatus(actor, command, dependencies)
+		: await changeSellerOrderStatus(
+				actor,
+				command,
+				await createChangeSellerOrderStatusDependencies(),
+			);
 
 	return unwrapResultOrThrowRequestError(result);
 }
@@ -134,15 +138,26 @@ async function createPrismaOrderQueries(): Promise<PrismaOrderQueryPort> {
 	return new PrismaOrderQueries(prisma);
 }
 
-async function createPrismaSellerOrderStatusRepository(): Promise<SellerOrderStatusRepositoryPort> {
-	const [{ prisma }, { PrismaSellerOrderStatusRepository }] = await Promise.all(
-		[
-			import("@/data/connect-db"),
-			import(
-				"@/domains/ordering/infrastructure/prisma-seller-order-status-repository"
-			),
-		],
-	);
+async function createChangeSellerOrderStatusDependencies() {
+	const [
+		{ prisma },
+		{ PrismaSellerOrderStatusRepository },
+		{ releaseListingStockForCanceledOrder },
+		{ PrismaUnitOfWork },
+	] = await Promise.all([
+		import("@/data/connect-db"),
+		import(
+			"@/domains/ordering/infrastructure/prisma-seller-order-status-repository"
+		),
+		import("@/domains/ordering/infrastructure/prisma-listings-for-purchase"),
+		import("@/domains/shared/infrastructure/prisma-unit-of-work"),
+	]);
 
-	return new PrismaSellerOrderStatusRepository(prisma);
+	return {
+		sellerOrders: new PrismaSellerOrderStatusRepository(prisma),
+		listingStock: {
+			releaseForCanceledOrder: releaseListingStockForCanceledOrder,
+		},
+		unitOfWork: new PrismaUnitOfWork(prisma),
+	};
 }
