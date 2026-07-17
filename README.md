@@ -18,19 +18,17 @@ RiffMarket is a modern e-commerce web application for buying and selling music g
 ## Folder Structure
 
 ```
+.env.example            # Environment variable template (copy to .env at project root)
 src/
-├── actions/            # Service layer (API Business logic)
-├── data/               # Repository layer (Prisma query/mutation methods, database connection)
 ├── components/         # Reusable UI components (Navbar, UserMenu, CartList, etc.)
-├── constants/          # Static values and configuration (e.g., navbar items)
-├── hooks/              # Custom React hooks (auth, cart, sign-in/up, etc.)
-├── lib/                # Library-based functions
-│   └── tanstack-query/ # Query functions for TanStack Query
-    └── zod/            # Service layer validation
+├── data/               # Repository layer (Prisma query/mutation methods, database connection)
+├── domains/            # Domain logic and application services
+├── server/             # Server functions and API handlers
 ├── routes/             # Application routes (file-based routing)
+├── hooks/              # Custom React hooks (auth, cart, sign-in/up, etc.)
 ├── store/              # Zustand stores for global state (user, dialog, toast, etc.)
-├── types/              # TypeScript types and enums
-└── .env        # Environment variable definitions
+├── lib/                # Shared utilities and library helpers
+└── test/               # Test helpers and fixtures
 ```
 
 ---
@@ -42,20 +40,41 @@ src/
    bun install
    ```
 
-2. **Run the development server:**
+2. **Configure environment variables:**
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` and fill in real values for the required keys.
+
+3. **Generate the Prisma client:**
+   ```bash
+   bun db:generate
+   ```
+
+4. **Run database migrations:**
+   ```bash
+   bun prisma migrate dev
+   ```
+
+5. **Run the development server:**
    ```bash
    bun dev
    ```
 
-3. **Build for production:**
+6. **Build for production:**
    ```bash
    bun build
    ```
 
-4. **Syntax Format for this app**
+7. **Format and lint:**
    ```bash
-   biome format 
+   bun format
+   bun lint
+   bun validate
    ```
+
+For DB-backed Vitest tests and Playwright, set `TEST_DATABASE_URL` in `.env` (see `.env.example`). The database name must contain `test`, `testing`, `vitest`, or `integration`.
+
 ---
 
 ## Testing
