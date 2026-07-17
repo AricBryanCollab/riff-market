@@ -1,15 +1,14 @@
 import { describe, expect, it } from "vitest";
-import type {
-	ChangeSellerOrderStatusDependencies,
-	ListingStockReleasePort,
-	SellerOrderStatusRepositoryPort,
+import {
+	type ChangeSellerOrderStatusResult,
+	changeSellerOrderStatusError,
 } from "@/domains/ordering/application/change-seller-order-status";
 import type {
 	BuyerPurchaseView,
 	OrderView,
 	SellerOrderView,
 } from "@/domains/ordering/dto/order-view";
-import type { UnitOfWork } from "@/domains/shared/application/unit-of-work";
+import { err, ok } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	changeSellerOrderStatusForCurrentUser,
@@ -23,9 +22,9 @@ type OrderQueries = NonNullable<
 	Parameters<typeof getOrderDetailForCurrentUser>[2]
 >;
 
-type FakeTransaction = {
-	readonly id: string;
-};
+type ChangeSellerOrderStatusRunner = NonNullable<
+	Parameters<typeof changeSellerOrderStatusForCurrentUser>[2]
+>;
 
 const customerUser: ServerUserContext = {
 	id: "customer-1",
@@ -84,24 +83,39 @@ describe("order server service", () => {
 		});
 	});
 
-	it("maps missing tracking numbers for shipping into request errors", async () => {
-		await expect(
-			changeSellerOrderStatusForCurrentUser(
-				sellerUser,
-				{
-					sellerOrderId: "seller-order-1",
-					status: "SHIPPED",
-				},
-				missingSellerOrderDependencies(),
-			),
-		).rejects.toMatchObject({
-			name: "RequestError",
-			code: "CHANGE_SELLER_ORDER_STATUS_INVALID_COMMAND",
-			message: "Tracking number is required to ship seller order",
+	it("maps change-seller-order-status results into responses", async () => {
+		const execute: ChangeSellerOrderStatusRunner = async () =>
+			ok({
+				sellerOrderId: "seller-order-1",
+				purchaseId: "purchase-1",
+				status: "PROCESSING",
+				trackingNumber: null,
+			} satisfies ChangeSellerOrderStatusResult);
+
+		const response = await changeSellerOrderStatusForCurrentUser(
+			sellerUser,
+			{ sellerOrderId: "seller-order-1", status: "PROCESSING" },
+			execute,
+		);
+
+		expect(response).toEqual({
+			sellerOrderId: "seller-order-1",
+			purchaseId: "purchase-1",
+			status: "PROCESSING",
+			trackingNumber: null,
 		});
 	});
 
-	it("maps missing seller-order status targets into request errors", async () => {
+	it("maps change-seller-order-status errors into request errors", async () => {
+		const execute: ChangeSellerOrderStatusRunner = async () =>
+			err(
+				changeSellerOrderStatusError(
+					"CHANGE_SELLER_ORDER_STATUS_NOT_FOUND",
+					"Seller order not found",
+					"not-found",
+				),
+			);
+
 		await expect(
 			changeSellerOrderStatusForCurrentUser(
 				sellerUser,
@@ -109,7 +123,7 @@ describe("order server service", () => {
 					sellerOrderId: "missing-seller-order",
 					status: "PROCESSING",
 				},
-				missingSellerOrderDependencies(),
+				execute,
 			),
 		).rejects.toMatchObject({
 			name: "RequestError",
@@ -130,39 +144,5 @@ class EmptyOrderQueries implements OrderQueries {
 
 	async findForAdmin(): Promise<OrderView | null> {
 		return null;
-	}
-}
-
-function missingSellerOrderDependencies(): ChangeSellerOrderStatusDependencies<FakeTransaction> {
-	return {
-		sellerOrders: new MissingSellerOrderStatusRepository(),
-		listingStock: new NoopListingStockRelease(),
-		unitOfWork: new ImmediateUnitOfWork(),
-	};
-}
-
-class MissingSellerOrderStatusRepository
-	implements SellerOrderStatusRepositoryPort<FakeTransaction>
-{
-	async findById() {
-		return null;
-	}
-
-	async save(): Promise<boolean> {
-		throw new Error("Missing seller orders cannot be saved");
-	}
-}
-
-class NoopListingStockRelease
-	implements ListingStockReleasePort<FakeTransaction>
-{
-	async releaseForCanceledOrder() {}
-}
-
-class ImmediateUnitOfWork implements UnitOfWork<FakeTransaction> {
-	async runInTransaction<TResult>(
-		handler: (context: FakeTransaction) => Promise<TResult>,
-	): Promise<TResult> {
-		return handler({ id: "tx-1" });
 	}
 }

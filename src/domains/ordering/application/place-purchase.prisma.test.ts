@@ -1,9 +1,6 @@
 import type { PrismaClient } from "generated/prisma/client";
 import { beforeEach, expect, it } from "vitest";
-import {
-	type ChangeSellerOrderStatusDependencies,
-	changeSellerOrderStatus,
-} from "@/domains/ordering/application/change-seller-order-status";
+import { changeSellerOrderStatus } from "@/domains/ordering/application/change-seller-order-status";
 import {
 	getOrderDetail,
 	listOrdersForActor,
@@ -476,12 +473,10 @@ describeDb("PlacePurchase Prisma integration", () => {
 			throw new Error("Expected seller order");
 		}
 
-		const sellerOrderStatusDependencies =
-			createChangeSellerOrderStatusDependencies(db);
-		const denied = await changeSellerOrderStatus(
+		const changeStatus = createChangeSellerOrderStatusRunner(db);
+		const denied = await changeStatus(
 			{ id: "seller-2", role: "SELLER" },
 			{ sellerOrderId, status: "PROCESSING" },
-			sellerOrderStatusDependencies,
 		);
 
 		expect(denied).toMatchObject({
@@ -491,10 +486,9 @@ describeDb("PlacePurchase Prisma integration", () => {
 			},
 		});
 
-		const processed = await changeSellerOrderStatus(
+		const processed = await changeStatus(
 			{ id: "seller-1", role: "SELLER" },
 			{ sellerOrderId, status: "PROCESSING" },
-			sellerOrderStatusDependencies,
 		);
 		expect(processed).toMatchObject({
 			ok: true,
@@ -504,14 +498,13 @@ describeDb("PlacePurchase Prisma integration", () => {
 			},
 		});
 
-		const shipped = await changeSellerOrderStatus(
+		const shipped = await changeStatus(
 			{ id: "seller-1", role: "SELLER" },
 			{
 				sellerOrderId,
 				status: "SHIPPED",
 				trackingNumber: "TRACK-1",
 			},
-			sellerOrderStatusDependencies,
 		);
 		expect(shipped).toMatchObject({
 			ok: true,
@@ -567,10 +560,9 @@ describeDb("PlacePurchase Prisma integration", () => {
 		}
 		expect(await listingStock(db, "listing-1")).toBe(1);
 
-		const canceled = await changeSellerOrderStatus(
+		const canceled = await createChangeSellerOrderStatusRunner(db)(
 			{ id: "customer-1", role: "CUSTOMER" },
 			{ sellerOrderId, status: "CANCELED" },
-			createChangeSellerOrderStatusDependencies(db),
 		);
 
 		expect(canceled).toMatchObject({
@@ -792,16 +784,19 @@ describeDb("PlacePurchase Prisma integration", () => {
 	});
 });
 
-function createChangeSellerOrderStatusDependencies(
-	db: PrismaClient,
-): ChangeSellerOrderStatusDependencies<PrismaTransactionContext> {
-	return {
+function createChangeSellerOrderStatusRunner(db: PrismaClient) {
+	const dependencies = {
 		sellerOrders: new PrismaSellerOrderStatusRepository(db),
 		listingStock: {
 			releaseForCanceledOrder: releaseListingStockForCanceledOrder,
 		},
 		unitOfWork: new PrismaUnitOfWork(db),
 	};
+
+	return (
+		actor: Parameters<typeof changeSellerOrderStatus>[0],
+		command: Parameters<typeof changeSellerOrderStatus>[1],
+	) => changeSellerOrderStatus(actor, command, dependencies);
 }
 
 function createPlacePurchaseRunner(

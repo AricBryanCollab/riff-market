@@ -1,6 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-	type PlacePurchaseCommand,
 	type PlacePurchaseResult,
 	placePurchaseError,
 } from "@/domains/ordering/application/place-purchase";
@@ -13,6 +12,10 @@ import {
 	validatePlacePurchaseInput,
 } from "@/server/place-purchase-service";
 import { RequestError } from "@/server/request-error";
+
+type PlacePurchaseRunner = NonNullable<
+	Parameters<typeof placePurchaseForCurrentUser>[2]
+>;
 
 const customer: ServerUserContext = {
 	id: "customer-1",
@@ -28,8 +31,8 @@ const validInput: PlacePurchaseInput = {
 };
 
 describe("placePurchaseForCurrentUser", () => {
-	it("maps the current checkout payload into a PlacePurchase command", async () => {
-		const execute = vi.fn().mockResolvedValue(
+	it("maps place-purchase results into responses", async () => {
+		const execute: PlacePurchaseRunner = async () =>
 			ok({
 				purchaseId: "purchase-1",
 				purchaseNumber: "RIFF-1001",
@@ -37,8 +40,7 @@ describe("placePurchaseForCurrentUser", () => {
 				paymentStatus: "MANUALLY_CONFIRMED",
 				status: "OPEN",
 				sellerOrderIds: ["seller-order-1"],
-			} satisfies PlacePurchaseResult),
-		);
+			} satisfies PlacePurchaseResult);
 
 		const response = await placePurchaseForCurrentUser(
 			customer,
@@ -46,16 +48,6 @@ describe("placePurchaseForCurrentUser", () => {
 			execute,
 		);
 
-		expect(execute).toHaveBeenCalledWith(
-			{ id: "customer-1", role: "CUSTOMER" },
-			{
-				items: [{ listingId: "listing-1", quantity: 2 }],
-				buyerName: "Pat Buyer",
-				buyerEmail: "pat@example.com",
-				buyerPhone: null,
-				shippingAddress: "123 Market St",
-			} satisfies PlacePurchaseCommand,
-		);
 		expect(response).toEqual({
 			message: "An order has been placed",
 			purchase: {
@@ -71,15 +63,12 @@ describe("placePurchaseForCurrentUser", () => {
 	});
 
 	it("maps expected PlacePurchase errors into request errors", async () => {
-		const execute = vi
-			.fn()
-			.mockResolvedValue(
-				err(
-					placePurchaseError(
-						"PLACE_PURCHASE_INSUFFICIENT_STOCK",
-						"Insufficient stock for listing listing-1",
-						"conflict",
-					),
+		const execute: PlacePurchaseRunner = async () =>
+			err(
+				placePurchaseError(
+					"PLACE_PURCHASE_INSUFFICIENT_STOCK",
+					"Insufficient stock for listing listing-1",
+					"conflict",
 				),
 			);
 

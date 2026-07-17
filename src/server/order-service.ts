@@ -1,7 +1,8 @@
 import { z } from "zod";
-import {
-	type ChangeSellerOrderStatusDependencies,
-	changeSellerOrderStatus,
+import type {
+	ChangeSellerOrderStatusCommand,
+	ChangeSellerOrderStatusError,
+	ChangeSellerOrderStatusResult,
 } from "@/domains/ordering/application/change-seller-order-status";
 import {
 	getOrderDetail,
@@ -13,6 +14,7 @@ import type { SellerOrderStatus } from "@/domains/ordering/domain/seller-order";
 import { sellerStatusCommands } from "@/domains/ordering/domain/seller-order";
 import type { OrderView } from "@/domains/ordering/dto/order-view";
 import type { Actor } from "@/domains/shared/domain/actor";
+import type { Result } from "@/domains/shared/domain/result";
 import type { ServerUserContext } from "@/server/function-middleware";
 import {
 	RequestError,
@@ -51,6 +53,13 @@ export type SellerOrderStatusChangeResponse = {
 };
 
 type PrismaOrderQueryPort = OrderListQueryPort & OrderDetailQueryPort;
+
+type ChangeSellerOrderStatusRunner = (
+	actor: Actor,
+	command: ChangeSellerOrderStatusCommand,
+) => Promise<
+	Result<ChangeSellerOrderStatusResult, ChangeSellerOrderStatusError>
+>;
 
 export function validateOrderDetailInput(data: unknown): OrderDetailInput {
 	const parsed = orderDetailInputSchema.safeParse(data);
@@ -100,24 +109,21 @@ export async function getOrderDetailForCurrentUser(
 	return unwrapResultOrThrowRequestError(result);
 }
 
-export async function changeSellerOrderStatusForCurrentUser<TContext>(
+export async function changeSellerOrderStatusForCurrentUser(
 	user: ServerUserContext,
 	input: ChangeSellerOrderStatusInput,
-	dependencies?: ChangeSellerOrderStatusDependencies<TContext>,
+	runChangeSellerOrderStatus?: ChangeSellerOrderStatusRunner,
 ): Promise<SellerOrderStatusChangeResponse> {
+	const runner =
+		runChangeSellerOrderStatus ??
+		(await createPrismaChangeSellerOrderStatusRunner());
 	const actor = toActor(user);
 	const command = {
 		sellerOrderId: input.sellerOrderId,
 		status: input.status,
 		trackingNumber: input.trackingNumber,
 	};
-	const result = dependencies
-		? await changeSellerOrderStatus(actor, command, dependencies)
-		: await changeSellerOrderStatus(
-				actor,
-				command,
-				await createChangeSellerOrderStatusDependencies(),
-			);
+	const result = await runner(actor, command);
 
 	return unwrapResultOrThrowRequestError(result);
 }
@@ -138,14 +144,16 @@ async function createPrismaOrderQueries(): Promise<PrismaOrderQueryPort> {
 	return new PrismaOrderQueries(prisma);
 }
 
-async function createChangeSellerOrderStatusDependencies() {
+async function createPrismaChangeSellerOrderStatusRunner() {
 	const [
 		{ prisma },
+		{ changeSellerOrderStatus },
 		{ PrismaSellerOrderStatusRepository },
 		{ releaseListingStockForCanceledOrder },
 		{ PrismaUnitOfWork },
 	] = await Promise.all([
 		import("@/data/connect-db"),
+		import("@/domains/ordering/application/change-seller-order-status"),
 		import(
 			"@/domains/ordering/infrastructure/prisma-seller-order-status-repository"
 		),
@@ -153,11 +161,14 @@ async function createChangeSellerOrderStatusDependencies() {
 		import("@/domains/shared/infrastructure/prisma-unit-of-work"),
 	]);
 
-	return {
-		sellerOrders: new PrismaSellerOrderStatusRepository(prisma),
+	const dependencies = {
+		unitOfWork: new PrismaUnitOfWork(prisma),
 		listingStock: {
 			releaseForCanceledOrder: releaseListingStockForCanceledOrder,
 		},
-		unitOfWork: new PrismaUnitOfWork(prisma),
+		sellerOrders: new PrismaSellerOrderStatusRepository(prisma),
 	};
+
+	return (actor: Actor, command: ChangeSellerOrderStatusCommand) =>
+		changeSellerOrderStatus(actor, command, dependencies);
 }
