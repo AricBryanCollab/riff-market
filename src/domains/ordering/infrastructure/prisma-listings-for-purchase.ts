@@ -5,7 +5,6 @@ import {
 	ListingPurchaseError,
 	type ListingStatus,
 } from "@/domains/listings/domain/listing";
-import type { ListingStockReleaseItem } from "@/domains/ordering/application/change-seller-order-status";
 import { Money } from "@/domains/shared/domain/money";
 import { err, ok } from "@/domains/shared/domain/result";
 import type { PrismaTransactionContext } from "@/domains/shared/infrastructure/prisma-unit-of-work";
@@ -163,17 +162,41 @@ export class PrismaListingsForPurchase
 	}
 }
 
-function aggregateRequestedItems(items: PlacePurchaseItem[]) {
-	const quantitiesByListingId = new Map<string, number>();
+// Stock up on cancel. Same file as reserve (stock down on buy), separate adapter
+// so cancel does not depend on the purchase reservation port.
+export async function releaseListingStockForCanceledOrder(
+	context: PrismaTransactionContext,
+	items: readonly PlacePurchaseItem[],
+) {
+	const requestedItems = aggregateRequestedItems(items);
 
-	for (const item of items) {
-		quantitiesByListingId.set(
-			item.listingId,
-			(quantitiesByListingId.get(item.listingId) ?? 0) + item.quantity,
-		);
+	await Promise.all(
+		requestedItems.map((item) =>
+			context.listing.updateMany({
+				where: {
+					id: item.listingId,
+				},
+				data: {
+					stock: {
+						increment: item.quantity,
+					},
+				},
+			}),
+		),
+	);
+}
+
+function aggregateRequestedItems(
+	items: readonly PlacePurchaseItem[],
+): PlacePurchaseItem[] {
+	const quantityByListingId = new Map<string, number>();
+
+	for (const { listingId, quantity } of items) {
+		const current = quantityByListingId.get(listingId) ?? 0;
+		quantityByListingId.set(listingId, current + quantity);
 	}
 
-	return [...quantitiesByListingId.entries()].map(([listingId, quantity]) => ({
+	return Array.from(quantityByListingId, ([listingId, quantity]) => ({
 		listingId,
 		quantity,
 	}));
@@ -255,27 +278,5 @@ function mapListingError(error: unknown): PlacePurchaseError {
 		error instanceof Error ? error.message : "Listing reservation failed",
 		"invariant",
 		error,
-	);
-}
-
-// Put stock back on cancel. Lives next to reserveForPurchase (stock down on buy)
-// but stays a plain function — cancel wires a different dependency than place-purchase.
-export async function releaseListingStockForCanceledOrder(
-	context: PrismaTransactionContext,
-	items: readonly ListingStockReleaseItem[],
-) {
-	await Promise.all(
-		items.map((item) =>
-			context.listing.update({
-				where: {
-					id: item.listingId,
-				},
-				data: {
-					stock: {
-						increment: item.quantity,
-					},
-				},
-			}),
-		),
 	);
 }

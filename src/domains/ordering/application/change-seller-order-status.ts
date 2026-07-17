@@ -2,10 +2,12 @@ import {
 	allowedSellerStatusCommands,
 	type SellerOrder,
 	type SellerOrderStatus,
+	type SellerOrderStatusChangedEvent,
 	type SellerStatusCommand,
 } from "@/domains/ordering/domain/seller-order";
 import type { UnitOfWork } from "@/domains/shared/application/unit-of-work";
 import type { Actor } from "@/domains/shared/domain/actor";
+import type { DomainEvent } from "@/domains/shared/domain/domain-event";
 import {
 	type AppError,
 	err,
@@ -109,6 +111,12 @@ export async function changeSellerOrderStatus<TContext>(
 		return err(transitionError);
 	}
 
+	const domainEvents = record.sellerOrder.pullDomainEvents();
+	const stockToRelease = stockReleaseItemsForCanceledOrder(
+		record.sellerOrder,
+		domainEvents,
+	);
+
 	try {
 		const saved = await unitOfWork.runInTransaction(async (context) => {
 			const updated = await sellerOrders.save(
@@ -120,11 +128,8 @@ export async function changeSellerOrderStatus<TContext>(
 				return false;
 			}
 
-			if (record.sellerOrder.status === "CANCELED") {
-				await listingStock.releaseForCanceledOrder(
-					context,
-					toStockReleaseItems(record.sellerOrder),
-				);
+			if (stockToRelease.length > 0) {
+				await listingStock.releaseForCanceledOrder(context, stockToRelease);
 			}
 
 			return true;
@@ -153,15 +158,6 @@ export async function changeSellerOrderStatus<TContext>(
 	return ok(toResult(record.sellerOrder));
 }
 
-function toStockReleaseItems(
-	sellerOrder: SellerOrder,
-): ListingStockReleaseItem[] {
-	return sellerOrder.items.map((item) => ({
-		listingId: item.listingId,
-		quantity: item.quantity,
-	}));
-}
-
 export function changeSellerOrderStatusError(
 	code: ChangeSellerOrderStatusErrorCode,
 	message: string,
@@ -174,6 +170,29 @@ export function changeSellerOrderStatusError(
 		kind,
 		details,
 	};
+}
+
+function stockReleaseItemsForCanceledOrder(
+	sellerOrder: SellerOrder,
+	domainEvents: readonly DomainEvent[],
+): ListingStockReleaseItem[] {
+	if (!domainEvents.some(isCanceledStatusChangedEvent)) {
+		return [];
+	}
+
+	return sellerOrder.items.map((item) => ({
+		listingId: item.listingId,
+		quantity: item.quantity,
+	}));
+}
+
+function isCanceledStatusChangedEvent(
+	event: DomainEvent,
+): event is SellerOrderStatusChangedEvent {
+	return (
+		event.eventName === "SellerOrderStatusChanged" &&
+		event.payload.nextStatus === "CANCELED"
+	);
 }
 
 function validateCommand(command: ChangeSellerOrderStatusCommand) {

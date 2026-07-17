@@ -4,6 +4,7 @@ import {
 	type ChangeSellerOrderStatusCommand,
 	type ChangeSellerOrderStatusDependencies,
 	changeSellerOrderStatus,
+	type ListingStockReleaseItem,
 	type ListingStockReleasePort,
 	type SellerOrderStatusChangeRecord,
 	type SellerOrderStatusRepositoryPort,
@@ -281,11 +282,11 @@ class FakeUnitOfWork implements UnitOfWork<FakeTransaction> {
 class FakeListingStockRelease
 	implements ListingStockReleasePort<FakeTransaction>
 {
-	released: { listingId: string; quantity: number }[] = [];
+	released: ListingStockReleaseItem[] = [];
 
 	async releaseForCanceledOrder(
 		_context: FakeTransaction,
-		items: readonly { readonly listingId: string; readonly quantity: number }[],
+		items: readonly ListingStockReleaseItem[],
 	) {
 		this.released.push(...items);
 	}
