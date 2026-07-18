@@ -131,7 +131,8 @@ export function ListingDetailsActions({
 }: ListingDetailsActionsProps) {
 	const { data: user } = useAuthUser();
 	const { showToast } = useToastStore();
-	const { addItem } = useCartStore();
+	const addItem = useCartStore((state) => state.addItem);
+	const updateQuantity = useCartStore((state) => state.updateQuantity);
 	const { setOpenDialog } = useDialogStore();
 
 	const { id } = useParams({ strict: false });
@@ -168,7 +169,20 @@ export function ListingDetailsActions({
 			return;
 		}
 
-		addItem(id, user.id, role, quantity);
+		const existingQuantity =
+			useCartStore.getState().items.find((item) => item.listingId === id)
+				?.quantity ?? 0;
+		const nextQuantity = Math.max(
+			1,
+			Math.min(existingQuantity + quantity, Math.max(stock, 1)),
+		);
+
+		if (existingQuantity > 0) {
+			updateQuantity(id, nextQuantity);
+			return;
+		}
+
+		addItem(id, user.id, role, nextQuantity);
 	};
 
 	const navigateToEditListing = () => {

@@ -27,7 +27,7 @@ function RouteComponent() {
 
 	const {
 		isLoading: isLoadingCart,
-		cartLines,
+		cartDetails,
 		cartPricing,
 		checkoutCart,
 	} = useCartDetails();
@@ -77,7 +77,7 @@ function RouteComponent() {
 					<form onSubmit={handleSubmit} className="space-y-6">
 						<OrderItemCard
 							isLoadingCart={isLoadingCart}
-							cartLines={cartLines}
+							cartDetails={cartDetails}
 						/>
 
 						<ShippingAddressField

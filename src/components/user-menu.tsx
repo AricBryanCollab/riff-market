@@ -61,11 +61,6 @@ const CustomerActions = () => {
 	const [isOpen, setIsOpen] = useState(false);
 	const cartItems = useCartStore((state) => state.items);
 
-	const cartCount = useMemo(
-		() => cartItems.reduce((total, item) => total + item.quantity, 0),
-		[cartItems],
-	);
-
 	const uniqueListingIds = useMemo(
 		() => Array.from(new Set(cartItems.map((item) => item.listingId))).sort(),
 		[cartItems],
@@ -75,7 +70,8 @@ const CustomerActions = () => {
 		isCartEmpty,
 		isLoading: isCartLoading,
 		cartPricing,
-		cartLines,
+		cartCount,
+		cartDetails,
 	} = useCartDetails({ enabled: isOpen });
 
 	const prefetchCart = useCallback(() => {
@@ -110,7 +106,7 @@ const CustomerActions = () => {
 						isCartEmpty={isCartEmpty}
 						cartPricing={cartPricing}
 						cartCount={cartCount}
-						cartLines={cartLines}
+						cartDetails={cartDetails}
 					/>
 				</Suspense>
 			) : null}

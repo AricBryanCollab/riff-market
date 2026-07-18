@@ -8,7 +8,7 @@ import type { ListingResponse } from "@/domains/listings/dto/listing-view";
 import { queryKeys } from "@/lib/tanstack-query/query-keys";
 import { getCartListingsServerFn } from "@/server/listing-query.functions";
 import { type CartItem, useCartStore } from "@/store/cart";
-import type { CartLine } from "@/types/cart";
+import type { CartDetail } from "@/types/cart";
 import type { OrderItem } from "@/types/order";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
 
@@ -50,15 +50,15 @@ export type CheckoutCartState =
 	  };
 
 function toListingCartSubtotalLines(
-	lines: CartLine[],
+	cartDetails: CartDetail[],
 ): ListingCartSubtotalLine[] {
-	return lines.flatMap((line) =>
-		line.status === "available"
+	return cartDetails.flatMap((detail) =>
+		detail.status === "available"
 			? [
 					{
-						priceAmountMinor: line.listing.priceAmountMinor,
-						currencyCode: line.listing.currencyCode,
-						quantity: line.quantity,
+						priceAmountMinor: detail.listing.priceAmountMinor,
+						currencyCode: detail.listing.currencyCode,
+						quantity: detail.quantity,
 					},
 				]
 			: [],
@@ -104,36 +104,45 @@ const useCartDetails = (options: UseCartDetailsOptions = {}) => {
 		listings.map((listing) => [listing.id, listing]),
 	);
 
-	const cartLines = cartDetailsLoadFailed
+	const cartDetails = cartDetailsLoadFailed
 		? []
 		: cartItems.map((cartItem) =>
-				toCartLine(cartItem, listingsById.get(cartItem.listingId)),
+				toCartDetail(cartItem, listingsById.get(cartItem.listingId)),
 			);
 
 	const isCartEmpty = cartItems.length === 0;
 	const isLoading = shouldFetchCartDetails && isLoadingListings;
-	const unavailableListingIds = cartLines
-		.filter((line) => line.status === "unavailable")
-		.map((line) => line.listingId);
+	const unavailableListingIds = cartDetails
+		.filter((detail) => detail.status === "unavailable")
+		.map((detail) => detail.listingId);
 	const cartPricing = getCartPricingState({
 		isLoading: isLoading || (!enabled && uniqueListingIds.length > 0),
 		isLoadError: cartDetailsLoadFailed,
 		unavailableListingIds,
-		lines: cartLines,
+		cartDetails,
 	});
 	const checkoutCart = getCheckoutCartState({
-		lines: cartLines,
+		cartDetails,
 		cartPricing,
 	});
 
-	const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+	const cartCount = cartDetails.reduce(
+		(total, detail) => total + detail.quantity,
+		0,
+	);
 
 	const handleRemoveItem = (id: string) => {
 		removeItem(id);
 	};
 
 	const handleQuantityChange = (quantity: number, listingId: string) => {
-		updateQuantity(listingId, quantity);
+		const listing = listingsById.get(listingId);
+
+		if (!listing) {
+			return;
+		}
+
+		updateQuantity(listingId, clampCartQuantity(quantity, listing.stock));
 	};
 
 	return {
@@ -142,13 +151,25 @@ const useCartDetails = (options: UseCartDetailsOptions = {}) => {
 		cartPricing,
 		checkoutCart,
 		cartCount,
-		cartLines,
+		cartDetails,
 		handleRemoveItem,
 		handleQuantityChange,
 	};
 };
 
-function toCartLine(cartItem: CartItem, listing: ListingResponse | undefined) {
+function clampCartQuantity(quantity: number, stock: number): number {
+	if (!Number.isSafeInteger(quantity) || quantity < 1) {
+		return 1;
+	}
+
+	if (!Number.isSafeInteger(stock) || stock < 1) {
+		return 1;
+	}
+
+	return Math.min(quantity, stock);
+}
+
+function toCartDetail(cartItem: CartItem, listing: ListingResponse | undefined) {
 	if (!listing) {
 		return {
 			status: "unavailable",
@@ -159,13 +180,15 @@ function toCartLine(cartItem: CartItem, listing: ListingResponse | undefined) {
 			unitPriceText: "Unavailable",
 			subtotalText: "Unavailable",
 			imageAlt: "Listing unavailable",
-		} satisfies CartLine;
+		} satisfies CartDetail;
 	}
+
+	const effectiveQuantity = clampCartQuantity(cartItem.quantity, listing.stock);
 
 	return {
 		status: "available",
 		listingId: cartItem.listingId,
-		quantity: cartItem.quantity,
+		quantity: effectiveQuantity,
 		listing,
 		title: listing.name,
 		description: `${listing.brand} • ${listing.model}`,
@@ -174,24 +197,24 @@ function toCartLine(cartItem: CartItem, listing: ListingResponse | undefined) {
 			listing.currencyCode,
 		),
 		subtotalText: formatMoneyAmountMinor(
-			listing.priceAmountMinor * cartItem.quantity,
+			listing.priceAmountMinor * effectiveQuantity,
 			listing.currencyCode,
 		),
 		imageUrl: listing.images[0]?.url,
 		imageAlt: listing.name,
-	} satisfies CartLine;
+	} satisfies CartDetail;
 }
 
 function getCartPricingState({
 	isLoading,
 	isLoadError,
 	unavailableListingIds,
-	lines,
+	cartDetails,
 }: {
 	readonly isLoading: boolean;
 	readonly isLoadError: boolean;
 	readonly unavailableListingIds: string[];
-	readonly lines: CartLine[];
+	readonly cartDetails: CartDetail[];
 }): CartPricingState {
 	if (isLoading) {
 		return {
@@ -216,7 +239,7 @@ function getCartPricingState({
 	}
 
 	const subtotal = calculateListingCartSubtotal(
-		toListingCartSubtotalLines(lines),
+		toListingCartSubtotalLines(cartDetails),
 	);
 
 	if (subtotal.status === "invalid") {
@@ -235,13 +258,13 @@ function getCartPricingState({
 }
 
 function getCheckoutCartState({
-	lines,
+	cartDetails,
 	cartPricing,
 }: {
-	readonly lines: CartLine[];
+	readonly cartDetails: CartDetail[];
 	readonly cartPricing: CartPricingState;
 }): CheckoutCartState {
-	if (lines.length === 0) {
+	if (cartDetails.length === 0) {
 		return {
 			status: "not-ready",
 			message: "Your cart is empty",
@@ -257,9 +280,9 @@ function getCheckoutCartState({
 
 	return {
 		status: "ready",
-		items: lines.flatMap((line) =>
-			line.status === "available"
-				? [{ listingId: line.listingId, quantity: line.quantity }]
+		items: cartDetails.flatMap((detail) =>
+			detail.status === "available"
+				? [{ listingId: detail.listingId, quantity: detail.quantity }]
 				: [],
 		),
 	};

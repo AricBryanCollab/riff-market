@@ -22,7 +22,7 @@ function RouteComponent() {
 		isLoading,
 		cartPricing,
 		cartCount,
-		cartLines,
+		cartDetails,
 		handleRemoveItem,
 		handleQuantityChange,
 	} = useCartDetails();
@@ -83,7 +83,7 @@ function RouteComponent() {
 				<div className=" w-full rounded-2xl bg-white p-8">
 					<h2 className="mb-6 text-2xl font-semibold">Items in Your Cart</h2>
 					<div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-						{cartLines.map((item) => (
+						{cartDetails.map((item) => (
 							<CartCard
 								key={item.listingId}
 								cartItem={item}

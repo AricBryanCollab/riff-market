@@ -1,9 +1,9 @@
 import Counter from "@/components/counter";
 import { Button } from "@/components/ui/button";
-import type { CartLine } from "@/types/cart";
+import type { CartDetail } from "@/types/cart";
 
 interface CartCardProps {
-	cartItem: CartLine;
+	cartItem: CartDetail;
 	handleRemoveItem: (id: string) => void;
 	handleQuantityChange: (quantity: number, listingId: string) => void;
 }
@@ -14,6 +14,7 @@ const CartCard = ({
 	handleQuantityChange,
 }: CartCardProps) => {
 	const { listingId, quantity } = cartItem;
+	const isAvailable = cartItem.status === "available";
 
 	return (
 		<div className="flex flex-col rounded-xl bg-background/90 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -48,6 +49,8 @@ const CartCard = ({
 					label="Quantity"
 					value={quantity}
 					min={1}
+					max={isAvailable ? cartItem.listing.stock : undefined}
+					disabled={!isAvailable}
 					showLimit={false}
 					onChange={(newQuantity) =>
 						handleQuantityChange(newQuantity, listingId)

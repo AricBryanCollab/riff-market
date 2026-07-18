@@ -1,14 +1,14 @@
 import { Package } from "lucide-react";
 import AnimatedLoader from "@/components/animated-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { CartLine } from "@/types/cart";
+import type { CartDetail } from "@/types/cart";
 
 interface OrderItemCardProps {
 	isLoadingCart: boolean;
-	cartLines: CartLine[];
+	cartDetails: CartDetail[];
 }
 
-const OrderItemCard = ({ isLoadingCart, cartLines }: OrderItemCardProps) => {
+const OrderItemCard = ({ isLoadingCart, cartDetails }: OrderItemCardProps) => {
 	return (
 		<Card>
 			<CardHeader>
@@ -27,13 +27,13 @@ const OrderItemCard = ({ isLoadingCart, cartLines }: OrderItemCardProps) => {
 							containerSizeClass="w-fit min-h-fit mx-auto py-8"
 						/>
 					</div>
-				) : cartLines.length === 0 ? (
+				) : cartDetails.length === 0 ? (
 					<p className="text-center text-muted-foreground py-8">
 						Your cart is empty
 					</p>
 				) : (
 					<div className="space-y-4">
-						{cartLines.map((item) => (
+						{cartDetails.map((item) => (
 							<div
 								key={item.listingId}
 								className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"

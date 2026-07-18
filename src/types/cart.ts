@@ -1,6 +1,6 @@
 import type { ListingResponse } from "@/domains/listings/dto/listing-view";
 
-type CartLineBase = {
+type CartDetailBase = {
 	readonly listingId: string;
 	readonly quantity: number;
 	readonly title: string;
@@ -11,13 +11,13 @@ type CartLineBase = {
 	readonly imageAlt: string;
 };
 
-export type AvailableCartLine = CartLineBase & {
+export type AvailableCartDetail = CartDetailBase & {
 	readonly status: "available";
 	readonly listing: ListingResponse;
 };
 
-export type UnavailableCartLine = CartLineBase & {
+export type UnavailableCartDetail = CartDetailBase & {
 	readonly status: "unavailable";
 };
 
-export type CartLine = AvailableCartLine | UnavailableCartLine;
+export type CartDetail = AvailableCartDetail | UnavailableCartDetail;

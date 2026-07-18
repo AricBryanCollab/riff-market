@@ -4,7 +4,7 @@ import AnimatedLoader from "@/components/animated-loader";
 import { Button } from "@/components/ui/button";
 import { BodySmall, H5 } from "@/components/ui/typography";
 import type { CartPricingState } from "@/hooks/use-cart-details";
-import type { CartLine } from "@/types/cart";
+import type { CartDetail } from "@/types/cart";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
 
 interface CartListProps {
@@ -12,7 +12,7 @@ interface CartListProps {
 	isCartEmpty: boolean;
 	cartPricing: CartPricingState;
 	cartCount: number;
-	cartLines: CartLine[];
+	cartDetails: CartDetail[];
 }
 
 const CartList = ({
@@ -20,7 +20,7 @@ const CartList = ({
 	isCartEmpty,
 	cartPricing,
 	cartCount,
-	cartLines,
+	cartDetails,
 }: CartListProps) => {
 	const subtotalText =
 		cartPricing.status === "priced"
@@ -76,7 +76,7 @@ const CartList = ({
 			<div className="max-h-96 overflow-y-auto px-4 py-3">
 				{!isLoading && !isCartEmpty && (
 					<ul className="space-y-3">
-						{cartLines.slice(0, 3).map((cart) => (
+						{cartDetails.slice(0, 3).map((cart) => (
 							<li
 								key={cart.listingId}
 								className="flex gap-3 p-2.5 rounded-lg hover:bg-accent/50 transition-colors group"
@@ -110,11 +110,11 @@ const CartList = ({
 								</div>
 							</li>
 						))}
-						{cartLines.length > 3 && (
+						{cartDetails.length > 3 && (
 							<div className="text-center pt-1 pb-1">
 								<BodySmall className="text-muted-foreground/80 text-xs">
-									+{cartLines.length - 3} more{" "}
-									{cartLines.length - 3 === 1 ? "item" : "items"}
+									+{cartDetails.length - 3} more{" "}
+									{cartDetails.length - 3 === 1 ? "item" : "items"}
 								</BodySmall>
 							</div>
 						)}
