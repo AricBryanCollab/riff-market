@@ -39,16 +39,16 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 							"https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400"
 						}
 						alt={listing.name}
-						className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+						className="w-full h-full object-cover outline -outline-offset-1 outline-black/10 dark:outline-white/10 group-hover:scale-105 transition-transform duration-300"
 					/>
 
 					{isOutOfStock && (
-						<div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
+						<div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-sm">
 							Out of Stock
 						</div>
 					)}
 					{isLowStock && (
-						<div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded">
+						<div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-sm">
 							{listing.stock} left
 						</div>
 					)}
@@ -116,7 +116,7 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 					<Link
 						to="/listing/$id"
 						params={{ id: listing.id }}
-						className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium text-center transition-colors"
+						className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium text-center transition-[background-color,scale] active:scale-[0.96]"
 						onClick={(e) => {
 							if (onClick) {
 								e.preventDefault();

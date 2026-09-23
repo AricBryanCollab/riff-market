@@ -15,12 +15,12 @@ const NavbarIconButtons = ({
 	return (
 		<div
 			onClick={onClick}
-			className="relative cursor-pointer hover:bg-accent/20 rounded-full p-1"
+			className="relative cursor-pointer hover:bg-accent/20 rounded-full p-1 after:absolute after:top-1/2 after:left-1/2 after:size-10 after:-translate-1/2"
 		>
 			<Icon size={24} className="text-primary" />
 			{count > 0 && (
 				<div className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-rose-500">
-					<span className="text-xs font-semibold text-white leading-none">
+					<span className="text-xs font-semibold text-white leading-none tabular-nums">
 						{count > 9 ? "9+" : count}
 					</span>
 				</div>

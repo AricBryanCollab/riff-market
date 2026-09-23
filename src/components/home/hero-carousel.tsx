@@ -48,7 +48,7 @@ const HeroCarousel = ({
 								<img
 									src={listing.images[0]?.url}
 									alt={listing.name}
-									className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+									className="w-full h-full object-cover rounded-2xl outline -outline-offset-1 outline-black/10 dark:outline-white/10 transition-transform duration-300 group-hover:scale-105"
 								/>
 							) : (
 								<div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
@@ -61,7 +61,7 @@ const HeroCarousel = ({
 
 					<Button
 						variant="outline"
-						size="icon"
+						size="icon-lg"
 						onClick={goToPrev}
 						aria-label="Previous item"
 						className="absolute left-3 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
@@ -71,7 +71,7 @@ const HeroCarousel = ({
 
 					<Button
 						variant="outline"
-						size="icon"
+						size="icon-lg"
 						onClick={goToNext}
 						aria-label="Next item"
 						className="absolute right-3 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
@@ -86,7 +86,7 @@ const HeroCarousel = ({
 								key={listings[index].id}
 								type="button"
 								onClick={() => setCurrentIndex(index)}
-								className={`w-2 h-2 rounded-full transition-colors ${
+								className={`relative w-2 h-2 rounded-full transition-colors after:absolute after:top-1/2 after:left-1/2 after:h-10 after:w-4 after:-translate-1/2 ${
 									index === currentIndex ? "bg-foreground" : "bg-foreground/30"
 								}`}
 								aria-label={`Go to item ${index + 1}`}
@@ -99,13 +99,13 @@ const HeroCarousel = ({
 					<p className="text-sm text-muted-foreground uppercase tracking-wider">
 						Featured
 					</p>
-					<h1 className="text-4xl md:text-5xl font-semibold text-foreground mt-2 leading-tight">
+					<h1 className="text-4xl md:text-5xl font-semibold text-foreground mt-2 leading-tight text-balance">
 						{listing.name}
 					</h1>
 					<p className="text-muted-foreground mt-4">
 						{listing.brand} · {listing.model}
 					</p>
-					<p className="text-3xl font-semibold text-foreground mt-6">
+					<p className="text-3xl font-semibold text-foreground mt-6 tabular-nums">
 						{formatMoneyAmountMinor(
 							listing.priceAmountMinor,
 							listing.currencyCode,
