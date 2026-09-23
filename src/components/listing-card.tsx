@@ -43,7 +43,7 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 					/>
 
 					{isOutOfStock && (
-						<div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-sm">
+						<div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-sm">
 							Out of Stock
 						</div>
 					)}
