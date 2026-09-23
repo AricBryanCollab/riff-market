@@ -20,12 +20,12 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 	const sellerName = `${listing.seller.firstName} ${listing.seller.lastName}`;
 
 	return (
-		<Card className="flex flex-col max-h-125 hover:shadow-lg transition-shadow duration-200 group">
+		<Card className="flex flex-col max-h-125 pt-0 hover:shadow-lg transition-shadow duration-200 group">
 			<CardHeader className="p-0">
 				<Link
 					to="/listing/$id"
 					params={{ id: listing.id }}
-					className="relative block h-48 rounded-t-lg bg-accent overflow-hidden"
+					className="relative block h-48 rounded-t-xl bg-accent overflow-hidden"
 					onClick={(e) => {
 						if (onClick) {
 							e.preventDefault();
