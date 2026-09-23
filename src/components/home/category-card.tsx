@@ -1,16 +1,30 @@
 import { Link } from "@tanstack/react-router";
-import { type LucideIcon, Mic2, Music, Piano, Zap } from "lucide-react";
+import {
+	AudioWaveform,
+	Guitar,
+	Headphones,
+	KeyboardMusic,
+	type LucideIcon,
+	Music,
+	PlugZap,
+} from "lucide-react";
 import type { ListingCategoryMeta } from "@/domains/listings/dto/listing-view";
+import { cn } from "@/lib/utils";
 
 interface CategoryCardProps {
 	category: ListingCategoryMeta;
 }
 
 const ICON_MAP: Record<string, LucideIcon> = {
-	Zap,
-	Music,
-	Piano,
-	Mic2,
+	PlugZap,
+	Guitar,
+	KeyboardMusic,
+	AudioWaveform,
+	Headphones,
+};
+
+const OPTICAL_OFFSET: Record<string, string> = {
+	PlugZap: "translate-x-px",
 };
 
 const CategoryCard = ({ category }: CategoryCardProps) => {
@@ -22,8 +36,8 @@ const CategoryCard = ({ category }: CategoryCardProps) => {
 			search={{ category: category.category }}
 			className="group flex items-center gap-4 p-4 rounded-xl ring-1 ring-foreground/10 shadow-xs hover:ring-foreground/20 transition-shadow"
 		>
-			<div className="p-3 rounded-lg bg-muted group-hover:bg-foreground group-hover:text-background transition-colors">
-				<Icon className="w-5 h-5" />
+			<div className="p-2.5 rounded-lg bg-muted group-hover:bg-foreground group-hover:text-background transition-colors">
+				<Icon className={cn("size-6", OPTICAL_OFFSET[category.icon])} />
 			</div>
 			<div>
 				<h3 className="font-medium text-foreground">{category.label}</h3>
