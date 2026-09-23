@@ -48,7 +48,7 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 						</div>
 					)}
 					{isLowStock && (
-						<div className="absolute top-2 right-2 bg-amber-500 text-white text-xs font-semibold px-2 py-1 rounded">
+						<div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded">
 							{listing.stock} left
 						</div>
 					)}
