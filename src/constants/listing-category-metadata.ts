@@ -7,22 +7,22 @@ export const listingCategoryMetadata: Record<
 > = {
 	ELECTRIC: {
 		label: "Electric Guitars",
-		icon: "Zap",
+		icon: "PlugZap",
 	},
 	ACOUSTIC: {
 		label: "Acoustic Guitars",
-		icon: "Music",
+		icon: "Guitar",
 	},
 	KEYBOARD: {
 		label: "Keyboards & Synths",
-		icon: "Piano",
+		icon: "KeyboardMusic",
 	},
 	PEDALS: {
 		label: "Pedals & Effects",
-		icon: "Wand2",
+		icon: "AudioWaveform",
 	},
 	ACCESSORY: {
 		label: "Accessories",
-		icon: "Mic2",
+		icon: "Headphones",
 	},
 };
