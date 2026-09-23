@@ -17,7 +17,7 @@ import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 import { useSidebarStore } from "@/store/sidebar";
 
 const shopSidebarVariants = cva(
-	"shrink-0 border-r bg-background fixed z-50 h-screen overflow-hidden transition-all duration-300 ease-in-out",
+	"shrink-0 border-r bg-background fixed z-50 h-screen overflow-hidden transition-[width] duration-300 ease-in-out",
 	{
 		variants: {
 			isExpanded: {

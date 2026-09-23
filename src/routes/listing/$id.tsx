@@ -105,7 +105,7 @@ function RouteComponent() {
 									listing.images[selectedImage]?.url || listing.images[0]?.url
 								}
 								alt={listing.name}
-								className="w-full h-full object-cover"
+								className="w-full h-full object-cover rounded-xl outline -outline-offset-1 outline-black/10 dark:outline-white/10"
 							/>
 						</div>
 						<div className="grid grid-cols-4 gap-3">
@@ -114,7 +114,7 @@ function RouteComponent() {
 									type="button"
 									key={img.imageId}
 									onClick={() => setSelectedImage(idx)}
-									className={`h-20 w-full rounded-lg overflow-hidden transition-all ${
+									className={`h-20 w-full rounded-lg overflow-hidden transition-[opacity,box-shadow] ${
 										selectedImage === idx
 											? "ring-2 ring-primary"
 											: "opacity-70 hover:opacity-100"
@@ -123,7 +123,7 @@ function RouteComponent() {
 									<img
 										src={img.url}
 										alt={`${listing.name} ${idx + 1}`}
-										className="w-full h-full object-cover"
+										className="w-full h-full object-cover rounded-lg outline -outline-offset-1 outline-black/10 dark:outline-white/10"
 									/>
 								</button>
 							))}
@@ -134,7 +134,7 @@ function RouteComponent() {
 						{/* TITLE & BRAND */}
 						<div className="flex items-start justify-between gap-4">
 							<div className="flex-1">
-								<h1 className="text-3xl font-bold text-gray-900 mb-2">
+								<h1 className="text-3xl font-bold text-gray-900 mb-2 text-balance">
 									{listing.name}
 								</h1>
 								<p className="text-lg text-gray-600">
@@ -170,7 +170,7 @@ function RouteComponent() {
 						</div>
 
 						{/* PRICE */}
-						<div className="rounded-xl bg-slate-50 p-6 border-2 border-slate-200">
+						<div className="rounded-xl bg-slate-50 p-6 ring-1 ring-foreground/10 shadow-xs">
 							<p className="text-4xl font-bold text-gray-900">
 								{formatMoneyAmountMinor(
 									listing.priceAmountMinor,
@@ -197,7 +197,7 @@ function RouteComponent() {
 							<h3 className="text-xl font-semibold text-gray-900 mb-3">
 								Description
 							</h3>
-							<p className="text-gray-600 leading-relaxed">
+							<p className="text-gray-600 leading-relaxed text-pretty">
 								{listing.description}
 							</p>
 						</div>

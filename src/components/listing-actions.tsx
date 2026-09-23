@@ -17,7 +17,7 @@ import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
 
 const listingActionButtonVariants = cva(
-	"rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors",
+	"rounded-lg font-semibold flex items-center justify-center gap-2 transition-[color,background-color,scale] active:not-disabled:scale-[0.96]",
 	{
 		variants: {
 			variant: {
