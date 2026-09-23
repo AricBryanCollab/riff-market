@@ -95,7 +95,7 @@ function OrderSummaryBreakdown({
 				)}
 			>
 				<span>Total</span>
-				<span className="text-primary">
+				<span className="text-primary tabular-nums">
 					{formatSummaryAmount(totalAmountMinor, amounts.currencyCode)}
 				</span>
 			</div>
@@ -113,7 +113,7 @@ function OrderSummaryRow({
 	return (
 		<div className="flex justify-between text-sm">
 			<span className="text-muted-foreground">{label}</span>
-			<span className="font-medium">{children}</span>
+			<span className="font-medium tabular-nums">{children}</span>
 		</div>
 	);
 }
