@@ -82,11 +82,11 @@ const CartList = ({
 								className="flex gap-3 p-2.5 rounded-lg hover:bg-accent/50 transition-colors group"
 							>
 								{cart.imageUrl && (
-									<div className="relative size-20 shrink-0 rounded-md overflow-hidden bg-muted border border-border">
+									<div className="relative size-20 shrink-0 rounded-md overflow-hidden bg-muted">
 										<img
 											src={cart.imageUrl}
 											alt={cart.imageAlt}
-											className="w-full h-full object-cover"
+											className="w-full h-full object-cover rounded-md outline -outline-offset-1 outline-black/10 dark:outline-white/10"
 										/>
 									</div>
 								)}
@@ -128,7 +128,7 @@ const CartList = ({
 						<span className="text-sm font-medium text-muted-foreground">
 							Subtotal:
 						</span>
-						<span className="text-lg font-bold text-foreground">
+						<span className="text-lg font-bold text-foreground tabular-nums">
 							{subtotalText}
 						</span>
 					</div>

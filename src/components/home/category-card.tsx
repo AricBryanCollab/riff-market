@@ -20,7 +20,7 @@ const CategoryCard = ({ category }: CategoryCardProps) => {
 		<Link
 			to="/shop"
 			search={{ category: category.category }}
-			className="group flex items-center gap-4 p-4 rounded-xl border border-border hover:border-foreground transition-colors"
+			className="group flex items-center gap-4 p-4 rounded-xl ring-1 ring-foreground/10 shadow-xs hover:ring-foreground/20 transition-shadow"
 		>
 			<div className="p-3 rounded-lg bg-muted group-hover:bg-foreground group-hover:text-background transition-colors">
 				<Icon className="w-5 h-5" />

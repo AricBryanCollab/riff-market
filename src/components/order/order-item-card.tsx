@@ -36,25 +36,25 @@ const OrderItemCard = ({ isLoadingCart, cartDetails }: OrderItemCardProps) => {
 						{cartDetails.map((item) => (
 							<div
 								key={item.listingId}
-								className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"
+								className="flex items-center gap-4 p-2 rounded-xl bg-muted/50"
 							>
-								<div className="size-20 bg-muted rounded-md flex items-center justify-center">
+								<div className="size-20 bg-muted rounded-sm flex items-center justify-center">
 									{item.imageUrl && (
 										<img
 											src={item.imageUrl}
 											alt={item.imageAlt}
-											className="w-full h-full object-cover"
+											className="w-full h-full object-cover rounded-sm outline -outline-offset-1 outline-black/10 dark:outline-white/10"
 										/>
 									)}
 								</div>
 								<div className="grid grid-cols-2">
 									<div className="flex flex-col gap-2">
 										<h4 className="font-medium">{item.title}</h4>
-										<p className="text-sm text-muted-foreground">
+										<p className="text-sm text-muted-foreground tabular-nums">
 											Quantity: {item.quantity}
 										</p>
 									</div>
-									<div className="flex flex-col items-end gap-2">
+									<div className="flex flex-col items-end gap-2 tabular-nums">
 										<p className="font-semibold">{item.unitPriceText}</p>
 										<p className="text-sm text-muted-foreground">
 											{item.subtotalText}

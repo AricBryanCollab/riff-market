@@ -57,16 +57,16 @@ function RouteComponent() {
 					<div className="flex w-[50%] flex-col gap-4">
 						<div className="flex w-full items-center justify-between rounded-xl  px-4 py-3">
 							<BodySmall className="font-medium">Total Items</BodySmall>
-							<BodyLarge className="font-bold text-primary">
+							<BodyLarge className="font-bold text-primary tabular-nums">
 								{cartCount}
 							</BodyLarge>
 						</div>
 
-						<div className="flex w-full items-center justify-between rounded-xl border border-foreground px-2 py-3">
+						<div className="flex w-full items-center justify-between rounded-xl ring-1 ring-foreground/10 shadow-xs px-2 py-3">
 							<BodySmall className="font-semibold tracking-wide">
 								Total Price
 							</BodySmall>
-							<BodyLarge className="font-extrabold leading-none">
+							<BodyLarge className="font-extrabold leading-none tabular-nums">
 								{cartPricing.status === "priced"
 									? formatMoneyAmountMinor(
 											cartPricing.totalPriceAmountMinor,

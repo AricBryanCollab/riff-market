@@ -55,7 +55,24 @@ export function PasswordField({
 					aria-label={isVisible ? "Hide password" : "Show password"}
 					className="absolute top-1/2 -translate-y-1/2 right-3 cursor-pointer text-foreground hover:text-primary focus-visible:text-primary focus-visible:outline-none transition-colors"
 				>
-					{isVisible ? <EyeOff size={20} /> : <Eye size={20} />}
+					<EyeOff
+						size={20}
+						className={cn(
+							"absolute inset-0 transition-[opacity,filter,scale] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
+							isVisible
+								? "scale-100 opacity-100 blur-[0px]"
+								: "scale-[0.25] opacity-0 blur-[4px]",
+						)}
+					/>
+					<Eye
+						size={20}
+						className={cn(
+							"transition-[opacity,filter,scale] duration-300 ease-[cubic-bezier(0.2,0,0,1)]",
+							isVisible
+								? "scale-[0.25] opacity-0 blur-[4px]"
+								: "scale-100 opacity-100 blur-[0px]",
+						)}
+					/>
 				</button>
 			</div>
 		</Field>

@@ -19,7 +19,7 @@ const H1 = ({ children, className = "" }: TypographyProps) => (
 const H2 = ({ children, className = "" }: TypographyProps) => (
 	<h2
 		className={cn(
-			"scroll-m-20 text-3xl font-semibold tracking-tight lg:text-4xl",
+			"scroll-m-20 text-3xl font-semibold tracking-tight text-balance lg:text-4xl",
 			className,
 		)}
 	>
@@ -30,7 +30,7 @@ const H2 = ({ children, className = "" }: TypographyProps) => (
 const H3 = ({ children, className = "" }: TypographyProps) => (
 	<h3
 		className={cn(
-			"scroll-m-20 text-2xl font-semibold tracking-tight",
+			"scroll-m-20 text-2xl font-semibold tracking-tight text-balance",
 			className,
 		)}
 	>

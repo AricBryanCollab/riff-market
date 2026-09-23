@@ -102,7 +102,7 @@ function RouteComponent() {
 					>
 						Previous
 					</Button>
-					<span className="px-4 py-2 text-sm text-muted-foreground">
+					<span className="px-4 py-2 text-sm text-muted-foreground tabular-nums">
 						Page {page + 1} of {totalPages}
 					</span>
 

@@ -73,10 +73,10 @@ const Counter = ({
 							min={min}
 							max={max}
 							step={1}
-							className="w-20 text-center bg-muted text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+							className="w-20 text-center bg-muted text-sm font-medium tabular-nums focus:outline-none focus:ring-2 focus:ring-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
 						/>
 					) : (
-						<div className="w-20 text-center text-sm font-medium py-2.5">
+						<div className="w-20 text-center text-sm font-medium py-2.5 tabular-nums">
 							{value}
 						</div>
 					)}
