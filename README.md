@@ -56,6 +56,11 @@ src/
    bun prisma migrate dev
    ```
 
+   Optionally seed demo sellers and approved listings with photos (re-runnable; seller password `riffmarket-seed`):
+   ```bash
+   bun db:seed
+   ```
+
 5. **Run the development server:**
    ```bash
    bun dev
