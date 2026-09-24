@@ -99,7 +99,7 @@ export function ShopPageListingActions({
 					value={searchTerm}
 					onChange={(e) => handleSearchTerm(e.target.value)}
 					placeholder="Search listings"
-					className="outline-none text-sm text-slate-700 placeholder:text-slate-400 bg-transparent w-48"
+					className="outline-none text-sm text-foreground placeholder:text-muted-foreground bg-transparent w-48"
 				/>
 			</div>
 			<div className="min-w-36">{ButtonByRole()}</div>
