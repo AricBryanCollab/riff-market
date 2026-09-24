@@ -16,8 +16,16 @@ import SectionContainer from "@/components/section-container";
 import { listingCategoryOptions } from "@/constants/select-options";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { listingByIdQueryOpt } from "@/hooks/use-get-listings";
+import { listingReviewsQueryOpt } from "@/hooks/use-listing-reviews";
 import { optionalAuthUserQueryOpt } from "@/lib/tanstack-query/auth-user-query";
+import { cn } from "@/lib/utils";
 import { formatMoneyAmountMinor } from "@/utils/format-money";
+
+const eyebrowClassName =
+	"text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground";
+
+const revealClassName =
+	"animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out fill-mode-both motion-reduce:animate-none";
 
 export const Route = createFileRoute("/listing/$id")({
 	beforeLoad: async ({ context, params }) => {
@@ -25,11 +33,14 @@ export const Route = createFileRoute("/listing/$id")({
 			.ensureQueryData(optionalAuthUserQueryOpt)
 			.catch(() => null);
 
-		await context.queryClient
-			.ensureQueryData(
-				listingByIdQueryOpt(params.id, user?.id ?? "public"),
-			)
-			.catch(() => undefined);
+		await Promise.all([
+			context.queryClient
+				.ensureQueryData(listingByIdQueryOpt(params.id, user?.id ?? "public"))
+				.catch(() => undefined),
+			context.queryClient
+				.ensureQueryData(listingReviewsQueryOpt(params.id))
+				.catch(() => undefined),
+		]);
 	},
 	component: RouteComponent,
 });
@@ -132,39 +143,38 @@ function RouteComponent() {
 						)}
 					</div>
 
-					<div className="rounded-2xl bg-white p-6 space-y-6">
+					<div className="rounded-2xl bg-white p-6 md:p-8 space-y-6">
 						{/* TITLE & BRAND */}
-						<div className="flex items-start justify-between gap-4">
-							<div className="flex-1">
-								<h1 className="text-3xl font-bold text-gray-900 mb-2 text-balance">
-									{listing.name}
-								</h1>
-								<p className="text-lg text-gray-600">
-									{listing.brand} {listing.model && `• ${listing.model}`}
-								</p>
-							</div>
+						<div className={cn(revealClassName, "space-y-3")}>
+							<p className={eyebrowClassName}>
+								{listing.brand}
+								{listing.model && ` · ${listing.model}`}
+							</p>
+							<h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900 text-balance">
+								{listing.name}
+							</h1>
+							<Rating listingId={listing.id} />
 						</div>
 
-						<Rating />
-
 						{/* CATEGORY & STOCK */}
-						<div className="flex items-center gap-3">
-							{(() => {
-								const categoryDisplay = getCategoryDisplay(listing.category);
-								return (
-									<span className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
-										{categoryDisplay.label}
-									</span>
-								);
-							})()}
-							<span
-								className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${
-									listing.stock > 0
-										? "bg-green-100 text-green-700"
-										: "bg-red-100 text-red-700"
-								}`}
-							>
-								<Package size={16} />
+						<div
+							className={cn(
+								revealClassName,
+								"flex flex-wrap items-center gap-2",
+							)}
+							style={{ animationDelay: "60ms" }}
+						>
+							<span className="rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-gray-900">
+								{getCategoryDisplay(listing.category).label}
+							</span>
+							<span className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-gray-900 ring-1 ring-border ring-inset tabular-nums">
+								<span
+									aria-hidden
+									className={cn(
+										"size-1.5 rounded-full",
+										listing.stock > 0 ? "bg-emerald-500" : "bg-red-500",
+									)}
+								/>
 								{listing.stock > 0
 									? `${listing.stock} in stock`
 									: "Out of stock"}
@@ -172,44 +182,76 @@ function RouteComponent() {
 						</div>
 
 						{/* PRICE */}
-						<div className="rounded-xl bg-slate-50 p-6 ring-1 ring-foreground/10 shadow-xs">
-							<p className="text-4xl font-bold text-gray-900">
+						<div
+							className={cn(
+								revealClassName,
+								"flex flex-wrap items-baseline gap-x-2 border-y py-5",
+							)}
+							style={{ animationDelay: "120ms" }}
+						>
+							<p className="text-4xl font-semibold tracking-tight text-gray-900 tabular-nums">
 								{formatMoneyAmountMinor(
 									listing.priceAmountMinor,
 									listing.currencyCode,
 								)}
 							</p>
-							<p className="text-sm text-gray-500 mt-1">Price per unit</p>
+							<p className="text-sm text-muted-foreground">per unit</p>
 						</div>
 
 						{/* ACTIONS */}
-						<ListingDetailsActions
-							quantity={quantity}
-							stock={listing.stock}
-							isOrderable={listing.isOrderable}
-							viewerCanEdit={listing.viewerCanEdit}
-							viewerCanDelete={listing.viewerCanDelete}
-							viewerCanApprove={listing.viewerCanApprove}
-							viewerCanDecline={listing.viewerCanDecline}
-							handleQuantityChange={handleQuantityChange}
-						/>
+						<div
+							className={revealClassName}
+							style={{ animationDelay: "180ms" }}
+						>
+							<ListingDetailsActions
+								quantity={quantity}
+								stock={listing.stock}
+								isOrderable={listing.isOrderable}
+								viewerCanEdit={listing.viewerCanEdit}
+								viewerCanDelete={listing.viewerCanDelete}
+								viewerCanApprove={listing.viewerCanApprove}
+								viewerCanDecline={listing.viewerCanDecline}
+								handleQuantityChange={handleQuantityChange}
+							/>
+						</div>
 
 						{/* DESCRIPTION */}
-						<div className="pt-6 border-t">
-							<h3 className="text-xl font-semibold text-gray-900 mb-3">
-								Description
-							</h3>
-							<p className="text-gray-600 leading-relaxed text-pretty">
+						<div
+							className={cn(revealClassName, "space-y-3 border-t pt-6")}
+							style={{ animationDelay: "240ms" }}
+						>
+							<h3 className={eyebrowClassName}>Description</h3>
+							<p className="text-gray-700 leading-relaxed text-pretty">
 								{listing.description}
 							</p>
 						</div>
 
 						{/* SELLER INFO */}
-						<div className="rounded-xl bg-blue-50 p-5 border border-blue-200">
-							<h4 className="font-semibold text-blue-900 mb-1">
-								Sold by {listing.seller.firstName} {listing.seller.lastName}
-							</h4>
-							<p className="text-sm text-blue-700">{listing.seller.email}</p>
+						<div
+							className={cn(
+								revealClassName,
+								"flex items-center gap-4 rounded-xl bg-muted/70 p-4 ring-1 ring-border ring-inset",
+							)}
+							style={{ animationDelay: "300ms" }}
+						>
+							<div
+								aria-hidden
+								className="flex size-11 shrink-0 items-center justify-center rounded-full bg-foreground text-sm font-semibold tracking-wide text-background"
+							>
+								{`${listing.seller.firstName.charAt(0)}${listing.seller.lastName.charAt(0)}`.toUpperCase()}
+							</div>
+							<div className="min-w-0">
+								<p className={eyebrowClassName}>Sold by</p>
+								<p className="truncate font-semibold text-gray-900">
+									{listing.seller.firstName} {listing.seller.lastName}
+								</p>
+								<a
+									href={`mailto:${listing.seller.email}`}
+									className="block truncate text-sm text-muted-foreground underline-offset-4 hover:text-gray-900 hover:underline"
+								>
+									{listing.seller.email}
+								</a>
+							</div>
 						</div>
 					</div>
 
@@ -222,7 +264,7 @@ function RouteComponent() {
 					</AppDialog>
 				</div>
 
-				<ReviewSection />
+				<ReviewSection listingId={listing.id} />
 			</div>
 		</SectionContainer>
 	);

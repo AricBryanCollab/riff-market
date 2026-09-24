@@ -36,4 +36,9 @@ export const queryKeys = {
 		byRole: (userRole: ActorRole) => ["orders", userRole] as const,
 	},
 	listings: listingKeys,
+	reviews: {
+		root: ["reviews"] as const,
+		byListing: (listingId: string) =>
+			["reviews", "listing", listingId] as const,
+	},
 };
