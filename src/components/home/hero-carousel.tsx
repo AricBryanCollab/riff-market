@@ -64,7 +64,7 @@ const HeroCarousel = ({
 						size="icon-lg"
 						onClick={goToPrev}
 						aria-label="Previous item"
-						className="absolute left-3 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
+						className="absolute left-3 top-1/2 -translate-y-1/2 border-0 bg-background/80 shadow-none backdrop-blur-sm"
 					>
 						<ChevronLeft className="w-5 h-5" />
 					</Button>
@@ -74,7 +74,7 @@ const HeroCarousel = ({
 						size="icon-lg"
 						onClick={goToNext}
 						aria-label="Next item"
-						className="absolute right-3 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
+						className="absolute right-3 top-1/2 -translate-y-1/2 border-0 bg-background/80 shadow-none backdrop-blur-sm"
 					>
 						<ChevronRight className="w-5 h-5" />
 					</Button>
