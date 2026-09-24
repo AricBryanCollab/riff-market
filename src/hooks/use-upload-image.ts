@@ -56,7 +56,7 @@ const useUploadImage = <TImage extends ImageFile>(
 	const [dragActive, setDragActive] = useState(false);
 	const [error, setError] = useState<string>("");
 
-	const handleFileSelect = async (files: FileList | null) => {
+	const handleFileSelect = (files: FileList | null) => {
 		if (!files || files.length === 0) return;
 
 		setError("");
