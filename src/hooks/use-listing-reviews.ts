@@ -10,15 +10,7 @@ export const listingReviewsQueryOpt = (listingId: string) =>
 		staleTime: 1000 * 60,
 	});
 
-export type ListingReviewSummary = {
-	readonly reviewCount: number;
-	readonly averageRating: number;
-	readonly distribution: readonly { stars: number; count: number }[];
-};
-
-export function summarizeListingReviews(
-	reviews: readonly ListingReview[],
-): ListingReviewSummary {
+function summarizeListingReviews(reviews: readonly ListingReview[]) {
 	const reviewCount = reviews.length;
 	const total = reviews.reduce((sum, review) => sum + review.rating, 0);
 
@@ -34,10 +26,11 @@ export function summarizeListingReviews(
 
 export const useListingReviews = (listingId: string) => {
 	const query = useQuery(listingReviewsQueryOpt(listingId));
+	const reviews = query.data ?? [];
 
 	return {
 		...query,
-		reviews: query.data ?? [],
-		summary: summarizeListingReviews(query.data ?? []),
+		reviews,
+		summary: summarizeListingReviews(reviews),
 	};
 };

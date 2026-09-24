@@ -37,7 +37,6 @@ export const queryKeys = {
 	},
 	listings: listingKeys,
 	reviews: {
-		root: ["reviews"] as const,
 		byListing: (listingId: string) =>
 			["reviews", "listing", listingId] as const,
 	},
