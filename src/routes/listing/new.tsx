@@ -51,6 +51,7 @@ function RouteComponent() {
 					<FormField
 						id="name"
 						label="Listing Name"
+						placeholder="Listing Name"
 						onChange={onChange}
 						value={listingDraft.name}
 					/>
