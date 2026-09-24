@@ -47,6 +47,47 @@ export function isExistingImageFile(
 const LISTING_IMAGE_MAX_MB = LISTING_IMAGE_MAX_BYTES / (1024 * 1024);
 const ACCEPT_FORMATS = "image/jpeg,image/png,image/webp";
 
+export function validateIncomingFiles(
+	files: readonly File[],
+	remainingSlots: number,
+): { accepted: File[]; error: string } {
+	if (files.length > remainingSlots) {
+		return {
+			accepted: [],
+			error: `You can only upload ${remainingSlots} more image(s)`,
+		};
+	}
+
+	const accepted: File[] = [];
+	let error = "";
+
+	for (const file of files) {
+		if (file.size <= 0 || file.size > LISTING_IMAGE_MAX_BYTES) {
+			error = `${file.name} exceeds ${LISTING_IMAGE_MAX_MB}MB limit`;
+		} else if (!isAllowedImageMimeType(file.type)) {
+			error = `${file.name} is not a supported format`;
+		} else {
+			accepted.push(file);
+		}
+	}
+
+	return { accepted, error };
+}
+
+export function moveItem<T>(
+	items: readonly T[],
+	index: number,
+	direction: -1 | 1,
+): T[] | null {
+	const target = index + direction;
+	if (target < 0 || target >= items.length) return null;
+
+	const next = [...items];
+	const [item] = next.splice(index, 1);
+	next.splice(target, 0, item);
+	return next;
+}
+
 const useUploadImage = <TImage extends ImageFile>(
 	images: TImage[],
 	maxImages: number,
@@ -59,35 +100,23 @@ const useUploadImage = <TImage extends ImageFile>(
 	const handleFileSelect = (files: FileList | null) => {
 		if (!files || files.length === 0) return;
 
-		setError("");
+		const { accepted, error } = validateIncomingFiles(
+			Array.from(files),
+			maxImages - images.length,
+		);
+		setError(error);
 
-		const remainingSlots = maxImages - images.length;
-		if (files.length > remainingSlots) {
-			setError(`You can only upload ${remainingSlots} more image(s)`);
-			return;
-		}
-
-		const newImages: NewImageFile[] = [];
-
-		for (let i = 0; i < files.length; i++) {
-			const file = files[i];
-
-			if (file.size <= 0 || file.size > LISTING_IMAGE_MAX_BYTES) {
-				setError(`${file.name} exceeds ${LISTING_IMAGE_MAX_MB}MB limit`);
-				continue;
-			}
-
-			if (!isAllowedImageMimeType(file.type)) {
-				setError(`${file.name} is not a supported format`);
-				continue;
-			}
-
-			const preview = URL.createObjectURL(file);
-			newImages.push({ kind: "new", file, preview });
-		}
-
-		if (newImages.length > 0) {
-			onChange([...images, ...newImages]);
+		if (accepted.length > 0) {
+			onChange([
+				...images,
+				...accepted.map(
+					(file): NewImageFile => ({
+						kind: "new",
+						file,
+						preview: URL.createObjectURL(file),
+					}),
+				),
+			]);
 		}
 	};
 
@@ -109,15 +138,9 @@ const useUploadImage = <TImage extends ImageFile>(
 	};
 
 	const handleMoveImage = (index: number, direction: -1 | 1) => {
-		const targetIndex = index + direction;
+		const reorderedImages = moveItem(images, index, direction);
+		if (!reorderedImages) return;
 
-		if (targetIndex < 0 || targetIndex >= images.length) {
-			return;
-		}
-
-		const reorderedImages = [...images];
-		const [image] = reorderedImages.splice(index, 1);
-		reorderedImages.splice(targetIndex, 0, image);
 		onChange(reorderedImages);
 		setError("");
 	};
