@@ -22,7 +22,7 @@ const CategoryFilters = () => {
 						variant="ghost"
 						size="sm"
 						onClick={() => setCategory(undefined)}
-						className="h-6 px-2"
+						className="h-6 px-2 cursor-pointer"
 					>
 						<X size={14} />
 					</Button>

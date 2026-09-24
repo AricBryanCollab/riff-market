@@ -7,7 +7,7 @@ import { usePendingListingStore } from "@/store/pending-listing";
 import type { ListingCategory } from "@/types/enum";
 
 const listingFilterBadgeVariants = cva(
-	"px-5 py-4 rounded-full border-2 font-medium transition-[color,background-color,border-color,box-shadow,scale]",
+	"cursor-pointer px-5 py-4 rounded-full border-2 font-medium transition-[color,background-color,border-color,box-shadow,scale]",
 	{
 		variants: {
 			active: {
