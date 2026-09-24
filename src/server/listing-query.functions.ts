@@ -96,7 +96,8 @@ export const getPopularListingBrandCountsServerFn = createServerFn({
 	method: "GET",
 })
 	.middleware(publicServerFunctionMiddleware)
-	.handler(async () => getPopularListingBrandCountDtos());
+	.inputValidator((data) => approvedListingSearchServerInputSchema.parse(data))
+	.handler(async ({ data }) => getPopularListingBrandCountDtos(data));
 
 export const getListingStatusCountServerFn = createServerFn({
 	method: "GET",

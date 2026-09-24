@@ -7,8 +7,8 @@ import useGetListingBrandCount from "@/hooks/use-get-listing-brand-count";
 import useShopSearchFilters from "@/hooks/use-shop-search-filters";
 
 const BrandFilters = () => {
-	const { searchParams, setBrand } = useShopSearchFilters();
-	const { brandCounts } = useGetListingBrandCount();
+	const { searchParams, approvedFilters, setBrand } = useShopSearchFilters();
+	const { brandCounts } = useGetListingBrandCount(approvedFilters);
 	const selectedBrand = searchParams.brand;
 	const selectedBrandKey = toListingBrandKey(selectedBrand);
 

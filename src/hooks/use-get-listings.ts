@@ -19,7 +19,7 @@ import {
 import type { ApprovedListingSearchFilterQuery } from "@/utils/shop-search";
 import { useAuthUser } from "./use-auth-user";
 
-function toApprovedListingSearchServerInput(
+export function toApprovedListingSearchServerInput(
 	filters: ApprovedListingSearchFilterQuery,
 ): ApprovedListingSearchServerInput {
 	return {

@@ -11,7 +11,8 @@ const listingKeys = {
 		["listings", "approved", filters] as const,
 	cartDetails: (listingIds: readonly string[]) =>
 		["listings", "cart-details", listingIds] as const,
-	popularBrandCounts: ["listings", "popular-brand-counts"] as const,
+	popularBrandCounts: (filters: ApprovedListingSearchFilterQuery) =>
+		["listings", "popular-brand-counts", filters] as const,
 	countByCategory: ["listings", "count", "by-category"] as const,
 	countByStatus: (status: ListingCountStatusQuery) =>
 		["listings", "count", status] as const,

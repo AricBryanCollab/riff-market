@@ -107,11 +107,14 @@ describe("listing query behavior", () => {
 
 	it("returns popular approved brand counts from the listing query view", async () => {
 		await expect(
-			getPopularListingBrandCountDtos({
-				listPopularApprovedBrandCounts: async () => [
-					{ brand: "Fender", count: 2 },
-				],
-			}),
+			getPopularListingBrandCountDtos(
+				{ limit: null, offset: null, random: null },
+				{
+					listPopularApprovedBrandCounts: async () => [
+						{ brand: "Fender", count: 2 },
+					],
+				},
+			),
 		).resolves.toEqual([{ brand: "Fender", count: 2 }]);
 	});
 });
