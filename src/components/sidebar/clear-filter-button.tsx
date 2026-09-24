@@ -13,7 +13,7 @@ const ClearFilterButton = ({
 		<div className="px-4 py-4 border-t bg-muted/50 space-y-2 shrink-0">
 			<Button
 				variant="outline"
-				className="w-full cursor-pointer"
+				className="w-full"
 				onClick={resetFilters}
 				disabled={activeFiltersCount === 0}
 			>

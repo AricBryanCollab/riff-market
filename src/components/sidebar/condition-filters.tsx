@@ -22,7 +22,7 @@ const ConditionFilters = () => {
 						variant="ghost"
 						size="sm"
 						onClick={() => setCondition(undefined)}
-						className="h-6 px-2 cursor-pointer"
+						className="h-6 px-2"
 					>
 						<X size={14} />
 					</Button>

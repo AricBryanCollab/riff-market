@@ -7,7 +7,7 @@ import { usePendingListingStore } from "@/store/pending-listing";
 import type { ListingCategory } from "@/types/enum";
 
 const listingFilterBadgeVariants = cva(
-	"cursor-pointer px-5 py-4 rounded-full border-2 font-medium transition-[color,background-color,border-color,box-shadow,scale]",
+	"px-5 py-4 rounded-full border-2 font-medium transition-[color,background-color,border-color,box-shadow,scale]",
 	{
 		variants: {
 			active: {
@@ -59,6 +59,7 @@ const ListingFilterBadges = () => {
 		<div className="flex flex-wrap gap-3 my-6">
 			{/* All Categories */}
 			<Badge
+				render={<button type="button" />}
 				onClick={handleShowAll}
 				className={listingFilterBadgeVariants({
 					active: !selectedCategory && !showPending,
@@ -70,6 +71,7 @@ const ListingFilterBadges = () => {
 			{/* Pending Listings */}
 			{isAdmin && (
 				<Badge
+					render={<button type="button" />}
 					onClick={handlePendingListing}
 					className={listingFilterBadgeVariants({
 						active: showPending,
@@ -86,6 +88,7 @@ const ListingFilterBadges = () => {
 				return (
 					<Badge
 						key={category.value}
+						render={<button type="button" />}
 						onClick={() => handleCategorySelect(category.value)}
 						className={listingFilterBadgeVariants({
 							active: isSelected,

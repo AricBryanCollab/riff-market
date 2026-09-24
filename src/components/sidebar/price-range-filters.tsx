@@ -85,7 +85,7 @@ const PriceRangeFilters = () => {
 						variant="ghost"
 						size="sm"
 						onClick={clearPriceRange}
-						className="h-6 px-2 cursor-pointer"
+						className="h-6 px-2"
 					>
 						<X size={14} />
 					</Button>
