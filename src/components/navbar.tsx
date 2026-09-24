@@ -1,7 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Search } from "lucide-react";
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { Link } from "@tanstack/react-router";
 import UserMenu from "@/components/user-menu";
 import { navbarItems } from "@/constants/navbar-items";
 
@@ -11,16 +8,6 @@ interface NavbarItemProps {
 }
 
 const Navbar = () => {
-	const [query, setQuery] = useState("");
-	const navigate = useNavigate();
-
-	const handleSearch = (e: React.FormEvent) => {
-		e.preventDefault();
-		if (query.trim()) {
-			navigate({ to: "/shop" });
-		}
-	};
-
 	return (
 		<header className="w-full border-b border-border bg-background">
 			<nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
@@ -38,28 +25,6 @@ const Navbar = () => {
 						))}
 					</ul>
 				</div>
-
-				<search className="hidden sm:flex flex-1 max-w-md mx-4">
-					<form onSubmit={handleSearch} className="w-full">
-						<div className="relative">
-							<Search
-								className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
-								aria-hidden="true"
-							/>
-							<label htmlFor="navbar-search" className="sr-only">
-								Search gear
-							</label>
-							<Input
-								id="navbar-search"
-								type="search"
-								value={query}
-								onChange={(e) => setQuery(e.target.value)}
-								placeholder="Search gear..."
-								className="pl-10"
-							/>
-						</div>
-					</form>
-				</search>
 
 				<UserMenu />
 			</nav>
