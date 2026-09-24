@@ -33,7 +33,7 @@ const listingActionButtonVariants = cva(
 				secondary: "h-12 px-6",
 			},
 			disabled: {
-				true: "bg-gray-300 hover:bg-gray-300 cursor-not-allowed text-gray-500",
+				true: "bg-muted hover:bg-muted cursor-not-allowed text-muted-foreground",
 				false: "cursor-pointer",
 			},
 		},
@@ -92,8 +92,8 @@ export function ShopPageListingActions({
 
 	return (
 		<div className="flex flex-col md:flex-row items-center gap-2">
-			<div className="flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2">
-				<Search className="h-4 w-4 text-slate-400" />
+			<div className="flex items-center gap-2 border border-input rounded-lg px-3 py-2">
+				<Search className="h-4 w-4 text-muted-foreground" />
 				<input
 					type="text"
 					value={searchTerm}

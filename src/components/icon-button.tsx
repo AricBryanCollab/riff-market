@@ -7,7 +7,7 @@ const iconButtonVariants = cva(
 	{
 		variants: {
 			disabled: {
-				true: "bg-gray-300 text-gray-500 cursor-not-allowed",
+				true: "bg-muted text-muted-foreground cursor-not-allowed",
 				false: "cursor-pointer text-background",
 			},
 		},

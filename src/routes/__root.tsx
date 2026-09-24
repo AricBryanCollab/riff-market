@@ -10,10 +10,11 @@ import PageNotFound from "@/components/page-not-found";
 
 import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
-import { ThemeProvider } from "@/components/theme-provider";
 import Toast from "@/components/toast";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { optionalAuthUserQueryOpt } from "@/lib/tanstack-query/auth-user-query";
 import TanStackAppDevtools from "@/lib/tanstack-query/devtools";
+import { useThemeStore } from "@/store/theme";
 import appCss from "../styles.css?url";
 
 interface MyRouterContext {
@@ -55,30 +56,31 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+	const { data: user } = useAuthUser();
+	const previewTheme = useThemeStore((state) => state.previewTheme);
+
 	return (
-		<html lang="en">
+		<html lang="en" className={previewTheme ?? user?.theme ?? "light"}>
 			<head>
 				<HeadContent />
 			</head>
 			<body>
 				<div className="root">
-					<ThemeProvider>
-						<Navbar />
-						{children}
-						<TanStackAppDevtools />
-						<AppDialog type="signin" title="RiffMarket LogIn">
-							<SignInForm />
-						</AppDialog>
+					<Navbar />
+					{children}
+					<TanStackAppDevtools />
+					<AppDialog type="signin" title="RiffMarket LogIn">
+						<SignInForm />
+					</AppDialog>
 
-						<AppDialog
-							type="signup"
-							maxWidth="max-w-lg"
-							title="Register at RiffMarket"
-						>
-							<SignUpForm />
-						</AppDialog>
-						<Toast />
-					</ThemeProvider>
+					<AppDialog
+						type="signup"
+						maxWidth="max-w-lg"
+						title="Register at RiffMarket"
+					>
+						<SignUpForm />
+					</AppDialog>
+					<Toast />
 				</div>
 				<Scripts />
 			</body>

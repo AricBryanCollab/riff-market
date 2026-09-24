@@ -80,7 +80,7 @@ function RouteComponent() {
 			</div>
 
 			{!isCartEmpty && (
-				<div className=" w-full rounded-2xl bg-white p-8">
+				<div className=" w-full rounded-2xl bg-card text-card-foreground p-8">
 					<h2 className="mb-6 text-2xl font-semibold">Items in Your Cart</h2>
 					<div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 						{cartDetails.map((item) => (

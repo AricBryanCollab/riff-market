@@ -18,7 +18,7 @@ const CartCard = ({
 
 	return (
 		<div className="flex flex-col rounded-3xl bg-background/90 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-			<div className="relative mb-4 h-40 rounded-sm bg-slate-200 overflow-hidden">
+			<div className="relative mb-4 h-40 rounded-sm bg-muted overflow-hidden">
 				{cartItem.imageUrl && (
 					<img
 						src={cartItem.imageUrl}
@@ -28,11 +28,11 @@ const CartCard = ({
 				)}
 			</div>
 
-			<div className="text-xs font-medium text-secondary uppercase tracking-wide mb-1">
+			<div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
 				{cartItem.description}
 			</div>
 
-			<div className="text-sm font-semibold text-black line-clamp-2 mb-3">
+			<div className="text-sm font-semibold text-foreground line-clamp-2 mb-3">
 				{cartItem.title}
 			</div>
 
@@ -40,7 +40,7 @@ const CartCard = ({
 				<span className="text-lg font-bold text-primary">
 					{cartItem.unitPriceText}
 				</span>
-				<span className="text-xs text-slate-500 tabular-nums">
+				<span className="text-xs text-muted-foreground tabular-nums">
 					Qty: {quantity}
 				</span>
 			</div>
