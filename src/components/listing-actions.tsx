@@ -12,6 +12,7 @@ import {
 import type { ActorRole } from "@/domains/shared/domain/actor";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import useModerateListing from "@/hooks/use-moderate-listing";
+import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import { useDialogStore } from "@/store/dialog";
 import { useToastStore } from "@/store/toast";
@@ -21,19 +22,18 @@ const listingActionButtonVariants = cva(
 	{
 		variants: {
 			variant: {
-				primary: "bg-primary hover:bg-accent text-white",
+				primary: "bg-primary hover:bg-primary/80 text-primary-foreground",
 				secondary:
 					"bg-background hover:bg-muted text-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_1px_2px_-1px_rgba(0,0,0,0.08),0_2px_4px_0_rgba(0,0,0,0.04)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.13)]",
-				destructive:
-					"bg-destructive hover:bg-rose-400 dark:hover:bg-rose-400 text-white",
+				destructive: "bg-destructive hover:bg-red-700 text-white",
 				success: "bg-green-600 hover:bg-green-500 text-white",
 			},
 			width: {
-				primary: "flex-1 h-12 text-white",
+				primary: "flex-1 h-12",
 				secondary: "h-12 px-6",
 			},
 			disabled: {
-				true: "bg-gray-300 cursor-not-allowed text-gray-500",
+				true: "bg-gray-300 hover:bg-gray-300 cursor-not-allowed text-gray-500",
 				false: "cursor-pointer",
 			},
 		},
@@ -297,11 +297,13 @@ export function ListingDetailsActions({
 											? "This listing cannot be moderated with this action"
 											: undefined
 							}
-							className={listingActionButtonVariants({
-								variant: action.variant as RoleActionVariant,
-								width: isSecondary ? "secondary" : "primary",
-								disabled: isButtonDisabled,
-							})}
+							className={cn(
+								listingActionButtonVariants({
+									variant: action.variant as RoleActionVariant,
+									width: isSecondary ? "secondary" : "primary",
+									disabled: isButtonDisabled,
+								}),
+							)}
 						>
 							<Icon size={20} />
 							{action.label}
@@ -320,7 +322,7 @@ export function ListingDetailsActions({
 							icon={Trash2}
 							disabled={!viewerCanDelete}
 							onClick={() => setOpenDialog("deleteListing")}
-							backgroundColor="bg-destructive hover:bg-rose-400"
+							backgroundColor="bg-destructive hover:bg-red-700"
 						/>
 					</div>
 				)}
