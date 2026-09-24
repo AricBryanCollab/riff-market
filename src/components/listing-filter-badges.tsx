@@ -59,6 +59,7 @@ const ListingFilterBadges = () => {
 		<div className="flex flex-wrap gap-3 my-6">
 			{/* All Categories */}
 			<Badge
+				render={<button type="button" />}
 				onClick={handleShowAll}
 				className={listingFilterBadgeVariants({
 					active: !selectedCategory && !showPending,
@@ -70,6 +71,7 @@ const ListingFilterBadges = () => {
 			{/* Pending Listings */}
 			{isAdmin && (
 				<Badge
+					render={<button type="button" />}
 					onClick={handlePendingListing}
 					className={listingFilterBadgeVariants({
 						active: showPending,
@@ -86,6 +88,7 @@ const ListingFilterBadges = () => {
 				return (
 					<Badge
 						key={category.value}
+						render={<button type="button" />}
 						onClick={() => handleCategorySelect(category.value)}
 						className={listingFilterBadgeVariants({
 							active: isSelected,
