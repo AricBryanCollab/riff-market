@@ -139,51 +139,55 @@ const ImageUploader = <TImage extends ImageFile>({
 							{images.map((imageFile, index) => (
 								<div
 									key={imageFile.preview}
-									className="relative group aspect-square rounded-lg overflow-hidden bg-muted"
+									className="group flex flex-col gap-1.5 min-w-0"
 								>
-									<img
-										src={imageFile.preview}
-										alt={getImageLabel(imageFile)}
-										className="w-full h-full object-cover rounded-lg outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
-									/>
-									<div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-2">
-										<div className="flex items-center gap-1">
+									<div className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+										<img
+											src={imageFile.preview}
+											alt={getImageLabel(imageFile)}
+											className="w-full h-full object-cover rounded-lg outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
+										/>
+										<div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-2">
+											{images.length > 1 && (
+												<div className="flex items-center gap-1">
+													<button
+														type="button"
+														onClick={() => handleMoveImage(index, -1)}
+														disabled={index === 0}
+														className="relative cursor-pointer bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shadow-lg hover:bg-black/80 disabled:pointer-events-none disabled:opacity-30 after:absolute after:top-1/2 after:left-1/2 after:h-10 after:w-8 after:-translate-1/2"
+														title="Move image earlier"
+														aria-label="Move image earlier"
+													>
+														<ChevronLeft size={16} />
+													</button>
+													<button
+														type="button"
+														onClick={() => handleMoveImage(index, 1)}
+														disabled={index === images.length - 1}
+														className="relative cursor-pointer bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shadow-lg hover:bg-black/80 disabled:pointer-events-none disabled:opacity-30 after:absolute after:top-1/2 after:left-1/2 after:h-10 after:w-8 after:-translate-1/2"
+														title="Move image later"
+														aria-label="Move image later"
+													>
+														<ChevronRight size={16} />
+													</button>
+												</div>
+											)}
 											<button
 												type="button"
-												onClick={() => handleMoveImage(index, -1)}
-												disabled={index === 0}
-												className="relative cursor-pointer bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shadow-lg hover:bg-black/80 disabled:pointer-events-none disabled:opacity-30 after:absolute after:top-1/2 after:left-1/2 after:h-10 after:w-8 after:-translate-1/2"
-												title="Move image earlier"
-												aria-label="Move image earlier"
+												onClick={() => handleRemoveImage(index)}
+												className="relative ml-auto cursor-pointer bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shadow-lg hover:bg-red-600 after:absolute after:top-1/2 after:left-1/2 after:size-10 after:-translate-1/2"
+												title="Remove image"
+												aria-label="Remove image"
 											>
-												<ChevronLeft size={16} />
-											</button>
-											<button
-												type="button"
-												onClick={() => handleMoveImage(index, 1)}
-												disabled={index === images.length - 1}
-												className="relative cursor-pointer bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shadow-lg hover:bg-black/80 disabled:pointer-events-none disabled:opacity-30 after:absolute after:top-1/2 after:left-1/2 after:h-10 after:w-8 after:-translate-1/2"
-												title="Move image later"
-												aria-label="Move image later"
-											>
-												<ChevronRight size={16} />
+												<X size={16} />
 											</button>
 										</div>
-										<button
-											type="button"
-											onClick={() => handleRemoveImage(index)}
-											className="relative cursor-pointer bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shadow-lg hover:bg-red-600 after:absolute after:top-1/2 after:left-1/2 after:size-10 after:-translate-1/2"
-											title="Remove image"
-											aria-label="Remove image"
-										>
-											<X size={16} />
-										</button>
 									</div>
-
-									{/* Image Number & File Name */}
-									<div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-2 py-1">
-										<div className="font-semibold">{index + 1}</div>
-										<div className="truncate">{getImageLabel(imageFile)}</div>
+									<div className="flex gap-1.5 px-0.5 text-xs text-foreground/60">
+										<span className="font-medium text-foreground tabular-nums">
+											{index + 1}
+										</span>
+										<span className="truncate">{getImageLabel(imageFile)}</span>
 									</div>
 								</div>
 							))}
