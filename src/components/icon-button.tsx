@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const iconButtonVariants = cva(
-	"size-10 flex items-center justify-center rounded-lg transition-colors",
+	"size-10 flex items-center justify-center rounded-lg transition-[background-color,color,scale] active:not-disabled:scale-[0.96]",
 	{
 		variants: {
 			disabled: {
@@ -19,6 +19,7 @@ const iconButtonVariants = cva(
 
 interface IconButtonProps {
 	icon: LucideIcon;
+	label: string;
 	onClick: () => void;
 	disabled?: boolean;
 	backgroundColor?: string;
@@ -27,6 +28,7 @@ interface IconButtonProps {
 const IconButton = ({
 	onClick,
 	icon: Icon,
+	label,
 	disabled = false,
 	backgroundColor = "bg-primary hover:bg-accent hover:text-primary",
 }: IconButtonProps) => {
@@ -35,6 +37,7 @@ const IconButton = ({
 			type="button"
 			disabled={disabled}
 			onClick={onClick}
+			aria-label={label}
 			className={cn(
 				iconButtonVariants({ disabled }),
 				!disabled && backgroundColor,

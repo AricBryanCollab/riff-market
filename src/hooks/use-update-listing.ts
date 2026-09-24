@@ -149,7 +149,7 @@ const useUpdateListing = (id: string) => {
 				"The listing has been updated. Please wait again for admin approval",
 				"success",
 			);
-			navigate({ to: "/shop" });
+			navigate({ to: "/listing/$id", params: { id } });
 		},
 		onError: (error) => {
 			clientLogger.error("Failed to update the listing", error);
@@ -199,6 +199,7 @@ const useUpdateListing = (id: string) => {
 	};
 
 	return {
+		listing: listingData,
 		listingDraft,
 		images,
 		isListingLoading,
