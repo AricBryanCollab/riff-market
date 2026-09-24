@@ -54,12 +54,13 @@ const Counter = ({
 						<Icon size={18} />
 					</div>
 				)}
-				<div className="flex items-center border border-primary rounded-lg overflow-hidden bg-muted">
+				<div className="flex h-12 items-center rounded-lg bg-background p-1 shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_1px_2px_-1px_rgba(0,0,0,0.08),0_2px_4px_0_rgba(0,0,0,0.04)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.13)]">
 					<button
 						type="button"
+						aria-label="Decrease quantity"
 						onClick={handleDecrement}
 						disabled={disabled || value <= min}
-						className="px-4 py-2.5 text-white bg-primary hover:bg-accent cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed font-semibold"
+						className="flex size-10 items-center justify-center rounded-sm text-foreground cursor-pointer transition-[background-color,scale] hover:bg-muted active:not-disabled:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
 					>
 						<Minus size={18} />
 					</button>
@@ -73,18 +74,19 @@ const Counter = ({
 							min={min}
 							max={max}
 							step={1}
-							className="w-20 text-center bg-muted text-sm font-medium tabular-nums focus:outline-none focus:ring-2 focus:ring-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+							className="h-10 w-14 rounded-sm bg-transparent text-center text-sm font-semibold text-foreground tabular-nums focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
 						/>
 					) : (
-						<div className="w-20 text-center text-sm font-medium py-2.5 tabular-nums">
+						<div className="w-14 text-center text-sm font-semibold text-foreground tabular-nums">
 							{value}
 						</div>
 					)}
 					<button
 						type="button"
+						aria-label="Increase quantity"
 						onClick={handleIncrement}
 						disabled={disabled || value >= max}
-						className="px-4 py-2.5 text-white bg-primary hover:bg-accent cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed font-semibold"
+						className="flex size-10 items-center justify-center rounded-sm text-foreground cursor-pointer transition-[background-color,scale] hover:bg-muted active:not-disabled:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
 					>
 						<Plus size={18} />
 					</button>
