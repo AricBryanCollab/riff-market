@@ -1,0 +1,303 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
+STATE_ROOT="${RIFF_VERIFY_STATE_ROOT:-${TMPDIR:-/tmp}/riff-verify}"
+EVIDENCE_ROOT="$REPO_ROOT/tmp/riff-verify"
+DB_NAME="riff_verify_test"
+DB_USER="riff"
+
+die() { echo "riff-verify: $*" >&2; exit 1; }
+log() { echo "riff-verify: $*" >&2; }
+
+usage() {
+	cat <<'EOF'
+Usage: riff-verify <command> [args]
+
+  up [--dev] [--no-seed]   Start a disposable Postgres + RiffMarket + headless Chromium.
+                           Prints `export RIFF_VERIFY_RUN=<id>`; run it before other commands.
+  doctor                   Read-only health check of the current run. Exit 0 = safe to drive.
+  env                      Print the run's state (APP_URL, DATABASE_URL, EVIDENCE_DIR, ...).
+  sql "<query>"            Run a query against the run's database (psql -tA).
+  browser <cmd> [args]     Drive the run's browser. See `riff-verify browser help`.
+  down                     Stop everything this run started and delete scratch state.
+                           Evidence under tmp/riff-verify/<run>/ is kept.
+  list                     List runs with scratch state on this machine.
+EOF
+}
+
+require_run() {
+	[[ -n "${RIFF_VERIFY_RUN:-}" ]] || die "RIFF_VERIFY_RUN is not set. Run \`riff-verify up\` and export the id it prints."
+	RUN_DIR="$STATE_ROOT/$RIFF_VERIFY_RUN"
+	[[ -f "$RUN_DIR/state.env" ]] || die "no state for run $RIFF_VERIFY_RUN at $RUN_DIR"
+	set -a
+	source "$RUN_DIR/state.env"
+	set +a
+}
+
+alive() { [[ -n "${1:-}" ]] && kill -0 "$1" 2>/dev/null; }
+
+free_port() {
+	bun -e 'const s=require("net").createServer();s.listen(0,"127.0.0.1",()=>{console.log(s.address().port);s.close()})'
+}
+
+pg_bindir() {
+	if command -v initdb >/dev/null 2>&1; then
+		dirname "$(command -v initdb)"
+	elif command -v pg_config >/dev/null 2>&1 && [[ -x "$(pg_config --bindir)/initdb" ]]; then
+		pg_config --bindir
+	else
+		local dir
+		dir="$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1)"
+		[[ -n "$dir" && -x "$dir/initdb" ]] || die "initdb not found. Install PostgreSQL (e.g. apt-get install postgresql) or set RIFF_VERIFY_DATABASE_URL."
+		echo "$dir"
+	fi
+}
+
+wait_http() {
+	local url="$1" tries="$2"
+	for _ in $(seq "$tries"); do
+		if curl -fsS -o /dev/null "$url" 2>/dev/null; then return 0; fi
+		sleep 1
+	done
+	return 1
+}
+
+write_state() { echo "$1=$(printf '%q' "$2")" >>"$RUN_DIR/state.env"; }
+
+cmd_up() {
+	local mode="preview" seed=1
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+			--dev) mode="dev" ;;
+			--no-seed) seed=0 ;;
+			*) die "unknown flag for up: $1" ;;
+		esac
+		shift
+	done
+
+	command -v bun >/dev/null 2>&1 || die "bun is not on PATH (install: curl -fsSL https://bun.sh/install | bash)"
+	command -v curl >/dev/null 2>&1 || die "curl is required"
+
+	RIFF_VERIFY_RUN="${RIFF_VERIFY_RUN:-run-$(date +%Y%m%d-%H%M%S)-$$}"
+	RUN_DIR="$STATE_ROOT/$RIFF_VERIFY_RUN"
+	[[ -e "$RUN_DIR" ]] && die "run $RIFF_VERIFY_RUN already exists at $RUN_DIR; pick a new RIFF_VERIFY_RUN or run \`riff-verify down\` first"
+	mkdir -p "$RUN_DIR"
+	local evidence_dir="$EVIDENCE_ROOT/$RIFF_VERIFY_RUN"
+	mkdir -p "$evidence_dir"
+	: >"$RUN_DIR/state.env"
+	write_state RIFF_VERIFY_RUN "$RIFF_VERIFY_RUN"
+	write_state RUN_DIR "$RUN_DIR"
+	write_state EVIDENCE_DIR "$evidence_dir"
+	write_state APP_MODE "$mode"
+	write_state GIT_SHA "$(git -C "$REPO_ROOT" rev-parse HEAD)"
+
+	trap '[[ $? -eq 0 ]] || echo "riff-verify: up failed; logs are in $RUN_DIR. Clean up with: RIFF_VERIFY_RUN=$RIFF_VERIFY_RUN $0 down" >&2' EXIT
+
+	cd "$REPO_ROOT"
+	[[ -d node_modules ]] || { log "installing dependencies"; bun install --frozen-lockfile >"$RUN_DIR/install.log" 2>&1; }
+
+	local db_url
+	if [[ -n "${RIFF_VERIFY_DATABASE_URL:-}" ]]; then
+		db_url="$RIFF_VERIFY_DATABASE_URL"
+		[[ "${db_url##*/}" =~ (^|[_-])(test|testing|vitest|integration)([_-]|$|\?) ]] \
+			|| die "RIFF_VERIFY_DATABASE_URL database name must contain test|testing|vitest|integration"
+		write_state PG_EXTERNAL 1
+	else
+		local bindir pg_port
+		bindir="$(pg_bindir)"
+		pg_port="$(free_port)"
+		write_state PG_BINDIR "$bindir"
+		write_state PG_DATA "$RUN_DIR/pg"
+		write_state PG_PORT "$pg_port"
+		log "starting private Postgres on 127.0.0.1:$pg_port"
+		"$bindir/initdb" -D "$RUN_DIR/pg" -U "$DB_USER" --auth=trust >"$RUN_DIR/initdb.log" 2>&1
+		"$bindir/pg_ctl" -D "$RUN_DIR/pg" -l "$RUN_DIR/postgres.log" -w \
+			-o "-p $pg_port -k $RUN_DIR -c listen_addresses=127.0.0.1" start >/dev/null
+		"$bindir/createdb" -h 127.0.0.1 -p "$pg_port" -U "$DB_USER" "$DB_NAME"
+		db_url="postgresql://$DB_USER@127.0.0.1:$pg_port/$DB_NAME"
+	fi
+	write_state DATABASE_URL "$db_url"
+
+	export DATABASE_URL="$db_url" TEST_DATABASE_URL="$db_url"
+	if [[ ! -d generated/prisma ]]; then
+		log "generating Prisma client"
+		bun db:generate >"$RUN_DIR/generate.log" 2>&1 || die "prisma generate failed, see $RUN_DIR/generate.log"
+	fi
+	log "applying migrations"
+	bun prisma migrate deploy >"$RUN_DIR/migrate.log" 2>&1 || die "migrations failed, see $RUN_DIR/migrate.log"
+	if [[ "$seed" == 1 ]]; then
+		log "seeding demo sellers, listings, and verify fixtures"
+		{ bun prisma/seed.ts && bun "$SKILL_DIR/scripts/seed-verify-fixtures.ts"; } >"$RUN_DIR/seed.log" 2>&1 \
+			|| die "seeding failed, see $RUN_DIR/seed.log"
+	fi
+
+	local app_port app_url
+	app_port="$(free_port)"
+	app_url="http://127.0.0.1:$app_port"
+	write_state APP_PORT "$app_port"
+	write_state APP_URL "$app_url"
+
+	local app_cmd
+	if [[ "$mode" == "dev" ]]; then
+		app_cmd="exec bun --bun vite dev --host 127.0.0.1 --port $app_port --strictPort"
+	else
+		log "building app (vite build)"
+		bun --bun vite build >"$RUN_DIR/build.log" 2>&1 || die "build failed, see $RUN_DIR/build.log"
+		app_cmd="exec bun --bun vite preview --host 127.0.0.1 --port $app_port --strictPort"
+	fi
+
+	log "starting app ($mode) on $app_url"
+	env DATABASE_URL="$db_url" \
+		SESSION_SECRET="${SESSION_SECRET:-riff-verify-session-secret-0123456789abcdef}" \
+		CLOUDINARY_CLOUD_NAME="${CLOUDINARY_CLOUD_NAME:-local}" \
+		CLOUDINARY_API_KEY="${CLOUDINARY_API_KEY:-local}" \
+		CLOUDINARY_API_SECRET="${CLOUDINARY_API_SECRET:-local}" \
+		CLOUDINARY_UPLOAD_PRESET="${CLOUDINARY_UPLOAD_PRESET:-local}" \
+		SERVER_URL="$app_url" \
+		setsid bash -c "$app_cmd" >"$RUN_DIR/app.log" 2>&1 </dev/null &
+	write_state APP_PID "$!"
+
+	wait_http "$app_url/" 120 || die "app did not answer on $app_url within 120s, see $RUN_DIR/app.log"
+
+	local chrome cdp_port
+	chrome="$(cd "$REPO_ROOT" && bun -e 'console.log(require("playwright").chromium.executablePath())')"
+	[[ -x "$chrome" ]] || die "Playwright Chromium missing; run: bunx playwright install chromium"
+	cdp_port="$(free_port)"
+	write_state CDP_PORT "$cdp_port"
+	log "starting headless Chromium (CDP 127.0.0.1:$cdp_port)"
+	setsid "$chrome" --headless=new --no-first-run --no-default-browser-check \
+		--remote-debugging-address=127.0.0.1 --remote-debugging-port="$cdp_port" \
+		--user-data-dir="$RUN_DIR/chrome" --window-size=1440,900 about:blank \
+		>"$RUN_DIR/chrome.log" 2>&1 </dev/null &
+	write_state CHROME_PID "$!"
+	wait_http "http://127.0.0.1:$cdp_port/json/version" 30 || die "Chromium did not expose CDP, see $RUN_DIR/chrome.log"
+
+	log "ready"
+	echo "export RIFF_VERIFY_RUN=$RIFF_VERIFY_RUN"
+	echo "APP_URL=$app_url"
+	echo "EVIDENCE_DIR=$evidence_dir"
+}
+
+cmd_doctor() {
+	require_run
+	local ok=1
+	check() {
+		if eval "$2" >/dev/null 2>&1; then echo "ok   $1"; else echo "FAIL $1"; ok=0; fi
+	}
+	echo "run       $RIFF_VERIFY_RUN ($APP_MODE)"
+	echo "app       $APP_URL"
+	echo "database  $DATABASE_URL"
+	echo "evidence  $EVIDENCE_DIR"
+	check "app process $APP_PID alive" "alive $APP_PID"
+	if command -v ss >/dev/null 2>&1 || command -v lsof >/dev/null 2>&1; then
+		check "app port $APP_PORT owned by this run" "port_owned $APP_PORT $APP_PID"
+	else
+		echo "warn cannot confirm who owns port $APP_PORT (install lsof or ss)"
+	fi
+	check "GET $APP_URL/ returns RiffMarket" "curl -fsS '$APP_URL/' | grep -q '<title>RiffMarket</title>'"
+	check "database accepts connections" "psql '$DATABASE_URL' -tAc 'select 1'"
+	check "database has migrations applied" "[[ \$(psql '$DATABASE_URL' -tAc 'select count(*) from _prisma_migrations where finished_at is not null') -gt 0 ]]"
+	check "chromium process $CHROME_PID alive" "alive $CHROME_PID"
+	check "chromium CDP answers on $CDP_PORT" "curl -fsS http://127.0.0.1:$CDP_PORT/json/version"
+	local head
+	head="$(git -C "$REPO_ROOT" rev-parse HEAD)"
+	if [[ "$head" == "$GIT_SHA" ]]; then
+		echo "ok   checkout HEAD matches the build ($GIT_SHA)"
+	elif [[ "$APP_MODE" == "dev" ]]; then
+		echo "warn HEAD moved to $head since up; dev mode hot-reloads, but server restarts may be needed"
+	else
+		echo "FAIL HEAD moved to $head since up; the preview build is stale, run down + up"
+		ok=0
+	fi
+	echo "listings  $(psql "$DATABASE_URL" -tAc 'select "listingStatus", count(*) from "Listing" group by 1 order by 1' 2>/dev/null | tr '\n' ' ')"
+	echo "users     $(psql "$DATABASE_URL" -tAc 'select role, count(*) from "User" group by 1 order by 1' 2>/dev/null | tr '\n' ' ')"
+	[[ "$ok" == 1 ]] || { echo "doctor: NOT safe to drive"; return 1; }
+	echo "doctor: safe to drive"
+}
+
+port_owned() {
+	local port="$1" root="$2" pids pid
+	pids="$(descendants "$root")"
+	if command -v ss >/dev/null 2>&1; then
+		for pid in $(ss -ltnpH "sport = :$port" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2); do
+			grep -qx "$pid" <<<"$pids" && return 0
+		done
+	elif command -v lsof >/dev/null 2>&1; then
+		for pid in $(lsof -nP -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null); do
+			grep -qx "$pid" <<<"$pids" && return 0
+		done
+	fi
+	return 1
+}
+
+descendants() {
+	local pid="$1" child
+	echo "$pid"
+	for child in $(pgrep -P "$pid" 2>/dev/null); do descendants "$child"; done
+}
+
+stop_group() {
+	local pid="$1" name="$2"
+	alive "$pid" || return 0
+	log "stopping $name (process group $pid)"
+	kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+	for _ in $(seq 20); do alive "$pid" || return 0; sleep 0.5; done
+	kill -KILL -- "-$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null || true
+}
+
+cmd_down() {
+	require_run
+	stop_group "${CHROME_PID:-}" chromium
+	stop_group "${APP_PID:-}" app
+	if [[ -n "${PG_DATA:-}" && -d "$PG_DATA" ]]; then
+		log "stopping private Postgres"
+		"$PG_BINDIR/pg_ctl" -D "$PG_DATA" -m fast -w stop >/dev/null 2>&1 || true
+	fi
+	rm -rf "$RUN_DIR"
+	log "removed scratch state $RUN_DIR"
+	rmdir "$EVIDENCE_DIR" 2>/dev/null || true
+	if [[ -d "$EVIDENCE_DIR" ]]; then
+		log "evidence kept at $EVIDENCE_DIR"
+	fi
+}
+
+cmd_env() { require_run; cat "$RUN_DIR/state.env"; }
+
+cmd_sql() {
+	require_run
+	[[ $# -ge 1 ]] || die "usage: riff-verify sql \"<query>\""
+	psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -tA -F $'\t' -c "$1"
+}
+
+cmd_browser() {
+	require_run
+	cd "$REPO_ROOT"
+	exec bun "$SKILL_DIR/scripts/browser.mjs" "$@"
+}
+
+cmd_list() {
+	[[ -d "$STATE_ROOT" ]] || { echo "no runs"; return 0; }
+	local dir
+	for dir in "$STATE_ROOT"/*/; do
+		[[ -f "$dir/state.env" ]] || continue
+		(set -a; source "$dir/state.env"; set +a
+			state="stopped"; alive "${APP_PID:-}" && state="running"
+			echo "$RIFF_VERIFY_RUN  $state  $APP_URL")
+	done
+}
+
+cmd="${1:-help}"
+shift || true
+case "$cmd" in
+	up) cmd_up "$@" ;;
+	doctor) cmd_doctor ;;
+	down) cmd_down ;;
+	env) cmd_env ;;
+	sql) cmd_sql "$@" ;;
+	browser) cmd_browser "$@" ;;
+	list) cmd_list ;;
+	help | -h | --help) usage ;;
+	*) usage; exit 2 ;;
+esac
