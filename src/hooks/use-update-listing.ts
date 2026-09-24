@@ -143,13 +143,19 @@ const useUpdateListing = (id: string) => {
 				data: formData,
 			}) as Promise<ListingMutationResponseDto>;
 		},
-		onSuccess: async () => {
+		onSuccess: async (response) => {
 			await invalidateListingCache(queryClient);
 			showToast(
 				"The listing has been updated. Please wait again for admin approval",
 				"success",
 			);
-			navigate({ to: "/listing/$id", params: { id } });
+
+			if (response.listing.isApproved) {
+				navigate({ to: "/listing/$id", params: { id } });
+				return;
+			}
+
+			navigate({ to: "/shop" });
 		},
 		onError: (error) => {
 			clientLogger.error("Failed to update the listing", error);
