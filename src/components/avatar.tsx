@@ -67,7 +67,7 @@ const Avatar = ({
 		<div
 			className={cn(
 				avatarSizeVariants({ size }),
-				"flex items-center justify-center rounded-full bg-primary text-white font-semibold",
+				"flex items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold",
 			)}
 		>
 			{getInitial(firstName)}
