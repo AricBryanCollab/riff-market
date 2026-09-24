@@ -98,7 +98,8 @@ function RouteComponent() {
 					<Button
 						onClick={previousPage}
 						disabled={isFirstPage}
-						className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+						variant="outline"
+						className="px-4 py-2 rounded-lg text-foreground"
 					>
 						Previous
 					</Button>
@@ -109,7 +110,8 @@ function RouteComponent() {
 					<Button
 						onClick={nextPage}
 						disabled={isLastPage}
-						className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+						variant="outline"
+						className="px-4 py-2 rounded-lg text-foreground"
 					>
 						Next
 					</Button>
