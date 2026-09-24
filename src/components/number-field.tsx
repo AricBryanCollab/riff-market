@@ -38,7 +38,7 @@ export function NumberField({
 				min={min}
 				step={step}
 				disabled={disabled}
-				className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+				className="tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
 				placeholder={placeholder || label.toLowerCase()}
 			/>
 		</Field>

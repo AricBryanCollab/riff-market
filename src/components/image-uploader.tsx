@@ -22,12 +22,13 @@ interface ImageUploaderProps<TImage extends ImageFile> {
 }
 
 const imageUploaderDropZoneVariants = cva(
-	"relative w-full h-full min-h-62.5 rounded-lg border-2 border-dashed transition-all cursor-pointer",
+	"relative w-full h-full min-h-62.5 rounded-lg border border-dashed transition-[background-color,border-color] cursor-pointer",
 	{
 		variants: {
 			dragActive: {
-				true: "border-primary bg-accent",
-				false: "border-primary bg-muted hover:bg-accent",
+				true: "border-foreground/60 bg-muted",
+				false:
+					"border-foreground/20 bg-muted/50 hover:border-foreground/40 hover:bg-muted",
 			},
 		},
 		defaultVariants: {
@@ -65,10 +66,10 @@ const ImageUploader = <TImage extends ImageFile>({
 		isNewImageFile(imageFile) ? imageFile.file.name : "Existing listing photo";
 
 	return (
-		<div className="flex flex-col gap-1 my-2">
+		<div className="flex flex-col gap-3 my-2">
 			<label
 				htmlFor={inputId}
-				className="block text-sm font-semibold tracking-wide text-foreground"
+				className="block text-sm leading-snug font-medium text-foreground"
 			>
 				{label}
 			</label>
@@ -109,7 +110,7 @@ const ImageUploader = <TImage extends ImageFile>({
 										.join(", ")}{" "}
 									(max {maxSizeMB}MB each)
 								</p>
-								<p className="text-xs text-foreground/60 mt-1">
+								<p className="text-xs text-foreground/60 mt-1 tabular-nums">
 									{images.length} / {maxImages} images uploaded
 								</p>
 							</div>
@@ -138,12 +139,12 @@ const ImageUploader = <TImage extends ImageFile>({
 							{images.map((imageFile, index) => (
 								<div
 									key={imageFile.preview}
-									className="relative group aspect-square rounded-lg overflow-hidden border border-primary bg-muted"
+									className="relative group aspect-square rounded-lg overflow-hidden bg-muted"
 								>
 									<img
 										src={imageFile.preview}
 										alt={getImageLabel(imageFile)}
-										className="w-full h-full object-cover"
+										className="w-full h-full object-cover rounded-lg outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
 									/>
 									<div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-2">
 										<div className="flex items-center gap-1">
@@ -188,7 +189,7 @@ const ImageUploader = <TImage extends ImageFile>({
 							))}
 						</div>
 					) : (
-						<div className="flex items-center justify-center h-full min-h-25 rounded-lg border-2 border-dashed border-primary/30 bg-muted/50">
+						<div className="flex items-center justify-center h-full min-h-25 rounded-lg border border-dashed border-foreground/10 bg-muted/30">
 							<p className="text-sm text-foreground/60">
 								No images uploaded yet
 							</p>

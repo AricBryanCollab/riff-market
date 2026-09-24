@@ -52,7 +52,7 @@ export function FormTextArea({
 					placeholder={placeholder || label.toLowerCase()}
 				/>
 				{showCounter && maxLength && (
-					<div className="absolute bottom-2 right-3 text-xs text-foreground/60">
+					<div className="absolute bottom-2 right-3 text-xs text-foreground/60 tabular-nums">
 						{value.length}/{maxLength}
 					</div>
 				)}

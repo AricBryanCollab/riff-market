@@ -39,8 +39,8 @@ function RouteComponent() {
 	return (
 		<SectionContainer>
 			<div className="my-4 max-w-6xl flex flex-col gap-3">
-				<H4>Add A New Listing To Sell</H4>
-				<Body>
+				<H4 className="text-balance">Add A New Listing To Sell</H4>
+				<Body className="text-pretty text-muted-foreground">
 					Fill up the form to add the listing. RiffMarket App admin would check
 					and approve the listing if it is valid to be sold in our community
 					marketplace.
@@ -82,7 +82,7 @@ function RouteComponent() {
 						rows={5}
 					/>
 
-					<div className="lg:col-span-1">
+					<div className="lg:col-span-1 lg:row-span-2 lg:grid lg:grid-rows-subgrid">
 						<SearchableSelect
 							options={listingCategoryOptions.map((p) => ({
 								label: p.label,
@@ -108,7 +108,7 @@ function RouteComponent() {
 						/>
 					</div>
 
-					<div className="lg:col-span-1">
+					<div className="lg:col-span-1 lg:row-span-2 lg:grid lg:grid-rows-subgrid">
 						<Counter
 							inputId="stock"
 							label="Stock Quantity"
