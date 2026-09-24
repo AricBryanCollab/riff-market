@@ -202,6 +202,63 @@ const listings: readonly SeedListing[] = [
 	},
 ];
 
+const reviews: readonly {
+	readonly listingKey: SeedListing["key"];
+	readonly userId: (typeof sellers)[number]["id"];
+	readonly rating: number;
+	readonly comment: string;
+}[] = [
+	{
+		listingKey: "stratocaster",
+		userId: "seed-seller-tone-hunter",
+		rating: 5,
+		comment: "Arrived perfectly set up. The V-Mod II pickups sound fantastic.",
+	},
+	{
+		listingKey: "stratocaster",
+		userId: "seed-seller-keys-king",
+		rating: 4,
+		comment:
+			"Great Strat, a couple of tiny case scuffs but plays like a dream.",
+	},
+	{
+		listingKey: "martinD28",
+		userId: "seed-seller-vintage-boxes",
+		rating: 5,
+		comment: "Huge, warm dreadnought tone. Exactly as described.",
+	},
+	{
+		listingKey: "martinD28",
+		userId: "seed-seller-tone-hunter",
+		rating: 5,
+		comment: "Well packed and fast shipping. Seller was easy to deal with.",
+	},
+	{
+		listingKey: "bossDs1",
+		userId: "seed-seller-keys-king",
+		rating: 4,
+		comment: "Classic crunch, works fine. Some velcro residue on the bottom.",
+	},
+	{
+		listingKey: "korgMinilogue",
+		userId: "seed-seller-vintage-boxes",
+		rating: 4,
+		comment: "Fun synth with plenty of presets. Came with the power supply.",
+	},
+	{
+		listingKey: "korgMinilogue",
+		userId: "seed-seller-keys-king",
+		rating: 5,
+		comment: "Mint condition, the multi-engine is a blast.",
+	},
+	{
+		listingKey: "tubeScreamer",
+		userId: "seed-seller-vintage-boxes",
+		rating: 5,
+		comment: "Brand new in box. Tightens up my amp nicely.",
+	},
+];
+
 async function main() {
 	if (process.env.NODE_ENV === "production") {
 		throw new Error("Refusing to seed demo data with NODE_ENV=production");
@@ -249,8 +306,17 @@ async function main() {
 			});
 		}
 
+		for (const { listingKey, ...review } of reviews) {
+			const listingId = `seed-listing-${listingKey}`;
+			await prisma.review.upsert({
+				where: { userId_listingId: { userId: review.userId, listingId } },
+				update: review,
+				create: { ...review, listingId },
+			});
+		}
+
 		console.log(
-			`Seeded ${sellers.length} sellers and ${listings.length} approved listings`,
+			`Seeded ${sellers.length} sellers, ${listings.length} approved listings and ${reviews.length} reviews`,
 		);
 	} finally {
 		await prisma.$disconnect();
