@@ -41,10 +41,10 @@ const Counter = ({
 	};
 
 	return (
-		<div className="flex flex-col gap-1 my-2">
+		<div className="flex flex-col gap-3 my-2">
 			<label
 				htmlFor={inputId}
-				className="block text-sm font-semibold tracking-wide text-foreground"
+				className="block text-sm leading-snug font-medium text-foreground"
 			>
 				{label}
 			</label>
