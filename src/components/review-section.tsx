@@ -136,7 +136,7 @@ function ReviewItem({ review }: { review: ListingReview }) {
 
 function EmptyReviews() {
 	return (
-		<div className="mt-8 flex flex-col items-center gap-4 rounded-xl border border-dashed px-6 py-14 text-center">
+		<div className="mt-8 flex flex-col items-center gap-4 rounded-xl border border-dashed border-gray-300 px-6 py-14 text-center">
 			<RatingStars rating={0} starClassName="size-6" />
 			<div className="space-y-1.5">
 				<h3 className="text-lg font-semibold text-gray-900">No reviews yet</h3>
