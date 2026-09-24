@@ -25,18 +25,19 @@ Preconditions:
 - `$V doctor` passes. The catalog is the seeded 14 approved listings, either signed out or as any role.
 
 - **Open shop.** Run `$V browser goto /` and then `$V browser click --in-role banner --role link --name Shop`. The heading `Browse Music Tools` appears with 8 `View Details` links, and the text reads `Page 1 of 2`.
-- **Search.** Run `$V browser fill --role textbox --name "Search listings" --value fender`, then `$V browser wait --role link --name "Fender Custom Shop Telecaster" --nth 0`. `$V browser url` ends in `?search=fender`, and `$V browser count --role link --name "View Details"` prints `2`.
-- **Category chip.** Choose `Pedals & Effects`. Run `$V browser click --in-role main --role button --name "Pedals & Effects"`. The URL gains `category=PEDALS`, and with `search=fender` still set, the empty state `No listings match your search here` appears. Choose `All` to drop the category.
-- **Sidebar filters.** Run `$V browser click --role button --name "Expand sidebar"`. The complementary region shows `Filters` with `Category`, `Price Range`, `Condition`, and `Brand`. Type a brand into `$V browser fill --in-role complementary --role textbox --name "Search brands..." --value Boss`. The footer reads `N filter(s) active`.
-- **Clear.** Run `$V browser click --in-role complementary --role button --name "Clear All Filters"`. The URL returns to `/shop` and page 1 lists 8 cards again.
-- **Paginate.** Run `$V browser click --in-role main --role button --name Next`. The text reads `Page 2 of 2`, it lists 6 cards, and `Next` is disabled.
+- **Search.** Run `$V browser fill --role textbox --name "Search listings" --value fender`, then wait for a non-match to leave the grid with `$V browser wait --role link --name "Gibson Les Paul Standard '60s" --nth 0 --state hidden`. `$V browser url` ends in `?search=fender`, and `$V browser count --role link --name "View Details"` prints `2`.
+- **Category chip.** Choose `Pedals & Effects`. Run `$V browser click --in-role main --role button --name "Pedals & Effects"`. The URL gains `category=PEDALS`. With `search=fender` still set, run `$V browser wait --text "No listings match your search here"` to confirm the empty state. Choose `All` to drop the category.
+- **Sidebar filters.** Run `$V browser click --role button --name "Expand sidebar"`. The complementary region shows `Filters` with `Category`, `Price Range`, `Condition`, and `Brand`. Run `$V browser fill --in-role complementary --role textbox --name "Search brands..." --value Boss`, which adds `brand=Boss` to the URL. Run `$V browser click --in-role complementary --text Used --exact`, which adds `condition=USED`. The footer reads `N filters active`.
+- **Clear.** Run `$V browser click --in-role complementary --role button --name "Clear All Filters"`. The URL returns to `/shop` and it lists 8 cards again.
+- **Paginate.** From `/shop` with no filters, run `$V browser click --in-role main --role button --name Next`. The URL gains `page=1`, the text reads `Page 2 of 2`, it lists 6 cards, and `Next` is disabled.
 - **Home category card.** Run `$V browser goto /` and `$V browser click --role link --name "Pedals & Effects 3 listings"`. The URL is `/shop?category=PEDALS` and it lists 3 cards.
 - **Proof.** Run `$V browser snapshot --path shop/<step>.aria.txt --role main` after each filter change and `$V browser screenshot --path shop/<step>.png`. For a count, cross-check with `$V sql "select count(*) from \"Listing\" where \"listingStatus\"='APPROVED' and name ilike '%fender%'"`.
 
 ## Gotchas
 
-- Sidebar checkboxes and the two price spinbuttons have no accessible name. Target them by the adjacent text inside `--in-role complementary`, or use the category chips in `main`, which are named buttons.
-- Search is debounced into the URL. Wait for a result link or the empty-state text, not a fixed sleep.
+- Sidebar checkboxes and the two price spinbuttons have no accessible name. For checkboxes, click the adjacent label text inside `--in-role complementary`. For spinbuttons, use `--in-role complementary --role spinbutton --nth 0` (min) or `--nth 1` (max). You can also use the category chips in `main`, which are named buttons.
+- Search is debounced into the URL. Wait for a non-matching card to become hidden, or for the empty-state text. Do not wait for a matching card, because it may already be on the unfiltered page, and do not use a fixed sleep.
+- `Page N of M` counts every approved listing and ignores filters. A 2-result search still reads `Page 1 of 2`, and `Next` shows an empty page. Assert on cards, not on the pager, when filters are active.
 - Every listing card has two links with the listing name (image and title). Use `--nth 0` when you click or wait on one.
 - For admins, the chip row adds `Pending`, which swaps the grid to pending listings (see [admin-moderation.md](./admin-moderation.md)). `Pending` is a prefix of the pending listing names, so pass `--exact`.
 - `Register Now` (Guest), `My Orders` (Customer), and `Add Listing` (Seller/Admin) share the header slot. For Customers, `My Orders` currently does nothing when clicked.

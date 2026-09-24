@@ -29,6 +29,7 @@ Target flags
   --label L                   getByLabel (form fields).
   --text T                    getByText.
   --placeholder P             getByPlaceholder.
+  --css S                     CSS selector; last resort for controls with no accessible name.
   --in-role R --in-name N     Scope the target inside a container (dialog, region, list...).
   --nth I                     Pick the I-th match (0-based) instead of requiring a unique match.
 
@@ -79,7 +80,7 @@ function record(status, detail = "") {
 }
 
 function hasTarget() {
-	return ["role", "label", "text", "placeholder"].some((k) => k in flags);
+	return ["role", "label", "text", "placeholder", "css"].some((k) => k in flags);
 }
 
 function locate(page) {
@@ -97,8 +98,10 @@ function locate(page) {
 		locator = scope.getByText(flags.text, { exact });
 	} else if (flags.placeholder) {
 		locator = scope.getByPlaceholder(flags.placeholder, { exact });
+	} else if (flags.css) {
+		locator = scope.locator(flags.css);
 	} else {
-		throw new Error("missing target: pass --role/--name, --label, --text, or --placeholder");
+		throw new Error("missing target: pass --role/--name, --label, --text, --placeholder, or --css");
 	}
 	return flags.nth !== undefined ? locator.nth(Number(flags.nth)) : locator;
 }

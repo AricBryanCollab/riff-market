@@ -7,7 +7,7 @@ New listings start as pending and stay hidden from the public shop until an Admi
 - `mod-pending-popover` shows the navbar pending popover `Pending Approval` with the count and newest pending listings.
 - `mod-pending-chip` swaps the `/shop` grid to pending listings with the `Pending` chip.
 - `mod-accept` approves a pending listing. The listing becomes public, a toast confirms, and the seller is notified.
-- `mod-decline` declines a pending listing so it never reaches the public shop.
+- `mod-decline` declines a pending listing so it never reaches the public shop, and notifies the seller.
 
 ## How to get to it (user POV)
 
@@ -28,7 +28,7 @@ Preconditions:
 - **Accept.** Run `$V browser click --role button --name Accept --exact`. The app returns to `/shop` with the toast `Listing approved successfully`. `$V sql 'select "listingStatus", "isApproved" from "Listing" where id = $$verify-pending-jazzmaster$$'` returns `APPROVED t`.
 - **Public view.** Run `$V browser reset` and `$V browser goto "/shop?search=jazzmaster"`. A Guest now sees `Verify Pending Jazzmaster`.
 - **Seller notified.** `$V sql 'select message from "Notification" where "userId" = $$seed-seller-vintage-boxes$$'` includes `Great News! Your listing Verify Pending Jazzmaster has been approved and live at the RiffMarket shop`. Signing in as `vintage.boxes@seed.riffmarket.dev` and opening `/notifications` shows the same text.
-- **Decline.** As the Admin, open `/listing/verify-pending-wah` and run `$V browser click --role button --name Decline --exact`. Then `$V sql 'select "listingStatus" from "Listing" where id = $$verify-pending-wah$$'` should no longer be `PENDING`. Record the toast text and the resulting status. A Guest search for `wah` must stay empty.
+- **Decline.** As the Admin, run `$V browser goto /listing/verify-pending-wah` and `$V browser click --role button --name Decline --exact`. The app returns to `/shop` with the toast `Listing declined successfully`. `$V sql 'select "listingStatus", "isApproved" from "Listing" where id = $$verify-pending-wah$$'` returns `DECLINED f`. The seller gets the notification `Your listing Verify Pending Wah Pedal has been declined by the admin`. After `$V browser reset`, `$V browser goto "/shop?search=wah"` shows `No listings match your search here`.
 - **Proof.** Save snapshots of the popover, the pending grid, and the listing before and after with `$V browser snapshot --path admin-moderation/<step>.aria.txt`. Also save the status and notification rows.
 
 ## Gotchas

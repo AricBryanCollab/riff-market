@@ -15,8 +15,10 @@ usage() {
 	cat <<'EOF'
 Usage: riff-verify <command> [args]
 
-  up [--dev] [--no-seed]   Start a disposable Postgres + RiffMarket + headless Chromium.
-                           Prints `export RIFF_VERIFY_RUN=<id>`; run it before other commands.
+  up [--dev] [--no-seed] [--run <id>]
+                           Start a disposable Postgres + RiffMarket + headless Chromium.
+                           Always a new run (fresh id unless --run is given); an exported
+                           RIFF_VERIFY_RUN is ignored. Prints `export RIFF_VERIFY_RUN=<id>`.
   doctor                   Read-only health check of the current run. Exit 0 = safe to drive.
   env                      Print the run's state (APP_URL, DATABASE_URL, EVIDENCE_DIR, ...).
   sql "<query>"            Run a query against the run's database (psql -tA).
@@ -67,11 +69,12 @@ wait_http() {
 write_state() { echo "$1=$(printf '%q' "$2")" >>"$RUN_DIR/state.env"; }
 
 cmd_up() {
-	local mode="preview" seed=1
+	local mode="preview" seed=1 run_id=""
 	while [[ $# -gt 0 ]]; do
 		case "$1" in
 			--dev) mode="dev" ;;
 			--no-seed) seed=0 ;;
+			--run) run_id="${2:?--run needs an id}"; shift ;;
 			*) die "unknown flag for up: $1" ;;
 		esac
 		shift
@@ -80,7 +83,7 @@ cmd_up() {
 	command -v bun >/dev/null 2>&1 || die "bun is not on PATH (install: curl -fsSL https://bun.sh/install | bash)"
 	command -v curl >/dev/null 2>&1 || die "curl is required"
 
-	RIFF_VERIFY_RUN="${RIFF_VERIFY_RUN:-run-$(date +%Y%m%d-%H%M%S)-$$}"
+	RIFF_VERIFY_RUN="${run_id:-run-$(date +%Y%m%d-%H%M%S)-$$}"
 	RUN_DIR="$STATE_ROOT/$RIFF_VERIFY_RUN"
 	[[ -e "$RUN_DIR" ]] && die "run $RIFF_VERIFY_RUN already exists at $RUN_DIR; pick a new RIFF_VERIFY_RUN or run \`riff-verify down\` first"
 	mkdir -p "$RUN_DIR"
@@ -278,14 +281,15 @@ cmd_browser() {
 }
 
 cmd_list() {
-	[[ -d "$STATE_ROOT" ]] || { echo "no runs"; return 0; }
-	local dir
+	local dir found=0
 	for dir in "$STATE_ROOT"/*/; do
 		[[ -f "$dir/state.env" ]] || continue
+		found=1
 		(set -a; source "$dir/state.env"; set +a
 			state="stopped"; alive "${APP_PID:-}" && state="running"
-			echo "$RIFF_VERIFY_RUN  $state  $APP_URL")
+			echo "$RIFF_VERIFY_RUN  $state  ${APP_URL:-not started}")
 	done
+	[[ "$found" == 1 ]] || echo "no runs"
 }
 
 cmd="${1:-help}"

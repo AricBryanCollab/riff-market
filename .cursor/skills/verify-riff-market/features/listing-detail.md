@@ -27,13 +27,14 @@ Preconditions:
 - **Reviews.** Run `$V browser snapshot --role region --name "Customer Reviews"`. It shows `1 review`, `4.0 out of 5`, and one card from `Keys K.` marked `Verified buyer`. The rating link `4.0 out of 5 stars 4.0 (1 review)` sits under the title.
 - **Guest add to cart.** Run `$V browser click --role button --name "Add to Cart"`. The dialog `Register at RiffMarket` opens, and the cart stays empty.
 - **Quantity bounds.** Sign in as the Customer ([auth.md](./auth.md)) and reopen the listing. `Decrease quantity` is disabled at `1`. Run `$V browser click --role button --name "Increase quantity"` twice. `$V browser snapshot` shows `spinbutton "Quantity": "3"` and `Increase quantity` is disabled at stock.
-- **Role actions.** As the Customer you see `Add to Cart` and `Add to wishlist`. As `tone.hunter@seed.riffmarket.dev` (the owner) you see `Edit` and `Delete`. As the Admin on an approved listing, `Accept` and `Decline` show but are disabled.
+- **Role actions.** As the Customer you see `Add to Cart` and `Add to wishlist`. As `tone.hunter@seed.riffmarket.dev` (the owner) you see `Edit` and `Delete`, with no quantity controls. As the Admin on an approved listing, you see `Accept` (disabled), `Decline` (enabled: declining takes an approved listing down), `Edit listing`, and `Delete listing`.
+- **Missing listing.** Run `$V browser goto /listing/does-not-exist`. The page shows `Listing not found` and a named `Back to Shop` button.
 - **Proof.** Run `$V browser snapshot --path listing-detail/<step>.aria.txt` and `$V browser screenshot --path listing-detail/<step>.png` for each viewer.
 
 ## Gotchas
 
 - The page has no `main` landmark. Use a full `snapshot`, or target `--role region --name "Customer Reviews"`.
-- `Back to Shop` is an unnamed button wrapping a paragraph. Click it with `--text "Back to Shop"`.
+- On a found listing, `Back to Shop` is a plain paragraph and clicking it does nothing. The unnamed arrow button to its left navigates. Use the navbar `Shop` link, or `--css "button:has(svg.lucide-arrow-left)"` if the arrow itself is under test.
 - `Add to wishlist` has no behavior yet. Do not report favorites as verified.
 - Listing photos are hot-linked from Wikimedia. Offline runs render broken images, which is not an app bug.
-- Pending listings are visible only to Admins. For others, `/listing/verify-pending-jazzmaster` does not show the listing.
+- Pending and declined listings are visible only to Admins. A Guest opening `/listing/verify-pending-jazzmaster` sees `Listing not found`.

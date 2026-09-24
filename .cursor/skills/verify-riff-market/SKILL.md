@@ -35,7 +35,7 @@ export RIFF_VERIFY_RUN=<id printed by up>
 6. Builds and starts the app with placeholder Cloudinary credentials and a fixed `SESSION_SECRET`.
 7. Starts Chromium with a CDP port.
 
-It is ready when it prints `riff-verify: ready`, then `export RIFF_VERIFY_RUN=...`, `APP_URL=...`, and `EVIDENCE_DIR=...`. If `up` fails partway, it prints the log directory and the exact `down` command to clean up. Every later command needs `RIFF_VERIFY_RUN` set.
+It is ready when it prints `riff-verify: ready`, then `export RIFF_VERIFY_RUN=...`, `APP_URL=...`, and `EVIDENCE_DIR=...`. Every later command needs `RIFF_VERIFY_RUN` set. `up` always creates a new run and ignores an already-exported `RIFF_VERIFY_RUN`, so export the new id before you continue. Pass `--run <id>` to choose the id yourself. If `up` fails partway, it prints the log directory and the exact `down` command to clean up.
 
 Seeded accounts all use the password `riffmarket-seed`:
 
@@ -70,7 +70,7 @@ $V browser snapshot --role main           # ARIA tree: read this before choosing
 $V browser reset                          # clear cookies + storage (sign out, empty cart)
 ```
 
-- Target elements with `--role`/`--name` first, then `--label`, then `--text`. Scope with `--in-role dialog` (or `--in-role banner`, `--in-role complementary`). Add `--exact` when one name is a prefix of another, for example `Password` and `Confirm Password`, or `Pending` and `Verify Pending ...`. Use `--nth` only when duplicates are inherent, for example each listing card has two links with the same name.
+- Target elements with `--role`/`--name` first, then `--label`, then `--text`. Use `--css` only for controls with no accessible name. Scope with `--in-role dialog` (or `--in-role banner`, `--in-role complementary`). Add `--exact` when one name is a prefix of another, for example `Password` and `Confirm Password`, or `Pending` and `Verify Pending ...`. Use `--nth` only when duplicates are inherent, for example each listing card has two links with the same name.
 - Lookups are strict. Several matches make a command fail rather than click the wrong element.
 - `wait`, `count`, and `text` are the assertions. `wait` exits 1 on timeout (default 10s, set with `--timeout`).
 - Check database side effects with `$V sql "<query>"`. It runs `psql -tA` against the run's database. Prisma tables and columns are quoted camelCase, for example `"Listing"."listingStatus"`, `"Purchase"."totalAmountCents"`, and `"Notification"."message"`.

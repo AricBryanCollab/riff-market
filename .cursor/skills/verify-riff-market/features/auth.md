@@ -33,7 +33,7 @@ Preconditions:
 - **Stored user.** Run `$V sql "select email, role from \"User\" where email = '$EMAIL'"`. It returns one row with the chosen role (`CUSTOMER` by default). The password column is a bcrypt hash, not the plain text.
 - **Sign out.** Choose `Logout`. Run `$V browser click --role button --name Logout` and `$V browser wait --role button --name Login`. `Login` and `Get Started` are back.
 - **Sign in.** Run `$V browser click --role button --name Login`, `$V browser fill --in-role dialog --label Email --value "$EMAIL"`, `$V browser fill --in-role dialog --label Password --exact --value "Password123!"`, `$V browser click --in-role dialog --role button --name "Sign In"`, and `$V browser wait --role button --name Logout`.
-- **Failed sign-in.** After `$V browser reset`, open `Login` and submit `customer@verify.riffmarket.dev` with password `wrong-password`. Run `$V browser wait --in-role dialog --text "Failed to sign in"`. The dialog stays open and `Login` is still in the navbar.
+- **Failed sign-in.** After `$V browser reset`, open `Login` and submit `customer@verify.riffmarket.dev` with password `wrong-password`. Run `$V browser wait --in-role dialog --text "Failed to sign in"`. The dialog stays open. Run `$V browser press --key Escape` and `$V browser wait --role button --name Login` to confirm you are still signed out.
 - **Proof.** Run `$V browser snapshot --path auth/signed-in.aria.txt --role banner` and `$V browser screenshot --path auth/signed-in.png` while signed in, plus the `sql` row above.
 
 ## Gotchas
@@ -41,5 +41,6 @@ Preconditions:
 - Both dialogs have a `Password` field. The register dialog also has `Confirm Password`, so pass `--exact` with `--label Password`.
 - Both dialogs have `Sign In` and `Sign Up` buttons: one submits, the other switches dialogs. Always scope with `--in-role dialog` and check which dialog is open, using `snapshot --role dialog`.
 - The avatar button is named by the first initial (`C`, `T`, `A`), and clicking it goes to `/settings`. Do not use it as the "signed in" check. Wait for `Logout` instead.
+- While a dialog is open, the rest of the page is hidden from the accessibility tree. `--in-role banner` lookups return nothing until you press `Escape`.
 - The user menu renders client-side only. Right after `goto`, the navbar shows skeletons, so `wait` for `Login` or `Logout` before you assert.
 - Test-helper users from `src/test/prisma-test-data.ts` have unhashed passwords and cannot sign in. Use the seeded verify accounts.
