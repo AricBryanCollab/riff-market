@@ -98,8 +98,8 @@ function RouteComponent() {
 				{/* LISTING MAIN SECTION */}
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 					{/* LISTING IMAGES */}
-					<div className="rounded-2xl bg-white p-6">
-						<div className="h-96 w-full rounded-xl bg-slate-200 mb-4 overflow-hidden">
+					<div className="flex flex-col gap-4 rounded-2xl bg-white p-6">
+						<div className="h-96 w-full rounded-xl bg-slate-200 overflow-hidden">
 							<img
 								src={
 									listing.images[selectedImage]?.url || listing.images[0]?.url
@@ -108,26 +108,28 @@ function RouteComponent() {
 								className="w-full h-full object-cover rounded-xl outline -outline-offset-1 outline-black/10 dark:outline-white/10"
 							/>
 						</div>
-						<div className="grid grid-cols-4 gap-3">
-							{listing.images.slice(0, 4).map((img, idx) => (
-								<button
-									type="button"
-									key={img.imageId}
-									onClick={() => setSelectedImage(idx)}
-									className={`h-20 w-full rounded-lg overflow-hidden transition-[opacity,box-shadow] ${
-										selectedImage === idx
-											? "ring-2 ring-primary"
-											: "opacity-70 hover:opacity-100"
-									}`}
-								>
-									<img
-										src={img.url}
-										alt={`${listing.name} ${idx + 1}`}
-										className="w-full h-full object-cover rounded-lg outline -outline-offset-1 outline-black/10 dark:outline-white/10"
-									/>
-								</button>
-							))}
-						</div>
+						{listing.images.length > 1 && (
+							<div className="grid grid-cols-4 gap-3">
+								{listing.images.slice(0, 4).map((img, idx) => (
+									<button
+										type="button"
+										key={img.imageId}
+										onClick={() => setSelectedImage(idx)}
+										className={`h-20 w-full rounded-lg overflow-hidden transition-[opacity,box-shadow,scale] active:scale-[0.96] ${
+											selectedImage === idx
+												? "ring-2 ring-primary"
+												: "opacity-70 hover:opacity-100"
+										}`}
+									>
+										<img
+											src={img.url}
+											alt={`${listing.name} ${idx + 1}`}
+											className="w-full h-full object-cover rounded-lg outline -outline-offset-1 outline-black/10 dark:outline-white/10"
+										/>
+									</button>
+								))}
+							</div>
+						)}
 					</div>
 
 					<div className="rounded-2xl bg-white p-6 space-y-6">
