@@ -22,6 +22,7 @@ import {
 	LISTING_CONDITIONS,
 } from "@/domains/listings/domain/listing-attributes";
 import type {
+	ApprovedListingCount,
 	ListingBrandCount,
 	ListingCategoryCount,
 	ListingDetailResponse,
@@ -183,6 +184,26 @@ export async function getListingStatusCountDto(
 	return isApproved
 		? { approvedListingCount: count }
 		: { pendingListingCount: count };
+}
+
+export async function countApprovedListingDto(
+	rawQuery: unknown,
+	listings?: Pick<ListingCountQueryPort, "countApproved">,
+): Promise<ApprovedListingCount> {
+	const parsed = approvedListingSearchInputSchema.safeParse(rawQuery);
+
+	if (!parsed.success) {
+		throw new RequestError("Invalid listing queries", {
+			details: parsed.error,
+		});
+	}
+
+	const listingQueries = listings ?? (await createPrismaListingQueries());
+	const count = await listingQueries.countApproved(
+		toListingSearchQuery(parsed.data),
+	);
+
+	return { approvedListingCount: count };
 }
 
 export async function listRecentListingResponses(

@@ -15,6 +15,8 @@ const listingKeys = {
 	countByCategory: ["listings", "count", "by-category"] as const,
 	countByStatus: (status: ListingCountStatusQuery) =>
 		["listings", "count", status] as const,
+	approvedCount: (filters: ApprovedListingSearchFilterQuery) =>
+		["listings", "count", "approved", filters] as const,
 	detail: (id: string, viewerKey: string) =>
 		["listings", "detail", id, viewerKey] as const,
 	featured: ["listings", "featured"] as const,

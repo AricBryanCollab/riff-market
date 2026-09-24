@@ -12,6 +12,7 @@ import {
 } from "@/lib/tanstack-query/query-keys";
 import {
 	type ApprovedListingSearchServerInput,
+	getApprovedListingCountServerFn,
 	getApprovedListingsServerFn,
 	getListingDetailsServerFn,
 	getListingStatusCountServerFn,
@@ -87,6 +88,20 @@ export const listingCountByStatusQueryOpt = (status: ListingCountStatusQuery) =>
 			}),
 	});
 
+export const approvedListingCountQueryOpt = (
+	filters: ApprovedListingSearchFilterQuery,
+) => {
+	const countFilters = { ...filters, limit: undefined, offset: undefined };
+
+	return queryOptions<ApprovedListingCount>({
+		queryKey: queryKeys.listings.approvedCount(countFilters),
+		queryFn: async () =>
+			getApprovedListingCountServerFn({
+				data: toApprovedListingSearchServerInput(countFilters),
+			}),
+	});
+};
+
 export const useApprovedListings = (
 	filters: ApprovedListingSearchFilterQuery,
 ) => {
@@ -106,12 +121,14 @@ export const useApprovedListings = (
 	};
 };
 
-export const useApprovedListingCount = () => {
+export const useApprovedListingCount = (
+	filters: ApprovedListingSearchFilterQuery,
+) => {
 	const {
 		data: listingCount,
 		isError: isErrorListingCount,
 		isPending: loadingListingCount,
-	} = useQuery(listingCountByStatusQueryOpt("approved"));
+	} = useQuery(approvedListingCountQueryOpt(filters));
 
 	return {
 		listingCount,

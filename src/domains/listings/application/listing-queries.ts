@@ -71,6 +71,7 @@ export interface ListingCountQueryPort {
 	listPopularApprovedBrandCounts(): Promise<ListingBrandCount[]>;
 	countApprovedByCategory(): Promise<ListingCategoryCount[]>;
 	countByStatus(status: ListingCountStatus): Promise<number>;
+	countApproved(query: ApprovedListingSearchQuery): Promise<number>;
 }
 
 export interface RecentApprovedListingQueryPort {

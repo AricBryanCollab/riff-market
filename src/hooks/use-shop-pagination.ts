@@ -11,7 +11,7 @@ const useShopPagination = () => {
 	const pageSize = approvedFilters.limit ?? SHOP_PAGE_SIZE;
 
 	const { listingCount, isErrorListingCount, loadingListingCount } =
-		useApprovedListingCount();
+		useApprovedListingCount(approvedFilters);
 
 	const { listings, isLoadingListings, isErrorListings, refetchListings } =
 		useApprovedListings(approvedFilters);
