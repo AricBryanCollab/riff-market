@@ -23,7 +23,7 @@ const listingActionButtonVariants = cva(
 			variant: {
 				primary: "bg-primary hover:bg-accent text-white",
 				secondary:
-					"bg-slate-200 hover:bg-slate-300 text-slate-900 hover:text-slate-900",
+					"bg-background hover:bg-muted text-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_1px_2px_-1px_rgba(0,0,0,0.08),0_2px_4px_0_rgba(0,0,0,0.04)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.13)]",
 				destructive:
 					"bg-destructive hover:bg-rose-400 dark:hover:bg-rose-400 text-white",
 				success: "bg-green-600 hover:bg-green-500 text-white",
@@ -280,6 +280,11 @@ export function ListingDetailsActions({
 							type="button"
 							onClick={() => handleAction(action.onClickKey)}
 							disabled={isButtonDisabled}
+							aria-label={
+								action.onClickKey === "toggleFavorite"
+									? "Add to wishlist"
+									: undefined
+							}
 							title={
 								!isActionAllowed &&
 								(action.onClickKey === "edit" || action.onClickKey === "delete")

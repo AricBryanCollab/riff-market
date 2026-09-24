@@ -51,6 +51,14 @@ describe("review server service", () => {
 		).toEqual({
 			listingId,
 		});
+
+		expect(
+			validateGetListingReviewsInput({
+				listingId: "seed-listing-prophetSynth",
+			}),
+		).toEqual({
+			listingId: "seed-listing-prophetSynth",
+		});
 	});
 
 	it("creates a review for the current user", async () => {

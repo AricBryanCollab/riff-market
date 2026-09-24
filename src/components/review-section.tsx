@@ -1,112 +1,200 @@
-import { cva } from "class-variance-authority";
-import { Star } from "lucide-react";
+import { BadgeCheck, Star } from "lucide-react";
+import { RatingStars } from "@/components/rating";
+import type { ListingReview } from "@/domains/reviews/dto/listing-review";
+import { useListingReviews } from "@/hooks/use-listing-reviews";
 
-import { cn } from "@/lib/utils";
-
-const ratingStarVariants = cva("size-6", {
-	variants: {
-		state: {
-			filled: "fill-yellow-400 text-yellow-400",
-			empty: "fill-gray-200 text-gray-200",
-		},
-	},
-	defaultVariants: {
-		state: "empty",
-	},
+const reviewDateFormatter = new Intl.DateTimeFormat("en-US", {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
 });
 
-const reviewDistribution = [
-	{ stars: 5, width: "78%", count: 84 },
-	{ stars: 4, width: "52%", count: 41 },
-	{ stars: 3, width: "24%", count: 18 },
-	{ stars: 2, width: "12%", count: 8 },
-	{ stars: 1, width: "7%", count: 5 },
-] as const;
+const eyebrowClassName =
+	"text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground";
 
-const ReviewSection = () => {
-	const avgRating = 4.2;
-	const reviewCount = 156;
-	const roundedAvgRating = Math.round(avgRating);
+const ReviewSection = ({ listingId }: { listingId: string }) => {
+	const { reviews, summary, isPending, isError } = useListingReviews(listingId);
+	const { reviewCount } = summary;
 
 	return (
-		<div>
-			{/* REVIEWS SECTION */}
-			<div className="rounded-2xl bg-white p-6">
-				<h2 className="text-2xl font-bold text-gray-900 mb-8">
-					Customer Reviews
-				</h2>
+		<section
+			id="reviews"
+			aria-labelledby="reviews-heading"
+			className="scroll-mt-24 rounded-2xl bg-white p-6 md:p-8"
+		>
+			<header className="flex items-end justify-between gap-4 border-b pb-6">
+				<div className="space-y-1.5">
+					<p className={eyebrowClassName}>From verified buyers</p>
+					<h2
+						id="reviews-heading"
+						className="text-2xl font-semibold tracking-tight text-gray-900 text-balance"
+					>
+						Customer Reviews
+					</h2>
+				</div>
+				{reviewCount > 0 && (
+					<p className="text-sm text-muted-foreground tabular-nums">
+						{reviewCount} {reviewCount === 1 ? "review" : "reviews"}
+					</p>
+				)}
+			</header>
 
-				{/* REVIEW SUMMARY */}
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-					<div className="flex flex-col items-center justify-center p-8 bg-slate-50 rounded-xl">
-						<div className="text-5xl font-bold text-gray-900 mb-3">
-							{avgRating}
-						</div>
-						<div className="flex gap-1 mb-2">
-							{[1, 2, 3, 4, 5].map((star) => (
+			<ReviewSectionBody
+				reviews={reviews}
+				summary={summary}
+				isPending={isPending}
+				isError={isError}
+			/>
+		</section>
+	);
+};
+
+type ReviewSectionBodyProps = Pick<
+	ReturnType<typeof useListingReviews>,
+	"reviews" | "summary" | "isPending" | "isError"
+>;
+
+function ReviewSectionBody({
+	reviews,
+	summary,
+	isPending,
+	isError,
+}: ReviewSectionBodyProps) {
+	const { averageRating, reviewCount, distribution } = summary;
+
+	if (isPending) {
+		return <ReviewSectionSkeleton />;
+	}
+
+	if (isError) {
+		return (
+			<p className="pt-6 text-sm text-muted-foreground">
+				Reviews couldn't be loaded right now. Please try again later.
+			</p>
+		);
+	}
+
+	if (reviewCount === 0) {
+		return <EmptyReviews />;
+	}
+
+	return (
+		<>
+			<div className="grid grid-cols-1 gap-8 pt-8 md:grid-cols-[minmax(0,14rem)_1fr] md:gap-12">
+				<div className="flex flex-col gap-3">
+					<p className="flex items-baseline gap-2">
+						<span className="text-6xl font-semibold leading-none tracking-tight text-gray-900 tabular-nums">
+							{averageRating.toFixed(1)}
+						</span>
+						<span className="text-sm text-muted-foreground">out of 5</span>
+					</p>
+					<RatingStars rating={averageRating} starClassName="size-5" />
+				</div>
+
+				<ul className="flex flex-col justify-center gap-2.5">
+					{distribution.map(({ stars, count }) => (
+						<li
+							key={stars}
+							className="flex items-center gap-3 text-sm tabular-nums"
+						>
+							<span className="flex w-8 items-center gap-1 font-medium text-gray-900">
+								{stars}
 								<Star
-									key={star}
-									className={cn(
-										ratingStarVariants({
-											state: star <= roundedAvgRating ? "filled" : "empty",
-										}),
-									)}
+									aria-hidden
+									className="size-3 fill-current text-gray-400"
 								/>
-							))}
-						</div>
-						<p className="text-sm text-gray-500">{reviewCount} reviews</p>
-					</div>
-
-					<div className="col-span-2 space-y-3">
-						{reviewDistribution.map((rating) => (
-							<div key={rating.stars} className="flex items-center gap-3">
-								<span className="text-sm font-medium text-gray-700 w-8">
-									{rating.stars}★
-								</span>
-								<div className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden">
-									<div
-										className="h-full bg-yellow-400"
-										style={{ width: rating.width }}
-									/>
-								</div>
-								<span className="text-sm text-gray-500 w-12">
-									{rating.count}
-								</span>
+							</span>
+							<div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+								<div
+									className="h-full rounded-full bg-foreground"
+									style={{ width: `${(count / reviewCount) * 100}%` }}
+								/>
 							</div>
-						))}
-					</div>
-				</div>
-
-				{/* INDIVIDUAL REVIEWS  */}
-				<div className="space-y-6">
-					{[1, 2, 3].map((i) => (
-						<div key={i} className="border rounded-xl p-6 bg-slate-50">
-							<div className="flex items-start justify-between mb-4">
-								<div className="flex-1">
-									<div className="flex items-center gap-2 mb-2">
-										<div className="flex gap-1">
-											<div className="h-4 w-4 rounded bg-yellow-300" />
-											<div className="h-4 w-4 rounded bg-yellow-300" />
-											<div className="h-4 w-4 rounded bg-yellow-300" />
-											<div className="h-4 w-4 rounded bg-yellow-300" />
-											<div className="h-4 w-4 rounded bg-slate-200" />
-										</div>
-										<div className="h-4 w-24 rounded bg-slate-300" />
-									</div>
-									<div className="h-3 w-40 rounded bg-slate-200" />
-								</div>
-							</div>
-							<div className="space-y-2">
-								<div className="h-4 w-full rounded bg-slate-200" />
-								<div className="h-4 w-full rounded bg-slate-200" />
-								<div className="h-4 w-2/3 rounded bg-slate-200" />
-							</div>
-						</div>
+							<span className="w-8 text-right text-muted-foreground">
+								{count}
+							</span>
+						</li>
 					))}
+				</ul>
+			</div>
+
+			<ul className="mt-8 divide-y border-t">
+				{reviews.map((review) => (
+					<ReviewItem key={review.id} review={review} />
+				))}
+			</ul>
+		</>
+	);
+}
+
+function ReviewItem({ review }: { review: ListingReview }) {
+	const { firstName, lastName } = review.reviewer;
+	const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+
+	return (
+		<li className="flex gap-4 py-6">
+			<div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold tracking-wide text-background">
+				{initials}
+			</div>
+			<div className="min-w-0 flex-1 space-y-2">
+				<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+					<div className="flex items-center gap-2">
+						<p className="font-semibold text-gray-900">
+							{firstName} {lastName.charAt(0)}.
+						</p>
+						<span className="flex items-center gap-1 text-xs text-muted-foreground">
+							<BadgeCheck aria-hidden className="size-3.5" />
+							Verified buyer
+						</span>
+					</div>
+					<time
+						dateTime={review.createdAt.toISOString()}
+						className="text-xs text-muted-foreground tabular-nums"
+					>
+						{reviewDateFormatter.format(review.createdAt)}
+					</time>
 				</div>
+				<RatingStars rating={review.rating} starClassName="size-3.5" />
+				<p className="whitespace-pre-line leading-relaxed text-gray-700 text-pretty">
+					{review.comment}
+				</p>
+			</div>
+		</li>
+	);
+}
+
+function EmptyReviews() {
+	return (
+		<div className="mt-8 flex flex-col items-center gap-4 rounded-xl border border-dashed border-gray-300 px-6 py-14 text-center">
+			<RatingStars rating={0} starClassName="size-6" />
+			<div className="space-y-1.5">
+				<h3 className="text-lg font-semibold text-gray-900">No reviews yet</h3>
+				<p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground text-pretty">
+					Only buyers whose order has been delivered can review this listing.
+					Their ratings will show up here.
+				</p>
 			</div>
 		</div>
 	);
-};
+}
+
+function ReviewSectionSkeleton() {
+	return (
+		<div
+			aria-hidden
+			className="grid grid-cols-1 gap-8 pt-8 md:grid-cols-[minmax(0,14rem)_1fr] md:gap-12"
+		>
+			<div className="space-y-3">
+				<div className="h-14 w-28 rounded-lg bg-muted animate-pulse" />
+				<div className="h-5 w-32 rounded-full bg-muted animate-pulse" />
+			</div>
+			<div className="space-y-3">
+				{[1, 2, 3, 4, 5].map((row) => (
+					<div key={row} className="h-2 rounded-full bg-muted animate-pulse" />
+				))}
+			</div>
+		</div>
+	);
+}
 
 export default ReviewSection;

@@ -25,7 +25,7 @@ export type CreateListingReviewInput = z.infer<
 >;
 
 export const getListingReviewsQuerySchema = z.object({
-	listingId: z.string().trim().uuid("Invalid listing ID"),
+	listingId: z.string().trim().min(1, "Listing ID is required"),
 });
 
 export type GetListingReviewsQuery = z.infer<
