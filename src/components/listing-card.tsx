@@ -16,7 +16,6 @@ interface ListingCardProps {
 
 const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 	const isOutOfStock = listing.stock === 0;
-	const isLowStock = listing.stock > 0 && listing.stock <= 3;
 	const sellerName = `${listing.seller.firstName} ${listing.seller.lastName}`;
 
 	return (
@@ -41,17 +40,6 @@ const ListingCard = ({ listing, onClick }: ListingCardProps) => {
 						alt={listing.name}
 						className="w-full h-full object-cover outline -outline-offset-1 outline-black/10 dark:outline-white/10 group-hover:scale-105 transition-transform duration-300"
 					/>
-
-					{isOutOfStock && (
-						<div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-sm">
-							Out of Stock
-						</div>
-					)}
-					{isLowStock && (
-						<div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-sm">
-							{listing.stock} left
-						</div>
-					)}
 				</Link>
 			</CardHeader>
 
