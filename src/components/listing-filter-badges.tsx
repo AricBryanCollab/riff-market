@@ -11,9 +11,9 @@ const listingFilterBadgeVariants = cva(
 	{
 		variants: {
 			active: {
-				true: "bg-primary text-white border-secondary shadow-lg scale-105",
+				true: "bg-primary text-primary-foreground border-primary shadow-lg scale-105",
 				false:
-					"bg-white text-black border-gray-300 hover:border-primary hover:bg-accent hover:text-accent-foreground shadow-sm",
+					"bg-card text-foreground border-border hover:border-primary hover:bg-accent hover:text-accent-foreground shadow-sm",
 			},
 		},
 		defaultVariants: {
