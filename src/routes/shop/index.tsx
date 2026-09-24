@@ -20,10 +20,10 @@ import { getApprovedFiltersFromSearch } from "@/utils/shop-search";
 import { validateListingSearch } from "@/utils/validate-listing-search";
 
 export const Route = createFileRoute("/shop/")({
-	beforeLoad: async ({ context, search }) => {
+	beforeLoad: async ({ context, search, cause }) => {
 		const filters = getApprovedFiltersFromSearch(search);
 
-		await Promise.all([
+		const prefetch = Promise.all([
 			context.queryClient
 				.ensureQueryData(approvedListingsQueryOpt(filters))
 				.catch(() => undefined),
@@ -31,6 +31,10 @@ export const Route = createFileRoute("/shop/")({
 				.ensureQueryData(listingCountByStatusQueryOpt("approved"))
 				.catch(() => undefined),
 		]);
+
+		if (cause !== "stay") {
+			await prefetch;
+		}
 	},
 	component: RouteComponent,
 	validateSearch: validateListingSearch,
