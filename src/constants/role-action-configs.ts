@@ -32,7 +32,7 @@ export const RoleActionConfigs = {
 		{
 			icon: Trash2,
 			label: "Delete",
-			variant: "destructive" as const,
+			variant: "secondary" as const,
 			onClickKey: "delete" as const,
 		},
 	],

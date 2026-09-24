@@ -143,12 +143,18 @@ const useUpdateListing = (id: string) => {
 				data: formData,
 			}) as Promise<ListingMutationResponseDto>;
 		},
-		onSuccess: async () => {
+		onSuccess: async (response) => {
 			await invalidateListingCache(queryClient);
 			showToast(
 				"The listing has been updated. Please wait again for admin approval",
 				"success",
 			);
+
+			if (response.listing.isApproved) {
+				navigate({ to: "/listing/$id", params: { id } });
+				return;
+			}
+
 			navigate({ to: "/shop" });
 		},
 		onError: (error) => {
@@ -199,6 +205,7 @@ const useUpdateListing = (id: string) => {
 	};
 
 	return {
+		listing: listingData,
 		listingDraft,
 		images,
 		isListingLoading,

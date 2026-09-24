@@ -152,7 +152,7 @@ const ImageUploader = <TImage extends ImageFile>({
 												type="button"
 												onClick={() => handleMoveImage(index, -1)}
 												disabled={index === 0}
-												className="cursor-pointer bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-black/80 disabled:pointer-events-none disabled:opacity-30"
+												className="relative cursor-pointer bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shadow-lg hover:bg-black/80 disabled:pointer-events-none disabled:opacity-30 after:absolute after:top-1/2 after:left-1/2 after:h-10 after:w-8 after:-translate-1/2"
 												title="Move image earlier"
 												aria-label="Move image earlier"
 											>
@@ -162,7 +162,7 @@ const ImageUploader = <TImage extends ImageFile>({
 												type="button"
 												onClick={() => handleMoveImage(index, 1)}
 												disabled={index === images.length - 1}
-												className="cursor-pointer bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-black/80 disabled:pointer-events-none disabled:opacity-30"
+												className="relative cursor-pointer bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shadow-lg hover:bg-black/80 disabled:pointer-events-none disabled:opacity-30 after:absolute after:top-1/2 after:left-1/2 after:h-10 after:w-8 after:-translate-1/2"
 												title="Move image later"
 												aria-label="Move image later"
 											>
@@ -172,7 +172,7 @@ const ImageUploader = <TImage extends ImageFile>({
 										<button
 											type="button"
 											onClick={() => handleRemoveImage(index)}
-											className="cursor-pointer bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+											className="relative cursor-pointer bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shadow-lg hover:bg-red-600 after:absolute after:top-1/2 after:left-1/2 after:size-10 after:-translate-1/2"
 											title="Remove image"
 											aria-label="Remove image"
 										>

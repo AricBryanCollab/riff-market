@@ -143,12 +143,16 @@ export function ListingDetailsActions({
 
 	const role: ActorRole = user?.role ?? "CUSTOMER";
 
-	const actions = RoleActionConfigs[role] ?? RoleActionConfigs.CUSTOMER;
-	const actionKeys = actions.map((action) => action.onClickKey);
-	const showModifyIconActions =
-		(viewerCanEdit || viewerCanDelete) &&
-		!actionKeys.includes("edit") &&
-		!actionKeys.includes("delete");
+	const canModify = viewerCanEdit || viewerCanDelete;
+	const actionRole: ActorRole =
+		role === "ADMIN" ? "ADMIN" : canModify ? "SELLER" : "CUSTOMER";
+	const actions = RoleActionConfigs[actionRole].filter(
+		(action) =>
+			(action.onClickKey !== "edit" || viewerCanEdit) &&
+			(action.onClickKey !== "delete" || viewerCanDelete),
+	);
+	const showQuantity = actionRole === "CUSTOMER";
+	const showModifyIconActions = actionRole === "ADMIN" && canModify;
 	const capabilities = {
 		edit: viewerCanEdit,
 		delete: viewerCanDelete,
@@ -253,18 +257,20 @@ export function ListingDetailsActions({
 	};
 
 	return (
-		<div className="relative my-2">
-			<Counter
-				inputId="quantity"
-				label="Quantity"
-				value={quantity}
-				onChange={handleQuantityChange}
-				min={1}
-				max={stock}
-				showLimit={false}
-			/>
+		<div className="my-2">
+			{showQuantity && (
+				<Counter
+					inputId="quantity"
+					label="Quantity"
+					value={quantity}
+					onChange={handleQuantityChange}
+					min={1}
+					max={stock}
+					showLimit={false}
+				/>
+			)}
 
-			<div className="flex gap-4 my-4">
+			<div className="flex items-center gap-4 my-4">
 				{actions.map((action) => {
 					const Icon = action.icon;
 					const isSecondary = action.variant === "secondary";
@@ -286,16 +292,13 @@ export function ListingDetailsActions({
 									: undefined
 							}
 							title={
-								!isActionAllowed &&
-								(action.onClickKey === "edit" || action.onClickKey === "delete")
-									? "You can only modify your own listings"
-									: !isActionAllowed && action.onClickKey === "addToCart"
-										? "Listing is not available for purchase"
-										: !isActionAllowed &&
-												(action.onClickKey === "approve" ||
-													action.onClickKey === "decline")
-											? "This listing cannot be moderated with this action"
-											: undefined
+								!isActionAllowed && action.onClickKey === "addToCart"
+									? "Listing is not available for purchase"
+									: !isActionAllowed &&
+											(action.onClickKey === "approve" ||
+												action.onClickKey === "decline")
+										? "This listing cannot be moderated with this action"
+										: undefined
 							}
 							className={cn(
 								listingActionButtonVariants({
@@ -311,19 +314,23 @@ export function ListingDetailsActions({
 					);
 				})}
 				{showModifyIconActions && (
-					<div className="absolute right-0 top-6 flex gap-4">
-						<IconButton
-							icon={Pencil}
-							disabled={!viewerCanEdit}
-							onClick={navigateToEditListing}
-							backgroundColor="bg-primary hover:bg-accent hover:text-primary"
-						/>
-						<IconButton
-							icon={Trash2}
-							disabled={!viewerCanDelete}
-							onClick={() => setOpenDialog("deleteListing")}
-							backgroundColor="bg-destructive hover:bg-red-700"
-						/>
+					<div className="flex gap-4">
+						{viewerCanEdit && (
+							<IconButton
+								icon={Pencil}
+								label="Edit listing"
+								onClick={navigateToEditListing}
+								backgroundColor="bg-primary hover:bg-accent hover:text-primary"
+							/>
+						)}
+						{viewerCanDelete && (
+							<IconButton
+								icon={Trash2}
+								label="Delete listing"
+								onClick={() => setOpenDialog("deleteListing")}
+								backgroundColor="bg-destructive hover:bg-red-700"
+							/>
+						)}
 					</div>
 				)}
 			</div>
