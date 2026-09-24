@@ -75,11 +75,11 @@ function RouteComponent() {
 	if (isError || !listing) {
 		return (
 			<div className="flex flex-col justify-center items-center min-h-screen">
-				<p className="text-lg text-gray-500">Listing not found</p>
+				<p className="text-lg text-muted-foreground">Listing not found</p>
 				<button
 					type="button"
 					onClick={() => navigate({ to: "/shop" })}
-					className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+					className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
 				>
 					Back to Shop
 				</button>
@@ -95,11 +95,11 @@ function RouteComponent() {
 		<SectionContainer>
 			<div className="flex w-full flex-col gap-8">
 				{/* BACK TO SHOP */}
-				<div className="flex items-center gap-3 rounded-2xl bg-white p-4">
+				<div className="flex items-center gap-3 rounded-2xl bg-card text-card-foreground p-4">
 					<button
 						type="button"
 						onClick={() => navigate({ to: "/shop" })}
-						className="size-10 flex justify-center cursor-pointer items-center rounded-full bg-muted-foreground hover:bg-foreground hover:text-white transition-colors"
+						className="size-10 flex justify-center cursor-pointer items-center rounded-full bg-muted-foreground hover:bg-foreground hover:text-background transition-colors"
 					>
 						<ArrowLeft size={28} />
 					</button>
@@ -109,8 +109,8 @@ function RouteComponent() {
 				{/* LISTING MAIN SECTION */}
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 					{/* LISTING IMAGES */}
-					<div className="flex flex-col gap-4 rounded-2xl bg-white p-6">
-						<div className="h-96 w-full rounded-xl bg-slate-200 overflow-hidden">
+					<div className="flex flex-col gap-4 rounded-2xl bg-card text-card-foreground p-6">
+						<div className="h-96 w-full rounded-xl bg-muted overflow-hidden">
 							<img
 								src={
 									listing.images[selectedImage]?.url || listing.images[0]?.url
@@ -143,14 +143,14 @@ function RouteComponent() {
 						)}
 					</div>
 
-					<div className="rounded-2xl bg-white p-6 md:p-8 space-y-6">
+					<div className="rounded-2xl bg-card text-card-foreground p-6 md:p-8 space-y-6">
 						{/* TITLE & BRAND */}
 						<div className={cn(revealClassName, "space-y-3")}>
 							<p className={eyebrowClassName}>
 								{listing.brand}
 								{listing.model && ` · ${listing.model}`}
 							</p>
-							<h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-900 text-balance">
+							<h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground text-balance">
 								{listing.name}
 							</h1>
 							<Rating listingId={listing.id} />
@@ -164,10 +164,10 @@ function RouteComponent() {
 							)}
 							style={{ animationDelay: "60ms" }}
 						>
-							<span className="rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-gray-900">
+							<span className="rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
 								{getCategoryDisplay(listing.category).label}
 							</span>
-							<span className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-gray-900 ring-1 ring-border ring-inset tabular-nums">
+							<span className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border ring-inset tabular-nums">
 								<span
 									aria-hidden
 									className={cn(
@@ -189,7 +189,7 @@ function RouteComponent() {
 							)}
 							style={{ animationDelay: "120ms" }}
 						>
-							<p className="text-4xl font-semibold tracking-tight text-gray-900 tabular-nums">
+							<p className="text-4xl font-semibold tracking-tight text-foreground tabular-nums">
 								{formatMoneyAmountMinor(
 									listing.priceAmountMinor,
 									listing.currencyCode,
@@ -221,7 +221,7 @@ function RouteComponent() {
 							style={{ animationDelay: "240ms" }}
 						>
 							<h3 className={eyebrowClassName}>Description</h3>
-							<p className="text-gray-700 leading-relaxed text-pretty">
+							<p className="text-foreground/80 leading-relaxed text-pretty">
 								{listing.description}
 							</p>
 						</div>
@@ -242,12 +242,12 @@ function RouteComponent() {
 							</div>
 							<div className="min-w-0">
 								<p className={eyebrowClassName}>Sold by</p>
-								<p className="truncate font-semibold text-gray-900">
+								<p className="truncate font-semibold text-foreground">
 									{listing.seller.firstName} {listing.seller.lastName}
 								</p>
 								<a
 									href={`mailto:${listing.seller.email}`}
-									className="block truncate text-sm text-muted-foreground underline-offset-4 hover:text-gray-900 hover:underline"
+									className="block truncate text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
 								>
 									{listing.seller.email}
 								</a>

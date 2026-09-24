@@ -20,14 +20,14 @@ const ReviewSection = ({ listingId }: { listingId: string }) => {
 		<section
 			id="reviews"
 			aria-labelledby="reviews-heading"
-			className="scroll-mt-24 rounded-2xl bg-white p-6 md:p-8"
+			className="scroll-mt-24 rounded-2xl bg-card text-card-foreground p-6 md:p-8"
 		>
 			<header className="flex items-end justify-between gap-4 border-b pb-6">
 				<div className="space-y-1.5">
 					<p className={eyebrowClassName}>From verified buyers</p>
 					<h2
 						id="reviews-heading"
-						className="text-2xl font-semibold tracking-tight text-gray-900 text-balance"
+						className="text-2xl font-semibold tracking-tight text-foreground text-balance"
 					>
 						Customer Reviews
 					</h2>
@@ -83,7 +83,7 @@ function ReviewSectionBody({
 			<div className="grid grid-cols-1 gap-8 pt-8 md:grid-cols-[minmax(0,14rem)_1fr] md:gap-12">
 				<div className="flex flex-col gap-3">
 					<p className="flex items-baseline gap-2">
-						<span className="text-6xl font-semibold leading-none tracking-tight text-gray-900 tabular-nums">
+						<span className="text-6xl font-semibold leading-none tracking-tight text-foreground tabular-nums">
 							{averageRating.toFixed(1)}
 						</span>
 						<span className="text-sm text-muted-foreground">out of 5</span>
@@ -97,11 +97,11 @@ function ReviewSectionBody({
 							key={stars}
 							className="flex items-center gap-3 text-sm tabular-nums"
 						>
-							<span className="flex w-8 items-center gap-1 font-medium text-gray-900">
+							<span className="flex w-8 items-center gap-1 font-medium text-foreground">
 								{stars}
 								<Star
 									aria-hidden
-									className="size-3 fill-current text-gray-400"
+									className="size-3 fill-current text-muted-foreground"
 								/>
 							</span>
 							<div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
@@ -139,7 +139,7 @@ function ReviewItem({ review }: { review: ListingReview }) {
 			<div className="min-w-0 flex-1 space-y-2">
 				<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
 					<div className="flex items-center gap-2">
-						<p className="font-semibold text-gray-900">
+						<p className="font-semibold text-foreground">
 							{firstName} {lastName.charAt(0)}.
 						</p>
 						<span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -155,7 +155,7 @@ function ReviewItem({ review }: { review: ListingReview }) {
 					</time>
 				</div>
 				<RatingStars rating={review.rating} starClassName="size-3.5" />
-				<p className="whitespace-pre-line leading-relaxed text-gray-700 text-pretty">
+				<p className="whitespace-pre-line leading-relaxed text-foreground/80 text-pretty">
 					{review.comment}
 				</p>
 			</div>
@@ -165,10 +165,12 @@ function ReviewItem({ review }: { review: ListingReview }) {
 
 function EmptyReviews() {
 	return (
-		<div className="mt-8 flex flex-col items-center gap-4 rounded-xl border border-dashed border-gray-300 px-6 py-14 text-center">
+		<div className="mt-8 flex flex-col items-center gap-4 rounded-xl border border-dashed border-border px-6 py-14 text-center">
 			<RatingStars rating={0} starClassName="size-6" />
 			<div className="space-y-1.5">
-				<h3 className="text-lg font-semibold text-gray-900">No reviews yet</h3>
+				<h3 className="text-lg font-semibold text-foreground">
+					No reviews yet
+				</h3>
 				<p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground text-pretty">
 					Only buyers whose order has been delivered can review this listing.
 					Their ratings will show up here.

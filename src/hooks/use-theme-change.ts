@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { clientLogger } from "@/lib/client-logger";
 import { setCurrentUserCache } from "@/lib/tanstack-query/cache-policy";
@@ -11,14 +10,8 @@ const useThemeChange = () => {
 	const queryClient = useQueryClient();
 	const { data: user } = useAuthUser();
 	const previewTheme = useThemeStore((state) => state.previewTheme);
-	const { cancelPreview, commitPreview, setTheme } = useThemeStore();
+	const { cancelPreview, commitPreview } = useThemeStore();
 	const { showToast } = useToastStore();
-
-	useEffect(() => {
-		if (user?.theme) {
-			setTheme(user.theme);
-		}
-	}, [user?.theme, setTheme]);
 
 	const themeValue = previewTheme || user?.theme || "light";
 
