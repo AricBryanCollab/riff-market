@@ -1,6 +1,6 @@
 # Cart and checkout
 
-A Customer adds listings to a cart that persists in the browser, reviews it in the navbar popover and on `/cart`, and places an order on `/checkout` with a delivery address. The order creates a purchase, one seller order per seller, and a notification for each seller, and it lowers listing stock.
+A Customer adds listings to a cart that persists in the browser, reviews it in the navbar popover and on `/cart`, and places an order on `/checkout` with a delivery address. The order creates a purchase and one seller order per seller, sends a notification to the Customer and to each seller, and lowers listing stock.
 
 ## Sub-features
 
@@ -8,7 +8,7 @@ A Customer adds listings to a cart that persists in the browser, reviews it in t
 - `cart-popover` opens the navbar cart popover with items, quantities, and `Subtotal`.
 - `cart-page` shows `Cart Summary` and per-item quantity and `Remove` on `/cart`.
 - `checkout-place` places the order from `/checkout` with a `Delivery Address`.
-- `checkout-effects` records the purchase and seller order rows, lowers stock, and sends a seller notification.
+- `checkout-effects` records the purchase and seller order rows, lowers stock, and sends Customer and seller notifications.
 - `checkout-seller-view` shows the order to the seller in `/notifications` and the `Sales Orders` popover.
 
 ## How to get to it (user POV)
@@ -30,7 +30,8 @@ Preconditions:
 - **Popover.** Run `$V browser click --in-role banner --role button --name 2 --exact`. The dialog shows heading `Shopping Cart`, `2 items`, `Boss DS-1 Distortion` with `Qty: 2`, and `Subtotal: NT$3,600`.
 - **Cart page.** Run `$V browser click --in-role dialog --role link --name "View Full Cart"` and then `$V browser press --key Escape`. `/cart` shows `Cart Summary`, `Total Items` `2`, `Total Price` `NT$3,600`, and the buttons `Remove` and `Proceed To Checkout`.
 - **Checkout.** Run `$V browser click --role button --name "Proceed To Checkout"`. `/checkout` shows `Order Checkout`, `Quantity: 2`, and `Total NT$3,600`. Run `$V browser fill --label "Delivery Address" --value "12 Riff Lane, Taipei 100"` and `$V browser click --role button --name "Place Order"`. The app returns to `/shop` and the navbar cart button has no count.
-- **Side effects.** `$V sql 'select "purchaseNumber", status, "totalAmountCents", "shippingAddress" from "Purchase"'` returns one `RIFF-...` row with `OPEN` and `3600`. `$V sql 'select "sellerId", status, "subtotalCents" from "SellerOrder"'` returns `seed-seller-tone-hunter NEW 3600`. The listing stock query now returns `1`.
+- **Side effects.** `$V sql 'select "purchaseNumber", status, "totalAmountCents", "shippingAddress" from "Purchase"'` returns one `RIFF-...` row with `OPEN` and `3600`. `$V sql 'select "sellerId", status, "subtotalCents" from "SellerOrder"'` returns `seed-seller-tone-hunter NEW 3600`. The listing stock query now returns `1`. `$V sql 'select "userId", message from "Notification"'` returns two rows. `verify-customer` gets `Your purchase #RIFF-... has been placed successfully! Total: NT$3,600`, and `seed-seller-tone-hunter` gets the seller order message.
+- **Customer view.** While still signed in as the Customer, run `$V browser goto /notifications`. It shows the `placed successfully` notification. This is the Customer's only user-facing confirmation of the order.
 - **Seller view.** Run `$V browser reset`, then sign in as `tone.hunter@seed.riffmarket.dev` and run `$V browser goto /notifications`. It shows `1 unread notification` and `New seller order for purchase #RIFF-...: Boss DS-1 Distortion. Amount: NT$3,600`. The navbar orders button is named `1`. Opening it shows `Sales Orders` with the purchase number and `Customer: Casey Customer`.
 - **Proof.** Save snapshots at each step with `$V browser snapshot --path cart-checkout/<step>.aria.txt` and take a screenshot of `/checkout` before `Place Order`. Save the rows with `$V sql '...' | tee tmp/riff-verify/$RIFF_VERIFY_RUN/cart-checkout/<table>.tsv`.
 

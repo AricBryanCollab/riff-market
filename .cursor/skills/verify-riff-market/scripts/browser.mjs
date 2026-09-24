@@ -37,7 +37,9 @@ Every command is appended to EVIDENCE_DIR/actions.log.`;
 
 const { APP_URL, CDP_PORT, EVIDENCE_DIR } = process.env;
 if (!APP_URL || !CDP_PORT || !EVIDENCE_DIR) {
-	console.error("browser: run through `riff-verify browser` with RIFF_VERIFY_RUN set");
+	console.error(
+		"browser: this run has no app or browser recorded (did `riff-verify up` finish?); run `riff-verify doctor`",
+	);
 	process.exit(2);
 }
 
@@ -111,7 +113,13 @@ async function settle(page) {
 	await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => {});
 }
 
-const browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
+const browser = await chromium
+	.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`)
+	.catch(() => {
+		record("FAIL", `no browser on CDP port ${CDP_PORT}`);
+		console.error(`browser: no browser on CDP port ${CDP_PORT}; run \`riff-verify doctor\``);
+		process.exit(1);
+	});
 try {
 	const context = browser.contexts()[0] ?? (await browser.newContext());
 	const page = context.pages().find((p) => !p.url().startsWith("devtools://")) ?? (await context.newPage());

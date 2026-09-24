@@ -21,7 +21,7 @@ Requirements: `bun`, `curl`, PostgreSQL server binaries (`initdb`/`pg_ctl`, foun
 
 ```bash
 $V up            # production build + vite preview; about 15s on a warm checkout
-$V up --dev      # vite dev server with HMR, for iterating on UI code
+$V up --dev      # vite dev server with HMR, for iterating on UI code (single instance, see below)
 export RIFF_VERIFY_RUN=<id printed by up>
 ```
 
@@ -32,7 +32,7 @@ export RIFF_VERIFY_RUN=<id printed by up>
 3. Generates the Prisma client if it is missing.
 4. Runs `prisma migrate deploy`.
 5. Seeds the database with `prisma/seed.ts` (3 sellers, 14 approved listings, reviews) and `scripts/seed-verify-fixtures.ts` (one customer, one admin, two pending listings).
-6. Builds and starts the app with placeholder Cloudinary credentials and a fixed `SESSION_SECRET`.
+6. Builds into `tmp/riff-verify-builds/<run>/`, never the repo's `dist/`, and starts the app with placeholder Cloudinary credentials and a fixed `SESSION_SECRET`.
 7. Starts Chromium with a CDP port.
 
 It is ready when it prints `riff-verify: ready`, then `export RIFF_VERIFY_RUN=...`, `APP_URL=...`, and `EVIDENCE_DIR=...`. Every later command needs `RIFF_VERIFY_RUN` set. `up` always creates a new run and ignores an already-exported `RIFF_VERIFY_RUN`, so export the new id before you continue. Pass `--run <id>` to choose the id yourself. If `up` fails partway, it prints the log directory and the exact `down` command to clean up.
@@ -45,7 +45,9 @@ Seeded accounts all use the password `riffmarket-seed`:
 | Admin | `admin@verify.riffmarket.dev` |
 | Seller | `vintage.boxes@seed.riffmarket.dev`, `tone.hunter@seed.riffmarket.dev`, `keys.king@seed.riffmarket.dev` |
 
-Preview mode serves the build from `up` time. After you edit code, run `down` then `up` again, or use `--dev`. `doctor` fails when `HEAD` has moved past a preview build.
+Preview mode serves the build from `up` time. After you edit code, run `down` then `up` again, or use `--dev`. `doctor` fails when `HEAD` has moved past a preview build. Preview runs are fully isolated, and several can run side by side.
+
+`--dev` has two limits. The TanStack devtools plugin binds the fixed port 42069, so only one dev-mode run can exist at a time, and it cannot start while your own `bun dev` is running. `up --dev` refuses with a clear message in that case. Dev pages also render an `Open TanStack Devtools` button at the bottom of the page. Ignore it in snapshots.
 
 ## Doctor
 
@@ -101,7 +103,7 @@ Proof standards:
 $V down
 ```
 
-`down` stops the Chromium and app process groups this run started (by recorded PID, never by name), stops the private Postgres with `pg_ctl`, and deletes `$TMPDIR/riff-verify/<run>/`. It keeps `tmp/riff-verify/<run>/` and prints its path. Run `down` after every attempt, including failed ones. `$V list` shows runs that still have scratch state. With `RIFF_VERIFY_DATABASE_URL`, `down` does not drop the external database.
+`down` stops the Chromium and app process groups this run started (by recorded PID, never by name) and stops the private Postgres with `pg_ctl`. It then deletes `$TMPDIR/riff-verify/<run>/` and `tmp/riff-verify-builds/<run>/`. It keeps `tmp/riff-verify/<run>/` and prints its path. Run `down` after every attempt, including failed ones. `$V list` shows runs that still have scratch state. With `RIFF_VERIFY_DATABASE_URL`, `down` does not drop the external database.
 
 ## Helpers
 

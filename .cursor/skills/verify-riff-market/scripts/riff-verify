@@ -5,6 +5,8 @@ SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
 STATE_ROOT="${RIFF_VERIFY_STATE_ROOT:-${TMPDIR:-/tmp}/riff-verify}"
 EVIDENCE_ROOT="$REPO_ROOT/tmp/riff-verify"
+BUILD_ROOT="$REPO_ROOT/tmp/riff-verify-builds"
+STATE_VARS=(RUN_DIR EVIDENCE_DIR APP_MODE GIT_SHA PG_EXTERNAL PG_BINDIR PG_DATA PG_PORT DATABASE_URL APP_PORT APP_URL BUILD_DIR APP_PID CDP_PORT CHROME_PID)
 DB_NAME="riff_verify_test"
 DB_USER="riff"
 
@@ -31,14 +33,23 @@ EOF
 
 require_run() {
 	[[ -n "${RIFF_VERIFY_RUN:-}" ]] || die "RIFF_VERIFY_RUN is not set. Run \`riff-verify up\` and export the id it prints."
-	RUN_DIR="$STATE_ROOT/$RIFF_VERIFY_RUN"
-	[[ -f "$RUN_DIR/state.env" ]] || die "no state for run $RIFF_VERIFY_RUN at $RUN_DIR"
+	local state_file="$STATE_ROOT/$RIFF_VERIFY_RUN/state.env"
+	[[ -f "$state_file" ]] || die "no state for run $RIFF_VERIFY_RUN at $state_file"
+	unset "${STATE_VARS[@]}"
 	set -a
-	source "$RUN_DIR/state.env"
+	source "$state_file"
 	set +a
+	local var
+	for var in "${STATE_VARS[@]}"; do
+		[[ -n "${!var+x}" ]] || printf -v "$var" '%s' ""
+	done
 }
 
 alive() { [[ -n "${1:-}" ]] && kill -0 "$1" 2>/dev/null; }
+
+port_free() {
+	bun -e 'const s=require("net").createServer();s.once("error",()=>process.exit(1));s.listen(Number(process.argv[1]),()=>s.close(()=>process.exit(0)))' "$1"
+}
 
 free_port() {
 	bun -e 'const s=require("net").createServer();s.listen(0,"127.0.0.1",()=>{console.log(s.address().port);s.close()})'
@@ -82,6 +93,9 @@ cmd_up() {
 
 	command -v bun >/dev/null 2>&1 || die "bun is not on PATH (install: curl -fsSL https://bun.sh/install | bash)"
 	command -v curl >/dev/null 2>&1 || die "curl is required"
+	if [[ "$mode" == "dev" ]] && ! port_free 42069; then
+		die "--dev needs port 42069 for the TanStack devtools event bus, and something already holds it (another dev run or your own \`bun dev\`). Use preview mode (plain \`up\`) instead."
+	fi
 
 	RIFF_VERIFY_RUN="${run_id:-run-$(date +%Y%m%d-%H%M%S)-$$}"
 	RUN_DIR="$STATE_ROOT/$RIFF_VERIFY_RUN"
@@ -146,9 +160,12 @@ cmd_up() {
 	if [[ "$mode" == "dev" ]]; then
 		app_cmd="exec bun --bun vite dev --host 127.0.0.1 --port $app_port --strictPort"
 	else
-		log "building app (vite build)"
-		bun --bun vite build >"$RUN_DIR/build.log" 2>&1 || die "build failed, see $RUN_DIR/build.log"
-		app_cmd="exec bun --bun vite preview --host 127.0.0.1 --port $app_port --strictPort"
+		local build_dir="$BUILD_ROOT/$RIFF_VERIFY_RUN"
+		write_state BUILD_DIR "$build_dir"
+		log "building app (vite build into ${build_dir#"$REPO_ROOT"/})"
+		bun --bun vite build --outDir "$build_dir" --emptyOutDir >"$RUN_DIR/build.log" 2>&1 \
+			|| die "build failed, see $RUN_DIR/build.log"
+		app_cmd="exec bun --bun vite preview --outDir $(printf '%q' "$build_dir") --host 127.0.0.1 --port $app_port --strictPort"
 	fi
 
 	log "starting app ($mode) on $app_url"
@@ -193,16 +210,16 @@ cmd_doctor() {
 	echo "app       $APP_URL"
 	echo "database  $DATABASE_URL"
 	echo "evidence  $EVIDENCE_DIR"
-	check "app process $APP_PID alive" "alive $APP_PID"
+	check "app process $APP_PID alive" "alive '$APP_PID'"
 	if command -v ss >/dev/null 2>&1 || command -v lsof >/dev/null 2>&1; then
-		check "app port $APP_PORT owned by this run" "port_owned $APP_PORT $APP_PID"
+		check "app port $APP_PORT owned by this run" "port_owned '$APP_PORT' '$APP_PID'"
 	else
 		echo "warn cannot confirm who owns port $APP_PORT (install lsof or ss)"
 	fi
 	check "GET $APP_URL/ returns RiffMarket" "curl -fsS '$APP_URL/' | grep -q '<title>RiffMarket</title>'"
 	check "database accepts connections" "psql '$DATABASE_URL' -tAc 'select 1'"
 	check "database has migrations applied" "[[ \$(psql '$DATABASE_URL' -tAc 'select count(*) from _prisma_migrations where finished_at is not null') -gt 0 ]]"
-	check "chromium process $CHROME_PID alive" "alive $CHROME_PID"
+	check "chromium process $CHROME_PID alive" "alive '$CHROME_PID'"
 	check "chromium CDP answers on $CDP_PORT" "curl -fsS http://127.0.0.1:$CDP_PORT/json/version"
 	local head
 	head="$(git -C "$REPO_ROOT" rev-parse HEAD)"
@@ -221,7 +238,8 @@ cmd_doctor() {
 }
 
 port_owned() {
-	local port="$1" root="$2" pids pid
+	local port="${1:-}" root="${2:-}" pids pid
+	[[ -n "$port" && -n "$root" ]] || return 1
 	pids="$(descendants "$root")"
 	if command -v ss >/dev/null 2>&1; then
 		for pid in $(ss -ltnpH "sport = :$port" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2); do
@@ -258,6 +276,10 @@ cmd_down() {
 		log "stopping private Postgres"
 		"$PG_BINDIR/pg_ctl" -D "$PG_DATA" -m fast -w stop >/dev/null 2>&1 || true
 	fi
+	if [[ -n "${BUILD_DIR:-}" && "$BUILD_DIR" == "$BUILD_ROOT"/* ]]; then
+		rm -rf "$BUILD_DIR"
+		rmdir "$BUILD_ROOT" 2>/dev/null || true
+	fi
 	rm -rf "$RUN_DIR"
 	log "removed scratch state $RUN_DIR"
 	rmdir "$EVIDENCE_DIR" 2>/dev/null || true
@@ -285,7 +307,7 @@ cmd_list() {
 	for dir in "$STATE_ROOT"/*/; do
 		[[ -f "$dir/state.env" ]] || continue
 		found=1
-		(set -a; source "$dir/state.env"; set +a
+		(unset "${STATE_VARS[@]}"; set -a; source "$dir/state.env"; set +a
 			state="stopped"; alive "${APP_PID:-}" && state="running"
 			echo "$RIFF_VERIFY_RUN  $state  ${APP_URL:-not started}")
 	done
