@@ -25,10 +25,7 @@
 		"check": "biome check",
 		"check:fix": "biome check --write",
 		"typecheck": "tsc --noEmit",
-		"validate": "bun typecheck && bun lint",
-		"garden:sync": "garden agents sync --apply",
-		"garden:lint": "garden lint",
-		"garden:check": "garden check"
+		"validate": "bun typecheck && bun lint"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.1.0",

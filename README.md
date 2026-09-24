@@ -98,14 +98,6 @@ For DB-backed Vitest tests and Playwright, set `TEST_DATABASE_URL` in `.env` (se
 - **Tailwind CSS** for utility-first styling.
 - **shadcn/ui** for accessible, customizable UI components.
 
-## Garden Context
-
-- This repo uses Garden context cards in `.garden/context/*.md`.
-- Garden owns the generated context section in `AGENTS.md`; update context cards, then run `bun run garden:sync`.
-- Required context check: `bun run garden:lint`.
-- To inspect context for changed files, run `bun run garden:check -- <paths...>`.
-- The pre-commit hook skips Garden checks when the `garden` CLI is not installed.
-
 ---
 
 ## State Management
