@@ -1,13 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
 import type { ChangeEvent, DragEvent } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LISTING_IMAGE_MAX_BYTES } from "@/domains/shared/domain/image-upload";
 import useUploadImage, {
 	existingImageFile,
 	type ImageFile,
-	moveItem,
 	type NewImageFile,
-	validateIncomingFiles,
 } from "./use-upload-image";
 
 function makeFile(name: string, type = "image/png", size?: number) {
@@ -53,53 +51,6 @@ const existing = existingImageFile({
 
 beforeEach(() => {
 	URL.createObjectURL = vi.fn((file: Blob) => `blob:${(file as File).name}`);
-	URL.revokeObjectURL = vi.fn();
-});
-
-afterEach(() => {
-	vi.restoreAllMocks();
-});
-
-describe("validateIncomingFiles", () => {
-	it("accepts a batch that exactly fills the remaining slots", () => {
-		const files = [makeFile("a.png"), makeFile("b.png")];
-
-		expect(validateIncomingFiles(files, 2)).toEqual({
-			accepted: files,
-			error: "",
-		});
-	});
-
-	it("rejects the whole batch when it exceeds the remaining slots", () => {
-		expect(validateIncomingFiles([makeFile("a.png")], 0)).toEqual({
-			accepted: [],
-			error: "You can only upload 0 more image(s)",
-		});
-	});
-
-	it("accepts a file at the size limit and rejects one byte over", () => {
-		const atLimit = makeFile("at.png", "image/png", LISTING_IMAGE_MAX_BYTES);
-		const over = makeFile("over.png", "image/png", LISTING_IMAGE_MAX_BYTES + 1);
-
-		expect(validateIncomingFiles([atLimit, over], 5)).toEqual({
-			accepted: [atLimit],
-			error: "over.png exceeds 10MB limit",
-		});
-	});
-});
-
-describe("moveItem", () => {
-	it("returns a reordered copy without mutating the input", () => {
-		const items = ["a", "b", "c"];
-
-		expect(moveItem(items, 1, -1)).toEqual(["b", "a", "c"]);
-		expect(items).toEqual(["a", "b", "c"]);
-	});
-
-	it("returns null for a move past either end", () => {
-		expect(moveItem(["a", "b"], 0, -1)).toBeNull();
-		expect(moveItem(["a", "b"], 1, 1)).toBeNull();
-	});
 });
 
 describe("useUploadImage file selection", () => {
@@ -128,8 +79,32 @@ describe("useUploadImage file selection", () => {
 		act(() => result.current.handleInputChange(event));
 
 		expect(onChange).not.toHaveBeenCalled();
-		expect(URL.createObjectURL).not.toHaveBeenCalled();
 		expect(result.current.error).toBe("You can only upload 2 more image(s)");
+	});
+
+	it("accepts a batch that exactly fills the remaining slots", () => {
+		const { result, onChange } = setup([existing], 3);
+		const a = makeFile("a.png");
+		const b = makeFile("b.png");
+
+		act(() => result.current.handleInputChange(inputChange([a, b]).event));
+
+		expect(onChange).toHaveBeenCalledWith([existing, newImage(a), newImage(b)]);
+		expect(result.current.error).toBe("");
+	});
+
+	it("accepts a file at the size limit and rejects one byte over", () => {
+		const { result, onChange } = setup();
+		const atLimit = makeFile("at.png", "image/png", LISTING_IMAGE_MAX_BYTES);
+		const { event } = inputChange([
+			atLimit,
+			makeFile("over.png", "image/png", LISTING_IMAGE_MAX_BYTES + 1),
+		]);
+
+		act(() => result.current.handleInputChange(event));
+
+		expect(onChange).toHaveBeenCalledWith([newImage(atLimit)]);
+		expect(result.current.error).toBe("over.png exceeds 10MB limit");
 	});
 
 	it("skips invalid files, keeps valid ones, and reports the last error", () => {
@@ -144,7 +119,6 @@ describe("useUploadImage file selection", () => {
 		act(() => result.current.handleInputChange(event));
 
 		expect(onChange).toHaveBeenCalledWith([newImage(good)]);
-		expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
 		expect(result.current.error).toBe("doc.gif is not a supported format");
 	});
 

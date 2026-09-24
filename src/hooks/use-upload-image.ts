@@ -47,7 +47,7 @@ export function isExistingImageFile(
 const LISTING_IMAGE_MAX_MB = LISTING_IMAGE_MAX_BYTES / (1024 * 1024);
 const ACCEPT_FORMATS = "image/jpeg,image/png,image/webp";
 
-export function validateIncomingFiles(
+function validateIncomingFiles(
 	files: readonly File[],
 	remainingSlots: number,
 ): { accepted: File[]; error: string } {
@@ -74,7 +74,7 @@ export function validateIncomingFiles(
 	return { accepted, error };
 }
 
-export function moveItem<T>(
+function moveItem<T>(
 	items: readonly T[],
 	index: number,
 	direction: -1 | 1,
