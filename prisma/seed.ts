@@ -257,6 +257,60 @@ const reviews: readonly {
 		rating: 5,
 		comment: "Brand new in box. Tightens up my amp nicely.",
 	},
+	{
+		listingKey: "lesPaul",
+		userId: "seed-seller-vintage-boxes",
+		rating: 5,
+		comment: "Gorgeous flame top and the Burstbuckers sing.",
+	},
+	{
+		listingKey: "nordStage",
+		userId: "seed-seller-keys-king",
+		rating: 5,
+		comment: "Keybed feels great and the pianos are stunning.",
+	},
+	{
+		listingKey: "taylorAcoustic",
+		userId: "seed-seller-tone-hunter",
+		rating: 5,
+		comment: "Comfortable body and a clear, balanced plugged-in sound.",
+	},
+	{
+		listingKey: "telecaster",
+		userId: "seed-seller-tone-hunter",
+		rating: 4,
+		comment: "Twangy and punchy. Needed a small truss rod tweak.",
+	},
+	{
+		listingKey: "ibanezRg",
+		userId: "seed-seller-keys-king",
+		rating: 4,
+		comment: "Very fast neck, a few light scratches on the back.",
+	},
+	{
+		listingKey: "yamahaClassical",
+		userId: "seed-seller-vintage-boxes",
+		rating: 4,
+		comment: "Solid beginner guitar that stays in tune.",
+	},
+	{
+		listingKey: "prophetSynth",
+		userId: "seed-seller-tone-hunter",
+		rating: 5,
+		comment: "Lush analog pads, everything works as it should.",
+	},
+	{
+		listingKey: "bigMuff",
+		userId: "seed-seller-tone-hunter",
+		rating: 5,
+		comment: "Massive fuzz with endless sustain.",
+	},
+	{
+		listingKey: "shureSm58",
+		userId: "seed-seller-keys-king",
+		rating: 5,
+		comment: "Bulletproof vocal mic, sounds just like it should.",
+	},
 ];
 
 async function main() {
@@ -315,8 +369,65 @@ async function main() {
 			});
 		}
 
+		const [orderSeller, , orderBuyer] = sellers;
+		const orderListing = listings[0];
+		const orderListingId = `seed-listing-${orderListing.key}`;
+		const purchaseId = "seed-purchase-keys-king-stratocaster";
+		const sellerOrderId = "seed-seller-order-keys-king-stratocaster";
+		const purchase = {
+			customerId: orderBuyer.id,
+			customerIdSnapshot: orderBuyer.id,
+			purchaseNumber: "RIFF-SEED-0001",
+			totalAmountCents: orderListing.priceAmountMinor,
+			currencyCode: MARKETPLACE_CURRENCY_CODE,
+			status: "COMPLETED" as const,
+			buyerName: `${orderBuyer.firstName} ${orderBuyer.lastName}`,
+			buyerEmail: orderBuyer.email,
+			shippingAddress: "12 Chord Street, Taipei",
+		};
+		const sellerOrder = {
+			purchaseId,
+			sellerId: orderSeller.id,
+			sellerIdSnapshot: orderSeller.id,
+			subtotalCents: orderListing.priceAmountMinor,
+			currencyCode: MARKETPLACE_CURRENCY_CODE,
+			status: "DELIVERED" as const,
+		};
+		const sellerOrderItem = {
+			sellerOrderId,
+			listingId: orderListingId,
+			listingName: orderListing.name,
+			brand: orderListing.brand,
+			model: orderListing.model,
+			category: orderListing.category,
+			condition: orderListing.condition,
+			primaryImageUrl: listingPhotos[orderListing.key],
+			sellerId: orderSeller.id,
+			sellerDisplayName: `${orderSeller.firstName} ${orderSeller.lastName}`,
+			unitPriceCents: orderListing.priceAmountMinor,
+			quantity: 1,
+			subTotalCents: orderListing.priceAmountMinor,
+			currencyCode: MARKETPLACE_CURRENCY_CODE,
+		};
+
+		await prisma.purchase.upsert({
+			where: { id: purchaseId },
+			update: purchase,
+			create: { id: purchaseId, ...purchase },
+		});
+		await prisma.sellerOrder.upsert({
+			where: { id: sellerOrderId },
+			update: sellerOrder,
+			create: { id: sellerOrderId, ...sellerOrder },
+		});
+		await prisma.sellerOrderItem.upsert({
+			where: { id: `${sellerOrderId}-item` },
+			update: sellerOrderItem,
+			create: { id: `${sellerOrderId}-item`, ...sellerOrderItem },
+		});
+
 		console.log(
-			`Seeded ${sellers.length} sellers, ${listings.length} approved listings and ${reviews.length} reviews`,
+			`Seeded ${sellers.length} sellers, ${listings.length} approved listings, ${reviews.length} reviews and 1 delivered order`,
 		);
 	} finally {
 		await prisma.$disconnect();
