@@ -187,6 +187,12 @@ export class PrismaListingQueries
 		});
 	}
 
+	async countApproved(query: ApprovedListingSearchQuery): Promise<number> {
+		return await this.db.listing.count({
+			where: toApprovedListingWhere(query),
+		});
+	}
+
 	async listRecentApproved(limit: number): Promise<ListingView[]> {
 		const listings = await this.db.listing.findMany({
 			where: { listingStatus: "APPROVED" },

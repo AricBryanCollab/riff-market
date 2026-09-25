@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { H3 } from "@/components/ui/typography";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import {
+	approvedListingCountQueryOpt,
 	approvedListingsQueryOpt,
-	listingCountByStatusQueryOpt,
 } from "@/hooks/use-get-listings";
 import useGetPendingListings from "@/hooks/use-get-pending-listings";
 import useShopPagination from "@/hooks/use-shop-pagination";
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/shop/")({
 				.ensureQueryData(approvedListingsQueryOpt(filters))
 				.catch(() => undefined),
 			context.queryClient
-				.ensureQueryData(listingCountByStatusQueryOpt("approved"))
+				.ensureQueryData(approvedListingCountQueryOpt(filters))
 				.catch(() => undefined),
 		]);
 

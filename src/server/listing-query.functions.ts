@@ -9,6 +9,7 @@ import {
 	type ServerUserContext,
 } from "@/server/function-middleware";
 import {
+	countApprovedListingDto,
 	getListingCategoryCountDtos,
 	getListingDetailsResponse,
 	getListingStatusCountDto,
@@ -106,6 +107,13 @@ export const getListingStatusCountServerFn = createServerFn({
 	.handler(async ({ data }) =>
 		getListingStatusCountDto(data.status === "approved"),
 	);
+
+export const getApprovedListingCountServerFn = createServerFn({
+	method: "GET",
+})
+	.middleware(publicServerFunctionMiddleware)
+	.inputValidator((data) => approvedListingSearchServerInputSchema.parse(data))
+	.handler(async ({ data }) => countApprovedListingDto(data));
 
 export const getRecentListingsServerFn = createServerFn({ method: "GET" })
 	.middleware(publicServerFunctionMiddleware)
