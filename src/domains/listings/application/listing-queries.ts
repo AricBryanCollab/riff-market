@@ -68,7 +68,9 @@ export interface PendingModerationListingQueryPort {
 }
 
 export interface ListingCountQueryPort {
-	listPopularApprovedBrandCounts(): Promise<ListingBrandCount[]>;
+	listPopularApprovedBrandCounts(
+		query?: ApprovedListingSearchQuery,
+	): Promise<ListingBrandCount[]>;
 	countApprovedByCategory(): Promise<ListingCategoryCount[]>;
 	countByStatus(status: ListingCountStatus): Promise<number>;
 	countApproved(query: ApprovedListingSearchQuery): Promise<number>;

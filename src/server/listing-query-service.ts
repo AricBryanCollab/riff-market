@@ -160,10 +160,21 @@ export async function listPendingModerationListingResponses(
 }
 
 export async function getPopularListingBrandCountDtos(
+	rawQuery: unknown,
 	listings?: Pick<ListingCountQueryPort, "listPopularApprovedBrandCounts">,
 ): Promise<ListingBrandCount[]> {
+	const parsed = approvedListingSearchInputSchema.safeParse(rawQuery);
+
+	if (!parsed.success) {
+		throw new RequestError("Invalid listing queries", {
+			details: parsed.error,
+		});
+	}
+
 	const listingQueries = listings ?? (await createPrismaListingQueries());
-	return listingQueries.listPopularApprovedBrandCounts();
+	return listingQueries.listPopularApprovedBrandCounts(
+		toListingSearchQuery(parsed.data),
+	);
 }
 
 export async function getListingCategoryCountDtos(

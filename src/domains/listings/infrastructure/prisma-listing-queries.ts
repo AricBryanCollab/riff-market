@@ -142,11 +142,13 @@ export class PrismaListingQueries
 		return toListingViews(listings);
 	}
 
-	async listPopularApprovedBrandCounts(): Promise<ListingBrandCount[]> {
+	async listPopularApprovedBrandCounts(
+		query: ApprovedListingSearchQuery = {},
+	): Promise<ListingBrandCount[]> {
 		const groupedListings = await this.db.listing.groupBy({
 			by: ["brand"],
 			where: {
-				listingStatus: "APPROVED",
+				...toApprovedListingWhere({ ...query, brand: undefined }),
 				brand: {
 					not: "",
 				},
